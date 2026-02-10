@@ -7,7 +7,7 @@
 <meta name="description" content="Ko is the studio behind the products that define industries. Strategy. Design. Engineering. One team, zero compromise.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -38,6 +38,7 @@
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -49,13 +50,23 @@ body {
   overflow-x: hidden;
 }
 
-body.loading {
-  overflow: hidden;
-}
+body.loading { overflow: hidden; }
 
 ::selection {
   background: var(--accent);
   color: white;
+}
+
+/* ── SCROLL PROGRESS BAR ── */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--gradient-1);
+  z-index: 9999;
+  width: 0%;
+  transition: none;
 }
 
 /* ── PAGE LOADER ── */
@@ -67,6 +78,8 @@ body.loading {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+  gap: 24px;
   transition: opacity 0.6s ease, visibility 0.6s ease;
 }
 
@@ -91,6 +104,26 @@ body.loading {
   animation: loaderPulse 1.2s ease-in-out infinite;
 }
 
+.loader-bar {
+  width: 120px;
+  height: 2px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.loader-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--gradient-1);
+  border-radius: 2px;
+  animation: loaderFill 1.2s ease forwards;
+}
+
+@keyframes loaderFill {
+  to { width: 100%; }
+}
+
 @keyframes loaderPulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.08); opacity: 0.7; }
@@ -110,17 +143,9 @@ body::before {
 }
 
 /* ── CONTAINER ── */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-.container-lg {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.container-lg { max-width: 1400px; margin: 0 auto; padding: 0 24px; }
+.container-full { max-width: 100%; padding: 0 48px; }
 
 /* ── NAVBAR ── */
 .navbar {
@@ -225,10 +250,7 @@ body::before {
   transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 
-.mobile-menu.open {
-  opacity: 1;
-  visibility: visible;
-}
+.mobile-menu.open { opacity: 1; visibility: visible; }
 
 .mobile-menu a {
   font-family: 'Space Grotesk', sans-serif;
@@ -243,17 +265,12 @@ body::before {
   transition: opacity 0.4s var(--ease), transform 0.4s var(--ease), color 0.2s ease;
 }
 
-.mobile-menu.open a {
-  opacity: 1;
-  transform: translateY(0);
-}
-
+.mobile-menu.open a { opacity: 1; transform: translateY(0); }
 .mobile-menu.open a:nth-child(1) { transition-delay: 0.1s; }
 .mobile-menu.open a:nth-child(2) { transition-delay: 0.15s; }
 .mobile-menu.open a:nth-child(3) { transition-delay: 0.2s; }
 .mobile-menu.open a:nth-child(4) { transition-delay: 0.25s; }
 .mobile-menu.open a:nth-child(5) { transition-delay: 0.3s; }
-
 .mobile-menu a:hover { color: var(--accent); }
 
 /* ── ANIMATIONS ── */
@@ -263,21 +280,31 @@ body::before {
   transition: opacity 1s var(--ease), transform 1s var(--ease);
 }
 
-.reveal.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
+.reveal.visible { opacity: 1; transform: translateY(0); }
 
-.reveal-scale {
+.reveal-left {
   opacity: 0;
-  transform: scale(0.95);
+  transform: translateX(-60px);
   transition: opacity 1s var(--ease), transform 1s var(--ease);
 }
 
-.reveal-scale.visible {
-  opacity: 1;
-  transform: scale(1);
+.reveal-left.visible { opacity: 1; transform: translateX(0); }
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(60px);
+  transition: opacity 1s var(--ease), transform 1s var(--ease);
 }
+
+.reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 1s var(--ease), transform 1s var(--ease);
+}
+
+.reveal-scale.visible { opacity: 1; transform: scale(1); }
 
 .stagger-1 { transition-delay: 0.1s; }
 .stagger-2 { transition-delay: 0.2s; }
@@ -324,9 +351,7 @@ body::before {
   animation-delay: 0.5s;
 }
 
-@keyframes glowIn {
-  to { opacity: 1; }
-}
+@keyframes glowIn { to { opacity: 1; } }
 
 .hero-grid {
   position: absolute;
@@ -386,11 +411,7 @@ body::before {
   margin-bottom: 32px;
 }
 
-/* Text reveal clip animation */
-.hero-title-line {
-  display: block;
-  overflow: hidden;
-}
+.hero-title-line { display: block; overflow: hidden; }
 
 .hero-title-line-inner {
   display: block;
@@ -402,9 +423,7 @@ body::before {
 .hero-title-line:nth-child(2) .hero-title-line-inner { transition-delay: 0.45s; }
 .hero-title-line:nth-child(3) .hero-title-line-inner { transition-delay: 0.6s; }
 
-.hero-loaded .hero-title-line-inner {
-  transform: translateY(0);
-}
+.hero-loaded .hero-title-line-inner { transform: translateY(0); }
 
 .hero-title-gradient {
   background: var(--gradient-text);
@@ -438,10 +457,7 @@ body::before {
 }
 
 /* ── MAGNETIC BUTTON WRAPPER ── */
-.magnetic-wrap {
-  display: inline-block;
-  position: relative;
-}
+.magnetic-wrap { display: inline-block; position: relative; }
 
 .btn-primary {
   display: inline-flex;
@@ -461,10 +477,7 @@ body::before {
   will-change: transform;
 }
 
-.btn-primary:hover {
-  box-shadow: 0 0 50px rgba(255,255,255,0.12);
-}
-
+.btn-primary:hover { box-shadow: 0 0 50px rgba(255,255,255,0.12); }
 .btn-primary svg { transition: transform 0.2s ease; }
 .btn-primary:hover svg { transform: translateX(3px); }
 
@@ -562,30 +575,38 @@ body::before {
   margin-top: 24px;
 }
 
-/* ── CAPABILITIES (with cursor spotlight) ── */
-.capabilities-grid {
+/* ── CAPABILITIES (Split layout) ── */
+.capabilities-split {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1.3fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.capabilities-sticky {
+  position: sticky;
+  top: 120px;
+}
+
+.capabilities-bento {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 1px;
   background: var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  margin-top: 80px;
 }
 
 .capability-card {
-  padding: 48px 40px;
+  padding: 40px 32px;
   background: var(--bg-elevated);
   transition: background 0.4s ease;
   position: relative;
   overflow: hidden;
 }
 
-.capability-card:hover {
-  background: var(--bg-card);
-}
+.capability-card:hover { background: var(--bg-card); }
 
-/* Cursor spotlight effect */
 .capability-card .card-spotlight {
   position: absolute;
   inset: 0;
@@ -595,9 +616,7 @@ body::before {
   z-index: 0;
 }
 
-.capability-card:hover .card-spotlight {
-  opacity: 1;
-}
+.capability-card:hover .card-spotlight { opacity: 1; }
 
 .capability-card > *:not(.card-spotlight) {
   position: relative;
@@ -613,7 +632,7 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
   transition: background 0.3s ease, border-color 0.3s ease, transform 0.5s var(--ease);
 }
 
@@ -625,40 +644,55 @@ body::before {
 
 .capability-card h3 {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
 .capability-card p {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.7;
   color: var(--text-secondary);
 }
 
-/* ── SHOWCASE ── */
-.showcase-header {
+/* ── HORIZONTAL SCROLL SHOWCASE ── */
+.hscroll-section {
+  padding: 160px 0 0;
+  position: relative;
+  background: var(--bg-elevated);
+}
+
+.hscroll-header {
   text-align: center;
   margin-bottom: 80px;
+  padding: 0 24px;
 }
 
-.showcase-header .section-title {
-  margin: 0 auto;
+.hscroll-header .section-title { margin: 0 auto; }
+.hscroll-header .section-subtitle { margin: 24px auto 0; }
+
+.hscroll-track-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 0 48px 80px;
+  cursor: grab;
 }
 
-.showcase-header .section-subtitle {
-  margin: 24px auto 0;
+.hscroll-track-wrapper:active { cursor: grabbing; }
+.hscroll-track-wrapper::-webkit-scrollbar { display: none; }
+
+.hscroll-track {
+  display: flex;
+  gap: 24px;
+  width: max-content;
 }
 
-.showcase-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 16px;
-}
-
-.showcase-item {
+.hscroll-card {
+  flex: 0 0 520px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   position: relative;
@@ -667,22 +701,17 @@ body::before {
   cursor: pointer;
 }
 
-.showcase-item:hover {
-  transform: translateY(-6px);
+.hscroll-card:hover {
+  transform: translateY(-8px);
   border-color: var(--border-hover);
 }
 
-/* Animated gradient border on featured item */
-.showcase-item-1 {
-  grid-column: span 7;
-  grid-row: span 2;
-  min-height: 480px;
-  background: linear-gradient(135deg, #1a1040, #2d1b69, #1a1040);
+.hscroll-card.featured {
+  flex: 0 0 640px;
   border: none;
-  position: relative;
 }
 
-.showcase-item-1::before {
+.hscroll-card.featured::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -700,134 +729,384 @@ body::before {
   transition: opacity 0.4s ease;
 }
 
-.showcase-item-1:hover::before {
-  opacity: 1;
-}
+.hscroll-card.featured:hover::before { opacity: 1; }
 
 @keyframes borderRotate {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
 
-.showcase-item-2 {
-  grid-column: span 5;
-  min-height: 232px;
-  background: var(--bg-card);
-}
-
-.showcase-item-3 {
-  grid-column: span 5;
-  min-height: 232px;
-  background: linear-gradient(135deg, #1c1917, #292524);
-}
-
-.showcase-item-4 {
-  grid-column: span 4;
-  min-height: 260px;
-  background: var(--bg-card);
-}
-
-.showcase-item-5 {
-  grid-column: span 4;
-  min-height: 260px;
-  background: linear-gradient(135deg, #0c1222, #1e293b);
-}
-
-.showcase-item-6 {
-  grid-column: span 4;
-  min-height: 260px;
-  background: linear-gradient(135deg, #14120d, #1c1a14);
-}
-
-/* Spotlight on all showcase items */
-.showcase-item .card-spotlight {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.showcase-item:hover .card-spotlight {
-  opacity: 1;
-}
-
-.showcase-inner {
-  padding: 40px;
-  height: 100%;
+.hscroll-card-inner {
+  height: 440px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   position: relative;
   z-index: 2;
+  overflow: hidden;
 }
 
-.showcase-item-1 .showcase-inner {
+/* ── CSS DEVICE MOCKUPS ── */
+.device-area {
+  flex: 1;
+  padding: 24px 24px 0;
+  display: flex;
+  align-items: flex-start;
   justify-content: center;
-  padding: 56px;
+  overflow: hidden;
+  position: relative;
 }
 
-.showcase-tag {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+/* Browser window mockup */
+.browser-mock {
+  width: 100%;
+  background: #1a1a2e;
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  transform: translateY(20px);
+  transition: transform 0.6s var(--ease);
+}
+
+.hscroll-card:hover .browser-mock { transform: translateY(10px); }
+
+.browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.browser-dot { width: 8px; height: 8px; border-radius: 50%; }
+.browser-dot:nth-child(1) { background: #ff5f57; }
+.browser-dot:nth-child(2) { background: #febc2e; }
+.browser-dot:nth-child(3) { background: #28c840; }
+
+.browser-url {
+  margin-left: 12px;
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  flex: 1;
+  max-width: 180px;
+}
+
+.browser-body { padding: 16px; min-height: 200px; }
+
+.mock-dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.mock-chart {
+  background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.1);
+  border-radius: 8px;
+  padding: 12px;
+  height: 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.mock-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 100%;
+}
+
+.mock-chart-bar {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+  background: var(--gradient-1);
+  opacity: 0.6;
+  animation: mockBarGrow 2s var(--ease) forwards;
+  transform-origin: bottom;
+}
+
+@keyframes mockBarGrow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+.mock-stat {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.mock-stat-label {
+  font-size: 8px;
   text-transform: uppercase;
-  margin-bottom: 12px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.mock-stat-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.mock-stat-change { font-size: 9px; color: #22c55e; margin-top: 2px; }
+
+.mock-line {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.04);
+  margin-bottom: 6px;
+}
+
+.mock-line:nth-child(2) { width: 70%; }
+.mock-line:nth-child(3) { width: 85%; }
+
+/* Phone mockup */
+.phone-mock {
+  width: 200px;
+  background: #1a1a2e;
+  border-radius: 24px;
+  border: 2px solid rgba(255,255,255,0.08);
+  padding: 8px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  transform: translateY(40px);
+  transition: transform 0.6s var(--ease);
+}
+
+.hscroll-card:hover .phone-mock { transform: translateY(25px); }
+
+.phone-notch {
+  width: 80px;
+  height: 20px;
+  background: #0a0a0a;
+  margin: 0 auto 12px;
+  border-radius: 0 0 12px 12px;
+}
+
+.phone-body { padding: 8px; }
+
+.phone-header-mock { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.phone-avatar-mock { width: 28px; height: 28px; border-radius: 50%; background: var(--gradient-1); }
+.phone-text-mock { flex: 1; }
+.phone-text-line { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.06); margin-bottom: 4px; }
+.phone-text-line:nth-child(2) { width: 60%; }
+
+.phone-card-mock {
+  background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.1);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.phone-card-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.phone-card-label { font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+.phone-wave { height: 32px; display: flex; align-items: center; gap: 2px; padding: 0 4px; }
+
+.phone-wave-bar {
+  flex: 1;
+  background: var(--gradient-1);
+  border-radius: 2px;
+  opacity: 0.4;
+  animation: waveAnim 1.5s ease-in-out infinite;
+}
+
+@keyframes waveAnim {
+  0%, 100% { height: 30%; }
+  50% { height: 100%; }
+}
+
+/* Terminal mockup */
+.terminal-mock {
+  width: 100%;
+  background: #0d1117;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.06);
+  transform: translateY(20px);
+  transition: transform 0.6s var(--ease);
+}
+
+.hscroll-card:hover .terminal-mock { transform: translateY(10px); }
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.terminal-title {
+  margin-left: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
   color: var(--text-muted);
 }
 
-.showcase-title {
+.terminal-body {
+  padding: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.terminal-line { display: flex; gap: 8px; margin-bottom: 2px; }
+.terminal-prompt { color: #22c55e; }
+.terminal-cmd { color: var(--text-primary); }
+.terminal-output { color: var(--text-muted); padding-left: 16px; }
+.terminal-accent { color: #8b5cf6; }
+.terminal-success { color: #22c55e; }
+
+.terminal-blink {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  background: var(--text-primary);
+  animation: blink 1.2s step-end infinite;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Code editor mockup */
+.code-mock {
+  width: 100%;
+  background: #0d1117;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.06);
+  transform: translateY(20px);
+  transition: transform 0.6s var(--ease);
+}
+
+.hscroll-card:hover .code-mock { transform: translateY(10px); }
+
+.code-tabs {
+  display: flex;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.code-tab {
+  padding: 8px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  border-right: 1px solid rgba(255,255,255,0.04);
+}
+
+.code-tab.active {
+  background: #0d1117;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--accent);
+  margin-bottom: -1px;
+}
+
+.code-body {
+  padding: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.8;
+  display: flex;
+  gap: 16px;
+}
+
+.code-line-numbers { color: rgba(255,255,255,0.15); user-select: none; text-align: right; min-width: 20px; }
+.code-content { flex: 1; }
+.code-keyword { color: #ff7b72; }
+.code-string { color: #a5d6ff; }
+.code-func { color: #d2a8ff; }
+.code-comment { color: rgba(255,255,255,0.2); font-style: italic; }
+.code-const { color: #79c0ff; }
+.code-punct { color: var(--text-muted); }
+
+/* Card info section */
+.hscroll-card-info { padding: 24px 28px 28px; }
+
+.hscroll-card-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+
+.hscroll-card-title {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: clamp(20px, 2.5vw, 28px);
+  font-size: 22px;
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.02em;
   color: var(--text-primary);
+  margin-bottom: 6px;
 }
 
-.showcase-item-1 .showcase-title {
-  font-size: clamp(28px, 4vw, 44px);
-  letter-spacing: -0.03em;
+.hscroll-card-desc { font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+
+.hscroll-card-meta { display: flex; gap: 16px; margin-top: 12px; }
+.hscroll-card-stat { font-size: 11px; color: var(--text-muted); }
+.hscroll-card-stat strong { color: var(--text-primary); font-weight: 600; }
+
+.hscroll-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 0 80px;
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
 }
 
-.showcase-desc {
-  font-size: 14px;
-  line-height: 1.6;
-  margin-top: 12px;
-  color: var(--text-secondary);
+.hscroll-hint-arrow { display: inline-flex; animation: hintBounce 2s ease-in-out infinite; }
+
+@keyframes hintBounce {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(6px); }
 }
 
-.showcase-particles {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  z-index: 0;
-}
-
-.showcase-particle {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  border-radius: 50%;
-  background: rgba(139,92,246,0.5);
-  animation: floatParticle 10s ease-in-out infinite;
-}
-
-@keyframes floatParticle {
-  0%, 100% { transform: translate(0, 0); opacity: 0.2; }
-  25% { opacity: 0.8; }
-  50% { transform: translate(40px, -50px); opacity: 0.3; }
-  75% { opacity: 0.6; }
-}
-
-/* ── BIG STATEMENT SECTION ── */
+/* ── BIG STATEMENT ── */
 .statement-section {
-  padding: 200px 0;
+  padding: 240px 0;
   position: relative;
   overflow: hidden;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
+}
+
+.statement-bg-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(120px, 20vw, 300px);
+  font-weight: 700;
+  color: rgba(255,255,255,0.015);
+  white-space: nowrap;
+  letter-spacing: -0.04em;
+  user-select: none;
+  pointer-events: none;
 }
 
 .statement-text {
@@ -841,11 +1120,11 @@ body::before {
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 24px;
+  position: relative;
+  z-index: 1;
 }
 
-.statement-text .statement-muted {
-  color: var(--text-muted);
-}
+.statement-text .statement-muted { color: var(--text-muted); }
 
 .statement-text .statement-accent {
   background: var(--gradient-text);
@@ -872,19 +1151,12 @@ body::before {
 .metrics-section {
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
+  overflow: hidden;
 }
 
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-}
+.metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
 
-.metric-item {
-  text-align: center;
-  padding: 80px 24px;
-  position: relative;
-}
+.metric-item { text-align: center; padding: 80px 24px; position: relative; }
 
 .metric-item:not(:last-child)::after {
   content: '';
@@ -907,85 +1179,91 @@ body::before {
   margin-bottom: 8px;
 }
 
-.metric-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-muted);
-  letter-spacing: 0.02em;
+.metric-label { font-size: 13px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.02em; }
+.metric-context { font-size: 11px; color: var(--text-muted); opacity: 0.6; margin-top: 4px; }
+
+/* ── PROCESS — timeline ── */
+.process-timeline {
+  margin-top: 80px;
+  position: relative;
+  max-width: 800px;
 }
 
-/* ── PROCESS ── */
-.process-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  margin-top: 80px;
+.process-timeline::before {
+  content: '';
+  position: absolute;
+  left: 32px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--border), rgba(99,102,241,0.3), var(--border));
 }
 
 .process-step {
-  padding: 56px 44px;
-  background: var(--bg-elevated);
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 32px;
+  padding-bottom: 64px;
   position: relative;
-  overflow: hidden;
-  transition: background 0.4s ease;
 }
 
-.process-step:hover {
-  background: var(--bg-card);
+.process-step:last-child { padding-bottom: 0; }
+
+.process-marker { display: flex; justify-content: center; position: relative; z-index: 1; }
+
+.process-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--accent);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
-.process-step .card-spotlight {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.process-step:hover .card-spotlight {
-  opacity: 1;
-}
-
-.process-step > *:not(.card-spotlight) {
-  position: relative;
-  z-index: 1;
+.process-step:hover .process-dot {
+  background: var(--accent);
+  box-shadow: 0 0 20px rgba(99,102,241,0.4);
 }
 
 .process-number {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 64px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.15));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 24px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
 }
 
-.process-step h3 {
+.process-content h3 {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 600;
   margin-bottom: 12px;
   letter-spacing: -0.02em;
 }
 
-.process-step p {
-  font-size: 14px;
+.process-content p {
+  font-size: 15px;
   line-height: 1.7;
   color: var(--text-secondary);
+  max-width: 500px;
+}
+
+.process-deliverables { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+.process-tag {
+  padding: 4px 12px;
+  background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.1);
+  border-radius: 980px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 /* ── TESTIMONIALS ── */
-.testimonials-section {
-  overflow: hidden;
-}
+.testimonials-section { overflow: hidden; }
 
 .testimonials-track {
   display: flex;
@@ -995,9 +1273,7 @@ body::before {
   padding: 20px 0;
 }
 
-.testimonials-track:hover {
-  animation-play-state: paused;
-}
+.testimonials-track:hover { animation-play-state: paused; }
 
 @keyframes scrollTestimonials {
   0% { transform: translateX(0); }
@@ -1036,11 +1312,7 @@ body::before {
   font-style: normal;
 }
 
-.testimonial-author {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
+.testimonial-author { display: flex; align-items: center; gap: 14px; }
 
 .testimonial-avatar {
   width: 40px;
@@ -1054,24 +1326,11 @@ body::before {
   color: white;
 }
 
-.testimonial-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
-
-.testimonial-role {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
+.testimonial-name { font-size: 14px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
+.testimonial-role { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
 /* ── CTA ── */
-.cta-section {
-  padding: 200px 0;
-  position: relative;
-}
+.cta-section { padding: 200px 0; position: relative; }
 
 .cta-glow {
   position: absolute;
@@ -1085,11 +1344,7 @@ body::before {
   filter: blur(80px);
 }
 
-.cta-content {
-  text-align: center;
-  position: relative;
-  z-index: 1;
-}
+.cta-content { text-align: center; position: relative; z-index: 1; }
 
 .cta-title {
   font-family: 'Space Grotesk', sans-serif;
@@ -1140,9 +1395,7 @@ body::before {
   z-index: -1;
 }
 
-.btn-glow:hover::before {
-  opacity: 0.5;
-}
+.btn-glow:hover::before { opacity: 0.5; }
 
 .btn-glow:hover {
   transform: translateY(-2px);
@@ -1193,11 +1446,7 @@ body::before {
   letter-spacing: -0.02em;
 }
 
-.footer-brand p {
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--text-muted);
-}
+.footer-brand p { font-size: 13px; line-height: 1.7; color: var(--text-muted); }
 
 .footer-col h4 {
   font-size: 11px;
@@ -1228,15 +1477,9 @@ body::before {
   border-top: 1px solid var(--border);
 }
 
-.footer-copy {
-  font-size: 12px;
-  color: var(--text-muted);
-}
+.footer-copy { font-size: 12px; color: var(--text-muted); }
 
-.footer-socials {
-  display: flex;
-  gap: 12px;
-}
+.footer-socials { display: flex; gap: 12px; }
 
 .footer-socials a {
   width: 32px;
@@ -1256,19 +1499,15 @@ body::before {
   transform: translateY(-2px);
 }
 
-.footer-socials svg {
-  width: 14px;
-  height: 14px;
-  fill: var(--text-secondary);
-}
+.footer-socials svg { width: 14px; height: 14px; fill: var(--text-secondary); }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 1024px) {
-  .capabilities-grid { grid-template-columns: repeat(2, 1fr); }
-  .showcase-grid { grid-template-columns: repeat(6, 1fr); }
-  .showcase-item-1 { grid-column: span 6; min-height: 360px; }
-  .showcase-item-2, .showcase-item-3 { grid-column: span 3; }
-  .showcase-item-4, .showcase-item-5, .showcase-item-6 { grid-column: span 2; }
+  .capabilities-split { grid-template-columns: 1fr; gap: 48px; }
+  .capabilities-sticky { position: static; }
+  .hscroll-card { flex: 0 0 400px; }
+  .hscroll-card.featured { flex: 0 0 500px; }
+  .hscroll-card-inner { height: 380px; }
   .metrics-grid { grid-template-columns: repeat(2, 1fr); }
   .metric-item:nth-child(2)::after { display: none; }
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
@@ -1280,31 +1519,29 @@ body::before {
   .nav-menu-btn { display: flex; }
   .section { padding: 100px 0; }
   .hero-title { letter-spacing: -0.03em; }
-  .capabilities-grid { grid-template-columns: 1fr; }
-  .showcase-grid { grid-template-columns: 1fr; }
-  .showcase-item-1, .showcase-item-2, .showcase-item-3,
-  .showcase-item-4, .showcase-item-5, .showcase-item-6 {
-    grid-column: span 1;
-    min-height: 260px;
-  }
+  .capabilities-bento { grid-template-columns: 1fr; }
+  .hscroll-track-wrapper { padding: 0 20px 60px; }
+  .hscroll-card { flex: 0 0 320px; }
+  .hscroll-card.featured { flex: 0 0 340px; }
+  .hscroll-card-inner { height: 340px; }
   .metrics-grid { grid-template-columns: repeat(2, 1fr); }
   .metric-item::after { display: none; }
-  .process-grid { grid-template-columns: 1fr; }
   .cta-section { padding: 120px 0; }
   .statement-section { padding: 120px 0; }
   .footer-grid { grid-template-columns: 1fr; gap: 32px; }
-  .footer-bottom {
-    flex-direction: column;
-    gap: 16px;
-    text-align: center;
-  }
+  .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
   .hero-actions { flex-direction: column; }
+  .container-full { padding: 0 20px; }
+  .process-step { grid-template-columns: 48px 1fr; gap: 20px; }
+  .process-timeline::before { left: 24px; }
 }
 
 @media (max-width: 480px) {
   .metrics-grid { grid-template-columns: 1fr; }
   .testimonial-card { flex: 0 0 320px; padding: 32px; }
   .proof-logos { gap: 32px; }
+  .hscroll-card { flex: 0 0 280px; }
+  .hscroll-card.featured { flex: 0 0 300px; }
 }
 
 /* ── MARQUEE ── */
@@ -1333,11 +1570,7 @@ body::before {
   letter-spacing: -0.02em;
 }
 
-.marquee-dot {
-  font-size: 32px;
-  color: var(--accent);
-  opacity: 0.15;
-}
+.marquee-dot { font-size: 32px; color: var(--accent); opacity: 0.15; }
 
 @keyframes marquee {
   0% { transform: translateX(0); }
@@ -1345,21 +1578,20 @@ body::before {
 }
 
 /* ── TOP LINE ── */
-.top-line {
-  height: 2px;
-  background: var(--gradient-1);
-  opacity: 0.6;
-}
+.top-line { height: 2px; background: var(--gradient-1); opacity: 0.6; }
 </style>
 </head>
 <body class="loading">
 
+<!-- SCROLL PROGRESS -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
 <!-- PAGE LOADER -->
 <div class="loader" id="loader">
   <div class="loader-logo">K</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
 </div>
 
-<!-- Top accent line -->
 <div class="top-line"></div>
 
 <!-- NAVBAR -->
@@ -1376,10 +1608,10 @@ body::before {
     <li><a href="#contact" class="nav-cta">Start a Project</a></li>
   </ul>
   <button class="nav-menu-btn" id="menuBtn" aria-label="Menu">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" id="menuIcon">
-      <line x1="4" y1="7" x2="20" y2="7" class="menu-line-1"/>
-      <line x1="4" y1="12" x2="20" y2="12" class="menu-line-2"/>
-      <line x1="4" y1="17" x2="20" y2="17" class="menu-line-3"/>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <line x1="4" y1="7" x2="20" y2="7"/>
+      <line x1="4" y1="12" x2="20" y2="12"/>
+      <line x1="4" y1="17" x2="20" y2="17"/>
     </svg>
   </button>
 </nav>
@@ -1410,15 +1642,13 @@ body::before {
       <span class="hero-title-line"><span class="hero-title-line-inner">We build empires.</span></span>
     </h1>
     <p class="hero-description reveal stagger-2">
-      Ko is the studio behind the products that define industries. Strategy, design, and engineering -- one team, zero compromise.
+      Strategy, design, and engineering from a single team. Twelve senior specialists, no handoffs, no dilution.
     </p>
     <div class="hero-actions reveal stagger-3">
       <span class="magnetic-wrap">
         <a href="#contact" class="btn-primary">
           Start a project
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 8h10M9 4l4 4-4 4"/>
-          </svg>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a>
       </span>
       <span class="magnetic-wrap">
@@ -1446,196 +1676,341 @@ body::before {
 <!-- MARQUEE -->
 <div class="marquee-section">
   <div class="marquee-track" id="marquee">
-    <span class="marquee-item">Strategy</span>
-    <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Design</span>
-    <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Engineering</span>
-    <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Growth</span>
-    <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Intelligence</span>
-    <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Scale</span>
-    <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Strategy</span>
-    <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Design</span>
-    <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Engineering</span>
-    <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Growth</span>
-    <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Intelligence</span>
-    <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Scale</span>
-    <span class="marquee-dot">&middot;</span>
+    <span class="marquee-item">Strategy</span><span class="marquee-dot">&middot;</span>
+    <span class="marquee-item">Design</span><span class="marquee-dot">&middot;</span>
+    <span class="marquee-item">Engineering</span><span class="marquee-dot">&middot;</span>
+    <span class="marquee-item">Growth</span><span class="marquee-dot">&middot;</span>
+    <span class="marquee-item">Intelligence</span><span class="marquee-dot">&middot;</span>
+    <span class="marquee-item">Scale</span><span class="marquee-dot">&middot;</span>
+    <span class="marquee-item">Strategy</span><span class="marquee-dot">&middot;</span>
+    <span class="marquee-item">Design</span><span class="marquee-dot">&middot;</span>
+    <span class="marquee-item">Engineering</span><span class="marquee-dot">&middot;</span>
+    <span class="marquee-item">Growth</span><span class="marquee-dot">&middot;</span>
+    <span class="marquee-item">Intelligence</span><span class="marquee-dot">&middot;</span>
+    <span class="marquee-item">Scale</span><span class="marquee-dot">&middot;</span>
   </div>
 </div>
 
-<!-- CAPABILITIES -->
+<!-- CAPABILITIES — Split: sticky text left, bento right -->
 <section class="section" id="capabilities">
-  <div class="container">
-    <div class="reveal">
-      <p class="section-eyebrow">What we do</p>
-      <h2 class="section-title">Six disciplines.<br>One obsession.</h2>
-      <p class="section-subtitle">Every capability exists to serve one goal: building products that dominate markets.</p>
-    </div>
-
-    <div class="capabilities-grid">
-      <div class="capability-card reveal stagger-1">
-        <div class="card-spotlight"></div>
-        <div class="capability-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-            <polyline points="2 17 12 22 22 17"/>
-            <polyline points="2 12 12 17 22 12"/>
-          </svg>
+  <div class="container-lg">
+    <div class="capabilities-split">
+      <div class="capabilities-sticky">
+        <div class="reveal">
+          <p class="section-eyebrow">What we do</p>
+          <h2 class="section-title">Six disciplines.<br>One obsession.</h2>
+          <p class="section-subtitle">Every capability exists to serve one goal: products that capture markets and hold them.</p>
         </div>
-        <h3>Product Strategy</h3>
-        <p>We define the vision, validate assumptions, and build roadmaps that align business objectives with user truth.</p>
       </div>
 
-      <div class="capability-card reveal stagger-2">
-        <div class="card-spotlight"></div>
-        <div class="capability-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-            <line x1="9" y1="9" x2="9.01" y2="9"/>
-            <line x1="15" y1="9" x2="15.01" y2="9"/>
-          </svg>
+      <div class="capabilities-bento">
+        <div class="capability-card reveal stagger-1">
+          <div class="card-spotlight"></div>
+          <div class="capability-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+            </svg>
+          </div>
+          <h3>Product Strategy</h3>
+          <p>Market validation, roadmapping, and positioning. We find the gap, then build the bridge.</p>
         </div>
-        <h3>Brand Identity</h3>
-        <p>Visual systems that don't just look good -- they make your brand impossible to forget and impossible to copy.</p>
-      </div>
 
-      <div class="capability-card reveal stagger-3">
-        <div class="card-spotlight"></div>
-        <div class="capability-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
+        <div class="capability-card reveal stagger-2">
+          <div class="card-spotlight"></div>
+          <div class="capability-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+            </svg>
+          </div>
+          <h3>Brand Identity</h3>
+          <p>Visual systems engineered for recall. Logos, type, color, motion -- all built to compound.</p>
         </div>
-        <h3>UI/UX Design</h3>
-        <p>Interfaces that feel inevitable. Every pixel, every interaction, every micro-moment -- considered and intentional.</p>
-      </div>
 
-      <div class="capability-card reveal stagger-4">
-        <div class="card-spotlight"></div>
-        <div class="capability-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="16 18 22 12 16 6"/>
-            <polyline points="8 6 2 12 8 18"/>
-          </svg>
+        <div class="capability-card reveal stagger-3">
+          <div class="card-spotlight"></div>
+          <div class="capability-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </div>
+          <h3>UI/UX Design</h3>
+          <p>Interfaces where every tap, scroll, and transition earns its place. Nothing decorative.</p>
         </div>
-        <h3>Engineering</h3>
-        <p>Production-grade systems built for scale. Modern stacks, clean architecture, and code that ships on time.</p>
-      </div>
 
-      <div class="capability-card reveal stagger-5">
-        <div class="card-spotlight"></div>
-        <div class="capability-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
-          </svg>
+        <div class="capability-card reveal stagger-4">
+          <div class="card-spotlight"></div>
+          <div class="capability-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </div>
+          <h3>Engineering</h3>
+          <p>TypeScript, Rust, Go, Swift. We pick the right tool, not the trendy one. Ships on time.</p>
         </div>
-        <h3>Growth</h3>
-        <p>Data-informed strategies that move the metrics that matter. Acquisition, retention, and activation -- optimized end to end.</p>
-      </div>
 
-      <div class="capability-card reveal stagger-6">
-        <div class="card-spotlight"></div>
-        <div class="capability-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-            <path d="M2 17l10 5 10-5"/>
-            <path d="M2 12l10 5 10-5"/>
-          </svg>
+        <div class="capability-card reveal stagger-5">
+          <div class="card-spotlight"></div>
+          <div class="capability-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
+            </svg>
+          </div>
+          <h3>Growth</h3>
+          <p>Acquisition loops, retention mechanics, activation funnels. We optimize what the data says matters.</p>
         </div>
-        <h3>AI Integration</h3>
-        <p>From LLMs to custom models, we embed intelligence into products -- making AI practical, not performative.</p>
+
+        <div class="capability-card reveal stagger-6">
+          <div class="card-spotlight"></div>
+          <div class="capability-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <h3>AI Integration</h3>
+          <p>LLMs, embeddings, vector search, fine-tuning. We ship AI that solves real problems.</p>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- SHOWCASE -->
-<section class="section" id="work" style="background: var(--bg-elevated);">
-  <div class="container-lg">
-    <div class="showcase-header">
-      <p class="section-eyebrow reveal">Selected Work</p>
-      <h2 class="section-title reveal stagger-1">Products that<br>moved markets.</h2>
+<!-- SHOWCASE — Horizontal scroll with device mockups -->
+<section class="hscroll-section" id="work">
+  <div class="hscroll-header">
+    <p class="section-eyebrow reveal">Selected Work</p>
+    <h2 class="section-title reveal stagger-1">Products that<br>moved markets.</h2>
+    <p class="section-subtitle reveal stagger-2">Real outcomes for real companies. Not mock-ups -- shipped products generating revenue.</p>
+  </div>
+
+  <div class="hscroll-track-wrapper" id="hscrollWrapper">
+    <div class="hscroll-track" id="hscrollTrack">
+
+      <!-- Card 1: Dashboard — featured -->
+      <div class="hscroll-card featured reveal-scale" style="background: linear-gradient(135deg, #1a1040, #2d1b69, #1a1040);">
+        <div class="hscroll-card-inner">
+          <div class="device-area">
+            <div class="browser-mock">
+              <div class="browser-bar">
+                <div class="browser-dot"></div><div class="browser-dot"></div><div class="browser-dot"></div>
+                <div class="browser-url">nexus.ai/command</div>
+              </div>
+              <div class="browser-body">
+                <div class="mock-dashboard">
+                  <div class="mock-chart" style="grid-column: span 2;">
+                    <div class="mock-chart-bars">
+                      <div class="mock-chart-bar" style="height:40%;animation-delay:0s;"></div>
+                      <div class="mock-chart-bar" style="height:65%;animation-delay:0.1s;"></div>
+                      <div class="mock-chart-bar" style="height:45%;animation-delay:0.2s;"></div>
+                      <div class="mock-chart-bar" style="height:80%;animation-delay:0.3s;"></div>
+                      <div class="mock-chart-bar" style="height:55%;animation-delay:0.4s;"></div>
+                      <div class="mock-chart-bar" style="height:90%;animation-delay:0.5s;"></div>
+                      <div class="mock-chart-bar" style="height:70%;animation-delay:0.6s;"></div>
+                      <div class="mock-chart-bar" style="height:95%;animation-delay:0.7s;"></div>
+                      <div class="mock-chart-bar" style="height:60%;animation-delay:0.8s;"></div>
+                      <div class="mock-chart-bar" style="height:85%;animation-delay:0.9s;"></div>
+                    </div>
+                  </div>
+                  <div class="mock-stat">
+                    <div class="mock-stat-label">Active Users</div>
+                    <div class="mock-stat-value">52.4K</div>
+                    <div class="mock-stat-change">+18.2% vs last month</div>
+                  </div>
+                  <div class="mock-stat">
+                    <div class="mock-stat-label">Latency</div>
+                    <div class="mock-stat-value">12ms</div>
+                    <div class="mock-stat-change">p99 under SLA</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hscroll-card-info">
+            <div class="hscroll-card-tag">Platform Redesign</div>
+            <h3 class="hscroll-card-title">Nexus AI Command Center</h3>
+            <p class="hscroll-card-desc">End-to-end redesign of a real-time AI ops dashboard. 52K DAU, 12ms p99 latency.</p>
+            <div class="hscroll-card-meta">
+              <span class="hscroll-card-stat"><strong>3x</strong> engagement</span>
+              <span class="hscroll-card-stat"><strong>-67%</strong> support tickets</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Mobile app -->
+      <div class="hscroll-card reveal-scale stagger-1" style="background: var(--bg-card);">
+        <div class="hscroll-card-inner">
+          <div class="device-area">
+            <div class="phone-mock">
+              <div class="phone-notch"></div>
+              <div class="phone-body">
+                <div class="phone-header-mock">
+                  <div class="phone-avatar-mock"></div>
+                  <div class="phone-text-mock">
+                    <div class="phone-text-line"></div>
+                    <div class="phone-text-line"></div>
+                  </div>
+                </div>
+                <div class="phone-card-mock">
+                  <div class="phone-card-label">Heart Rate</div>
+                  <div class="phone-card-value">72 bpm</div>
+                  <div class="phone-wave">
+                    <div class="phone-wave-bar" style="animation-delay:0s;"></div>
+                    <div class="phone-wave-bar" style="animation-delay:0.1s;"></div>
+                    <div class="phone-wave-bar" style="animation-delay:0.2s;"></div>
+                    <div class="phone-wave-bar" style="animation-delay:0.3s;"></div>
+                    <div class="phone-wave-bar" style="animation-delay:0.4s;"></div>
+                    <div class="phone-wave-bar" style="animation-delay:0.5s;"></div>
+                    <div class="phone-wave-bar" style="animation-delay:0.6s;"></div>
+                    <div class="phone-wave-bar" style="animation-delay:0.7s;"></div>
+                    <div class="phone-wave-bar" style="animation-delay:0.8s;"></div>
+                    <div class="phone-wave-bar" style="animation-delay:0.9s;"></div>
+                  </div>
+                </div>
+                <div class="phone-card-mock">
+                  <div class="phone-card-label">Sleep Score</div>
+                  <div class="phone-card-value">94</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hscroll-card-info">
+            <div class="hscroll-card-tag">Mobile App</div>
+            <h3 class="hscroll-card-title">Helio Wellness</h3>
+            <p class="hscroll-card-desc">Health tracking that feels human. 400K downloads in 90 days.</p>
+            <div class="hscroll-card-meta">
+              <span class="hscroll-card-stat"><strong>4.8</strong> App Store</span>
+              <span class="hscroll-card-stat"><strong>62%</strong> D30 retention</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Terminal / CLI -->
+      <div class="hscroll-card reveal-scale stagger-2" style="background: linear-gradient(135deg, #0c1222, #1e293b);">
+        <div class="hscroll-card-inner">
+          <div class="device-area">
+            <div class="terminal-mock">
+              <div class="terminal-bar">
+                <div class="browser-dot" style="background:#ff5f57;"></div>
+                <div class="browser-dot" style="background:#febc2e;"></div>
+                <div class="browser-dot" style="background:#28c840;"></div>
+                <span class="terminal-title">vertex &mdash; analytics</span>
+              </div>
+              <div class="terminal-body">
+                <div class="terminal-line"><span class="terminal-prompt">$</span><span class="terminal-cmd">vertex deploy <span class="terminal-accent">--prod</span></span></div>
+                <div class="terminal-output">Compiling 847 modules...</div>
+                <div class="terminal-output">Bundle: <span class="terminal-accent">142kb</span> gzipped</div>
+                <div class="terminal-output">Edge regions: <span class="terminal-accent">14</span></div>
+                <div class="terminal-output"><span class="terminal-success">&#10003; Deployed to vertex.io</span></div>
+                <div class="terminal-line" style="margin-top:6px;"><span class="terminal-prompt">$</span><span class="terminal-cmd"><span class="terminal-blink"></span></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="hscroll-card-info">
+            <div class="hscroll-card-tag">SaaS Platform</div>
+            <h3 class="hscroll-card-title">Vertex Analytics</h3>
+            <p class="hscroll-card-desc">Real-time analytics with edge deployment. Sub-second queries on 2B+ events.</p>
+            <div class="hscroll-card-meta">
+              <span class="hscroll-card-stat"><strong>14</strong> edge regions</span>
+              <span class="hscroll-card-stat"><strong>99.99%</strong> uptime</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Code editor -->
+      <div class="hscroll-card reveal-scale stagger-3" style="background: linear-gradient(135deg, #1c1917, #292524);">
+        <div class="hscroll-card-inner">
+          <div class="device-area">
+            <div class="code-mock">
+              <div class="code-tabs">
+                <div class="code-tab active">brand.config.ts</div>
+                <div class="code-tab">tokens.css</div>
+              </div>
+              <div class="code-body">
+                <div class="code-line-numbers">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</div>
+                <div class="code-content">
+                  <span class="code-keyword">export const</span> <span class="code-const">brand</span> <span class="code-punct">= {</span><br>
+                  &nbsp;&nbsp;<span class="code-const">name</span><span class="code-punct">:</span> <span class="code-string">"Praxis Labs"</span><span class="code-punct">,</span><br>
+                  &nbsp;&nbsp;<span class="code-const">palette</span><span class="code-punct">: {</span><br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-const">primary</span><span class="code-punct">:</span> <span class="code-string">"#6366f1"</span><span class="code-punct">,</span><br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-const">surface</span><span class="code-punct">:</span> <span class="code-string">"#fafaf9"</span><span class="code-punct">,</span><br>
+                  &nbsp;&nbsp;<span class="code-punct">},</span><br>
+                  &nbsp;&nbsp;<span class="code-const">radius</span><span class="code-punct">:</span> <span class="code-string">"16px"</span><span class="code-punct">,</span><br>
+                  &nbsp;&nbsp;<span class="code-comment">// Zero to launch: 8 weeks</span><br>
+                  <span class="code-punct">}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hscroll-card-info">
+            <div class="hscroll-card-tag">Brand + Engineering</div>
+            <h3 class="hscroll-card-title">Praxis Labs</h3>
+            <p class="hscroll-card-desc">Full brand identity and design system. Concept to production in 8 weeks.</p>
+            <div class="hscroll-card-meta">
+              <span class="hscroll-card-stat"><strong>8</strong> week delivery</span>
+              <span class="hscroll-card-stat"><strong>240+</strong> components</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 5: E-commerce -->
+      <div class="hscroll-card reveal-scale stagger-4" style="background: linear-gradient(135deg, #14120d, #1c1a14);">
+        <div class="hscroll-card-inner">
+          <div class="device-area">
+            <div class="browser-mock">
+              <div class="browser-bar">
+                <div class="browser-dot"></div><div class="browser-dot"></div><div class="browser-dot"></div>
+                <div class="browser-url">arcform.store</div>
+              </div>
+              <div class="browser-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <div style="background:rgba(255,255,255,0.03);border-radius:8px;height:80px;border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;">
+                    <div style="width:32px;height:32px;border-radius:8px;background:var(--gradient-1);opacity:0.3;"></div>
+                  </div>
+                  <div style="background:rgba(255,255,255,0.03);border-radius:8px;height:80px;border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;">
+                    <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#f59e0b,#ef4444);opacity:0.3;"></div>
+                  </div>
+                </div>
+                <div style="margin-top:8px;">
+                  <div class="mock-line"></div>
+                  <div class="mock-line"></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+                    <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--text-primary);">$2,499</div>
+                    <div style="padding:4px 12px;background:var(--gradient-1);border-radius:6px;font-size:9px;color:white;font-weight:600;">ADD TO BAG</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hscroll-card-info">
+            <div class="hscroll-card-tag">E-Commerce</div>
+            <h3 class="hscroll-card-title">Arcform Store</h3>
+            <p class="hscroll-card-desc">Luxury e-commerce with sub-second page loads and 3D product visualization.</p>
+            <div class="hscroll-card-meta">
+              <span class="hscroll-card-stat"><strong>+340%</strong> conversion</span>
+              <span class="hscroll-card-stat"><strong>0.8s</strong> LCP</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
+  </div>
 
-    <div class="showcase-grid">
-      <div class="showcase-item showcase-item-1 reveal-scale">
-        <div class="card-spotlight"></div>
-        <div class="showcase-particles">
-          <div class="showcase-particle" style="top:15%;left:20%;animation-delay:0s;"></div>
-          <div class="showcase-particle" style="top:35%;left:75%;animation-delay:2s;"></div>
-          <div class="showcase-particle" style="top:65%;left:45%;animation-delay:4s;"></div>
-          <div class="showcase-particle" style="top:25%;left:85%;animation-delay:1s;"></div>
-          <div class="showcase-particle" style="top:80%;left:15%;animation-delay:3s;"></div>
-          <div class="showcase-particle" style="top:50%;left:60%;animation-delay:5s;"></div>
-        </div>
-        <div class="showcase-inner">
-          <span class="showcase-tag">Platform Redesign</span>
-          <h3 class="showcase-title">Nexus AI Command Center</h3>
-          <p class="showcase-desc">End-to-end redesign of a real-time AI operations dashboard serving 50K+ daily active users.</p>
-        </div>
-      </div>
-
-      <div class="showcase-item showcase-item-2 reveal-scale stagger-1">
-        <div class="card-spotlight"></div>
-        <div class="showcase-inner">
-          <span class="showcase-tag">Mobile App</span>
-          <h3 class="showcase-title">Helio Wellness</h3>
-          <p class="showcase-desc">Health tracking that feels human.</p>
-        </div>
-      </div>
-
-      <div class="showcase-item showcase-item-3 reveal-scale stagger-2">
-        <div class="card-spotlight"></div>
-        <div class="showcase-inner">
-          <span class="showcase-tag">Brand Identity</span>
-          <h3 class="showcase-title">Praxis Labs</h3>
-          <p class="showcase-desc">Zero to launch in 8 weeks.</p>
-        </div>
-      </div>
-
-      <div class="showcase-item showcase-item-4 reveal-scale stagger-3">
-        <div class="card-spotlight"></div>
-        <div class="showcase-inner">
-          <span class="showcase-tag">E-Commerce</span>
-          <h3 class="showcase-title">Arcform Store</h3>
-        </div>
-      </div>
-
-      <div class="showcase-item showcase-item-5 reveal-scale stagger-4">
-        <div class="card-spotlight"></div>
-        <div class="showcase-inner">
-          <span class="showcase-tag">SaaS Platform</span>
-          <h3 class="showcase-title">Vertex Analytics</h3>
-        </div>
-      </div>
-
-      <div class="showcase-item showcase-item-6 reveal-scale stagger-5">
-        <div class="card-spotlight"></div>
-        <div class="showcase-inner">
-          <span class="showcase-tag">Web3</span>
-          <h3 class="showcase-title">Luminar DAO</h3>
-        </div>
-      </div>
-    </div>
+  <div class="hscroll-hint">
+    Drag to explore
+    <span class="hscroll-hint-arrow">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </span>
   </div>
 </section>
 
 <!-- BIG STATEMENT -->
 <section class="statement-section">
   <div class="statement-glow"></div>
+  <div class="statement-bg-text" data-parallax="-0.1">BUILD</div>
   <div class="statement-text reveal">
     <span class="statement-muted">We don't follow trends.</span> We set the standard <span class="statement-accent">for what comes next.</span>
   </div>
@@ -1646,54 +2021,79 @@ body::before {
   <div class="container">
     <div class="metrics-grid">
       <div class="metric-item reveal">
-        <div class="metric-number" data-target="120" data-suffix="+">0</div>
+        <div class="metric-number" data-target="127" data-suffix="+">0</div>
         <div class="metric-label">Products shipped</div>
+        <div class="metric-context">since 2018</div>
       </div>
       <div class="metric-item reveal stagger-1">
         <div class="metric-number" data-target="98" data-suffix="%">0</div>
         <div class="metric-label">Client retention</div>
+        <div class="metric-context">come back for project #2</div>
       </div>
       <div class="metric-item reveal stagger-2">
-        <div class="metric-number" data-target="40" data-suffix="+">0</div>
-        <div class="metric-label">Engineers &amp; designers</div>
+        <div class="metric-number" data-target="12" data-suffix="">0</div>
+        <div class="metric-label">Senior specialists</div>
+        <div class="metric-context">avg 9 yrs experience</div>
       </div>
       <div class="metric-item reveal stagger-3">
         <div class="metric-number" data-target="8" data-suffix="">0</div>
         <div class="metric-label">Years in the arena</div>
+        <div class="metric-context">San Francisco + London</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- PROCESS -->
+<!-- PROCESS — Vertical timeline -->
 <section class="section" id="process">
   <div class="container">
     <div class="reveal">
       <p class="section-eyebrow">How we work</p>
       <h2 class="section-title">Three phases.<br>No wasted motion.</h2>
-      <p class="section-subtitle">A process refined over hundreds of engagements. Fast, transparent, and built for results.</p>
+      <p class="section-subtitle">A process refined over 127 engagements. Each phase has a clear deliverable and exit gate.</p>
     </div>
 
-    <div class="process-grid">
+    <div class="process-timeline">
       <div class="process-step reveal stagger-1">
-        <div class="card-spotlight"></div>
-        <div class="process-number">01</div>
-        <h3>Discover</h3>
-        <p>We immerse in your business, users, and market. Every assumption gets tested. Every insight gets documented. The strategy emerges from truth, not opinion.</p>
+        <div class="process-marker"><div class="process-dot"></div></div>
+        <div class="process-content">
+          <div class="process-number">Phase 01 &mdash; Week 1-2</div>
+          <h3>Discover</h3>
+          <p>We interview stakeholders, audit existing systems, and stress-test assumptions against market data. The output is a strategy document that becomes the contract between teams.</p>
+          <div class="process-deliverables">
+            <span class="process-tag">User research</span>
+            <span class="process-tag">Competitive audit</span>
+            <span class="process-tag">Technical assessment</span>
+          </div>
+        </div>
       </div>
 
       <div class="process-step reveal stagger-2">
-        <div class="card-spotlight"></div>
-        <div class="process-number">02</div>
-        <h3>Design</h3>
-        <p>Rapid prototyping with relentless iteration. We design in the browser, test with real users, and refine until every interaction feels effortless.</p>
+        <div class="process-marker"><div class="process-dot"></div></div>
+        <div class="process-content">
+          <div class="process-number">Phase 02 &mdash; Week 3-6</div>
+          <h3>Design + Prototype</h3>
+          <p>We design in code, not Figma. Working prototypes tested with real users every week. Iteration cycles measured in days, not sprints.</p>
+          <div class="process-deliverables">
+            <span class="process-tag">Interactive prototypes</span>
+            <span class="process-tag">Design system</span>
+            <span class="process-tag">User testing</span>
+          </div>
+        </div>
       </div>
 
       <div class="process-step reveal stagger-3">
-        <div class="card-spotlight"></div>
-        <div class="process-number">03</div>
-        <h3>Deliver</h3>
-        <p>Production-grade engineering with rigorous QA. We ship fast, monitor closely, and optimize based on real-world data -- not assumptions.</p>
+        <div class="process-marker"><div class="process-dot"></div></div>
+        <div class="process-content">
+          <div class="process-number">Phase 03 &mdash; Week 7-12</div>
+          <h3>Engineer + Ship</h3>
+          <p>Production code from day one. CI/CD pipelines, monitoring, and load testing baked in. You get a product that's ready for traffic, not a demo that needs six more months.</p>
+          <div class="process-deliverables">
+            <span class="process-tag">Production deployment</span>
+            <span class="process-tag">Monitoring</span>
+            <span class="process-tag">Load testing</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1702,7 +2102,7 @@ body::before {
 <!-- TESTIMONIALS -->
 <section class="section testimonials-section" id="testimonials">
   <div class="container">
-    <div class="showcase-header">
+    <div class="hscroll-header" style="margin-bottom:40px;">
       <p class="section-eyebrow reveal">Testimonials</p>
       <h2 class="section-title reveal stagger-1">Words from the<br>teams we've built for.</h2>
     </div>
@@ -1713,132 +2113,85 @@ body::before {
       <p class="testimonial-text">Ko completely transformed how we think about product. They didn't just build our app -- they redefined our entire user experience."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: var(--gradient-1);">S</div>
-        <div>
-          <div class="testimonial-name">Sarah Chen</div>
-          <div class="testimonial-role">CEO, Nexus AI</div>
-        </div>
+        <div><div class="testimonial-name">Sarah Chen</div><div class="testimonial-role">CEO, Nexus AI</div></div>
       </div>
     </div>
-
     <div class="testimonial-card">
       <p class="testimonial-text">Their engineering team is world-class. Prototype to production in record time, zero compromise on quality."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">M</div>
-        <div>
-          <div class="testimonial-name">Marcus Rivera</div>
-          <div class="testimonial-role">CTO, Helio Health</div>
-        </div>
+        <div><div class="testimonial-name">Marcus Rivera</div><div class="testimonial-role">CTO, Helio Health</div></div>
       </div>
     </div>
-
     <div class="testimonial-card">
       <p class="testimonial-text">Working with Ko felt like adding 10 senior engineers to our team overnight. The attention to detail is unmatched."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">A</div>
-        <div>
-          <div class="testimonial-name">Aisha Patel</div>
-          <div class="testimonial-role">VP Product, Vertex</div>
-        </div>
+        <div><div class="testimonial-name">Aisha Patel</div><div class="testimonial-role">VP Product, Vertex</div></div>
       </div>
     </div>
-
     <div class="testimonial-card">
       <p class="testimonial-text">They turned our messy Figma files into a beautiful, performant web app. Seamless collaboration from day one."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #10b981, #34d399);">J</div>
-        <div>
-          <div class="testimonial-name">James Wright</div>
-          <div class="testimonial-role">Founder, Praxis Labs</div>
-        </div>
+        <div><div class="testimonial-name">James Wright</div><div class="testimonial-role">Founder, Praxis Labs</div></div>
       </div>
     </div>
-
     <div class="testimonial-card">
       <p class="testimonial-text">Ko doesn't deliver projects. They deliver transformation. Our conversion rates tripled after their redesign."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">L</div>
-        <div>
-          <div class="testimonial-name">Lisa Nakamura</div>
-          <div class="testimonial-role">CMO, Arcform</div>
-        </div>
+        <div><div class="testimonial-name">Lisa Nakamura</div><div class="testimonial-role">CMO, Arcform</div></div>
       </div>
     </div>
-
     <div class="testimonial-card">
       <p class="testimonial-text">The best studio we've ever partnered with. They understand product at a molecular level and genuinely care about outcomes."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">D</div>
-        <div>
-          <div class="testimonial-name">David Kim</div>
-          <div class="testimonial-role">Head of Design, Luminar</div>
-        </div>
+        <div><div class="testimonial-name">David Kim</div><div class="testimonial-role">Head of Design, Luminar</div></div>
       </div>
     </div>
-
     <!-- Duplicated for seamless loop -->
     <div class="testimonial-card">
       <p class="testimonial-text">Ko completely transformed how we think about product. They didn't just build our app -- they redefined our entire user experience."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: var(--gradient-1);">S</div>
-        <div>
-          <div class="testimonial-name">Sarah Chen</div>
-          <div class="testimonial-role">CEO, Nexus AI</div>
-        </div>
+        <div><div class="testimonial-name">Sarah Chen</div><div class="testimonial-role">CEO, Nexus AI</div></div>
       </div>
     </div>
-
     <div class="testimonial-card">
       <p class="testimonial-text">Their engineering team is world-class. Prototype to production in record time, zero compromise on quality."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">M</div>
-        <div>
-          <div class="testimonial-name">Marcus Rivera</div>
-          <div class="testimonial-role">CTO, Helio Health</div>
-        </div>
+        <div><div class="testimonial-name">Marcus Rivera</div><div class="testimonial-role">CTO, Helio Health</div></div>
       </div>
     </div>
-
     <div class="testimonial-card">
       <p class="testimonial-text">Working with Ko felt like adding 10 senior engineers to our team overnight. The attention to detail is unmatched."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">A</div>
-        <div>
-          <div class="testimonial-name">Aisha Patel</div>
-          <div class="testimonial-role">VP Product, Vertex</div>
-        </div>
+        <div><div class="testimonial-name">Aisha Patel</div><div class="testimonial-role">VP Product, Vertex</div></div>
       </div>
     </div>
-
     <div class="testimonial-card">
       <p class="testimonial-text">They turned our messy Figma files into a beautiful, performant web app. Seamless collaboration from day one."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #10b981, #34d399);">J</div>
-        <div>
-          <div class="testimonial-name">James Wright</div>
-          <div class="testimonial-role">Founder, Praxis Labs</div>
-        </div>
+        <div><div class="testimonial-name">James Wright</div><div class="testimonial-role">Founder, Praxis Labs</div></div>
       </div>
     </div>
-
     <div class="testimonial-card">
       <p class="testimonial-text">Ko doesn't deliver projects. They deliver transformation. Our conversion rates tripled after their redesign."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">L</div>
-        <div>
-          <div class="testimonial-name">Lisa Nakamura</div>
-          <div class="testimonial-role">CMO, Arcform</div>
-        </div>
+        <div><div class="testimonial-name">Lisa Nakamura</div><div class="testimonial-role">CMO, Arcform</div></div>
       </div>
     </div>
-
     <div class="testimonial-card">
       <p class="testimonial-text">The best studio we've ever partnered with. They understand product at a molecular level and genuinely care about outcomes."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">D</div>
-        <div>
-          <div class="testimonial-name">David Kim</div>
-          <div class="testimonial-role">Head of Design, Luminar</div>
-        </div>
+        <div><div class="testimonial-name">David Kim</div><div class="testimonial-role">Head of Design, Luminar</div></div>
       </div>
     </div>
   </div>
@@ -1850,14 +2203,12 @@ body::before {
   <div class="container">
     <div class="cta-content">
       <h2 class="cta-title reveal">Let's build<br>what's next.</h2>
-      <p class="cta-desc reveal stagger-1">Have a vision? We'll make it real. Tell us where you're going and we'll engineer the path.</p>
+      <p class="cta-desc reveal stagger-1">Tell us where you're going. We'll tell you honestly if we're the right team to get you there.</p>
       <div class="reveal stagger-2">
         <span class="magnetic-wrap">
           <a href="mailto:hello@ko.studio" class="btn-glow">
             Get in touch
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 8h10M9 4l4 4-4 4"/>
-            </svg>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
           </a>
         </span>
       </div>
@@ -1876,50 +2227,25 @@ body::before {
         </a>
         <p>The studio behind products that define industries. Strategy, design, and engineering -- unified.</p>
       </div>
-
       <div class="footer-col">
         <h4>Company</h4>
-        <ul>
-          <li><a href="#">About</a></li>
-          <li><a href="#">Careers</a></li>
-          <li><a href="#">Blog</a></li>
-          <li><a href="#">Contact</a></li>
-        </ul>
+        <ul><li><a href="#">About</a></li><li><a href="#">Careers</a></li><li><a href="#">Blog</a></li><li><a href="#">Contact</a></li></ul>
       </div>
-
       <div class="footer-col">
         <h4>Services</h4>
-        <ul>
-          <li><a href="#">Product Strategy</a></li>
-          <li><a href="#">UI/UX Design</a></li>
-          <li><a href="#">Engineering</a></li>
-          <li><a href="#">AI Integration</a></li>
-        </ul>
+        <ul><li><a href="#">Product Strategy</a></li><li><a href="#">UI/UX Design</a></li><li><a href="#">Engineering</a></li><li><a href="#">AI Integration</a></li></ul>
       </div>
-
       <div class="footer-col">
         <h4>Resources</h4>
-        <ul>
-          <li><a href="#">Case Studies</a></li>
-          <li><a href="#">Open Source</a></li>
-          <li><a href="#">Privacy</a></li>
-          <li><a href="#">Terms</a></li>
-        </ul>
+        <ul><li><a href="#">Case Studies</a></li><li><a href="#">Open Source</a></li><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li></ul>
       </div>
     </div>
-
     <div class="footer-bottom">
       <div class="footer-copy">&copy; 2026 Ko Studio. All rights reserved.</div>
       <div class="footer-socials">
-        <a href="#" aria-label="X / Twitter">
-          <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-        </a>
-        <a href="#" aria-label="LinkedIn">
-          <svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-        </a>
-        <a href="#" aria-label="GitHub">
-          <svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-        </a>
+        <a href="#" aria-label="X / Twitter"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+        <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+        <a href="#" aria-label="GitHub"><svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></a>
       </div>
     </div>
   </div>
@@ -1929,6 +2255,15 @@ body::before {
 (function() {
   'use strict';
 
+  // ── SCROLL PROGRESS BAR ──
+  var progressBar = document.getElementById('scrollProgress');
+  function updateProgress() {
+    var scrollTop = window.pageYOffset;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressBar.style.width = progress + '%';
+  }
+
   // ── PAGE LOADER ──
   var loader = document.getElementById('loader');
   var heroSection = document.querySelector('.hero');
@@ -1937,12 +2272,8 @@ body::before {
     setTimeout(function() {
       loader.classList.add('done');
       document.body.classList.remove('loading');
-
-      // Trigger hero text clip reveal
       setTimeout(function() {
         heroSection.classList.add('hero-loaded');
-
-        // Also trigger other hero reveals
         document.querySelectorAll('.hero-content .reveal').forEach(function(el) {
           el.classList.add('visible');
         });
@@ -1965,6 +2296,7 @@ body::before {
           navbar.classList.remove('hidden');
         }
         lastScroll = currentScroll;
+        updateProgress();
         ticking = false;
       });
       ticking = true;
@@ -1987,7 +2319,6 @@ body::before {
     }
   });
 
-  // Close mobile menu on link click
   document.querySelectorAll('.mobile-link').forEach(function(link) {
     link.addEventListener('click', function() {
       menuOpen = false;
@@ -2006,7 +2337,7 @@ body::before {
     });
   }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
 
-  document.querySelectorAll('.reveal, .reveal-scale').forEach(function(el) {
+  document.querySelectorAll('.reveal, .reveal-scale, .reveal-left, .reveal-right').forEach(function(el) {
     revealObserver.observe(el);
   });
 
@@ -2055,12 +2386,9 @@ body::before {
 
   // ── CURSOR SPOTLIGHT ON CARDS ──
   if (window.matchMedia('(hover: hover)').matches) {
-    var spotlightCards = document.querySelectorAll('.capability-card, .showcase-item, .process-step');
-
-    spotlightCards.forEach(function(card) {
+    document.querySelectorAll('.capability-card').forEach(function(card) {
       var spotlight = card.querySelector('.card-spotlight');
       if (!spotlight) return;
-
       card.addEventListener('mousemove', function(e) {
         var rect = card.getBoundingClientRect();
         var x = e.clientX - rect.left;
@@ -2072,20 +2400,15 @@ body::before {
 
   // ── MAGNETIC BUTTONS ──
   if (window.matchMedia('(hover: hover)').matches) {
-    var magneticWraps = document.querySelectorAll('.magnetic-wrap');
-
-    magneticWraps.forEach(function(wrap) {
+    document.querySelectorAll('.magnetic-wrap').forEach(function(wrap) {
       var btn = wrap.querySelector('a, button');
       if (!btn) return;
-
       wrap.addEventListener('mousemove', function(e) {
         var rect = wrap.getBoundingClientRect();
         var x = e.clientX - rect.left - rect.width / 2;
         var y = e.clientY - rect.top - rect.height / 2;
-        var strength = 0.3;
-        btn.style.transform = 'translate(' + (x * strength) + 'px, ' + (y * strength) + 'px)';
+        btn.style.transform = 'translate(' + (x * 0.3) + 'px, ' + (y * 0.3) + 'px)';
       });
-
       wrap.addEventListener('mouseleave', function() {
         btn.style.transform = '';
       });
@@ -2101,6 +2424,49 @@ body::before {
       glows.forEach(function(glow, i) {
         var factor = (i + 1) * 12;
         glow.style.transform = 'translate(calc(-50% + ' + (x * factor) + 'px), ' + (y * factor) + 'px)';
+      });
+    });
+  }
+
+  // ── HORIZONTAL SCROLL DRAG ──
+  var hscrollWrapper = document.getElementById('hscrollWrapper');
+  if (hscrollWrapper) {
+    var isDown = false, startX, scrollLeft;
+
+    hscrollWrapper.addEventListener('mousedown', function(e) {
+      isDown = true;
+      hscrollWrapper.style.cursor = 'grabbing';
+      startX = e.pageX - hscrollWrapper.offsetLeft;
+      scrollLeft = hscrollWrapper.scrollLeft;
+    });
+
+    hscrollWrapper.addEventListener('mouseleave', function() {
+      isDown = false;
+      hscrollWrapper.style.cursor = 'grab';
+    });
+
+    hscrollWrapper.addEventListener('mouseup', function() {
+      isDown = false;
+      hscrollWrapper.style.cursor = 'grab';
+    });
+
+    hscrollWrapper.addEventListener('mousemove', function(e) {
+      if (!isDown) return;
+      e.preventDefault();
+      var x = e.pageX - hscrollWrapper.offsetLeft;
+      hscrollWrapper.scrollLeft = scrollLeft - (x - startX) * 1.5;
+    });
+  }
+
+  // ── PARALLAX ON SCROLL ──
+  var parallaxEls = document.querySelectorAll('[data-parallax]');
+  if (parallaxEls.length > 0) {
+    window.addEventListener('scroll', function() {
+      parallaxEls.forEach(function(el) {
+        var speed = parseFloat(el.getAttribute('data-parallax'));
+        var rect = el.parentElement.getBoundingClientRect();
+        var offset = (rect.top + rect.height / 2 - window.innerHeight / 2) * speed;
+        el.style.transform = 'translate(-50%, calc(-50% + ' + offset + 'px))';
       });
     });
   }
