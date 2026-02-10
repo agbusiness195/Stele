@@ -1580,6 +1580,191 @@ body::before {
 /* ── TOP LINE ── */
 .top-line { height: 2px; background: var(--gradient-1); opacity: 0.6; }
 
+/* ── HERO 3D ORB ── */
+.hero-orb-container {
+  position: absolute;
+  right: 8%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 420px;
+  height: 420px;
+  perspective: 1200px;
+  z-index: 0;
+  opacity: 0;
+  animation: orbFadeIn 2s ease 1.2s forwards;
+}
+
+@keyframes orbFadeIn { to { opacity: 1; } }
+
+.hero-orb {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: orbSpin 25s linear infinite;
+}
+
+@keyframes orbSpin {
+  from { transform: rotateX(-20deg) rotateY(0deg); }
+  to { transform: rotateX(-20deg) rotateY(360deg); }
+}
+
+.orb-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(99,102,241,0.15);
+  transform-style: preserve-3d;
+}
+
+.orb-ring-1 { transform: rotateX(70deg); }
+.orb-ring-2 { transform: rotateX(70deg) rotateY(60deg); }
+.orb-ring-3 { transform: rotateX(70deg) rotateY(120deg); }
+.orb-ring-4 { transform: rotateX(70deg) rotateY(180deg); border-color: rgba(139,92,246,0.12); }
+.orb-ring-5 { transform: rotateY(90deg); border-color: rgba(168,85,247,0.1); }
+.orb-ring-6 { transform: rotateX(90deg); border-color: rgba(99,102,241,0.08); }
+
+.orb-ring::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 12px rgba(99,102,241,0.6);
+}
+
+.orb-ring-2::after { top: auto; bottom: 0; background: #a855f7; box-shadow: 0 0 12px rgba(168,85,247,0.6); }
+.orb-ring-3::after { top: 50%; left: 0; transform: translateY(-50%); }
+.orb-ring-4::after { display: none; }
+.orb-ring-5::after { top: 50%; right: 0; left: auto; transform: translateY(-50%); background: #8b5cf6; box-shadow: 0 0 12px rgba(139,92,246,0.6); }
+.orb-ring-6::after { display: none; }
+
+.orb-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translate(-50%, -50%);
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 40px 15px rgba(99,102,241,0.15), 0 0 80px 30px rgba(99,102,241,0.05);
+}
+
+.orb-glow {
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99,102,241,0.04) 0%, transparent 70%);
+  filter: blur(40px);
+}
+
+/* ── PROOF SVG LOGOS ── */
+.proof-logo-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.proof-logo-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.proof-logo-mark svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+/* ── SECTION CLIP REVEALS ── */
+.section-reveal {
+  clip-path: inset(6% 3% 6% 3% round 20px);
+  transition: clip-path 1.2s var(--ease);
+}
+
+.section-reveal.revealed {
+  clip-path: inset(0% 0% 0% 0% round 0px);
+}
+
+/* ── CTA MESH ── */
+.cta-mesh {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.cta-mesh-line {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99,102,241,0.15), transparent);
+  width: 100%;
+  animation: meshDrift 12s ease-in-out infinite;
+}
+
+.cta-mesh-line:nth-child(1) { top: 20%; animation-delay: 0s; }
+.cta-mesh-line:nth-child(2) { top: 35%; animation-delay: 2s; opacity: 0.3; }
+.cta-mesh-line:nth-child(3) { top: 50%; animation-delay: 4s; }
+.cta-mesh-line:nth-child(4) { top: 65%; animation-delay: 1s; opacity: 0.3; }
+.cta-mesh-line:nth-child(5) { top: 80%; animation-delay: 3s; }
+
+.cta-mesh-vline {
+  position: absolute;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, rgba(99,102,241,0.08), transparent);
+  animation: meshDrift 15s ease-in-out infinite reverse;
+}
+
+.cta-mesh-vline:nth-child(6) { left: 15%; animation-delay: 0s; }
+.cta-mesh-vline:nth-child(7) { left: 35%; animation-delay: 2s; }
+.cta-mesh-vline:nth-child(8) { left: 55%; animation-delay: 4s; }
+.cta-mesh-vline:nth-child(9) { left: 75%; animation-delay: 1s; }
+.cta-mesh-vline:nth-child(10) { left: 90%; animation-delay: 3s; }
+
+@keyframes meshDrift {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(20px); opacity: 1; }
+}
+
+/* ── TESTIMONIAL PROJECT BADGE ── */
+.testimonial-project {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.1);
+  border-radius: 980px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+  font-style: normal;
+}
+
+@media (max-width: 1024px) {
+  .hero-orb-container {
+    width: 280px;
+    height: 280px;
+    right: 4%;
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-orb-container { display: none; }
+}
+
 /* ── CUSTOM CURSOR ── */
 .cursor-dot {
   position: fixed;
@@ -1822,18 +2007,32 @@ body::before {
     <div class="hero-shape hero-shape-6" style="--r:25deg;"></div>
   </div>
 
+  <!-- 3D ORB -->
+  <div class="hero-orb-container">
+    <div class="orb-glow"></div>
+    <div class="hero-orb">
+      <div class="orb-ring orb-ring-1"></div>
+      <div class="orb-ring orb-ring-2"></div>
+      <div class="orb-ring orb-ring-3"></div>
+      <div class="orb-ring orb-ring-4"></div>
+      <div class="orb-ring orb-ring-5"></div>
+      <div class="orb-ring orb-ring-6"></div>
+      <div class="orb-core"></div>
+    </div>
+  </div>
+
   <div class="hero-content">
     <div class="hero-eyebrow reveal">
       <span class="hero-eyebrow-dot"></span>
       Accepting new partners for 2026
     </div>
     <h1 class="hero-title">
-      <span class="hero-title-line"><span class="hero-title-line-inner">We don't build</span></span>
-      <span class="hero-title-line"><span class="hero-title-line-inner"><span class="hero-title-gradient">websites.</span></span></span>
-      <span class="hero-title-line"><span class="hero-title-line-inner">We build empires.</span></span>
+      <span class="hero-title-line"><span class="hero-title-line-inner">Ship the product.</span></span>
+      <span class="hero-title-line"><span class="hero-title-line-inner"><span class="hero-title-gradient">Capture</span> the</span></span>
+      <span class="hero-title-line"><span class="hero-title-line-inner">market.</span></span>
     </h1>
     <p class="hero-description reveal stagger-2">
-      Strategy, design, and engineering from a single team. Twelve senior specialists, no handoffs, no dilution.
+      Twelve senior specialists — strategy, design, engineering — working as one team. No handoffs. No dilution. Products shipped in 12 weeks or less.
     </p>
     <div class="hero-actions reveal stagger-3">
       <span class="magnetic-wrap">
@@ -1854,12 +2053,12 @@ body::before {
   <div class="container">
     <p class="proof-label reveal">Trusted by industry leaders</p>
     <div class="proof-logos reveal stagger-1">
-      <span class="proof-logo">Vertex</span>
-      <span class="proof-logo">Luminar</span>
-      <span class="proof-logo">Praxis</span>
-      <span class="proof-logo">Nexus AI</span>
-      <span class="proof-logo">Helio</span>
-      <span class="proof-logo">Arcform</span>
+      <span class="proof-logo proof-logo-icon"><span class="proof-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12,2 22,8 22,16 12,22 2,16 2,8"/></svg></span>Vertex</span>
+      <span class="proof-logo proof-logo-icon"><span class="proof-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 3 L15 12 L12 21"/><path d="M12 3 L9 12 L12 21"/></svg></span>Luminar</span>
+      <span class="proof-logo proof-logo-icon"><span class="proof-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg></span>Praxis</span>
+      <span class="proof-logo proof-logo-icon"><span class="proof-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="10"/></svg></span>Nexus AI</span>
+      <span class="proof-logo proof-logo-icon"><span class="proof-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 C6 2 2 6 2 12 C2 18 12 22 12 22 C12 22 22 18 22 12 C22 6 18 2 12 2Z"/></svg></span>Helio</span>
+      <span class="proof-logo proof-logo-icon"><span class="proof-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4 L20 4 L16 20 L8 20 Z"/></svg></span>Arcform</span>
     </div>
   </div>
 </section>
@@ -1889,8 +2088,8 @@ body::before {
       <div class="capabilities-sticky">
         <div class="reveal">
           <p class="section-eyebrow">What we do</p>
-          <h2 class="section-title">Six disciplines.<br>One obsession.</h2>
-          <p class="section-subtitle">Every capability exists to serve one goal: products that capture markets and hold them.</p>
+          <h2 class="section-title">Six disciplines.<br>One delivery team.</h2>
+          <p class="section-subtitle">No agency layers. Each capability is staffed by a senior specialist who ships, not a coordinator who delegates.</p>
         </div>
       </div>
 
@@ -1972,7 +2171,7 @@ body::before {
 </section>
 
 <!-- SHOWCASE — Horizontal scroll with device mockups -->
-<section class="hscroll-section" id="work">
+<section class="hscroll-section section-reveal" id="work">
   <div class="hscroll-header">
     <p class="section-eyebrow reveal">Selected Work</p>
     <h2 class="section-title reveal stagger-1">Products that<br>moved markets.</h2>
@@ -2200,22 +2399,18 @@ body::before {
 </section>
 
 <!-- BIG STATEMENT -->
-<section class="statement-section">
+<section class="statement-section section-reveal">
   <div class="statement-glow"></div>
   <div class="statement-bg-text" data-parallax="-0.1">BUILD</div>
   <div class="statement-text" id="statementText">
-    <span class="statement-word statement-muted" style="transition-delay:0s;">We</span>
-    <span class="statement-word statement-muted" style="transition-delay:0.05s;">don't</span>
-    <span class="statement-word statement-muted" style="transition-delay:0.1s;">follow</span>
-    <span class="statement-word statement-muted" style="transition-delay:0.15s;">trends.</span>
-    <span class="statement-word" style="transition-delay:0.25s;">We</span>
-    <span class="statement-word" style="transition-delay:0.3s;">set</span>
-    <span class="statement-word" style="transition-delay:0.35s;">the</span>
-    <span class="statement-word" style="transition-delay:0.4s;">standard</span>
-    <span class="statement-word statement-accent" style="transition-delay:0.5s;">for</span>
-    <span class="statement-word statement-accent" style="transition-delay:0.55s;">what</span>
-    <span class="statement-word statement-accent" style="transition-delay:0.6s;">comes</span>
-    <span class="statement-word statement-accent" style="transition-delay:0.65s;">next.</span>
+    <span class="statement-word statement-muted" style="transition-delay:0s;">127</span>
+    <span class="statement-word statement-muted" style="transition-delay:0.05s;">products</span>
+    <span class="statement-word statement-muted" style="transition-delay:0.1s;">shipped.</span>
+    <span class="statement-word" style="transition-delay:0.2s;">Every</span>
+    <span class="statement-word" style="transition-delay:0.25s;">one</span>
+    <span class="statement-word" style="transition-delay:0.3s;">still</span>
+    <span class="statement-word statement-accent" style="transition-delay:0.4s;">generating</span>
+    <span class="statement-word statement-accent" style="transition-delay:0.45s;">revenue.</span>
   </div>
 </section>
 
@@ -2313,42 +2508,48 @@ body::before {
 
   <div class="testimonials-track" id="testimonialTrack">
     <div class="testimonial-card">
-      <p class="testimonial-text">Ko completely transformed how we think about product. They didn't just build our app -- they redefined our entire user experience."</p>
+      <div class="testimonial-project">Nexus AI Command Center</div>
+      <p class="testimonial-text">Support tickets dropped 67% the month after launch. Our ops team went from firefighting dashboards to actually using them. Ko rebuilt the entire information architecture in 10 weeks."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: var(--gradient-1);">S</div>
         <div><div class="testimonial-name">Sarah Chen</div><div class="testimonial-role">CEO, Nexus AI</div></div>
       </div>
     </div>
     <div class="testimonial-card">
-      <p class="testimonial-text">Their engineering team is world-class. Prototype to production in record time, zero compromise on quality."</p>
+      <div class="testimonial-project">Helio Wellness App</div>
+      <p class="testimonial-text">We went from concept to 400K downloads in 90 days. Their team wrote the health data pipeline in Rust — our App Store latency reviews went from 2 stars to 4.8 overnight."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">M</div>
         <div><div class="testimonial-name">Marcus Rivera</div><div class="testimonial-role">CTO, Helio Health</div></div>
       </div>
     </div>
     <div class="testimonial-card">
-      <p class="testimonial-text">Working with Ko felt like adding 10 senior engineers to our team overnight. The attention to detail is unmatched."</p>
+      <div class="testimonial-project">Vertex Analytics</div>
+      <p class="testimonial-text">They deployed our analytics engine to 14 edge regions in under 8 weeks. Sub-second queries on 2 billion events. We'd been trying to do that internally for a year."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">A</div>
         <div><div class="testimonial-name">Aisha Patel</div><div class="testimonial-role">VP Product, Vertex</div></div>
       </div>
     </div>
     <div class="testimonial-card">
-      <p class="testimonial-text">They turned our messy Figma files into a beautiful, performant web app. Seamless collaboration from day one."</p>
+      <div class="testimonial-project">Praxis Brand System</div>
+      <p class="testimonial-text">240 components, full token system, Storybook docs — delivered in 8 weeks. Our internal team picked it up on day one with zero onboarding. That never happens."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #10b981, #34d399);">J</div>
         <div><div class="testimonial-name">James Wright</div><div class="testimonial-role">Founder, Praxis Labs</div></div>
       </div>
     </div>
     <div class="testimonial-card">
-      <p class="testimonial-text">Ko doesn't deliver projects. They deliver transformation. Our conversion rates tripled after their redesign."</p>
+      <div class="testimonial-project">Arcform Store</div>
+      <p class="testimonial-text">Conversion went from 1.2% to 5.3% after the rebuild. They nailed the LCP at 0.8 seconds and added 3D product previews without touching our page speed score."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">L</div>
         <div><div class="testimonial-name">Lisa Nakamura</div><div class="testimonial-role">CMO, Arcform</div></div>
       </div>
     </div>
     <div class="testimonial-card">
-      <p class="testimonial-text">The best studio we've ever partnered with. They understand product at a molecular level and genuinely care about outcomes."</p>
+      <div class="testimonial-project">Luminar Design System</div>
+      <p class="testimonial-text">We hired Ko for a redesign. They audited our existing system and told us 60% of it was solid — saved us three months of unnecessary work. That honesty is rare."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">D</div>
         <div><div class="testimonial-name">David Kim</div><div class="testimonial-role">Head of Design, Luminar</div></div>
@@ -2356,42 +2557,48 @@ body::before {
     </div>
     <!-- Duplicated for seamless loop -->
     <div class="testimonial-card">
-      <p class="testimonial-text">Ko completely transformed how we think about product. They didn't just build our app -- they redefined our entire user experience."</p>
+      <div class="testimonial-project">Nexus AI Command Center</div>
+      <p class="testimonial-text">Support tickets dropped 67% the month after launch. Our ops team went from firefighting dashboards to actually using them. Ko rebuilt the entire information architecture in 10 weeks."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: var(--gradient-1);">S</div>
         <div><div class="testimonial-name">Sarah Chen</div><div class="testimonial-role">CEO, Nexus AI</div></div>
       </div>
     </div>
     <div class="testimonial-card">
-      <p class="testimonial-text">Their engineering team is world-class. Prototype to production in record time, zero compromise on quality."</p>
+      <div class="testimonial-project">Helio Wellness App</div>
+      <p class="testimonial-text">We went from concept to 400K downloads in 90 days. Their team wrote the health data pipeline in Rust — our App Store latency reviews went from 2 stars to 4.8 overnight."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">M</div>
         <div><div class="testimonial-name">Marcus Rivera</div><div class="testimonial-role">CTO, Helio Health</div></div>
       </div>
     </div>
     <div class="testimonial-card">
-      <p class="testimonial-text">Working with Ko felt like adding 10 senior engineers to our team overnight. The attention to detail is unmatched."</p>
+      <div class="testimonial-project">Vertex Analytics</div>
+      <p class="testimonial-text">They deployed our analytics engine to 14 edge regions in under 8 weeks. Sub-second queries on 2 billion events. We'd been trying to do that internally for a year."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">A</div>
         <div><div class="testimonial-name">Aisha Patel</div><div class="testimonial-role">VP Product, Vertex</div></div>
       </div>
     </div>
     <div class="testimonial-card">
-      <p class="testimonial-text">They turned our messy Figma files into a beautiful, performant web app. Seamless collaboration from day one."</p>
+      <div class="testimonial-project">Praxis Brand System</div>
+      <p class="testimonial-text">240 components, full token system, Storybook docs — delivered in 8 weeks. Our internal team picked it up on day one with zero onboarding. That never happens."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #10b981, #34d399);">J</div>
         <div><div class="testimonial-name">James Wright</div><div class="testimonial-role">Founder, Praxis Labs</div></div>
       </div>
     </div>
     <div class="testimonial-card">
-      <p class="testimonial-text">Ko doesn't deliver projects. They deliver transformation. Our conversion rates tripled after their redesign."</p>
+      <div class="testimonial-project">Arcform Store</div>
+      <p class="testimonial-text">Conversion went from 1.2% to 5.3% after the rebuild. They nailed the LCP at 0.8 seconds and added 3D product previews without touching our page speed score."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">L</div>
         <div><div class="testimonial-name">Lisa Nakamura</div><div class="testimonial-role">CMO, Arcform</div></div>
       </div>
     </div>
     <div class="testimonial-card">
-      <p class="testimonial-text">The best studio we've ever partnered with. They understand product at a molecular level and genuinely care about outcomes."</p>
+      <div class="testimonial-project">Luminar Design System</div>
+      <p class="testimonial-text">We hired Ko for a redesign. They audited our existing system and told us 60% of it was solid — saved us three months of unnecessary work. That honesty is rare."</p>
       <div class="testimonial-author">
         <div class="testimonial-avatar" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">D</div>
         <div><div class="testimonial-name">David Kim</div><div class="testimonial-role">Head of Design, Luminar</div></div>
@@ -2401,12 +2608,24 @@ body::before {
 </section>
 
 <!-- CTA -->
-<section class="cta-section" id="contact">
+<section class="cta-section section-reveal" id="contact">
   <div class="cta-glow"></div>
+  <div class="cta-mesh">
+    <div class="cta-mesh-line"></div>
+    <div class="cta-mesh-line"></div>
+    <div class="cta-mesh-line"></div>
+    <div class="cta-mesh-line"></div>
+    <div class="cta-mesh-line"></div>
+    <div class="cta-mesh-vline"></div>
+    <div class="cta-mesh-vline"></div>
+    <div class="cta-mesh-vline"></div>
+    <div class="cta-mesh-vline"></div>
+    <div class="cta-mesh-vline"></div>
+  </div>
   <div class="container">
     <div class="cta-content">
-      <h2 class="cta-title reveal">Let's build<br>what's next.</h2>
-      <p class="cta-desc reveal stagger-1">Tell us where you're going. We'll tell you honestly if we're the right team to get you there.</p>
+      <h2 class="cta-title reveal">Your product.<br>Our obsession.</h2>
+      <p class="cta-desc reveal stagger-1">Send a brief. We'll respond within 24 hours with an honest assessment — including whether we're the right fit.</p>
       <div class="reveal stagger-2">
         <span class="magnetic-wrap">
           <a href="mailto:hello@ko.studio" class="btn-glow">
@@ -2734,6 +2953,20 @@ body::before {
         el.style.transform = 'translate(-50%, calc(-50% + ' + offset + 'px))';
       });
     });
+  }
+
+  // ── SECTION CLIP-PATH REVEALS ──
+  var sectionRevealEls = document.querySelectorAll('.section-reveal');
+  if (sectionRevealEls.length > 0) {
+    var sectionObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          sectionObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.05, rootMargin: '0px 0px -80px 0px' });
+    sectionRevealEls.forEach(function(el) { sectionObserver.observe(el); });
   }
 
   // ── STATEMENT WORD-BY-WORD REVEAL ──
