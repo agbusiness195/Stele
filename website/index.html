@@ -3,37 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ko — Build What Matters</title>
-<meta name="description" content="Ko helps ambitious teams ship faster, think clearer, and build products that last. Strategy, design, and engineering — unified.">
+<title>Ko — The Future, Engineered</title>
+<meta name="description" content="Ko is the studio behind the products that define industries. Strategy. Design. Engineering. One team, zero compromise.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --white: #ffffff;
-  --off-white: #fafafa;
-  --light-gray: #f5f5f7;
-  --mid-gray: #e8e8ed;
-  --text-primary: #1d1d1f;
-  --text-secondary: #6e6e73;
-  --text-muted: #a1a1a6;
-  --accent: #0071e3;
-  --accent-hover: #0077ED;
-  --accent-light: rgba(0, 113, 227, 0.08);
-  --gradient-start: #667eea;
-  --gradient-end: #764ba2;
-  --warm-gradient-start: #f093fb;
-  --warm-gradient-end: #f5576c;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 20px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
-  --shadow-lg: 0 10px 40px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
-  --shadow-xl: 0 20px 60px rgba(0,0,0,0.1), 0 8px 24px rgba(0,0,0,0.06);
-  --radius-sm: 12px;
-  --radius-md: 16px;
+  --bg: #050505;
+  --bg-elevated: #0a0a0a;
+  --bg-card: #111111;
+  --bg-card-hover: #161616;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --text-primary: #f5f5f7;
+  --text-secondary: rgba(255,255,255,0.55);
+  --text-muted: rgba(255,255,255,0.3);
+  --accent: #6366f1;
+  --accent-2: #8b5cf6;
+  --accent-glow: rgba(99,102,241,0.15);
+  --gradient-1: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+  --gradient-2: linear-gradient(135deg, #3b82f6, #6366f1);
+  --gradient-text: linear-gradient(135deg, #c7d2fe, #e0e7ff, #f5f3ff, #ede9fe, #c7d2fe);
+  --radius: 16px;
   --radius-lg: 24px;
   --radius-xl: 32px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 html {
@@ -43,36 +41,43 @@ html {
 }
 
 body {
-  background: var(--white);
+  background: var(--bg);
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-weight: 400;
   line-height: 1.6;
   overflow-x: hidden;
 }
 
-/* ── SELECTION ── */
 ::selection {
-  background: var(--accent-light);
-  color: var(--accent);
+  background: var(--accent);
+  color: white;
 }
 
-/* ── SMOOTH CURSOR ── */
-.cursor-glow {
+/* ── GLOBAL NOISE TEXTURE ── */
+body::before {
+  content: '';
   position: fixed;
-  width: 500px;
-  height: 500px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(0,113,227,0.04) 0%, transparent 70%);
+  inset: 0;
+  z-index: 9999;
   pointer-events: none;
-  z-index: 0;
-  transform: translate(-50%, -50%);
-  transition: left 0.3s ease-out, top 0.3s ease-out;
-  display: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
 }
 
-@media (hover: hover) {
-  .cursor-glow { display: block; }
+/* ── CONTAINER ── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.container-lg {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
 /* ── NAVBAR ── */
@@ -83,101 +88,75 @@ body {
   right: 0;
   z-index: 1000;
   padding: 0 48px;
-  height: 72px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(5, 5, 5, 0.8);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease;
+  border-bottom: 1px solid var(--border);
+  transition: transform 0.5s var(--ease);
 }
 
-.navbar.hidden {
-  transform: translateY(-100%);
-}
+.navbar.hidden { transform: translateY(-100%); }
 
 .nav-logo {
-  font-size: 22px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
   font-weight: 700;
-  letter-spacing: -0.02em;
   color: var(--text-primary);
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: 10px;
+  letter-spacing: -0.02em;
 }
 
 .nav-logo-mark {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  background: var(--gradient-1);
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 13px;
   letter-spacing: 0;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 36px;
+  gap: 32px;
   list-style: none;
 }
 
 .nav-links a {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-secondary);
   text-decoration: none;
   transition: color 0.2s ease;
-  position: relative;
+  letter-spacing: 0.01em;
 }
 
-.nav-links a:hover {
-  color: var(--text-primary);
-}
-
-.nav-links a::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: var(--accent);
-  border-radius: 1px;
-  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.nav-links a:hover::after {
-  width: 100%;
-}
+.nav-links a:hover { color: var(--text-primary); }
 
 .nav-cta {
-  padding: 10px 24px;
+  padding: 8px 20px;
   background: var(--text-primary);
-  color: var(--white) !important;
+  color: var(--bg) !important;
   border-radius: 980px;
-  font-size: 14px;
-  font-weight: 500;
-  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  font-size: 13px;
+  font-weight: 600;
+  transition: opacity 0.2s ease !important;
 }
 
-.nav-cta::after { display: none !important; }
+.nav-cta:hover { opacity: 0.85; color: var(--bg) !important; }
 
-.nav-cta:hover {
-  transform: scale(1.04);
-  box-shadow: var(--shadow-md);
-  color: var(--white) !important;
-}
-
-/* Mobile menu button */
 .nav-menu-btn {
   display: none;
   background: none;
@@ -188,61 +167,26 @@ body {
 }
 
 /* ── ANIMATIONS ── */
-.fade-up {
+.reveal {
   opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(60px);
+  transition: opacity 1s var(--ease), transform 1s var(--ease);
 }
 
-.fade-up.visible {
+.reveal.visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-.fade-in {
+.reveal-scale {
   opacity: 0;
-  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: scale(0.95);
+  transition: opacity 1s var(--ease), transform 1s var(--ease);
 }
 
-.fade-in.visible {
-  opacity: 1;
-}
-
-.scale-in {
-  opacity: 0;
-  transform: scale(0.92);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.scale-in.visible {
+.reveal-scale.visible {
   opacity: 1;
   transform: scale(1);
-}
-
-.slide-left {
-  opacity: 0;
-  transform: translateX(-40px);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.slide-left.visible {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.slide-right {
-  opacity: 0;
-  transform: translateX(40px);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.slide-right.visible {
-  opacity: 1;
-  transform: translateX(0);
 }
 
 .stagger-1 { transition-delay: 0.1s; }
@@ -252,52 +196,6 @@ body {
 .stagger-5 { transition-delay: 0.5s; }
 .stagger-6 { transition-delay: 0.6s; }
 
-/* ── CONTAINER ── */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-.container-wide {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-/* ── SECTION ── */
-.section {
-  padding: 140px 0;
-  position: relative;
-}
-
-.section-label {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(36px, 5vw, 64px);
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-  max-width: 700px;
-}
-
-.section-subtitle {
-  font-size: 18px;
-  line-height: 1.7;
-  color: var(--text-secondary);
-  max-width: 560px;
-  margin-top: 20px;
-}
-
 /* ── HERO ── */
 .hero {
   min-height: 100vh;
@@ -306,119 +204,123 @@ body {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  padding-top: 72px;
+  padding-top: 64px;
 }
 
-.hero-bg {
+.hero-glow {
   position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.hero-gradient-orb {
-  position: absolute;
+  width: 800px;
+  height: 800px;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(120px);
   opacity: 0;
-  animation: orbFloat 20s ease-in-out infinite, orbFadeIn 2s ease forwards;
+  animation: glowIn 3s ease forwards;
 }
 
-.orb-1 {
+.hero-glow-1 {
+  background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%);
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.hero-glow-2 {
   width: 600px;
   height: 600px;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.1));
-  top: -10%;
-  right: -5%;
-  animation-delay: 0s;
+  background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+  bottom: -10%;
+  right: -10%;
+  animation-delay: 0.5s;
 }
 
-.orb-2 {
-  width: 400px;
-  height: 400px;
-  background: linear-gradient(135deg, rgba(240, 147, 251, 0.12), rgba(245, 87, 108, 0.08));
-  bottom: 5%;
-  left: -5%;
-  animation-delay: 5s;
-}
-
-.orb-3 {
-  width: 300px;
-  height: 300px;
-  background: linear-gradient(135deg, rgba(0, 113, 227, 0.1), rgba(102, 126, 234, 0.08));
-  top: 40%;
-  left: 30%;
-  animation-delay: 10s;
-}
-
-@keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -30px) scale(1.05); }
-  66% { transform: translate(-20px, 20px) scale(0.95); }
-}
-
-@keyframes orbFadeIn {
+@keyframes glowIn {
   to { opacity: 1; }
+}
+
+/* Grid lines behind hero */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, black 20%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, black 20%, transparent 100%);
 }
 
 .hero-content {
   text-align: center;
   position: relative;
   z-index: 1;
-  max-width: 900px;
+  max-width: 1000px;
   padding: 0 24px;
 }
 
-.hero-badge {
+.hero-eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 20px;
-  background: var(--light-gray);
+  padding: 6px 16px 6px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
   border-radius: 980px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
-  margin-bottom: 40px;
-  border: 1px solid var(--mid-gray);
+  margin-bottom: 48px;
+  letter-spacing: 0.02em;
 }
 
-.hero-badge-dot {
+.hero-eyebrow-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #34c759;
-  animation: pulse 2s ease-in-out infinite;
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34,197,94,0.5);
+  animation: pulse 2.5s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.5); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .hero-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(48px, 8vw, 88px);
-  font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(56px, 10vw, 120px);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
   color: var(--text-primary);
-  margin-bottom: 28px;
+  margin-bottom: 32px;
+}
+
+.hero-title-line {
+  display: block;
 }
 
 .hero-title-gradient {
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  background: var(--gradient-text);
+  background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: shimmer 6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 200% center; }
 }
 
 .hero-description {
-  font-size: clamp(17px, 2vw, 20px);
+  font-size: clamp(16px, 1.8vw, 20px);
   line-height: 1.7;
   color: var(--text-secondary);
-  max-width: 580px;
-  margin: 0 auto 48px;
+  max-width: 520px;
+  margin: 0 auto 56px;
+  font-weight: 400;
 }
 
 .hero-actions {
@@ -432,272 +334,248 @@ body {
 .btn-primary {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 16px 32px;
+  gap: 10px;
+  padding: 14px 32px;
   background: var(--text-primary);
-  color: var(--white);
+  color: var(--bg);
   border-radius: 980px;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   text-decoration: none;
   cursor: pointer;
   border: none;
   transition: transform 0.2s ease, box-shadow 0.3s ease;
+  letter-spacing: -0.01em;
 }
 
 .btn-primary:hover {
-  transform: scale(1.04);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 0 40px rgba(255,255,255,0.1);
 }
 
-.btn-primary svg {
-  transition: transform 0.2s ease;
-}
+.btn-primary svg { transition: transform 0.2s ease; }
+.btn-primary:hover svg { transform: translateX(3px); }
 
-.btn-primary:hover svg {
-  transform: translateX(3px);
-}
-
-.btn-secondary {
+.btn-ghost {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 16px 32px;
+  gap: 10px;
+  padding: 14px 32px;
   background: transparent;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   border-radius: 980px;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  border: 1.5px solid var(--mid-gray);
-  transition: border-color 0.2s ease, background 0.2s ease;
+  border: 1px solid var(--border);
+  transition: border-color 0.2s ease, color 0.2s ease;
+  letter-spacing: -0.01em;
 }
 
-.btn-secondary:hover {
-  border-color: var(--text-muted);
-  background: var(--light-gray);
+.btn-ghost:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
 }
 
-/* Floating shapes in hero */
-.hero-float {
-  position: absolute;
-  z-index: 0;
-  opacity: 0;
-  animation: heroShapeFadeIn 1.5s ease forwards;
-}
-
-@keyframes heroShapeFadeIn {
-  to { opacity: 1; }
-}
-
-.float-shape {
-  animation: floatY 6s ease-in-out infinite;
-}
-
-@keyframes floatY {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(3deg); }
-}
-
-.float-shape-2 {
-  animation: floatY2 8s ease-in-out infinite;
-}
-
-@keyframes floatY2 {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(-2deg); }
-}
-
-/* ── LOGOS / SOCIAL PROOF ── */
-.logos-section {
+/* ── SOCIAL PROOF ── */
+.proof-section {
   padding: 80px 0;
-  border-top: 1px solid var(--mid-gray);
-  border-bottom: 1px solid var(--mid-gray);
-  background: var(--off-white);
+  border-top: 1px solid var(--border);
 }
 
-.logos-label {
+.proof-label {
   text-align: center;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--text-muted);
   margin-bottom: 40px;
 }
 
-.logos-grid {
+.proof-logos {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 60px;
+  gap: 64px;
   flex-wrap: wrap;
-  opacity: 0.4;
 }
 
-.logo-item {
-  font-size: 22px;
-  font-weight: 700;
+.proof-logo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--text-primary);
+  opacity: 0.2;
   transition: opacity 0.3s ease;
   cursor: default;
   user-select: none;
 }
 
-.logo-item:hover {
-  opacity: 0.6;
+.proof-logo:hover { opacity: 0.4; }
+
+/* ── SECTION SYSTEM ── */
+.section {
+  padding: 160px 0;
+  position: relative;
 }
 
-/* ── FEATURES / SERVICES ── */
-.features-section {
-  background: var(--white);
+.section-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
 }
 
-.features-header {
-  text-align: center;
-  margin-bottom: 80px;
+.section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: var(--text-primary);
+  max-width: 700px;
 }
 
-.features-header .section-title {
-  margin: 0 auto;
+.section-subtitle {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  max-width: 480px;
+  margin-top: 24px;
 }
 
-.features-header .section-subtitle {
-  margin: 20px auto 0;
-}
-
-.features-grid {
+/* ── CAPABILITIES ── */
+.capabilities-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-
-.feature-card {
-  padding: 40px 32px;
+  gap: 1px;
+  background: var(--border);
   border-radius: var(--radius-lg);
-  background: var(--off-white);
-  border: 1px solid var(--mid-gray);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.3s ease;
-  position: relative;
   overflow: hidden;
+  margin-top: 80px;
 }
 
-.feature-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.03), rgba(118, 75, 162, 0.03));
-  opacity: 0;
-  transition: opacity 0.4s ease;
+.capability-card {
+  padding: 48px 40px;
+  background: var(--bg-elevated);
+  transition: background 0.4s ease;
+  position: relative;
 }
 
-.feature-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-  border-color: rgba(102, 126, 234, 0.2);
+.capability-card:hover {
+  background: var(--bg-card);
 }
 
-.feature-card:hover::before {
-  opacity: 1;
-}
-
-.feature-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-sm);
+.capability-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(99,102,241,0.08);
+  border: 1px solid rgba(99,102,241,0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 24px;
-  position: relative;
+  margin-bottom: 28px;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
-.feature-icon-1 { background: linear-gradient(135deg, #667eea20, #764ba220); }
-.feature-icon-2 { background: linear-gradient(135deg, #f093fb20, #f5576c20); }
-.feature-icon-3 { background: linear-gradient(135deg, #4facfe20, #00f2fe20); }
-.feature-icon-4 { background: linear-gradient(135deg, #43e97b20, #38f9d720); }
-.feature-icon-5 { background: linear-gradient(135deg, #fa709a20, #fee14020); }
-.feature-icon-6 { background: linear-gradient(135deg, #a18cd120, #fbc2eb20); }
+.capability-card:hover .capability-icon {
+  background: rgba(99,102,241,0.12);
+  border-color: rgba(99,102,241,0.2);
+}
 
-.feature-card h3 {
+.capability-card h3 {
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 12px;
   color: var(--text-primary);
-  position: relative;
+  letter-spacing: -0.02em;
 }
 
-.feature-card p {
-  font-size: 15px;
-  line-height: 1.6;
+.capability-card p {
+  font-size: 14px;
+  line-height: 1.7;
   color: var(--text-secondary);
-  position: relative;
 }
 
-/* ── SHOWCASE / BENTO GRID ── */
-.showcase-section {
-  background: var(--off-white);
+/* ── SHOWCASE ── */
+.showcase-header {
+  text-align: center;
+  margin-bottom: 80px;
 }
 
-.bento-grid {
+.showcase-header .section-title {
+  margin: 0 auto;
+}
+
+.showcase-header .section-subtitle {
+  margin: 24px auto 0;
+}
+
+.showcase-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  grid-auto-rows: minmax(200px, auto);
-  gap: 20px;
+  gap: 16px;
 }
 
-.bento-item {
+.showcase-item {
   border-radius: var(--radius-lg);
   overflow: hidden;
   position: relative;
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--border);
+  transition: transform 0.6s var(--ease), border-color 0.3s ease;
+  cursor: pointer;
 }
 
-.bento-item:hover {
-  transform: scale(1.02);
-  box-shadow: var(--shadow-xl);
+.showcase-item:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-hover);
 }
 
-.bento-item-1 {
+.showcase-item-1 {
   grid-column: span 7;
   grid-row: span 2;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  min-height: 440px;
+  min-height: 480px;
+  background: linear-gradient(135deg, #1a1040, #2d1b69, #1a1040);
 }
 
-.bento-item-2 {
+.showcase-item-2 {
   grid-column: span 5;
-  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
-  border: 1px solid var(--mid-gray);
+  min-height: 232px;
+  background: var(--bg-card);
 }
 
-.bento-item-3 {
+.showcase-item-3 {
   grid-column: span 5;
-  background: linear-gradient(135deg, #ffecd2, #fcb69f);
+  min-height: 232px;
+  background: linear-gradient(135deg, #1c1917, #292524);
 }
 
-.bento-item-4 {
+.showcase-item-4 {
   grid-column: span 4;
-  background: var(--white);
-  border: 1px solid var(--mid-gray);
+  min-height: 260px;
+  background: var(--bg-card);
 }
 
-.bento-item-5 {
+.showcase-item-5 {
   grid-column: span 4;
-  background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+  min-height: 260px;
+  background: linear-gradient(135deg, #0c1222, #1e293b);
 }
 
-.bento-item-6 {
+.showcase-item-6 {
   grid-column: span 4;
-  background: linear-gradient(135deg, #d4fc79, #96e6a1);
+  min-height: 260px;
+  background: linear-gradient(135deg, #14120d, #1c1a14);
 }
 
-.bento-inner {
+.showcase-inner {
   padding: 40px;
   height: 100%;
   display: flex;
@@ -707,213 +585,170 @@ body {
   z-index: 1;
 }
 
-.bento-item-1 .bento-inner {
+.showcase-item-1 .showcase-inner {
   justify-content: center;
-  align-items: flex-start;
+  padding: 56px;
 }
 
-.bento-tag {
-  font-size: 12px;
+.showcase-tag {
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-bottom: 12px;
-  opacity: 0.7;
+  color: var(--text-muted);
 }
 
-.bento-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(22px, 3vw, 32px);
+.showcase-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(20px, 2.5vw, 28px);
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.02em;
+  color: var(--text-primary);
 }
 
-.bento-item-1 .bento-title {
+.showcase-item-1 .showcase-title {
   font-size: clamp(28px, 4vw, 44px);
-  color: white;
+  letter-spacing: -0.03em;
 }
 
-.bento-item-1 .bento-tag { color: rgba(255,255,255,0.8); }
-.bento-item-1 .bento-desc { color: rgba(255,255,255,0.7); }
-
-.bento-desc {
-  font-size: 15px;
+.showcase-desc {
+  font-size: 14px;
   line-height: 1.6;
   margin-top: 12px;
   color: var(--text-secondary);
 }
 
-.bento-item-5 .bento-title,
-.bento-item-5 .bento-tag { color: var(--text-primary); }
-
-.bento-item-3 .bento-title,
-.bento-item-3 .bento-tag { color: var(--text-primary); }
-
-.bento-item-6 .bento-title,
-.bento-item-6 .bento-tag { color: var(--text-primary); }
-
-/* Animated dots inside bento */
-.bento-dots {
+/* Animated particles inside featured card */
+.showcase-particles {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  z-index: 0;
 }
 
-.bento-dot {
+.showcase-particle {
   position: absolute;
-  width: 4px;
-  height: 4px;
+  width: 2px;
+  height: 2px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.3);
-  animation: floatDot 8s ease-in-out infinite;
+  background: rgba(139,92,246,0.5);
+  animation: floatParticle 10s ease-in-out infinite;
 }
 
-@keyframes floatDot {
-  0%, 100% { transform: translate(0, 0); opacity: 0.3; }
-  50% { transform: translate(20px, -30px); opacity: 0.8; }
+@keyframes floatParticle {
+  0%, 100% { transform: translate(0, 0); opacity: 0.2; }
+  25% { opacity: 0.8; }
+  50% { transform: translate(40px, -50px); opacity: 0.3; }
+  75% { opacity: 0.6; }
 }
 
-/* ── STATS ── */
-.stats-section {
-  background: var(--white);
-  overflow: hidden;
+/* ── METRICS ── */
+.metrics-section {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
-.stats-grid {
+.metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 48px;
-  text-align: center;
+  gap: 0;
 }
 
-.stat-item {
+.metric-item {
+  text-align: center;
+  padding: 80px 24px;
   position: relative;
 }
 
-.stat-number {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(44px, 6vw, 72px);
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 12px;
-}
-
-.stat-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-.stat-divider {
+.metric-item:not(:last-child)::after {
+  content: '';
   position: absolute;
-  right: -24px;
+  right: 0;
   top: 50%;
   transform: translateY(-50%);
   width: 1px;
-  height: 60px;
-  background: var(--mid-gray);
+  height: 48px;
+  background: var(--border);
 }
 
-.stat-item:last-child .stat-divider {
-  display: none;
+.metric-number {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(48px, 6vw, 72px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  margin-bottom: 8px;
 }
 
-/* ── PROCESS / HOW IT WORKS ── */
-.process-section {
-  background: var(--off-white);
+.metric-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
 }
 
+/* ── PROCESS ── */
 .process-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 48px;
+  gap: 1px;
+  background: var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
   margin-top: 80px;
 }
 
 .process-step {
+  padding: 56px 44px;
+  background: var(--bg-elevated);
   position: relative;
-  text-align: center;
+  transition: background 0.4s ease;
+}
+
+.process-step:hover {
+  background: var(--bg-card);
 }
 
 .process-number {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: var(--white);
-  border: 2px solid var(--mid-gray);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 auto 28px;
-  position: relative;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.process-step:hover .process-number {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 6px var(--accent-light);
-}
-
-.process-connector {
-  position: absolute;
-  top: 32px;
-  left: calc(50% + 40px);
-  width: calc(100% - 80px);
-  height: 2px;
-  background: var(--mid-gray);
-}
-
-.process-connector::after {
-  content: '';
-  position: absolute;
-  top: -3px;
-  right: 0;
-  width: 8px;
-  height: 8px;
-  border-top: 2px solid var(--mid-gray);
-  border-right: 2px solid var(--mid-gray);
-  transform: rotate(45deg);
-}
-
-.process-step:last-child .process-connector {
-  display: none;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.15));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 24px;
 }
 
 .process-step h3 {
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 20px;
   font-weight: 600;
   margin-bottom: 12px;
+  letter-spacing: -0.02em;
 }
 
 .process-step p {
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.7;
   color: var(--text-secondary);
-  max-width: 280px;
-  margin: 0 auto;
 }
 
 /* ── TESTIMONIALS ── */
 .testimonials-section {
-  background: var(--white);
   overflow: hidden;
 }
 
 .testimonials-track {
   display: flex;
-  gap: 24px;
-  animation: scrollTestimonials 30s linear infinite;
+  gap: 20px;
+  animation: scrollTestimonials 35s linear infinite;
   width: max-content;
+  padding: 20px 0;
 }
 
 .testimonials-track:hover {
@@ -926,42 +761,40 @@ body {
 }
 
 .testimonial-card {
-  flex: 0 0 380px;
-  padding: 36px;
-  background: var(--off-white);
+  flex: 0 0 400px;
+  padding: 40px;
+  background: var(--bg-elevated);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--mid-gray);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid var(--border);
+  transition: border-color 0.3s ease;
 }
 
 .testimonial-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
-}
-
-.testimonial-stars {
-  display: flex;
-  gap: 2px;
-  margin-bottom: 16px;
-}
-
-.testimonial-stars svg {
-  width: 16px;
-  height: 16px;
-  fill: #FFB800;
+  border-color: var(--border-hover);
 }
 
 .testimonial-text {
   font-size: 15px;
-  line-height: 1.7;
-  color: var(--text-primary);
-  margin-bottom: 24px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  font-style: italic;
+}
+
+.testimonial-text::before {
+  content: '\201C';
+  font-size: 32px;
+  line-height: 0;
+  vertical-align: -12px;
+  color: var(--accent);
+  margin-right: 4px;
+  font-style: normal;
 }
 
 .testimonial-author {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .testimonial-avatar {
@@ -971,8 +804,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: white;
 }
 
@@ -980,95 +813,82 @@ body {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .testimonial-role {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
+  margin-top: 2px;
 }
 
-/* ── CTA SECTION ── */
+/* ── CTA ── */
 .cta-section {
-  background: var(--white);
-  padding: 160px 0;
-}
-
-.cta-card {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 80px 60px;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  border-radius: var(--radius-xl);
-  text-align: center;
+  padding: 200px 0;
   position: relative;
-  overflow: hidden;
-}
-
-.cta-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 
 .cta-glow {
   position: absolute;
-  width: 400px;
-  height: 400px;
+  width: 600px;
+  height: 600px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.1);
+  background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   filter: blur(60px);
-  top: -100px;
-  right: -100px;
-  animation: orbFloat 15s ease-in-out infinite;
+}
+
+.cta-content {
+  text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .cta-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(32px, 5vw, 52px);
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  color: white;
-  margin-bottom: 20px;
-  position: relative;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(40px, 6vw, 80px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  margin-bottom: 24px;
 }
 
 .cta-desc {
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1.7;
-  color: rgba(255,255,255,0.8);
-  max-width: 480px;
-  margin: 0 auto 40px;
-  position: relative;
+  color: var(--text-secondary);
+  max-width: 440px;
+  margin: 0 auto 48px;
 }
 
-.btn-white {
+.btn-glow {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 18px 40px;
-  background: white;
-  color: var(--text-primary);
+  gap: 10px;
+  padding: 16px 40px;
+  background: var(--gradient-1);
+  color: white;
   border-radius: 980px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
   border: none;
   transition: transform 0.2s ease, box-shadow 0.3s ease;
-  position: relative;
+  letter-spacing: -0.01em;
 }
 
-.btn-white:hover {
-  transform: scale(1.04);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+.btn-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 60px rgba(99,102,241,0.3), 0 0 20px rgba(99,102,241,0.2);
 }
 
 /* ── FOOTER ── */
 .footer {
-  background: var(--text-primary);
-  color: rgba(255,255,255,0.7);
+  border-top: 1px solid var(--border);
   padding: 80px 0 40px;
 }
 
@@ -1079,9 +899,7 @@ body {
   margin-bottom: 60px;
 }
 
-.footer-brand {
-  max-width: 300px;
-}
+.footer-brand { max-width: 280px; }
 
 .footer-logo {
   display: flex;
@@ -1092,268 +910,187 @@ body {
 }
 
 .footer-logo-mark {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  background: var(--gradient-1);
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 13px;
 }
 
 .footer-logo-text {
-  font-size: 22px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
   font-weight: 700;
-  color: white;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 
 .footer-brand p {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.7;
-  color: rgba(255,255,255,0.5);
+  color: var(--text-muted);
 }
 
 .footer-col h4 {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
+  color: var(--text-muted);
   margin-bottom: 20px;
 }
 
-.footer-col ul {
-  list-style: none;
-}
-
-.footer-col ul li {
-  margin-bottom: 12px;
-}
+.footer-col ul { list-style: none; }
+.footer-col ul li { margin-bottom: 12px; }
 
 .footer-col ul a {
-  font-size: 14px;
-  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+  color: var(--text-secondary);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
-.footer-col ul a:hover {
-  color: white;
-}
+.footer-col ul a:hover { color: var(--text-primary); }
 
 .footer-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 30px;
-  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
 }
 
 .footer-copy {
-  font-size: 13px;
-  color: rgba(255,255,255,0.4);
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 .footer-socials {
   display: flex;
-  gap: 16px;
+  gap: 12px;
 }
 
 .footer-socials a {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .footer-socials a:hover {
-  background: rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.08);
+  border-color: var(--border-hover);
 }
 
 .footer-socials svg {
-  width: 16px;
-  height: 16px;
-  fill: rgba(255,255,255,0.7);
+  width: 14px;
+  height: 14px;
+  fill: var(--text-secondary);
 }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 1024px) {
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .bento-grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-
-  .bento-item-1 {
-    grid-column: span 6;
-    min-height: 340px;
-  }
-
-  .bento-item-2,
-  .bento-item-3 {
-    grid-column: span 3;
-  }
-
-  .bento-item-4,
-  .bento-item-5,
-  .bento-item-6 {
-    grid-column: span 2;
-  }
-
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 40px;
-  }
-
-  .stat-divider {
-    display: none;
-  }
-
-  .footer-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 32px;
-  }
+  .capabilities-grid { grid-template-columns: repeat(2, 1fr); }
+  .showcase-grid { grid-template-columns: repeat(6, 1fr); }
+  .showcase-item-1 { grid-column: span 6; min-height: 360px; }
+  .showcase-item-2, .showcase-item-3 { grid-column: span 3; }
+  .showcase-item-4, .showcase-item-5, .showcase-item-6 { grid-column: span 2; }
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .metric-item:nth-child(2)::after { display: none; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
 }
 
 @media (max-width: 768px) {
-  .navbar {
-    padding: 0 20px;
-  }
-
+  .navbar { padding: 0 20px; }
   .nav-links { display: none; }
-
   .nav-menu-btn { display: flex; }
-
   .section { padding: 100px 0; }
-
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .bento-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .bento-item-1,
-  .bento-item-2,
-  .bento-item-3,
-  .bento-item-4,
-  .bento-item-5,
-  .bento-item-6 {
+  .hero-title { letter-spacing: -0.03em; }
+  .capabilities-grid { grid-template-columns: 1fr; }
+  .showcase-grid { grid-template-columns: 1fr; }
+  .showcase-item-1, .showcase-item-2, .showcase-item-3,
+  .showcase-item-4, .showcase-item-5, .showcase-item-6 {
     grid-column: span 1;
-    min-height: 240px;
+    min-height: 260px;
   }
-
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 32px;
-  }
-
-  .process-grid {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-
-  .process-connector { display: none; }
-
-  .cta-card { padding: 60px 32px; }
-
-  .footer-grid {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .metric-item::after { display: none; }
+  .process-grid { grid-template-columns: 1fr; }
+  .cta-section { padding: 120px 0; }
+  .footer-grid { grid-template-columns: 1fr; gap: 32px; }
   .footer-bottom {
     flex-direction: column;
     gap: 16px;
     text-align: center;
   }
-
-  .hero-actions {
-    flex-direction: column;
-  }
-
-  .hero-float { display: none; }
+  .hero-actions { flex-direction: column; }
 }
 
 @media (max-width: 480px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-
-  .testimonial-card {
-    flex: 0 0 300px;
-  }
-}
-
-/* ── ANIMATED GRADIENT LINE ── */
-.gradient-line {
-  height: 3px;
-  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end), var(--warm-gradient-start), var(--warm-gradient-end), var(--gradient-start));
-  background-size: 200% 100%;
-  animation: gradientMove 4s linear infinite;
-}
-
-@keyframes gradientMove {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  .metrics-grid { grid-template-columns: 1fr; }
+  .testimonial-card { flex: 0 0 320px; padding: 32px; }
+  .proof-logos { gap: 32px; }
 }
 
 /* ── MARQUEE ── */
 .marquee-section {
-  padding: 40px 0;
+  padding: 32px 0;
   overflow: hidden;
-  background: var(--off-white);
-  border-top: 1px solid var(--mid-gray);
-  border-bottom: 1px solid var(--mid-gray);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 .marquee-track {
   display: flex;
   gap: 48px;
-  animation: marquee 25s linear infinite;
+  animation: marquee 30s linear infinite;
   width: max-content;
 }
 
 .marquee-item {
-  font-family: 'Playfair Display', serif;
-  font-size: 36px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px;
   font-weight: 600;
   color: var(--text-primary);
-  opacity: 0.12;
+  opacity: 0.06;
   white-space: nowrap;
   user-select: none;
+  letter-spacing: -0.02em;
 }
 
 .marquee-dot {
-  font-size: 36px;
+  font-size: 32px;
   color: var(--accent);
-  opacity: 0.3;
+  opacity: 0.15;
 }
 
 @keyframes marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+
+/* ── TOP LINE ── */
+.top-line {
+  height: 2px;
+  background: var(--gradient-1);
+  opacity: 0.6;
+}
 </style>
 </head>
 <body>
 
-<!-- Cursor glow follow -->
-<div class="cursor-glow" id="cursorGlow"></div>
-
-<!-- Animated gradient line at top -->
-<div class="gradient-line"></div>
+<!-- Top accent line -->
+<div class="top-line"></div>
 
 <!-- NAVBAR -->
 <nav class="navbar" id="navbar">
@@ -1362,89 +1099,63 @@ body {
     Ko
   </a>
   <ul class="nav-links">
-    <li><a href="#services">Services</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
     <li><a href="#work">Work</a></li>
     <li><a href="#process">Process</a></li>
     <li><a href="#testimonials">Testimonials</a></li>
-    <li><a href="#contact" class="nav-cta">Get Started</a></li>
+    <li><a href="#contact" class="nav-cta">Start a Project</a></li>
   </ul>
   <button class="nav-menu-btn" id="menuBtn" aria-label="Menu">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <line x1="3" y1="6" x2="21" y2="6"/>
-      <line x1="3" y1="12" x2="21" y2="12"/>
-      <line x1="3" y1="18" x2="21" y2="18"/>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <line x1="4" y1="7" x2="20" y2="7"/>
+      <line x1="4" y1="12" x2="20" y2="12"/>
+      <line x1="4" y1="17" x2="20" y2="17"/>
     </svg>
   </button>
 </nav>
 
 <!-- HERO -->
 <section class="hero" id="hero">
-  <div class="hero-bg">
-    <div class="hero-gradient-orb orb-1"></div>
-    <div class="hero-gradient-orb orb-2"></div>
-    <div class="hero-gradient-orb orb-3"></div>
-  </div>
-
-  <!-- Floating decorative shapes -->
-  <div class="hero-float" style="top: 18%; left: 8%; animation-delay: 0.5s;">
-    <svg class="float-shape" width="48" height="48" viewBox="0 0 48 48" fill="none">
-      <rect x="4" y="4" width="40" height="40" rx="12" stroke="url(#g1)" stroke-width="1.5" opacity="0.3"/>
-      <defs><linearGradient id="g1" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#667eea"/><stop offset="1" stop-color="#764ba2"/></linearGradient></defs>
-    </svg>
-  </div>
-  <div class="hero-float" style="top: 25%; right: 10%; animation-delay: 1s;">
-    <svg class="float-shape-2" width="36" height="36" viewBox="0 0 36 36" fill="none">
-      <circle cx="18" cy="18" r="16" stroke="url(#g2)" stroke-width="1.5" opacity="0.25"/>
-      <defs><linearGradient id="g2" x1="0" y1="0" x2="36" y2="36"><stop stop-color="#f093fb"/><stop offset="1" stop-color="#f5576c"/></linearGradient></defs>
-    </svg>
-  </div>
-  <div class="hero-float" style="bottom: 20%; left: 15%; animation-delay: 1.5s;">
-    <svg class="float-shape" width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <polygon points="14,2 26,26 2,26" stroke="#667eea" stroke-width="1.5" opacity="0.2"/>
-    </svg>
-  </div>
-  <div class="hero-float" style="bottom: 30%; right: 12%; animation-delay: 2s;">
-    <svg class="float-shape-2" width="40" height="40" viewBox="0 0 40 40" fill="none">
-      <rect x="5" y="5" width="30" height="30" rx="4" transform="rotate(45 20 20)" stroke="#764ba2" stroke-width="1.5" opacity="0.2"/>
-    </svg>
-  </div>
+  <div class="hero-glow hero-glow-1"></div>
+  <div class="hero-glow hero-glow-2"></div>
+  <div class="hero-grid"></div>
 
   <div class="hero-content">
-    <div class="hero-badge fade-up">
-      <span class="hero-badge-dot"></span>
-      Now accepting new projects
+    <div class="hero-eyebrow reveal">
+      <span class="hero-eyebrow-dot"></span>
+      Accepting new partners for 2026
     </div>
-    <h1 class="hero-title fade-up stagger-1">
-      We build what<br><span class="hero-title-gradient">matters most</span>
+    <h1 class="hero-title reveal stagger-1">
+      <span class="hero-title-line">We don't build</span>
+      <span class="hero-title-line"><span class="hero-title-gradient">websites.</span></span>
+      <span class="hero-title-line">We build empires.</span>
     </h1>
-    <p class="hero-description fade-up stagger-2">
-      Ko is a modern studio that transforms bold ideas into exceptional digital products. Strategy, design, and engineering -- unified under one roof.
+    <p class="hero-description reveal stagger-2">
+      Ko is the studio behind the products that define industries. Strategy, design, and engineering -- one team, zero compromise.
     </p>
-    <div class="hero-actions fade-up stagger-3">
+    <div class="hero-actions reveal stagger-3">
       <a href="#contact" class="btn-primary">
         Start a project
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 8h10M9 4l4 4-4 4"/>
         </svg>
       </a>
-      <a href="#work" class="btn-secondary">
-        See our work
-      </a>
+      <a href="#work" class="btn-ghost">View our work</a>
     </div>
   </div>
 </section>
 
-<!-- LOGOS SECTION -->
-<section class="logos-section">
+<!-- SOCIAL PROOF -->
+<section class="proof-section">
   <div class="container">
-    <p class="logos-label fade-in">Trusted by forward-thinking teams</p>
-    <div class="logos-grid fade-in stagger-1">
-      <span class="logo-item">Vertex</span>
-      <span class="logo-item">Luminar</span>
-      <span class="logo-item">Praxis</span>
-      <span class="logo-item">Nexus AI</span>
-      <span class="logo-item">Helio</span>
-      <span class="logo-item">Arcform</span>
+    <p class="proof-label reveal">Trusted by industry leaders</p>
+    <div class="proof-logos reveal stagger-1">
+      <span class="proof-logo">Vertex</span>
+      <span class="proof-logo">Luminar</span>
+      <span class="proof-logo">Praxis</span>
+      <span class="proof-logo">Nexus AI</span>
+      <span class="proof-logo">Helio</span>
+      <span class="proof-logo">Arcform</span>
     </div>
   </div>
 </section>
@@ -1460,11 +1171,10 @@ body {
     <span class="marquee-dot">&middot;</span>
     <span class="marquee-item">Growth</span>
     <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Innovation</span>
+    <span class="marquee-item">Intelligence</span>
     <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Experience</span>
+    <span class="marquee-item">Scale</span>
     <span class="marquee-dot">&middot;</span>
-    <!-- Duplicate for seamless loop -->
     <span class="marquee-item">Strategy</span>
     <span class="marquee-dot">&middot;</span>
     <span class="marquee-item">Design</span>
@@ -1473,218 +1183,211 @@ body {
     <span class="marquee-dot">&middot;</span>
     <span class="marquee-item">Growth</span>
     <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Innovation</span>
+    <span class="marquee-item">Intelligence</span>
     <span class="marquee-dot">&middot;</span>
-    <span class="marquee-item">Experience</span>
+    <span class="marquee-item">Scale</span>
     <span class="marquee-dot">&middot;</span>
   </div>
 </div>
 
-<!-- FEATURES / SERVICES -->
-<section class="section features-section" id="services">
+<!-- CAPABILITIES -->
+<section class="section" id="capabilities">
   <div class="container">
-    <div class="features-header">
-      <p class="section-label fade-up">What we do</p>
-      <h2 class="section-title fade-up stagger-1">Crafted to perform,<br>designed to <em>inspire</em></h2>
-      <p class="section-subtitle fade-up stagger-2">We cover the full spectrum of digital product creation, from initial concept to scaled reality.</p>
+    <div class="reveal">
+      <p class="section-eyebrow">What we do</p>
+      <h2 class="section-title">Six disciplines.<br>One obsession.</h2>
+      <p class="section-subtitle">Every capability exists to serve one goal: building products that dominate markets.</p>
     </div>
 
-    <div class="features-grid">
-      <div class="feature-card fade-up stagger-1">
-        <div class="feature-icon feature-icon-1">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <div class="capabilities-grid">
+      <div class="capability-card reveal stagger-1">
+        <div class="capability-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="12 2 2 7 12 12 22 7 12 2"/>
             <polyline points="2 17 12 22 22 17"/>
             <polyline points="2 12 12 17 22 12"/>
           </svg>
         </div>
         <h3>Product Strategy</h3>
-        <p>We define the vision, validate ideas, and map product roadmaps that align business goals with user needs.</p>
+        <p>We define the vision, validate assumptions, and build roadmaps that align business objectives with user truth.</p>
       </div>
 
-      <div class="feature-card fade-up stagger-2">
-        <div class="feature-icon feature-icon-2">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f5576c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="capability-card reveal stagger-2">
+        <div class="capability-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/>
             <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
             <line x1="9" y1="9" x2="9.01" y2="9"/>
             <line x1="15" y1="9" x2="15.01" y2="9"/>
           </svg>
         </div>
-        <h3>Brand &amp; Identity</h3>
-        <p>Memorable brands that resonate. Logos, visual systems, and guidelines that make your story unmistakable.</p>
+        <h3>Brand Identity</h3>
+        <p>Visual systems that don't just look good -- they make your brand impossible to forget and impossible to copy.</p>
       </div>
 
-      <div class="feature-card fade-up stagger-3">
-        <div class="feature-icon feature-icon-3">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4facfe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="capability-card reveal stagger-3">
+        <div class="capability-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
             <circle cx="8.5" cy="8.5" r="1.5"/>
             <polyline points="21 15 16 10 5 21"/>
           </svg>
         </div>
         <h3>UI/UX Design</h3>
-        <p>Pixel-perfect interfaces and intuitive flows that keep users engaged and drive meaningful conversions.</p>
+        <p>Interfaces that feel inevitable. Every pixel, every interaction, every micro-moment -- considered and intentional.</p>
       </div>
 
-      <div class="feature-card fade-up stagger-4">
-        <div class="feature-icon feature-icon-4">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#43e97b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="capability-card reveal stagger-4">
+        <div class="capability-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="16 18 22 12 16 6"/>
             <polyline points="8 6 2 12 8 18"/>
           </svg>
         </div>
-        <h3>Full-Stack Engineering</h3>
-        <p>Scalable, performant applications built with modern frameworks. From APIs to frontends, we ship production-grade code.</p>
+        <h3>Engineering</h3>
+        <p>Production-grade systems built for scale. Modern stacks, clean architecture, and code that ships on time.</p>
       </div>
 
-      <div class="feature-card fade-up stagger-5">
-        <div class="feature-icon feature-icon-5">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fa709a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 20V10"/>
-            <path d="M12 20V4"/>
-            <path d="M6 20v-6"/>
+      <div class="capability-card reveal stagger-5">
+        <div class="capability-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
           </svg>
         </div>
-        <h3>Growth &amp; Analytics</h3>
-        <p>Data-driven strategies to acquire, retain, and delight users. We optimize every touchpoint in the journey.</p>
+        <h3>Growth</h3>
+        <p>Data-informed strategies that move the metrics that matter. Acquisition, retention, and activation -- optimized end to end.</p>
       </div>
 
-      <div class="feature-card fade-up stagger-6">
-        <div class="feature-icon feature-icon-6">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a18cd1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="capability-card reveal stagger-6">
+        <div class="capability-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2L2 7l10 5 10-5-10-5z"/>
             <path d="M2 17l10 5 10-5"/>
             <path d="M2 12l10 5 10-5"/>
           </svg>
         </div>
         <h3>AI Integration</h3>
-        <p>Embed intelligent features into your products. From LLMs to custom models, we make AI practical and impactful.</p>
+        <p>From LLMs to custom models, we embed intelligence into products -- making AI practical, not performative.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- SHOWCASE / BENTO GRID -->
-<section class="section showcase-section" id="work">
-  <div class="container-wide">
-    <div class="features-header">
-      <p class="section-label fade-up">Selected Work</p>
-      <h2 class="section-title fade-up stagger-1">Projects that move<br>the needle</h2>
+<!-- SHOWCASE -->
+<section class="section" id="work" style="background: var(--bg-elevated);">
+  <div class="container-lg">
+    <div class="showcase-header">
+      <p class="section-eyebrow reveal">Selected Work</p>
+      <h2 class="section-title reveal stagger-1">Products that<br>moved markets.</h2>
     </div>
 
-    <div class="bento-grid">
-      <div class="bento-item bento-item-1 scale-in">
-        <div class="bento-dots">
-          <div class="bento-dot" style="top:20%;left:15%;animation-delay:0s;"></div>
-          <div class="bento-dot" style="top:40%;left:70%;animation-delay:2s;"></div>
-          <div class="bento-dot" style="top:70%;left:40%;animation-delay:4s;"></div>
-          <div class="bento-dot" style="top:30%;left:85%;animation-delay:1s;"></div>
-          <div class="bento-dot" style="top:80%;left:20%;animation-delay:3s;"></div>
+    <div class="showcase-grid">
+      <div class="showcase-item showcase-item-1 reveal-scale">
+        <div class="showcase-particles">
+          <div class="showcase-particle" style="top:15%;left:20%;animation-delay:0s;"></div>
+          <div class="showcase-particle" style="top:35%;left:75%;animation-delay:2s;"></div>
+          <div class="showcase-particle" style="top:65%;left:45%;animation-delay:4s;"></div>
+          <div class="showcase-particle" style="top:25%;left:85%;animation-delay:1s;"></div>
+          <div class="showcase-particle" style="top:80%;left:15%;animation-delay:3s;"></div>
+          <div class="showcase-particle" style="top:50%;left:60%;animation-delay:5s;"></div>
         </div>
-        <div class="bento-inner">
-          <span class="bento-tag">Platform Redesign</span>
-          <h3 class="bento-title">Nexus AI Command Center</h3>
-          <p class="bento-desc">End-to-end redesign of a real-time AI operations dashboard serving 50K+ daily users.</p>
-        </div>
-      </div>
-
-      <div class="bento-item bento-item-2 scale-in stagger-1">
-        <div class="bento-inner">
-          <span class="bento-tag">Mobile App</span>
-          <h3 class="bento-title">Helio Wellness</h3>
-          <p class="bento-desc">A health tracking experience that actually feels human.</p>
+        <div class="showcase-inner">
+          <span class="showcase-tag">Platform Redesign</span>
+          <h3 class="showcase-title">Nexus AI Command Center</h3>
+          <p class="showcase-desc">End-to-end redesign of a real-time AI operations dashboard serving 50K+ daily active users.</p>
         </div>
       </div>
 
-      <div class="bento-item bento-item-3 scale-in stagger-2">
-        <div class="bento-inner">
-          <span class="bento-tag">Brand Identity</span>
-          <h3 class="bento-title">Praxis Labs</h3>
-          <p class="bento-desc">From zero to launch-ready brand in under 8 weeks.</p>
+      <div class="showcase-item showcase-item-2 reveal-scale stagger-1">
+        <div class="showcase-inner">
+          <span class="showcase-tag">Mobile App</span>
+          <h3 class="showcase-title">Helio Wellness</h3>
+          <p class="showcase-desc">Health tracking that feels human.</p>
         </div>
       </div>
 
-      <div class="bento-item bento-item-4 scale-in stagger-3">
-        <div class="bento-inner">
-          <span class="bento-tag">E-Commerce</span>
-          <h3 class="bento-title">Arcform Store</h3>
+      <div class="showcase-item showcase-item-3 reveal-scale stagger-2">
+        <div class="showcase-inner">
+          <span class="showcase-tag">Brand Identity</span>
+          <h3 class="showcase-title">Praxis Labs</h3>
+          <p class="showcase-desc">Zero to launch in 8 weeks.</p>
         </div>
       </div>
 
-      <div class="bento-item bento-item-5 scale-in stagger-4">
-        <div class="bento-inner">
-          <span class="bento-tag">SaaS</span>
-          <h3 class="bento-title">Vertex Analytics</h3>
+      <div class="showcase-item showcase-item-4 reveal-scale stagger-3">
+        <div class="showcase-inner">
+          <span class="showcase-tag">E-Commerce</span>
+          <h3 class="showcase-title">Arcform Store</h3>
         </div>
       </div>
 
-      <div class="bento-item bento-item-6 scale-in stagger-5">
-        <div class="bento-inner">
-          <span class="bento-tag">Web3</span>
-          <h3 class="bento-title">Luminar DAO</h3>
+      <div class="showcase-item showcase-item-5 reveal-scale stagger-4">
+        <div class="showcase-inner">
+          <span class="showcase-tag">SaaS Platform</span>
+          <h3 class="showcase-title">Vertex Analytics</h3>
+        </div>
+      </div>
+
+      <div class="showcase-item showcase-item-6 reveal-scale stagger-5">
+        <div class="showcase-inner">
+          <span class="showcase-tag">Web3</span>
+          <h3 class="showcase-title">Luminar DAO</h3>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- STATS -->
-<section class="section stats-section">
+<!-- METRICS -->
+<section class="section metrics-section">
   <div class="container">
-    <div class="stats-grid">
-      <div class="stat-item fade-up">
-        <div class="stat-number" data-target="120" data-suffix="+">0</div>
-        <div class="stat-label">Projects Delivered</div>
-        <div class="stat-divider"></div>
+    <div class="metrics-grid">
+      <div class="metric-item reveal">
+        <div class="metric-number" data-target="120" data-suffix="+">0</div>
+        <div class="metric-label">Products shipped</div>
       </div>
-      <div class="stat-item fade-up stagger-1">
-        <div class="stat-number" data-target="98" data-suffix="%">0</div>
-        <div class="stat-label">Client Satisfaction</div>
-        <div class="stat-divider"></div>
+      <div class="metric-item reveal stagger-1">
+        <div class="metric-number" data-target="98" data-suffix="%">0</div>
+        <div class="metric-label">Client retention</div>
       </div>
-      <div class="stat-item fade-up stagger-2">
-        <div class="stat-number" data-target="40" data-suffix="+">0</div>
-        <div class="stat-label">Team Members</div>
-        <div class="stat-divider"></div>
+      <div class="metric-item reveal stagger-2">
+        <div class="metric-number" data-target="40" data-suffix="+">0</div>
+        <div class="metric-label">Engineers & designers</div>
       </div>
-      <div class="stat-item fade-up stagger-3">
-        <div class="stat-number" data-target="8" data-suffix="">0</div>
-        <div class="stat-label">Years of Excellence</div>
+      <div class="metric-item reveal stagger-3">
+        <div class="metric-number" data-target="8" data-suffix="">0</div>
+        <div class="metric-label">Years in the arena</div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- PROCESS -->
-<section class="section process-section" id="process">
+<section class="section" id="process">
   <div class="container">
-    <div class="features-header">
-      <p class="section-label fade-up">How We Work</p>
-      <h2 class="section-title fade-up stagger-1">Simple process,<br>extraordinary <em>results</em></h2>
-      <p class="section-subtitle fade-up stagger-2">We've refined our process over hundreds of projects to deliver consistent, outstanding outcomes.</p>
+    <div class="reveal">
+      <p class="section-eyebrow">How we work</p>
+      <h2 class="section-title">Three phases.<br>No wasted motion.</h2>
+      <p class="section-subtitle">A process refined over hundreds of engagements. Fast, transparent, and built for results.</p>
     </div>
 
     <div class="process-grid">
-      <div class="process-step fade-up stagger-1">
-        <div class="process-number">1</div>
-        <div class="process-connector"></div>
-        <h3>Discover &amp; Define</h3>
-        <p>We dive deep into your goals, market, and users to define a clear strategy and project scope.</p>
+      <div class="process-step reveal stagger-1">
+        <div class="process-number">01</div>
+        <h3>Discover</h3>
+        <p>We immerse in your business, users, and market. Every assumption gets tested. Every insight gets documented. The strategy emerges from truth, not opinion.</p>
       </div>
 
-      <div class="process-step fade-up stagger-2">
-        <div class="process-number">2</div>
-        <div class="process-connector"></div>
-        <h3>Design &amp; Iterate</h3>
-        <p>Rapid prototyping and iterative design cycles until every detail feels right and every flow is seamless.</p>
+      <div class="process-step reveal stagger-2">
+        <div class="process-number">02</div>
+        <h3>Design</h3>
+        <p>Rapid prototyping with relentless iteration. We design in the browser, test with real users, and refine until every interaction feels effortless.</p>
       </div>
 
-      <div class="process-step fade-up stagger-3">
-        <div class="process-number">3</div>
-        <div class="process-connector"></div>
-        <h3>Build &amp; Launch</h3>
-        <p>Production-grade engineering with rigorous QA. We ship fast, then optimize based on real-world data.</p>
+      <div class="process-step reveal stagger-3">
+        <div class="process-number">03</div>
+        <h3>Deliver</h3>
+        <p>Production-grade engineering with rigorous QA. We ship fast, monitor closely, and optimize based on real-world data -- not assumptions.</p>
       </div>
     </div>
   </div>
@@ -1693,24 +1396,17 @@ body {
 <!-- TESTIMONIALS -->
 <section class="section testimonials-section" id="testimonials">
   <div class="container">
-    <div class="features-header">
-      <p class="section-label fade-up">Testimonials</p>
-      <h2 class="section-title fade-up stagger-1">Loved by the teams<br>we work with</h2>
+    <div class="showcase-header">
+      <p class="section-eyebrow reveal">Testimonials</p>
+      <h2 class="section-title reveal stagger-1">Words from the<br>teams we've built for.</h2>
     </div>
   </div>
 
   <div class="testimonials-track" id="testimonialTrack">
     <div class="testimonial-card">
-      <div class="testimonial-stars">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </div>
-      <p class="testimonial-text">"Ko completely transformed how we think about product. They didn't just build our app -- they redefined our entire user experience."</p>
+      <p class="testimonial-text">Ko completely transformed how we think about product. They didn't just build our app -- they redefined our entire user experience."</p>
       <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #667eea, #764ba2);">S</div>
+        <div class="testimonial-avatar" style="background: var(--gradient-1);">S</div>
         <div>
           <div class="testimonial-name">Sarah Chen</div>
           <div class="testimonial-role">CEO, Nexus AI</div>
@@ -1719,16 +1415,9 @@ body {
     </div>
 
     <div class="testimonial-card">
-      <div class="testimonial-stars">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </div>
-      <p class="testimonial-text">"Their engineering team is world-class. We went from prototype to production in record time, with zero compromise on quality."</p>
+      <p class="testimonial-text">Their engineering team is world-class. Prototype to production in record time, zero compromise on quality."</p>
       <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #f093fb, #f5576c);">M</div>
+        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">M</div>
         <div>
           <div class="testimonial-name">Marcus Rivera</div>
           <div class="testimonial-role">CTO, Helio Health</div>
@@ -1737,16 +1426,9 @@ body {
     </div>
 
     <div class="testimonial-card">
-      <div class="testimonial-stars">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </div>
-      <p class="testimonial-text">"Working with Ko felt like adding 10 senior engineers to our team overnight. The attention to detail is unmatched."</p>
+      <p class="testimonial-text">Working with Ko felt like adding 10 senior engineers to our team overnight. The attention to detail is unmatched."</p>
       <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">A</div>
+        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">A</div>
         <div>
           <div class="testimonial-name">Aisha Patel</div>
           <div class="testimonial-role">VP Product, Vertex</div>
@@ -1755,16 +1437,9 @@ body {
     </div>
 
     <div class="testimonial-card">
-      <div class="testimonial-stars">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </div>
-      <p class="testimonial-text">"They turned our messy Figma files into a beautiful, performant web app. The collaboration was seamless from day one."</p>
+      <p class="testimonial-text">They turned our messy Figma files into a beautiful, performant web app. Seamless collaboration from day one."</p>
       <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">J</div>
+        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #10b981, #34d399);">J</div>
         <div>
           <div class="testimonial-name">James Wright</div>
           <div class="testimonial-role">Founder, Praxis Labs</div>
@@ -1773,16 +1448,9 @@ body {
     </div>
 
     <div class="testimonial-card">
-      <div class="testimonial-stars">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </div>
-      <p class="testimonial-text">"Ko doesn't just deliver projects. They deliver transformation. Our conversion rates tripled after their redesign."</p>
+      <p class="testimonial-text">Ko doesn't deliver projects. They deliver transformation. Our conversion rates tripled after their redesign."</p>
       <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #fa709a, #fee140);">L</div>
+        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">L</div>
         <div>
           <div class="testimonial-name">Lisa Nakamura</div>
           <div class="testimonial-role">CMO, Arcform</div>
@@ -1791,16 +1459,9 @@ body {
     </div>
 
     <div class="testimonial-card">
-      <div class="testimonial-stars">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </div>
-      <p class="testimonial-text">"The best agency we've ever worked with. They understand product at a deep level and genuinely care about outcomes."</p>
+      <p class="testimonial-text">The best studio we've ever partnered with. They understand product at a molecular level and genuinely care about outcomes."</p>
       <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #a18cd1, #fbc2eb);">D</div>
+        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">D</div>
         <div>
           <div class="testimonial-name">David Kim</div>
           <div class="testimonial-role">Head of Design, Luminar</div>
@@ -1808,18 +1469,11 @@ body {
       </div>
     </div>
 
-    <!-- Duplicate for seamless scroll -->
+    <!-- Duplicated for seamless loop -->
     <div class="testimonial-card">
-      <div class="testimonial-stars">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </div>
-      <p class="testimonial-text">"Ko completely transformed how we think about product. They didn't just build our app -- they redefined our entire user experience."</p>
+      <p class="testimonial-text">Ko completely transformed how we think about product. They didn't just build our app -- they redefined our entire user experience."</p>
       <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #667eea, #764ba2);">S</div>
+        <div class="testimonial-avatar" style="background: var(--gradient-1);">S</div>
         <div>
           <div class="testimonial-name">Sarah Chen</div>
           <div class="testimonial-role">CEO, Nexus AI</div>
@@ -1828,16 +1482,9 @@ body {
     </div>
 
     <div class="testimonial-card">
-      <div class="testimonial-stars">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </div>
-      <p class="testimonial-text">"Their engineering team is world-class. We went from prototype to production in record time, with zero compromise on quality."</p>
+      <p class="testimonial-text">Their engineering team is world-class. Prototype to production in record time, zero compromise on quality."</p>
       <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #f093fb, #f5576c);">M</div>
+        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">M</div>
         <div>
           <div class="testimonial-name">Marcus Rivera</div>
           <div class="testimonial-role">CTO, Helio Health</div>
@@ -1846,16 +1493,9 @@ body {
     </div>
 
     <div class="testimonial-card">
-      <div class="testimonial-stars">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </div>
-      <p class="testimonial-text">"Working with Ko felt like adding 10 senior engineers to our team overnight. The attention to detail is unmatched."</p>
+      <p class="testimonial-text">Working with Ko felt like adding 10 senior engineers to our team overnight. The attention to detail is unmatched."</p>
       <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">A</div>
+        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">A</div>
         <div>
           <div class="testimonial-name">Aisha Patel</div>
           <div class="testimonial-role">VP Product, Vertex</div>
@@ -1864,16 +1504,9 @@ body {
     </div>
 
     <div class="testimonial-card">
-      <div class="testimonial-stars">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </div>
-      <p class="testimonial-text">"They turned our messy Figma files into a beautiful, performant web app. The collaboration was seamless from day one."</p>
+      <p class="testimonial-text">They turned our messy Figma files into a beautiful, performant web app. Seamless collaboration from day one."</p>
       <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">J</div>
+        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #10b981, #34d399);">J</div>
         <div>
           <div class="testimonial-name">James Wright</div>
           <div class="testimonial-role">Founder, Praxis Labs</div>
@@ -1882,16 +1515,9 @@ body {
     </div>
 
     <div class="testimonial-card">
-      <div class="testimonial-stars">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </div>
-      <p class="testimonial-text">"Ko doesn't just deliver projects. They deliver transformation. Our conversion rates tripled after their redesign."</p>
+      <p class="testimonial-text">Ko doesn't deliver projects. They deliver transformation. Our conversion rates tripled after their redesign."</p>
       <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #fa709a, #fee140);">L</div>
+        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">L</div>
         <div>
           <div class="testimonial-name">Lisa Nakamura</div>
           <div class="testimonial-role">CMO, Arcform</div>
@@ -1900,16 +1526,9 @@ body {
     </div>
 
     <div class="testimonial-card">
-      <div class="testimonial-stars">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </div>
-      <p class="testimonial-text">"The best agency we've ever worked with. They understand product at a deep level and genuinely care about outcomes."</p>
+      <p class="testimonial-text">The best studio we've ever partnered with. They understand product at a molecular level and genuinely care about outcomes."</p>
       <div class="testimonial-author">
-        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #a18cd1, #fbc2eb);">D</div>
+        <div class="testimonial-avatar" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">D</div>
         <div>
           <div class="testimonial-name">David Kim</div>
           <div class="testimonial-role">Head of Design, Luminar</div>
@@ -1921,17 +1540,19 @@ body {
 
 <!-- CTA -->
 <section class="cta-section" id="contact">
+  <div class="cta-glow"></div>
   <div class="container">
-    <div class="cta-card scale-in">
-      <div class="cta-glow"></div>
-      <h2 class="cta-title">Ready to build<br>something great?</h2>
-      <p class="cta-desc">Let's talk about your next project. We'd love to hear your vision and show you how Ko can bring it to life.</p>
-      <a href="mailto:hello@ko.studio" class="btn-white">
-        Get in touch
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 8h10M9 4l4 4-4 4"/>
-        </svg>
-      </a>
+    <div class="cta-content">
+      <h2 class="cta-title reveal">Let's build<br>what's next.</h2>
+      <p class="cta-desc reveal stagger-1">Have a vision? We'll make it real. Tell us where you're going and we'll engineer the path.</p>
+      <div class="reveal stagger-2">
+        <a href="mailto:hello@ko.studio" class="btn-glow">
+          Get in touch
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 8h10M9 4l4 4-4 4"/>
+          </svg>
+        </a>
+      </div>
     </div>
   </div>
 </section>
@@ -1945,7 +1566,7 @@ body {
           <div class="footer-logo-mark">K</div>
           <span class="footer-logo-text">Ko</span>
         </a>
-        <p>We build exceptional digital products for ambitious teams. Strategy, design, and engineering -- unified.</p>
+        <p>The studio behind products that define industries. Strategy, design, and engineering -- unified.</p>
       </div>
 
       <div class="footer-col">
@@ -2000,16 +1621,7 @@ body {
 (function() {
   'use strict';
 
-  // ── CURSOR GLOW ──
-  var cursorGlow = document.getElementById('cursorGlow');
-  if (window.matchMedia('(hover: hover)').matches) {
-    document.addEventListener('mousemove', function(e) {
-      cursorGlow.style.left = e.clientX + 'px';
-      cursorGlow.style.top = e.clientY + 'px';
-    });
-  }
-
-  // ── NAVBAR HIDE/SHOW ON SCROLL ──
+  // ── NAVBAR HIDE/SHOW ──
   var navbar = document.getElementById('navbar');
   var lastScroll = 0;
   var ticking = false;
@@ -2018,7 +1630,7 @@ body {
     if (!ticking) {
       requestAnimationFrame(function() {
         var currentScroll = window.pageYOffset;
-        if (currentScroll > lastScroll && currentScroll > 100) {
+        if (currentScroll > lastScroll && currentScroll > 80) {
           navbar.classList.add('hidden');
         } else {
           navbar.classList.remove('hidden');
@@ -2030,24 +1642,23 @@ body {
     }
   });
 
-  // ── INTERSECTION OBSERVER FOR ANIMATIONS ──
-  var animSelectors = '.fade-up, .fade-in, .scale-in, .slide-left, .slide-right';
-  var animObserver = new IntersectionObserver(function(entries) {
+  // ── INTERSECTION OBSERVER FOR SCROLL REVEALS ──
+  var revealObserver = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
         entry.target.classList.add('visible');
-        animObserver.unobserve(entry.target);
+        revealObserver.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
 
-  document.querySelectorAll(animSelectors).forEach(function(el) {
-    animObserver.observe(el);
+  document.querySelectorAll('.reveal, .reveal-scale').forEach(function(el) {
+    revealObserver.observe(el);
   });
 
-  // ── STAT NUMBER COUNTER ──
-  var statNumbers = document.querySelectorAll('.stat-number[data-target]');
-  var statObserver = new IntersectionObserver(function(entries) {
+  // ── STAT COUNTER ──
+  var metricNumbers = document.querySelectorAll('.metric-number[data-target]');
+  var metricObserver = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
         var el = entry.target;
@@ -2056,30 +1667,23 @@ body {
         var duration = 2000;
         var start = performance.now();
 
-        function easeOutQuart(t) {
-          return 1 - Math.pow(1 - t, 4);
-        }
+        function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
 
-        function updateCount(now) {
+        function tick(now) {
           var elapsed = now - start;
           var progress = Math.min(elapsed / duration, 1);
-          var eased = easeOutQuart(progress);
-          var current = Math.round(eased * target);
+          var current = Math.round(easeOutQuart(progress) * target);
           el.textContent = current + suffix;
-          if (progress < 1) {
-            requestAnimationFrame(updateCount);
-          }
+          if (progress < 1) requestAnimationFrame(tick);
         }
 
-        requestAnimationFrame(updateCount);
-        statObserver.unobserve(el);
+        requestAnimationFrame(tick);
+        metricObserver.unobserve(el);
       }
     });
   }, { threshold: 0.5 });
 
-  statNumbers.forEach(function(el) {
-    statObserver.observe(el);
-  });
+  metricNumbers.forEach(function(el) { metricObserver.observe(el); });
 
   // ── SMOOTH ANCHOR LINKS ──
   document.querySelectorAll('a[href^="#"]').forEach(function(a) {
@@ -2089,51 +1693,19 @@ body {
       var target = document.querySelector(href);
       if (target) {
         e.preventDefault();
-        var offsetTop = target.getBoundingClientRect().top + window.pageYOffset - 80;
-        window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+        var top = target.getBoundingClientRect().top + window.pageYOffset - 80;
+        window.scrollTo({ top: top, behavior: 'smooth' });
       }
     });
   });
 
-  // ── PARALLAX ON HERO ORBS (subtle) ──
-  var orbs = document.querySelectorAll('.hero-gradient-orb');
-  if (window.matchMedia('(hover: hover)').matches) {
-    document.addEventListener('mousemove', function(e) {
-      var x = (e.clientX / window.innerWidth - 0.5) * 2;
-      var y = (e.clientY / window.innerHeight - 0.5) * 2;
-      orbs.forEach(function(orb, i) {
-        var factor = (i + 1) * 8;
-        orb.style.transform = 'translate(' + (x * factor) + 'px, ' + (y * factor) + 'px)';
-      });
-    });
-  }
-
-  // ── FEATURE CARD TILT EFFECT ──
-  var featureCards = document.querySelectorAll('.feature-card');
-  featureCards.forEach(function(card) {
-    card.addEventListener('mousemove', function(e) {
-      var rect = card.getBoundingClientRect();
-      var x = e.clientX - rect.left;
-      var y = e.clientY - rect.top;
-      var centerX = rect.width / 2;
-      var centerY = rect.height / 2;
-      var rotateX = (y - centerY) / centerY * -3;
-      var rotateY = (x - centerX) / centerX * 3;
-      card.style.transform = 'translateY(-4px) perspective(600px) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg)';
-    });
-
-    card.addEventListener('mouseleave', function() {
-      card.style.transform = '';
-    });
-  });
-
-  // ── HERO STAGGER ANIMATION ON LOAD ──
+  // ── HERO CONTENT STAGGER ──
   window.addEventListener('load', function() {
     setTimeout(function() {
-      document.querySelectorAll('.hero-content .fade-up').forEach(function(el) {
+      document.querySelectorAll('.hero-content .reveal').forEach(function(el) {
         el.classList.add('visible');
       });
-    }, 200);
+    }, 150);
   });
 
 })();
