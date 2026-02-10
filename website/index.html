@@ -1579,9 +1579,192 @@ body::before {
 
 /* ── TOP LINE ── */
 .top-line { height: 2px; background: var(--gradient-1); opacity: 0.6; }
+
+/* ── CUSTOM CURSOR ── */
+.cursor-dot {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s var(--ease), height 0.3s var(--ease), background 0.3s ease, opacity 0.3s ease;
+  mix-blend-mode: difference;
+  opacity: 0;
+}
+
+.cursor-dot.visible { opacity: 1; }
+
+.cursor-dot.hovering {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.1);
+  mix-blend-mode: normal;
+  backdrop-filter: blur(2px);
+}
+
+/* ── HERO FLOATING SHAPES ── */
+.hero-shapes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-shape {
+  position: absolute;
+  border: 1px solid rgba(99,102,241,0.12);
+  opacity: 0;
+  animation: shapeFloat 20s ease-in-out infinite, shapeFadeIn 2s ease forwards;
+}
+
+.hero-shape-1 {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  top: 18%;
+  left: 8%;
+  animation-delay: 0s;
+  transform: rotate(15deg);
+}
+
+.hero-shape-2 {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  top: 25%;
+  right: 12%;
+  animation-delay: 3s;
+  border-color: rgba(139,92,246,0.1);
+}
+
+.hero-shape-3 {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  bottom: 22%;
+  left: 14%;
+  animation-delay: 6s;
+  border-color: rgba(168,85,247,0.08);
+  transform: rotate(-10deg);
+}
+
+.hero-shape-4 {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  bottom: 30%;
+  right: 8%;
+  animation-delay: 2s;
+  border-color: rgba(99,102,241,0.15);
+  transform: rotate(45deg);
+}
+
+.hero-shape-5 {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  top: 40%;
+  left: 4%;
+  animation-delay: 8s;
+  border-color: rgba(139,92,246,0.1);
+}
+
+.hero-shape-6 {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  top: 15%;
+  right: 5%;
+  animation-delay: 5s;
+  border-color: rgba(99,102,241,0.08);
+  transform: rotate(25deg);
+}
+
+@keyframes shapeFloat {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  33% { transform: translateY(-15px) rotate(calc(var(--r, 0deg) + 5deg)); }
+  66% { transform: translateY(10px) rotate(calc(var(--r, 0deg) - 3deg)); }
+}
+
+@keyframes shapeFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── 3D TILT CARDS ── */
+.hscroll-card {
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+
+.hscroll-card-inner {
+  transition: transform 0.4s var(--ease);
+}
+
+/* ── GLOW ON HSCROLL CARDS ── */
+.hscroll-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.hscroll-card:hover::after {
+  opacity: 1;
+  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(99,102,241,0.06), transparent 60%);
+}
+
+/* ── STATEMENT WORD REVEAL ── */
+.statement-word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+}
+
+.statement-text.words-visible .statement-word {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── PROCESS STEP HOVER LINE ── */
+.process-step {
+  transition: transform 0.4s var(--ease);
+}
+
+.process-step:hover {
+  transform: translateX(8px);
+}
+
+/* ── CAPABILITY CARD NUMBER ── */
+.capability-num {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(99,102,241,0.15);
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .cursor-dot { display: none; }
+  .hero-shapes { display: none; }
+}
 </style>
 </head>
 <body class="loading">
+
+<!-- CUSTOM CURSOR -->
+<div class="cursor-dot" id="cursorDot"></div>
 
 <!-- SCROLL PROGRESS -->
 <div class="scroll-progress" id="scrollProgress"></div>
@@ -1630,6 +1813,14 @@ body::before {
   <div class="hero-glow hero-glow-1"></div>
   <div class="hero-glow hero-glow-2"></div>
   <div class="hero-grid"></div>
+  <div class="hero-shapes">
+    <div class="hero-shape hero-shape-1" style="--r:15deg;"></div>
+    <div class="hero-shape hero-shape-2" style="--r:0deg;"></div>
+    <div class="hero-shape hero-shape-3" style="--r:-10deg;"></div>
+    <div class="hero-shape hero-shape-4" style="--r:45deg;"></div>
+    <div class="hero-shape hero-shape-5" style="--r:0deg;"></div>
+    <div class="hero-shape hero-shape-6" style="--r:25deg;"></div>
+  </div>
 
   <div class="hero-content">
     <div class="hero-eyebrow reveal">
@@ -1706,6 +1897,7 @@ body::before {
       <div class="capabilities-bento">
         <div class="capability-card reveal stagger-1">
           <div class="card-spotlight"></div>
+          <span class="capability-num">01</span>
           <div class="capability-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
@@ -1717,6 +1909,7 @@ body::before {
 
         <div class="capability-card reveal stagger-2">
           <div class="card-spotlight"></div>
+          <span class="capability-num">02</span>
           <div class="capability-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
@@ -1728,6 +1921,7 @@ body::before {
 
         <div class="capability-card reveal stagger-3">
           <div class="card-spotlight"></div>
+          <span class="capability-num">03</span>
           <div class="capability-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
@@ -1739,6 +1933,7 @@ body::before {
 
         <div class="capability-card reveal stagger-4">
           <div class="card-spotlight"></div>
+          <span class="capability-num">04</span>
           <div class="capability-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
@@ -1750,6 +1945,7 @@ body::before {
 
         <div class="capability-card reveal stagger-5">
           <div class="card-spotlight"></div>
+          <span class="capability-num">05</span>
           <div class="capability-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
@@ -1761,6 +1957,7 @@ body::before {
 
         <div class="capability-card reveal stagger-6">
           <div class="card-spotlight"></div>
+          <span class="capability-num">06</span>
           <div class="capability-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
@@ -1896,13 +2093,8 @@ body::before {
                 <div class="browser-dot" style="background:#28c840;"></div>
                 <span class="terminal-title">vertex &mdash; analytics</span>
               </div>
-              <div class="terminal-body">
-                <div class="terminal-line"><span class="terminal-prompt">$</span><span class="terminal-cmd">vertex deploy <span class="terminal-accent">--prod</span></span></div>
-                <div class="terminal-output">Compiling 847 modules...</div>
-                <div class="terminal-output">Bundle: <span class="terminal-accent">142kb</span> gzipped</div>
-                <div class="terminal-output">Edge regions: <span class="terminal-accent">14</span></div>
-                <div class="terminal-output"><span class="terminal-success">&#10003; Deployed to vertex.io</span></div>
-                <div class="terminal-line" style="margin-top:6px;"><span class="terminal-prompt">$</span><span class="terminal-cmd"><span class="terminal-blink"></span></span></div>
+              <div class="terminal-body" id="terminalBody">
+                <div class="terminal-line"><span class="terminal-prompt">$</span><span class="terminal-cmd" id="terminalTyping"></span><span class="terminal-blink" id="terminalCursor"></span></div>
               </div>
             </div>
           </div>
@@ -2011,8 +2203,19 @@ body::before {
 <section class="statement-section">
   <div class="statement-glow"></div>
   <div class="statement-bg-text" data-parallax="-0.1">BUILD</div>
-  <div class="statement-text reveal">
-    <span class="statement-muted">We don't follow trends.</span> We set the standard <span class="statement-accent">for what comes next.</span>
+  <div class="statement-text" id="statementText">
+    <span class="statement-word statement-muted" style="transition-delay:0s;">We</span>
+    <span class="statement-word statement-muted" style="transition-delay:0.05s;">don't</span>
+    <span class="statement-word statement-muted" style="transition-delay:0.1s;">follow</span>
+    <span class="statement-word statement-muted" style="transition-delay:0.15s;">trends.</span>
+    <span class="statement-word" style="transition-delay:0.25s;">We</span>
+    <span class="statement-word" style="transition-delay:0.3s;">set</span>
+    <span class="statement-word" style="transition-delay:0.35s;">the</span>
+    <span class="statement-word" style="transition-delay:0.4s;">standard</span>
+    <span class="statement-word statement-accent" style="transition-delay:0.5s;">for</span>
+    <span class="statement-word statement-accent" style="transition-delay:0.55s;">what</span>
+    <span class="statement-word statement-accent" style="transition-delay:0.6s;">comes</span>
+    <span class="statement-word statement-accent" style="transition-delay:0.65s;">next.</span>
   </div>
 </section>
 
@@ -2384,6 +2587,38 @@ body::before {
     });
   });
 
+  // ── CUSTOM CURSOR ──
+  var cursorDot = document.getElementById('cursorDot');
+  if (window.matchMedia('(hover: hover)').matches && cursorDot) {
+    var cx = 0, cy = 0, tx = 0, ty = 0;
+
+    document.addEventListener('mousemove', function(e) {
+      tx = e.clientX;
+      ty = e.clientY;
+      if (!cursorDot.classList.contains('visible')) cursorDot.classList.add('visible');
+    });
+
+    document.addEventListener('mouseleave', function() {
+      cursorDot.classList.remove('visible');
+    });
+
+    function animateCursor() {
+      cx += (tx - cx) * 0.15;
+      cy += (ty - cy) * 0.15;
+      cursorDot.style.left = cx + 'px';
+      cursorDot.style.top = cy + 'px';
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // Scale cursor on interactive elements
+    var interactiveEls = document.querySelectorAll('a, button, .hscroll-card, .capability-card, .testimonial-card');
+    interactiveEls.forEach(function(el) {
+      el.addEventListener('mouseenter', function() { cursorDot.classList.add('hovering'); });
+      el.addEventListener('mouseleave', function() { cursorDot.classList.remove('hovering'); });
+    });
+  }
+
   // ── CURSOR SPOTLIGHT ON CARDS ──
   if (window.matchMedia('(hover: hover)').matches) {
     document.querySelectorAll('.capability-card').forEach(function(card) {
@@ -2394,6 +2629,29 @@ body::before {
         var x = e.clientX - rect.left;
         var y = e.clientY - rect.top;
         spotlight.style.background = 'radial-gradient(300px circle at ' + x + 'px ' + y + 'px, rgba(99,102,241,0.06), transparent 60%)';
+      });
+    });
+  }
+
+  // ── 3D TILT ON SHOWCASE CARDS ──
+  if (window.matchMedia('(hover: hover)').matches) {
+    document.querySelectorAll('.hscroll-card').forEach(function(card) {
+      var inner = card.querySelector('.hscroll-card-inner');
+      if (!inner) return;
+
+      card.addEventListener('mousemove', function(e) {
+        var rect = card.getBoundingClientRect();
+        var x = (e.clientX - rect.left) / rect.width;
+        var y = (e.clientY - rect.top) / rect.height;
+        var tiltX = (0.5 - y) * 8;
+        var tiltY = (x - 0.5) * 8;
+        inner.style.transform = 'rotateX(' + tiltX + 'deg) rotateY(' + tiltY + 'deg)';
+        card.style.setProperty('--mouse-x', (x * 100) + '%');
+        card.style.setProperty('--mouse-y', (y * 100) + '%');
+      });
+
+      card.addEventListener('mouseleave', function() {
+        inner.style.transform = '';
       });
     });
   }
@@ -2418,12 +2676,19 @@ body::before {
   // ── HERO PARALLAX ON MOUSE ──
   if (window.matchMedia('(hover: hover)').matches) {
     var glows = document.querySelectorAll('.hero-glow');
+    var shapes = document.querySelectorAll('.hero-shape');
     document.addEventListener('mousemove', function(e) {
       var x = (e.clientX / window.innerWidth - 0.5) * 2;
       var y = (e.clientY / window.innerHeight - 0.5) * 2;
       glows.forEach(function(glow, i) {
         var factor = (i + 1) * 12;
         glow.style.transform = 'translate(calc(-50% + ' + (x * factor) + 'px), ' + (y * factor) + 'px)';
+      });
+      // Subtle parallax on floating shapes
+      shapes.forEach(function(shape, i) {
+        var factor = (i + 1) * 4;
+        shape.style.marginLeft = (x * factor) + 'px';
+        shape.style.marginTop = (y * factor) + 'px';
       });
     });
   }
@@ -2469,6 +2734,98 @@ body::before {
         el.style.transform = 'translate(-50%, calc(-50% + ' + offset + 'px))';
       });
     });
+  }
+
+  // ── STATEMENT WORD-BY-WORD REVEAL ──
+  var statementText = document.getElementById('statementText');
+  if (statementText) {
+    var statementObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('words-visible');
+          statementObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    statementObserver.observe(statementText);
+  }
+
+  // ── TERMINAL TYPING ANIMATION ──
+  var terminalBody = document.getElementById('terminalBody');
+  var terminalTyping = document.getElementById('terminalTyping');
+  var terminalCursor = document.getElementById('terminalCursor');
+
+  if (terminalBody && terminalTyping) {
+    var terminalLines = [
+      { type: 'cmd', text: 'vertex deploy --prod' },
+      { type: 'out', text: 'Compiling 847 modules...' },
+      { type: 'out', text: 'Bundle: 142kb gzipped' },
+      { type: 'out', text: 'Edge regions: 14' },
+      { type: 'success', text: '\u2713 Deployed to vertex.io' }
+    ];
+    var terminalStarted = false;
+
+    function typeTerminal() {
+      if (terminalStarted) return;
+      terminalStarted = true;
+
+      var lineIdx = 0;
+      var charIdx = 0;
+      var currentLine = terminalLines[0];
+
+      function typeChar() {
+        if (lineIdx >= terminalLines.length) {
+          // Add final prompt
+          var finalLine = document.createElement('div');
+          finalLine.className = 'terminal-line';
+          finalLine.style.marginTop = '6px';
+          finalLine.innerHTML = '<span class="terminal-prompt">$</span><span class="terminal-cmd"><span class="terminal-blink"></span></span>';
+          terminalBody.appendChild(finalLine);
+          if (terminalCursor) terminalCursor.style.display = 'none';
+          return;
+        }
+
+        currentLine = terminalLines[lineIdx];
+
+        if (currentLine.type === 'cmd') {
+          if (charIdx < currentLine.text.length) {
+            terminalTyping.textContent += currentLine.text[charIdx];
+            charIdx++;
+            setTimeout(typeChar, 40 + Math.random() * 30);
+          } else {
+            // Move to next line after typing command
+            lineIdx++;
+            charIdx = 0;
+            setTimeout(typeChar, 400);
+          }
+        } else {
+          // Output lines appear instantly
+          var outDiv = document.createElement('div');
+          outDiv.className = 'terminal-output';
+          if (currentLine.type === 'success') {
+            outDiv.innerHTML = '<span class="terminal-success">' + currentLine.text + '</span>';
+          } else {
+            outDiv.textContent = currentLine.text;
+          }
+          terminalBody.insertBefore(outDiv, terminalBody.lastElementChild);
+          lineIdx++;
+          charIdx = 0;
+          setTimeout(typeChar, 200);
+        }
+      }
+
+      setTimeout(typeChar, 500);
+    }
+
+    var termObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          typeTerminal();
+          termObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    termObserver.observe(terminalBody);
   }
 
 })();
