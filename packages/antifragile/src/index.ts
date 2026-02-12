@@ -132,7 +132,7 @@ function generateConstraintForBreach(
     const pattern = violatedConstraint.slice('limit:'.length);
     const numMatch = pattern.match(/(\d+)/);
     if (numMatch) {
-      const originalValue = parseInt(numMatch[1], 10);
+      const originalValue = parseInt(numMatch[1]!, 10);
       const reductionFactor =
         severity === 'critical' ? 0.25
         : severity === 'high' ? 0.5

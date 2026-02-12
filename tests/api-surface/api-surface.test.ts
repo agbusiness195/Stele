@@ -356,6 +356,7 @@ describe('API Surface Tests', () => {
       'resolveChain_core',
       'retryMiddleware',
       'runConformanceSuite',
+      'securityConformance',
       'serializeCCL',
       'serializeCovenant',
       'serializeIdentity',

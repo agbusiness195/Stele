@@ -478,21 +478,21 @@ export function computeNPartyNash(
   config?: NPartyNashConfig,
 ): NPartyNashResult | null {
   if (outcomes.length === 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'outcomes array must not be empty');
+    throw new SteleError('outcomes array must not be empty', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (utilities.length < 2) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'At least 2 utility functions required for Nash bargaining');
+    throw new SteleError('At least 2 utility functions required for Nash bargaining', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const n = utilities.length;
   const powers = bargainingPowers ?? utilities.map(() => 1.0);
 
   if (powers.length !== n) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `bargainingPowers length (${powers.length}) must match utilities length (${n})`);
+    throw new SteleError(`bargainingPowers length (${powers.length}) must match utilities length (${n})`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   for (let i = 0; i < powers.length; i++) {
     if (powers[i]! <= 0) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `bargainingPowers[${i}] must be positive, got ${powers[i]}`);
+      throw new SteleError(`bargainingPowers[${i}] must be positive, got ${powers[i]}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
   }
 
@@ -601,13 +601,13 @@ export class ConcessionProtocol {
 
   constructor(config: ConcessionConfig) {
     if (config.concessionRate < 0 || config.concessionRate > 1) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'concessionRate must be in [0, 1]');
+      throw new SteleError('concessionRate must be in [0, 1]', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (config.maxRounds < 1) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'maxRounds must be >= 1');
+      throw new SteleError('maxRounds must be >= 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (config.deadline <= 0) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'deadline must be positive');
+      throw new SteleError('deadline must be positive', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     this.config = config;
     this.startTime = Date.now();
@@ -669,7 +669,7 @@ export class ConcessionProtocol {
     }
 
     if (this.state === 'ACCEPT' || this.state === 'REJECT' || this.state === 'TIMEOUT') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Cannot propose in terminal state: ${this.state}`);
+      throw new SteleError(`Cannot propose in terminal state: ${this.state}`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     this.log.push({
@@ -696,7 +696,7 @@ export class ConcessionProtocol {
     }
 
     if (this.state !== 'PROPOSE' && this.state !== 'CONCEDE') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Cannot counter in state: ${this.state}. Must be PROPOSE or CONCEDE.`);
+      throw new SteleError(`Cannot counter in state: ${this.state}. Must be PROPOSE or CONCEDE.`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     if (this.round >= this.config.maxRounds) {
@@ -732,7 +732,7 @@ export class ConcessionProtocol {
     }
 
     if (this.state !== 'COUNTER' && this.state !== 'PROPOSE') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Cannot concede in state: ${this.state}. Must be COUNTER or PROPOSE.`);
+      throw new SteleError(`Cannot concede in state: ${this.state}. Must be COUNTER or PROPOSE.`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     const concessionAmount = this.calculateConcession(remainingGap, now);
@@ -754,7 +754,7 @@ export class ConcessionProtocol {
    */
   accept(from: string, proposal: Proposal): ConcessionState {
     if (this.state === 'ACCEPT' || this.state === 'REJECT' || this.state === 'TIMEOUT') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Cannot accept in terminal state: ${this.state}`);
+      throw new SteleError(`Cannot accept in terminal state: ${this.state}`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     this.log.push({
@@ -773,7 +773,7 @@ export class ConcessionProtocol {
    */
   reject(from: string, proposal: Proposal): ConcessionState {
     if (this.state === 'ACCEPT' || this.state === 'REJECT' || this.state === 'TIMEOUT') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Cannot reject in terminal state: ${this.state}`);
+      throw new SteleError(`Cannot reject in terminal state: ${this.state}`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     this.log.push({
@@ -810,7 +810,7 @@ export class IncrementalParetoFrontier {
 
   constructor(dimensions: number) {
     if (dimensions < 2) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Pareto frontier requires at least 2 dimensions');
+      throw new SteleError('Pareto frontier requires at least 2 dimensions', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     this.dimensions = dimensions;
   }
@@ -851,7 +851,7 @@ export class IncrementalParetoFrontier {
    */
   insert(outcome: Outcome, utilities: number[]): boolean {
     if (utilities.length !== this.dimensions) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Expected ${this.dimensions} utility values, got ${utilities.length}`);
+      throw new SteleError(`Expected ${this.dimensions} utility values, got ${utilities.length}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     const newPoint: ParetoOutcome = {
@@ -1020,10 +1020,10 @@ export function runZeuthenNegotiation(
   maxRounds: number = 100,
 ): { rounds: ZeuthenResult[]; agreedOutcome: Outcome | null } {
   if (outcomes.length === 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'outcomes array must not be empty');
+    throw new SteleError('outcomes array must not be empty', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (maxRounds < 1) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'maxRounds must be >= 1');
+    throw new SteleError('maxRounds must be >= 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Each party starts with their most preferred outcome

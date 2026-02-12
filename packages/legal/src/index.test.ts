@@ -361,8 +361,8 @@ describe('generateComplianceReport', () => {
   });
 
   it('HIPAA has stricter requirements than CCPA', () => {
-    expect(COMPLIANCE_STANDARDS['HIPAA'].requiredScore).toBeGreaterThan(COMPLIANCE_STANDARDS['CCPA'].requiredScore);
-    expect(COMPLIANCE_STANDARDS['HIPAA'].requiredAttestationCoverage).toBeGreaterThan(COMPLIANCE_STANDARDS['CCPA'].requiredAttestationCoverage);
+    expect(COMPLIANCE_STANDARDS['HIPAA']!.requiredScore).toBeGreaterThan(COMPLIANCE_STANDARDS['CCPA']!.requiredScore);
+    expect(COMPLIANCE_STANDARDS['HIPAA']!.requiredAttestationCoverage).toBeGreaterThan(COMPLIANCE_STANDARDS['CCPA']!.requiredAttestationCoverage);
   });
 
   it('handles zero totalInteractions without error', () => {
@@ -471,10 +471,10 @@ describe('COMPLIANCE_STANDARDS', () => {
     const standards: ComplianceStandard[] = ['SOC2', 'ISO27001', 'GDPR', 'CCPA', 'HIPAA'];
     for (const std of standards) {
       expect(COMPLIANCE_STANDARDS[std]).toBeDefined();
-      expect(COMPLIANCE_STANDARDS[std].requiredScore).toBeGreaterThan(0);
-      expect(COMPLIANCE_STANDARDS[std].requiredAttestationCoverage).toBeGreaterThan(0);
-      expect(COMPLIANCE_STANDARDS[std].requiredCanaryPassRate).toBeGreaterThan(0);
-      expect(COMPLIANCE_STANDARDS[std].description).toBeTruthy();
+      expect(COMPLIANCE_STANDARDS[std]!.requiredScore).toBeGreaterThan(0);
+      expect(COMPLIANCE_STANDARDS[std]!.requiredAttestationCoverage).toBeGreaterThan(0);
+      expect(COMPLIANCE_STANDARDS[std]!.requiredCanaryPassRate).toBeGreaterThan(0);
+      expect(COMPLIANCE_STANDARDS[std]!.description).toBeTruthy();
     }
   });
 
@@ -503,8 +503,8 @@ describe('crossJurisdictionCompliance', () => {
     const result = crossJurisdictionCompliance(pkg, ['US'], goodCompliance);
     expect(result.overallCompliant).toBe(true);
     expect(result.jurisdictions).toHaveLength(1);
-    expect(result.jurisdictions[0].jurisdiction).toBe('US');
-    expect(result.jurisdictions[0].passed).toBe(true);
+    expect(result.jurisdictions[0]!.jurisdiction).toBe('US');
+    expect(result.jurisdictions[0]!.passed).toBe(true);
   });
 
   it('reports non-compliance when at least one jurisdiction fails', () => {
@@ -539,7 +539,7 @@ describe('crossJurisdictionCompliance', () => {
     const pkg = exportLegalPackage('agent-1', 'operator-1', sampleData);
     const result = crossJurisdictionCompliance(pkg, ['MARS'], sampleCompliance);
     expect(result.overallCompliant).toBe(false);
-    expect(result.jurisdictions[0].gaps).toContain('Jurisdiction "MARS" is not registered');
+    expect(result.jurisdictions[0]!.gaps).toContain('Jurisdiction "MARS" is not registered');
   });
 
   it('generates recommendations for failing jurisdictions', () => {
@@ -679,7 +679,7 @@ describe('auditTrailExport', () => {
     const pkg = exportLegalPackage('agent-1', 'operator-1', sampleData);
     const trail = auditTrailExport(pkg);
     for (let i = 1; i < trail.entries.length; i++) {
-      expect(trail.entries[i].timestamp).toBeGreaterThanOrEqual(trail.entries[i - 1].timestamp);
+      expect(trail.entries[i]!.timestamp).toBeGreaterThanOrEqual(trail.entries[i - 1]!.timestamp);
     }
   });
 

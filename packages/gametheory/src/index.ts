@@ -357,7 +357,7 @@ export function coalitionStability(
 
     const key = coalition.join(',');
     const coalitionValue = valueMap.get(key) ?? 0;
-    const currentAllocation = coalition.reduce((s, i) => s + allocation[i], 0);
+    const currentAllocation = coalition.reduce((s, i) => s + (allocation[i] ?? 0), 0);
 
     // A coalition blocks if it can get more by deviating
     if (coalitionValue > currentAllocation) {

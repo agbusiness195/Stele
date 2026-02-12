@@ -757,7 +757,7 @@ describe('coalitionStability', () => {
       { coalition: [0, 1], value: 10 },
     ]);
     expect(result.isStable).toBe(false);
-    expect(result.blockingCoalitions[0].coalition).toEqual([0]);
+    expect(result.blockingCoalitions[0]!.coalition).toEqual([0]);
   });
 
   it('formula contains derivation for stable case', () => {

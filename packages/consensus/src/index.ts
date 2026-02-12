@@ -720,11 +720,11 @@ export class StreamlinedBFT {
 
   constructor(nodeIds: string[]) {
     if (nodeIds.length < 4) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'StreamlinedBFT requires at least 4 nodes (n >= 3f+1, f >= 1)');
+      throw new SteleError('StreamlinedBFT requires at least 4 nodes (n >= 3f+1, f >= 1)', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const uniqueNodes = [...new Set(nodeIds)];
     if (uniqueNodes.length !== nodeIds.length) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Node IDs must be unique');
+      throw new SteleError('Node IDs must be unique', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     this.nodes = uniqueNodes;
@@ -780,7 +780,7 @@ export class StreamlinedBFT {
    */
   propose(proposer: string, payload: unknown, parentHash: string): BFTBlock {
     if (proposer !== this.viewState.leader) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Only the leader (${this.viewState.leader}) can propose, not ${proposer}`);
+      throw new SteleError(`Only the leader (${this.viewState.leader}) can propose, not ${proposer}`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     const block: BFTBlock = {
@@ -805,10 +805,10 @@ export class StreamlinedBFT {
    */
   vote(nodeId: string): QuorumCertificate | null {
     if (!this.nodes.includes(nodeId)) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Unknown node: ${nodeId}`);
+      throw new SteleError(`Unknown node: ${nodeId}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (!this.viewState.block) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, 'No block to vote on');
+      throw new SteleError('No block to vote on', SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
     if (this.viewState.votes.has(nodeId)) {
       return null; // Already voted
@@ -924,7 +924,7 @@ export class DynamicQuorum {
 
   constructor(initialMembers: string[]) {
     if (initialMembers.length < 1) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Must have at least 1 initial member');
+      throw new SteleError('Must have at least 1 initial member', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const unique = [...new Set(initialMembers)];
     this.epochs.push({
@@ -967,11 +967,11 @@ export class DynamicQuorum {
    */
   requestJoin(nodeId: string): ReconfigRequest {
     if (!nodeId || typeof nodeId !== 'string') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'nodeId must be a non-empty string');
+      throw new SteleError('nodeId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const current = this.currentEpoch();
     if (current.members.includes(nodeId)) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Node ${nodeId} is already a member`);
+      throw new SteleError(`Node ${nodeId} is already a member`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     const req: ReconfigRequest = { type: 'join', nodeId, requestedAt: Date.now() };
@@ -985,11 +985,11 @@ export class DynamicQuorum {
    */
   requestLeave(nodeId: string): ReconfigRequest {
     if (!nodeId || typeof nodeId !== 'string') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'nodeId must be a non-empty string');
+      throw new SteleError('nodeId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const current = this.currentEpoch();
     if (!current.members.includes(nodeId)) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Node ${nodeId} is not a member`);
+      throw new SteleError(`Node ${nodeId} is not a member`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     const req: ReconfigRequest = { type: 'leave', nodeId, requestedAt: Date.now() };
@@ -1059,7 +1059,7 @@ export class DynamicQuorum {
     // Ensure we don't drop below minimum viable size
     if (newMembers.length < 1) {
       this.transitioning = false;
-      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, 'Cannot remove all members');
+      throw new SteleError('Cannot remove all members', SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     const newEpoch: Epoch = {
@@ -1125,16 +1125,16 @@ export class PipelineSimulator {
 
   constructor(condition: NetworkCondition) {
     if (condition.baseLatencyMs < 0) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'baseLatencyMs must be >= 0');
+      throw new SteleError('baseLatencyMs must be >= 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (condition.jitterMs < 0) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'jitterMs must be >= 0');
+      throw new SteleError('jitterMs must be >= 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (condition.lossProbability < 0 || condition.lossProbability >= 1) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'lossProbability must be in [0, 1)');
+      throw new SteleError('lossProbability must be in [0, 1)', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (condition.processingTimeMs < 0) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'processingTimeMs must be >= 0');
+      throw new SteleError('processingTimeMs must be >= 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     this.condition = condition;
   }
@@ -1164,10 +1164,10 @@ export class PipelineSimulator {
     seed: number = 42,
   ): PipelineSimulationResult {
     if (rounds < 1) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'rounds must be >= 1');
+      throw new SteleError('rounds must be >= 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (nodesPerRound < 1) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'nodesPerRound must be >= 1');
+      throw new SteleError('nodesPerRound must be >= 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     let totalTime = 0;
@@ -1295,13 +1295,13 @@ export class QuorumIntersectionVerifier {
     byzantineFaults: number,
   ): QuorumIntersectionResult {
     if (allNodes.length < 1) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'allNodes must not be empty');
+      throw new SteleError('allNodes must not be empty', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (byzantineFaults < 0) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'byzantineFaults must be >= 0');
+      throw new SteleError('byzantineFaults must be >= 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (quorumSets.length < 2) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'At least 2 quorum sets required for intersection analysis');
+      throw new SteleError('At least 2 quorum sets required for intersection analysis', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     const n = allNodes.length;

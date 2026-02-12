@@ -467,7 +467,7 @@ export function crossJurisdictionCompliance(
   const jurisdictionPairs: Array<[string, string]> = [];
   for (let i = 0; i < jurisdictions.length; i++) {
     for (let j = i + 1; j < jurisdictions.length; j++) {
-      jurisdictionPairs.push([jurisdictions[i], jurisdictions[j]]);
+      jurisdictionPairs.push([jurisdictions[i]!, jurisdictions[j]!]);
     }
   }
 

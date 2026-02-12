@@ -632,7 +632,7 @@ export async function cclConformance(
         message: 'Rate limit statement must parse into exactly 1 limit',
       });
     } else {
-      const limit = cclDoc.limits[0];
+      const limit = cclDoc.limits[0]!;
       if (limit.count !== 1000) {
         failures.push({
           test: 'ccl-rate-limit-count',
@@ -953,9 +953,9 @@ export async function covenantConformance(
   try {
     const { doc } = await buildTestCovenant();
     const badNonce = { ...doc, nonce: '' };
-    const result = await target.verifyCovenant(badNonce);
+    const result = (await target.verifyCovenant(badNonce)) as ConformanceVerifyResult;
     const nonceCheck = result.checks?.find(
-      (c: any) => c.name === 'nonce_present',
+      (c: ConformanceCheck) => c.name === 'nonce_present',
     );
     if (!nonceCheck || nonceCheck.passed) {
       failures.push({
@@ -1010,7 +1010,7 @@ export async function covenantConformance(
       'signature',
     ];
     const missing = requiredFields.filter(
-      (f) => (doc as any)[f] === undefined || (doc as any)[f] === null,
+      (f) => (doc as Record<string, unknown>)[f] === undefined || (doc as Record<string, unknown>)[f] === null,
     );
     if (missing.length > 0) {
       failures.push({
@@ -1139,7 +1139,7 @@ export async function interopConformance(
   total++;
   try {
     const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
-    const doc = await target.buildCovenant({
+    const doc = (await target.buildCovenant({
       issuer: {
         id: 'interop-issuer',
         publicKey: kp.publicKeyHex,
@@ -1152,10 +1152,10 @@ export async function interopConformance(
       },
       constraints: "permit read on '/interop/**'",
       privateKey: kp.privateKey,
-    });
+    })) as ConformanceDoc;
 
     // Compute the ID using the reference canonical form + target's sha256
-    const canonical = referenceCanonicalForm(doc);
+    const canonical = referenceCanonicalForm(doc as Record<string, unknown>);
     const expectedId = await target.sha256(textEncode(canonical));
 
     if (doc.id !== expectedId) {
@@ -1183,7 +1183,7 @@ export async function interopConformance(
   total++;
   try {
     const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
-    const doc = await target.buildCovenant({
+    const doc = (await target.buildCovenant({
       issuer: {
         id: 'roundtrip-issuer',
         publicKey: kp.publicKeyHex,
@@ -1197,10 +1197,10 @@ export async function interopConformance(
       constraints:
         "permit read on '/interop/**'\ndeny write on '/interop/restricted'",
       privateKey: kp.privateKey,
-    });
+    })) as ConformanceDoc;
     const json = JSON.stringify(doc);
     const restored = JSON.parse(json);
-    const result = await target.verifyCovenant(restored);
+    const result = (await target.verifyCovenant(restored)) as ConformanceVerifyResult;
     if (!result.valid) {
       failures.push({
         test: 'interop-serialize-roundtrip',
@@ -1225,7 +1225,7 @@ export async function interopConformance(
   total++;
   try {
     const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
-    const doc = await target.buildCovenant({
+    const doc = (await target.buildCovenant({
       issuer: {
         id: 'format-issuer',
         publicKey: kp.publicKeyHex,
@@ -1238,7 +1238,7 @@ export async function interopConformance(
       },
       constraints: "permit read on '/format'",
       privateKey: kp.privateKey,
-    });
+    })) as ConformanceDoc;
     const idRegex = /^[0-9a-f]{64}$/;
     if (!idRegex.test(doc.id)) {
       failures.push({
@@ -1264,7 +1264,7 @@ export async function interopConformance(
   total++;
   try {
     const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
-    const doc = await target.buildCovenant({
+    const doc = (await target.buildCovenant({
       issuer: {
         id: 'version-issuer',
         publicKey: kp.publicKeyHex,
@@ -1277,7 +1277,7 @@ export async function interopConformance(
       },
       constraints: "permit read on '/version'",
       privateKey: kp.privateKey,
-    });
+    })) as ConformanceDoc;
     if (doc.version !== '1.0') {
       failures.push({
         test: 'interop-protocol-version',
@@ -1301,7 +1301,7 @@ export async function interopConformance(
   total++;
   try {
     const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
-    const doc = await target.buildCovenant({
+    const doc = (await target.buildCovenant({
       issuer: {
         id: 'nonce-issuer',
         publicKey: kp.publicKeyHex,
@@ -1314,7 +1314,7 @@ export async function interopConformance(
       },
       constraints: "permit read on '/nonce'",
       privateKey: kp.privateKey,
-    });
+    })) as ConformanceDoc;
     const nonceRegex = /^[0-9a-f]{64}$/i;
     if (!nonceRegex.test(doc.nonce)) {
       failures.push({
@@ -1340,7 +1340,7 @@ export async function interopConformance(
   total++;
   try {
     const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
-    const doc = await target.buildCovenant({
+    const doc = (await target.buildCovenant({
       issuer: {
         id: 'timestamp-issuer',
         publicKey: kp.publicKeyHex,
@@ -1353,7 +1353,7 @@ export async function interopConformance(
       },
       constraints: "permit read on '/timestamp'",
       privateKey: kp.privateKey,
-    });
+    })) as ConformanceDoc;
     const parsed = new Date(doc.createdAt);
     if (isNaN(parsed.getTime())) {
       failures.push({
@@ -1378,14 +1378,234 @@ export async function interopConformance(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// Category 5: Security invariants
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Verify security-critical invariants.
+ *
+ * Checks:
+ * - Nonces are unique across consecutive builds
+ * - IDs are unique across consecutive builds
+ * - Empty signature string fails verification
+ * - Zero-filled signature fails verification
+ * - Private key is 32 or 64 bytes
+ * - Public key hex matches public key bytes
+ */
+export async function securityConformance(
+  target: ConformanceTarget,
+): Promise<CategoryResult> {
+  const failures: ConformanceFailure[] = [];
+  let total = 0;
+  const category = 'security';
+
+  // ── Nonces are unique across consecutive builds ────────────────────────
+  total++;
+  try {
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
+    const opts = {
+      issuer: {
+        id: 'nonce-uniq-issuer',
+        publicKey: kp.publicKeyHex,
+        role: 'issuer',
+      },
+      beneficiary: {
+        id: 'nonce-uniq-beneficiary',
+        publicKey: kp.publicKeyHex,
+        role: 'beneficiary',
+      },
+      constraints: "permit read on '/data'",
+      privateKey: kp.privateKey,
+    };
+    const doc1 = (await target.buildCovenant(opts)) as ConformanceDoc;
+    const doc2 = (await target.buildCovenant(opts)) as ConformanceDoc;
+    if (doc1.nonce === doc2.nonce) {
+      failures.push({
+        test: 'security-nonce-uniqueness',
+        category,
+        expected: 'different nonces',
+        actual: 'identical nonces',
+        message:
+          'Each covenant must have a unique nonce (CSPRNG). Identical nonces indicate predictable randomness.',
+      });
+    }
+  } catch (err) {
+    failures.push({
+      test: 'security-nonce-uniqueness',
+      category,
+      expected: 'no error',
+      actual: String(err),
+      message: `Nonce uniqueness test threw: ${err}`,
+    });
+  }
+
+  // ── IDs are unique across consecutive builds ──────────────────────────
+  total++;
+  try {
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
+    const opts = {
+      issuer: {
+        id: 'id-uniq-issuer',
+        publicKey: kp.publicKeyHex,
+        role: 'issuer',
+      },
+      beneficiary: {
+        id: 'id-uniq-beneficiary',
+        publicKey: kp.publicKeyHex,
+        role: 'beneficiary',
+      },
+      constraints: "permit read on '/data'",
+      privateKey: kp.privateKey,
+    };
+    const doc1 = (await target.buildCovenant(opts)) as ConformanceDoc;
+    const doc2 = (await target.buildCovenant(opts)) as ConformanceDoc;
+    if (doc1.id === doc2.id) {
+      failures.push({
+        test: 'security-id-uniqueness',
+        category,
+        expected: 'different IDs',
+        actual: 'identical IDs',
+        message:
+          'Consecutive builds with same params must produce different IDs (due to unique nonces)',
+      });
+    }
+  } catch (err) {
+    failures.push({
+      test: 'security-id-uniqueness',
+      category,
+      expected: 'no error',
+      actual: String(err),
+      message: `ID uniqueness test threw: ${err}`,
+    });
+  }
+
+  // ── Empty signature string fails verification ─────────────────────────
+  total++;
+  try {
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
+    const doc = (await target.buildCovenant({
+      issuer: {
+        id: 'empty-sig-issuer',
+        publicKey: kp.publicKeyHex,
+        role: 'issuer',
+      },
+      beneficiary: {
+        id: 'empty-sig-beneficiary',
+        publicKey: kp.publicKeyHex,
+        role: 'beneficiary',
+      },
+      constraints: "permit read on '/data'",
+      privateKey: kp.privateKey,
+    })) as ConformanceDoc;
+    const emptySig = { ...doc, signature: '' };
+    const result = (await target.verifyCovenant(emptySig)) as ConformanceVerifyResult;
+    if (result.valid) {
+      failures.push({
+        test: 'security-empty-signature-reject',
+        category,
+        expected: false,
+        actual: result.valid,
+        message: 'Covenant with empty signature must fail verification',
+      });
+    }
+  } catch (_err) {
+    // Throwing is acceptable -- counts as rejection
+  }
+
+  // ── Zero-filled signature fails verification ──────────────────────────
+  total++;
+  try {
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
+    const doc = (await target.buildCovenant({
+      issuer: {
+        id: 'zero-sig-issuer',
+        publicKey: kp.publicKeyHex,
+        role: 'issuer',
+      },
+      beneficiary: {
+        id: 'zero-sig-beneficiary',
+        publicKey: kp.publicKeyHex,
+        role: 'beneficiary',
+      },
+      constraints: "permit read on '/data'",
+      privateKey: kp.privateKey,
+    })) as ConformanceDoc;
+    const zeroSig = { ...doc, signature: '0'.repeat(128) };
+    const result = (await target.verifyCovenant(zeroSig)) as ConformanceVerifyResult;
+    if (result.valid) {
+      failures.push({
+        test: 'security-zero-signature-reject',
+        category,
+        expected: false,
+        actual: result.valid,
+        message: 'Covenant with zero-filled signature must fail verification',
+      });
+    }
+  } catch (_err) {
+    // Throwing is acceptable -- counts as rejection
+  }
+
+  // ── Private key length is 32 or 64 bytes ──────────────────────────────
+  total++;
+  try {
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
+    if (kp.privateKey.length !== 32 && kp.privateKey.length !== 64) {
+      failures.push({
+        test: 'security-private-key-length',
+        category,
+        expected: '32 or 64 bytes',
+        actual: kp.privateKey.length,
+        message:
+          'Ed25519 private key must be 32 bytes (seed) or 64 bytes (seed + public key)',
+      });
+    }
+  } catch (err) {
+    failures.push({
+      test: 'security-private-key-length',
+      category,
+      expected: 'no error',
+      actual: String(err),
+      message: `Private key length test threw: ${err}`,
+    });
+  }
+
+  // ── Public key hex matches public key bytes ───────────────────────────
+  total++;
+  try {
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
+    const expectedHex = bytesToHex(kp.publicKey);
+    if (kp.publicKeyHex !== expectedHex) {
+      failures.push({
+        test: 'security-pubkey-hex-consistency',
+        category,
+        expected: expectedHex,
+        actual: kp.publicKeyHex,
+        message:
+          'publicKeyHex must be the lowercase hex encoding of publicKey bytes',
+      });
+    }
+  } catch (err) {
+    failures.push({
+      test: 'security-pubkey-hex-consistency',
+      category,
+      expected: 'no error',
+      actual: String(err),
+      message: `Public key hex consistency test threw: ${err}`,
+    });
+  }
+
+  return { failures, total };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Full suite runner
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
  * Run the complete Stele Protocol Conformance Suite.
  *
- * Executes all four categories (crypto, CCL, covenant, interop) and
- * aggregates the results. An implementation that returns
+ * Executes all five categories (crypto, CCL, covenant, interop, security)
+ * and aggregates the results. An implementation that returns
  * `result.passed === true` is considered spec-compliant.
  *
  * @param target - The implementation under test.
@@ -1421,11 +1641,12 @@ export async function runConformanceSuite(
 ): Promise<ConformanceResult> {
   const start = Date.now();
 
-  const [crypto, ccl, covenant, interop] = await Promise.all([
+  const [crypto, ccl, covenant, interop, security] = await Promise.all([
     cryptoConformance(target),
     cclConformance(target),
     covenantConformance(target),
     interopConformance(target),
+    securityConformance(target),
   ]);
 
   const allFailures = [
@@ -1433,10 +1654,11 @@ export async function runConformanceSuite(
     ...ccl.failures,
     ...covenant.failures,
     ...interop.failures,
+    ...security.failures,
   ];
 
   const total =
-    crypto.total + ccl.total + covenant.total + interop.total;
+    crypto.total + ccl.total + covenant.total + interop.total + security.total;
 
   return {
     passed: allFailures.length === 0,

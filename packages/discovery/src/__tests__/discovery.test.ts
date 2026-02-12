@@ -57,7 +57,7 @@ function mockResponse(body: unknown, ok = true, status = 200): Response {
     json: async () => body,
     headers: new Headers(),
     redirected: false,
-    type: 'basic' as ResponseType,
+    type: 'basic' as Response['type'],
     url: '',
     body: null,
     bodyUsed: false,
@@ -248,7 +248,7 @@ describe('validateDiscoveryDocument', () => {
 
   it('fails when issuer is missing', async () => {
     const doc = makeMinimalDoc();
-    delete (doc as Record<string, unknown>).issuer;
+    delete (doc as unknown as Record<string, unknown>).issuer;
     const result = await validateDiscoveryDocument(doc);
     expect(result.valid).toBe(false);
     expect(result.errors).toContain('issuer must be a non-empty string URL');
@@ -263,7 +263,7 @@ describe('validateDiscoveryDocument', () => {
 
   it('fails when keys_endpoint is missing', async () => {
     const doc = makeMinimalDoc();
-    delete (doc as Record<string, unknown>).keys_endpoint;
+    delete (doc as unknown as Record<string, unknown>).keys_endpoint;
     const result = await validateDiscoveryDocument(doc);
     expect(result.valid).toBe(false);
     expect(result.errors).toContain('keys_endpoint must be a non-empty string URL');
@@ -271,7 +271,7 @@ describe('validateDiscoveryDocument', () => {
 
   it('fails when covenants_endpoint is missing', async () => {
     const doc = makeMinimalDoc();
-    delete (doc as Record<string, unknown>).covenants_endpoint;
+    delete (doc as unknown as Record<string, unknown>).covenants_endpoint;
     const result = await validateDiscoveryDocument(doc);
     expect(result.valid).toBe(false);
     expect(result.errors).toContain('covenants_endpoint must be a non-empty string URL');
@@ -293,7 +293,7 @@ describe('validateDiscoveryDocument', () => {
 
   it('fails when hash_algorithms_supported is missing', async () => {
     const doc = makeMinimalDoc();
-    delete (doc as Record<string, unknown>).hash_algorithms_supported;
+    delete (doc as unknown as Record<string, unknown>).hash_algorithms_supported;
     const result = await validateDiscoveryDocument(doc);
     expect(result.valid).toBe(false);
     expect(result.errors).toContain('hash_algorithms_supported must be a non-empty array');
@@ -507,14 +507,14 @@ describe('DiscoveryServer', () => {
       // Verify old key is rotated
       const keySet = server.getKeySet({ kid: oldEntry.kid });
       expect(keySet.keys).toHaveLength(1);
-      expect(keySet.keys[0].status).toBe('rotated');
-      expect(keySet.keys[0].deactivated_at).toBeDefined();
-      expect(keySet.keys[0].replaced_by).toBe(newEntry.kid);
+      expect(keySet.keys[0]!.status).toBe('rotated');
+      expect(keySet.keys[0]!.deactivated_at).toBeDefined();
+      expect(keySet.keys[0]!.replaced_by).toBe(newEntry.kid);
 
       // Verify new key is active
       const newKeySet = server.getKeySet({ kid: newEntry.kid });
-      expect(newKeySet.keys[0].status).toBe('active');
-      expect(newKeySet.keys[0].public_key).toBe(kp2.publicKeyHex);
+      expect(newKeySet.keys[0]!.status).toBe('active');
+      expect(newKeySet.keys[0]!.public_key).toBe(kp2.publicKeyHex);
     });
 
     it('creates a new key when old kid does not exist', async () => {
@@ -534,8 +534,8 @@ describe('DiscoveryServer', () => {
       server.revokeKey(entry.kid);
 
       const keySet = server.getKeySet({ kid: entry.kid });
-      expect(keySet.keys[0].status).toBe('revoked');
-      expect(keySet.keys[0].deactivated_at).toBeDefined();
+      expect(keySet.keys[0]!.status).toBe('revoked');
+      expect(keySet.keys[0]!.deactivated_at).toBeDefined();
     });
 
     it('does nothing when kid does not exist', () => {
@@ -565,7 +565,7 @@ describe('DiscoveryServer', () => {
 
       const keySet = server.getKeySet({ agentId: 'agent-1' });
       expect(keySet.keys).toHaveLength(1);
-      expect(keySet.keys[0].agent_id).toBe('agent-1');
+      expect(keySet.keys[0]!.agent_id).toBe('agent-1');
     });
 
     it('filters by kid', async () => {
@@ -577,7 +577,7 @@ describe('DiscoveryServer', () => {
 
       const keySet = server.getKeySet({ kid: entry1.kid });
       expect(keySet.keys).toHaveLength(1);
-      expect(keySet.keys[0].kid).toBe(entry1.kid);
+      expect(keySet.keys[0]!.kid).toBe(entry1.kid);
     });
 
     it('returns empty key set for unknown agentId', () => {
@@ -594,7 +594,7 @@ describe('DiscoveryServer', () => {
 
       const keySet = server.getKeySet({ agentId: 'agent-1', kid: entry1.kid });
       expect(keySet.keys).toHaveLength(1);
-      expect(keySet.keys[0].kid).toBe(entry1.kid);
+      expect(keySet.keys[0]!.kid).toBe(entry1.kid);
     });
   });
 
@@ -605,12 +605,12 @@ describe('DiscoveryServer', () => {
 
       const result = server.queryCovenants();
       expect(result.covenants).toHaveLength(1);
-      expect(result.covenants[0].id).toBe(cov.id);
-      expect(result.covenants[0].issuer_id).toBe('issuer-1');
-      expect(result.covenants[0].beneficiary_id).toBe('beneficiary-1');
-      expect(result.covenants[0].status).toBe('active');
-      expect(result.covenants[0].protocol_version).toBe(cov.version);
-      expect(result.covenants[0].document_url).toContain(cov.id);
+      expect(result.covenants[0]!.id).toBe(cov.id);
+      expect(result.covenants[0]!.issuer_id).toBe('issuer-1');
+      expect(result.covenants[0]!.beneficiary_id).toBe('beneficiary-1');
+      expect(result.covenants[0]!.status).toBe('active');
+      expect(result.covenants[0]!.protocol_version).toBe(cov.version);
+      expect(result.covenants[0]!.document_url).toContain(cov.id);
     });
 
     it('stores the full covenant document for retrieval', async () => {
@@ -696,9 +696,9 @@ describe('DiscoveryServer', () => {
       expect(page1.covenants).toHaveLength(1);
       expect(page1.next_cursor).toBeDefined();
 
-      const page2 = server.queryCovenants({ limit: 1, cursor: page1.covenants[0].id });
+      const page2 = server.queryCovenants({ limit: 1, cursor: page1.covenants[0]!.id });
       expect(page2.covenants).toHaveLength(1);
-      expect(page2.covenants[0].id).not.toBe(page1.covenants[0].id);
+      expect(page2.covenants[0]!.id).not.toBe(page1.covenants[0]!.id);
     });
 
     it('returns no next_cursor when on the last page', async () => {
@@ -757,9 +757,9 @@ describe('DiscoveryServer', () => {
       expect(response.covenant_id).toBe('nonexistent-covenant-id');
       expect(response.valid).toBe(false);
       expect(response.checks).toHaveLength(1);
-      expect(response.checks[0].name).toBe('exists');
-      expect(response.checks[0].passed).toBe(false);
-      expect(response.checks[0].message).toBe('Covenant not found');
+      expect(response.checks[0]!.name).toBe('exists');
+      expect(response.checks[0]!.passed).toBe(false);
+      expect(response.checks[0]!.message).toBe('Covenant not found');
     });
   });
 
@@ -795,7 +795,7 @@ describe('DiscoveryServer', () => {
       expect(result.status).toBe(200);
       const body = result.body as { keys: AgentKeyEntry[] };
       expect(body.keys).toHaveLength(1);
-      expect(body.keys[0].agent_id).toBe('agent-1');
+      expect(body.keys[0]!.agent_id).toBe('agent-1');
     });
 
     it('covenants handler returns the registry', async () => {
@@ -844,7 +844,7 @@ describe('DiscoveryClient', () => {
     validDoc = await buildDiscoveryDocument({ issuer: TEST_ISSUER });
     mockFetch = vi.fn();
     client = new DiscoveryClient({
-      fetchFn: mockFetch,
+      fetchFn: mockFetch as unknown as typeof fetch,
       fetchOptions: { verifySignature: false, timeout: 5000 },
     });
   });
@@ -869,7 +869,7 @@ describe('DiscoveryClient', () => {
       expect(doc.issuer).toBe(TEST_ISSUER);
       expect(mockFetch).toHaveBeenCalledOnce();
 
-      const calledUrl = mockFetch.mock.calls[0][0];
+      const calledUrl = mockFetch.mock.calls[0]![0];
       expect(calledUrl).toBe(`${TEST_ISSUER}${CONFIGURATION_PATH}`);
     });
 
@@ -905,7 +905,7 @@ describe('DiscoveryClient', () => {
 
       await client.discover('https://platform.example///');
 
-      const calledUrl = mockFetch.mock.calls[0][0];
+      const calledUrl = mockFetch.mock.calls[0]![0];
       expect(calledUrl).toBe(`${TEST_ISSUER}${CONFIGURATION_PATH}`);
     });
 
@@ -914,7 +914,7 @@ describe('DiscoveryClient', () => {
 
       await client.discover(TEST_ISSUER);
 
-      const calledInit = mockFetch.mock.calls[0][1];
+      const calledInit = mockFetch.mock.calls[0]![1];
       expect(calledInit.headers.Accept).toContain('application/stele+json');
     });
 
@@ -956,7 +956,7 @@ describe('DiscoveryClient', () => {
 
       const keys = await client.getAgentKeys(TEST_ISSUER, 'agent-1');
       expect(keys).toHaveLength(1);
-      expect(keys[0].agent_id).toBe('agent-1');
+      expect(keys[0]!.agent_id).toBe('agent-1');
     });
 
     it('filters keys by agent_id', async () => {
@@ -987,7 +987,7 @@ describe('DiscoveryClient', () => {
 
       const keys = await client.getAgentKeys(TEST_ISSUER, 'agent-1');
       expect(keys).toHaveLength(1);
-      expect(keys[0].agent_id).toBe('agent-1');
+      expect(keys[0]!.agent_id).toBe('agent-1');
     });
 
     it('includes agent_id in the URL query parameter', async () => {
@@ -997,7 +997,7 @@ describe('DiscoveryClient', () => {
 
       await client.getAgentKeys(TEST_ISSUER, 'agent-1');
 
-      const keysUrl = mockFetch.mock.calls[1][0] as string;
+      const keysUrl = mockFetch.mock.calls[1]![0] as string;
       expect(keysUrl).toContain('agent_id=agent-1');
     });
   });
@@ -1041,7 +1041,7 @@ describe('DiscoveryClient', () => {
         limit: 10,
       });
 
-      const calledUrl = mockFetch.mock.calls[1][0] as string;
+      const calledUrl = mockFetch.mock.calls[1]![0] as string;
       expect(calledUrl).toContain('issuer_id=issuer-1');
       expect(calledUrl).toContain('beneficiary_id=ben-1');
       expect(calledUrl).toContain('status=active');
@@ -1056,7 +1056,7 @@ describe('DiscoveryClient', () => {
 
       await client.queryCovenants(TEST_ISSUER, {});
 
-      const calledUrl = mockFetch.mock.calls[1][0] as string;
+      const calledUrl = mockFetch.mock.calls[1]![0] as string;
       // No query string appended for empty filters
       expect(calledUrl).not.toContain('?');
     });
@@ -1094,7 +1094,7 @@ describe('DiscoveryClient', () => {
 
       await client.verifyCovenant(TEST_ISSUER, 'cov-1');
 
-      const postInit = mockFetch.mock.calls[1][1];
+      const postInit = mockFetch.mock.calls[1]![1];
       expect(postInit.method).toBe('POST');
       expect(postInit.headers['Content-Type']).toBe('application/stele+json');
     });
@@ -1137,7 +1137,7 @@ describe('DiscoveryClient', () => {
 
       await client.verifyCovenant(TEST_ISSUER, 'cov-1');
 
-      const postBody = JSON.parse(mockFetch.mock.calls[1][1].body);
+      const postBody = JSON.parse(mockFetch.mock.calls[1]![1].body);
       expect(postBody.nonce).toBeDefined();
       expect(typeof postBody.nonce).toBe('string');
       expect(postBody.timestamp).toBeDefined();

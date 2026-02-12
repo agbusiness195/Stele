@@ -86,6 +86,7 @@ export {
   cclConformance,
   covenantConformance,
   interopConformance,
+  securityConformance,
 } from './conformance.js';
 export type {
   ConformanceResult,
