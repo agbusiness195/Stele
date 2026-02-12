@@ -1,19 +1,28 @@
 # Generated API docs
 docs/api/
 
-# tsc --build output in examples, tests, and package src dirs
+# tsc --build output in examples, tests, benchmarks, and package dirs
 examples/**/*.js
 examples/**/*.d.ts
 examples/**/*.js.map
 tests/**/*.js
 tests/**/*.d.ts
 tests/**/*.js.map
+benchmarks/**/*.js
+benchmarks/**/*.d.ts
+benchmarks/**/*.js.map
+test-vectors/**/*.js
+test-vectors/**/*.d.ts
+test-vectors/**/*.js.map
 scripts/*.js
 scripts/*.d.ts
 scripts/*.js.map
-packages/*/src/*.js
-packages/*/src/*.d.ts
-packages/*/src/*.js.map
+packages/*/src/**/*.js
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.js.map
+packages/*/__tests__/**/*.js
+packages/*/__tests__/**/*.d.ts
+packages/*/__tests__/**/*.js.map
 
 # Logs
 logs
