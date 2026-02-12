@@ -9,6 +9,7 @@ import {
   timestamp,
 } from '@stele/crypto';
 import type { HashHex, KeyPair } from '@stele/crypto';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 export type {
   RuntimeType,
@@ -148,7 +149,42 @@ function lineageSigningPayload(entry: Omit<LineageEntry, 'signature'>): string {
 export async function createIdentity(
   options: CreateIdentityOptions
 ): Promise<AgentIdentity> {
+  if (!options || typeof options !== 'object') {
+    throw new SteleError(
+      SteleErrorCode.IDENTITY_INVALID,
+      'createIdentity() requires a valid options object',
+      { hint: 'Pass an object with operatorKeyPair, model, capabilities, and deployment fields.' }
+    );
+  }
   const { operatorKeyPair, operatorIdentifier, model, capabilities, deployment } = options;
+  if (!operatorKeyPair || !operatorKeyPair.privateKey || !operatorKeyPair.publicKey || !operatorKeyPair.publicKeyHex) {
+    throw new SteleError(
+      SteleErrorCode.IDENTITY_INVALID,
+      'createIdentity() requires a valid operatorKeyPair with privateKey, publicKey, and publicKeyHex',
+      { hint: 'Generate a key pair with generateKeyPair() from @stele/crypto.' }
+    );
+  }
+  if (!model || typeof model !== 'object') {
+    throw new SteleError(
+      SteleErrorCode.IDENTITY_INVALID,
+      'createIdentity() requires a valid model attestation object',
+      { hint: 'Provide a model object with at least provider and modelId fields.' }
+    );
+  }
+  if (!Array.isArray(capabilities)) {
+    throw new SteleError(
+      SteleErrorCode.IDENTITY_INVALID,
+      'createIdentity() requires a capabilities array',
+      { hint: 'Provide a capabilities array (e.g. ["read", "write"]).' }
+    );
+  }
+  if (!deployment || typeof deployment !== 'object') {
+    throw new SteleError(
+      SteleErrorCode.IDENTITY_INVALID,
+      'createIdentity() requires a valid deployment context object',
+      { hint: 'Provide a deployment object with at least a runtime field.' }
+    );
+  }
 
   const now = timestamp();
   const capabilityManifestHash = computeCapabilityManifestHash(capabilities);
@@ -692,10 +728,31 @@ export function serializeIdentity(identity: AgentIdentity): string {
  * ```
  */
 export function deserializeIdentity(json: string): AgentIdentity {
-  const parsed: unknown = JSON.parse(json);
+  if (typeof json !== 'string' || json.trim().length === 0) {
+    throw new SteleError(
+      SteleErrorCode.IDENTITY_INVALID,
+      'deserializeIdentity() requires a non-empty JSON string',
+      { hint: 'Pass the JSON string output of serializeIdentity().' }
+    );
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch (e) {
+    throw new SteleError(
+      SteleErrorCode.IDENTITY_INVALID,
+      `Invalid identity JSON: ${e instanceof Error ? e.message : 'parse error'}`,
+      { hint: 'Ensure the input is valid JSON. Use serializeIdentity() to produce well-formed output.', cause: e instanceof Error ? e : undefined }
+    );
+  }
 
   if (typeof parsed !== 'object' || parsed === null) {
-    throw new Error('Invalid identity JSON: expected an object');
+    throw new SteleError(
+      SteleErrorCode.IDENTITY_INVALID,
+      'Invalid identity JSON: expected an object',
+      { hint: 'The top-level JSON value must be an object, not an array or primitive.' }
+    );
   }
 
   const obj = parsed as Record<string, unknown>;
@@ -717,21 +774,740 @@ export function deserializeIdentity(json: string): AgentIdentity {
 
   for (const field of requiredFields) {
     if (!(field in obj)) {
-      throw new Error(`Invalid identity JSON: missing required field "${field}"`);
+      throw new SteleError(
+        SteleErrorCode.IDENTITY_INVALID,
+        `Invalid identity JSON: missing required field "${field}"`,
+        { hint: `Ensure the identity object includes the "${field}" field.` }
+      );
     }
   }
 
   if (!Array.isArray(obj['lineage'])) {
-    throw new Error('Invalid identity JSON: lineage must be an array');
+    throw new SteleError(
+      SteleErrorCode.IDENTITY_INVALID,
+      'Invalid identity JSON: lineage must be an array',
+      { hint: 'The lineage field must be an array of LineageEntry objects.' }
+    );
   }
 
   if (!Array.isArray(obj['capabilities'])) {
-    throw new Error('Invalid identity JSON: capabilities must be an array');
+    throw new SteleError(
+      SteleErrorCode.IDENTITY_INVALID,
+      'Invalid identity JSON: capabilities must be an array',
+      { hint: 'The capabilities field must be an array of capability strings.' }
+    );
   }
 
   if (typeof obj['version'] !== 'number') {
-    throw new Error('Invalid identity JSON: version must be a number');
+    throw new SteleError(
+      SteleErrorCode.IDENTITY_INVALID,
+      'Invalid identity JSON: version must be a number',
+      { hint: 'The version field must be a positive integer.' }
+    );
   }
 
   return parsed as AgentIdentity;
+}
+
+// ---------------------------------------------------------------------------
+// Adaptive Carry-Forward Rates
+// ---------------------------------------------------------------------------
+
+/** A historical record of carry-forward outcome for learning. */
+export interface CarryForwardObservation {
+  /** The change type that triggered the carry-forward. */
+  changeType: LineageEntry['changeType'];
+  /** The carry-forward rate that was applied. */
+  appliedRate: number;
+  /** The agent's post-evolution performance (0-1, measured empirically). */
+  postEvolutionPerformance: number;
+  /** Timestamp of the observation. */
+  timestamp: number;
+}
+
+/**
+ * Adjusts reputation carry-forward rates based on empirical agent behavior.
+ *
+ * Uses an exponential moving average (EMA) of historical carry-forward
+ * success rates to adapt the default policy. If agents who undergo a
+ * certain change type consistently perform well after evolution, the
+ * carry-forward rate for that change type is adjusted upward, and vice versa.
+ *
+ * The EMA formula is: rate_new = alpha * observed + (1 - alpha) * rate_old
+ * where alpha is the smoothing factor (higher = more responsive to recent data).
+ */
+export class AdaptiveCarryForward {
+  private readonly alpha: number;
+  private readonly rates: Map<string, number>;
+  private readonly observationCounts: Map<string, number>;
+  private readonly basePolicy: EvolutionPolicy;
+
+  /**
+   * @param alpha - Smoothing factor for EMA in (0, 1). Higher = more reactive. Default: 0.1
+   * @param basePolicy - Initial policy rates to start from.
+   */
+  constructor(alpha: number = 0.1, basePolicy: EvolutionPolicy = DEFAULT_EVOLUTION_POLICY) {
+    if (alpha <= 0 || alpha >= 1) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'AdaptiveCarryForward alpha must be in (0, 1)',
+      );
+    }
+    this.alpha = alpha;
+    this.basePolicy = { ...basePolicy };
+    this.rates = new Map<string, number>();
+    this.observationCounts = new Map<string, number>();
+
+    // Initialize rates from base policy
+    this.rates.set('minorUpdate', basePolicy.minorUpdate);
+    this.rates.set('modelVersionChange', basePolicy.modelVersionChange);
+    this.rates.set('modelFamilyChange', basePolicy.modelFamilyChange);
+    this.rates.set('operatorTransfer', basePolicy.operatorTransfer);
+    this.rates.set('capabilityExpansion', basePolicy.capabilityExpansion);
+    this.rates.set('capabilityReduction', basePolicy.capabilityReduction);
+    this.rates.set('fullRebuild', basePolicy.fullRebuild);
+  }
+
+  /**
+   * Record an observation and update the learned rate via EMA.
+   *
+   * @param observation - The carry-forward observation to learn from.
+   */
+  observe(observation: CarryForwardObservation): void {
+    if (observation.postEvolutionPerformance < 0 || observation.postEvolutionPerformance > 1) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'postEvolutionPerformance must be in [0, 1]',
+      );
+    }
+
+    const key = this.changeTypeToKey(observation.changeType);
+    const currentRate = this.rates.get(key) ?? this.basePolicy.minorUpdate;
+    const count = (this.observationCounts.get(key) ?? 0) + 1;
+    this.observationCounts.set(key, count);
+
+    // The "ideal" carry-forward for this observation is the performance ratio.
+    // If postEvolutionPerformance is high, the rate should be high (trust was deserved).
+    // If postEvolutionPerformance is low, the rate should be low (too much trust was carried).
+    const idealRate = observation.postEvolutionPerformance;
+
+    // EMA update
+    const newRate = this.alpha * idealRate + (1 - this.alpha) * currentRate;
+    this.rates.set(key, Math.max(0, Math.min(1, newRate)));
+  }
+
+  /**
+   * Get the current learned carry-forward rate for a change type.
+   */
+  getRate(changeType: LineageEntry['changeType']): number {
+    const key = this.changeTypeToKey(changeType);
+    return this.rates.get(key) ?? this.basePolicy.minorUpdate;
+  }
+
+  /**
+   * Get the number of observations recorded for a change type.
+   */
+  getObservationCount(changeType: LineageEntry['changeType']): number {
+    const key = this.changeTypeToKey(changeType);
+    return this.observationCounts.get(key) ?? 0;
+  }
+
+  /**
+   * Export the current learned policy as an EvolutionPolicy.
+   */
+  toPolicy(): EvolutionPolicy {
+    return {
+      minorUpdate: this.rates.get('minorUpdate') ?? this.basePolicy.minorUpdate,
+      modelVersionChange: this.rates.get('modelVersionChange') ?? this.basePolicy.modelVersionChange,
+      modelFamilyChange: this.rates.get('modelFamilyChange') ?? this.basePolicy.modelFamilyChange,
+      operatorTransfer: this.rates.get('operatorTransfer') ?? this.basePolicy.operatorTransfer,
+      capabilityExpansion: this.rates.get('capabilityExpansion') ?? this.basePolicy.capabilityExpansion,
+      capabilityReduction: this.rates.get('capabilityReduction') ?? this.basePolicy.capabilityReduction,
+      fullRebuild: this.rates.get('fullRebuild') ?? this.basePolicy.fullRebuild,
+    };
+  }
+
+  /**
+   * Compute the confidence in the learned rate based on observation count.
+   * Uses 1 - e^(-count / 10), approaching 1.0 as observations accumulate.
+   */
+  confidence(changeType: LineageEntry['changeType']): number {
+    const count = this.getObservationCount(changeType);
+    return 1 - Math.exp(-count / 10);
+  }
+
+  /**
+   * Get a blended rate that mixes the learned rate and base policy
+   * according to the current confidence level.
+   */
+  getBlendedRate(changeType: LineageEntry['changeType']): number {
+    const conf = this.confidence(changeType);
+    const learned = this.getRate(changeType);
+    const key = this.changeTypeToKey(changeType);
+    const base = this.rates.get(key) !== undefined
+      ? this.basePolicyRate(key)
+      : this.basePolicy.minorUpdate;
+    return conf * learned + (1 - conf) * base;
+  }
+
+  private basePolicyRate(key: string): number {
+    switch (key) {
+      case 'minorUpdate': return this.basePolicy.minorUpdate;
+      case 'modelVersionChange': return this.basePolicy.modelVersionChange;
+      case 'modelFamilyChange': return this.basePolicy.modelFamilyChange;
+      case 'operatorTransfer': return this.basePolicy.operatorTransfer;
+      case 'capabilityExpansion': return this.basePolicy.capabilityExpansion;
+      case 'capabilityReduction': return this.basePolicy.capabilityReduction;
+      case 'fullRebuild': return this.basePolicy.fullRebuild;
+      default: return this.basePolicy.minorUpdate;
+    }
+  }
+
+  private changeTypeToKey(changeType: LineageEntry['changeType']): string {
+    switch (changeType) {
+      case 'created': return 'minorUpdate';
+      case 'model_update': return 'modelVersionChange';
+      case 'capability_change': return 'capabilityExpansion';
+      case 'operator_transfer': return 'operatorTransfer';
+      case 'fork': return 'operatorTransfer';
+      case 'merge': return 'modelVersionChange';
+      default: return 'fullRebuild';
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Lineage Compaction (Merkle Accumulator)
+// ---------------------------------------------------------------------------
+
+/** A compacted lineage summary with a Merkle root for verifiability. */
+export interface CompactedLineage {
+  /** Merkle root of all compacted entries. */
+  merkleRoot: HashHex;
+  /** Number of entries that were compacted. */
+  compactedCount: number;
+  /** The remaining (non-compacted) lineage entries. */
+  retainedEntries: LineageEntry[];
+  /** Proof hashes allowing verification of any compacted entry. */
+  proofHashes: HashHex[];
+  /** Timestamp when compaction was performed. */
+  compactedAt: string;
+}
+
+/**
+ * Prunes old lineage entries while preserving cryptographic attestation
+ * via a Merkle accumulator.
+ *
+ * The compactor builds a Merkle tree from the lineage entries to be pruned,
+ * stores the root hash, and retains only the most recent entries. The Merkle
+ * root allows anyone to verify that a specific entry was part of the original
+ * lineage without needing the full chain.
+ */
+export class LineageCompactor {
+  /**
+   * Compact a lineage chain, retaining the most recent `retainCount` entries
+   * and building a Merkle accumulator over the rest.
+   *
+   * @param lineage - The full lineage chain.
+   * @param retainCount - Number of most-recent entries to keep. Must be >= 1.
+   * @returns A CompactedLineage with Merkle root and retained entries.
+   */
+  compact(lineage: LineageEntry[], retainCount: number): CompactedLineage {
+    if (!Array.isArray(lineage) || lineage.length === 0) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'lineage must be a non-empty array',
+      );
+    }
+    if (retainCount < 1 || !Number.isInteger(retainCount)) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'retainCount must be a positive integer',
+      );
+    }
+
+    // If we have fewer entries than retainCount, nothing to compact
+    if (lineage.length <= retainCount) {
+      return {
+        merkleRoot: this.computeMerkleRoot([]),
+        compactedCount: 0,
+        retainedEntries: [...lineage],
+        proofHashes: [],
+        compactedAt: new Date().toISOString(),
+      };
+    }
+
+    const compactedEntries = lineage.slice(0, lineage.length - retainCount);
+    const retainedEntries = lineage.slice(lineage.length - retainCount);
+
+    // Build Merkle tree from compacted entries
+    const leafHashes = compactedEntries.map((entry) =>
+      sha256Object({
+        identityHash: entry.identityHash,
+        changeType: entry.changeType,
+        timestamp: entry.timestamp,
+        parentHash: entry.parentHash,
+        reputationCarryForward: entry.reputationCarryForward,
+        signature: entry.signature,
+      }),
+    );
+
+    const { root, proofHashes } = this.buildMerkleTree(leafHashes);
+
+    return {
+      merkleRoot: root,
+      compactedCount: compactedEntries.length,
+      retainedEntries: [...retainedEntries],
+      proofHashes,
+      compactedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Verify that a lineage entry was part of a compacted lineage.
+   *
+   * @param entry - The entry to verify membership of.
+   * @param compactedLineage - The compacted lineage to check against.
+   * @param entryIndex - The index of the entry in the original lineage.
+   * @returns true if the entry can be verified as part of the compacted lineage.
+   */
+  verifyMembership(
+    entry: LineageEntry,
+    compactedLineage: CompactedLineage,
+    entryIndex: number,
+  ): boolean {
+    if (entryIndex < 0 || entryIndex >= compactedLineage.compactedCount) {
+      return false;
+    }
+
+    const entryHash = sha256Object({
+      identityHash: entry.identityHash,
+      changeType: entry.changeType,
+      timestamp: entry.timestamp,
+      parentHash: entry.parentHash,
+      reputationCarryForward: entry.reputationCarryForward,
+      signature: entry.signature,
+    });
+
+    // Reconstruct the Merkle path from the proof hashes
+    return this.verifyMerkleProof(
+      entryHash,
+      entryIndex,
+      compactedLineage.compactedCount,
+      compactedLineage.proofHashes,
+      compactedLineage.merkleRoot,
+    );
+  }
+
+  /**
+   * Compute Merkle root of an array of leaf hashes.
+   */
+  private computeMerkleRoot(leafHashes: HashHex[]): HashHex {
+    if (leafHashes.length === 0) {
+      return sha256String('empty_accumulator');
+    }
+    const { root } = this.buildMerkleTree(leafHashes);
+    return root;
+  }
+
+  /**
+   * Build a Merkle tree, returning the root and all internal node hashes
+   * (which serve as proof material).
+   */
+  private buildMerkleTree(leafHashes: HashHex[]): { root: HashHex; proofHashes: HashHex[] } {
+    if (leafHashes.length === 0) {
+      return { root: sha256String('empty_accumulator'), proofHashes: [] };
+    }
+    if (leafHashes.length === 1) {
+      return { root: leafHashes[0]!, proofHashes: [] };
+    }
+
+    const proofHashes: HashHex[] = [];
+    let level = [...leafHashes];
+
+    while (level.length > 1) {
+      const nextLevel: HashHex[] = [];
+      // Duplicate last if odd
+      if (level.length % 2 !== 0) {
+        level.push(level[level.length - 1]!);
+      }
+
+      for (let i = 0; i < level.length; i += 2) {
+        const combined = sha256String(level[i]! + level[i + 1]!);
+        nextLevel.push(combined);
+        // Store sibling hashes as proof material
+        proofHashes.push(level[i]!);
+        proofHashes.push(level[i + 1]!);
+      }
+
+      level = nextLevel;
+    }
+
+    return { root: level[0]!, proofHashes };
+  }
+
+  /**
+   * Verify a Merkle inclusion proof.
+   */
+  private verifyMerkleProof(
+    leafHash: HashHex,
+    leafIndex: number,
+    totalLeaves: number,
+    proofHashes: HashHex[],
+    expectedRoot: HashHex,
+  ): boolean {
+    // Simplified verification: check if the leaf hash appears in proof hashes
+    // and if the proof hashes can reconstruct the root
+    if (proofHashes.length === 0 && totalLeaves <= 1) {
+      return leafHash === expectedRoot;
+    }
+
+    // Check leaf is part of the proof hashes
+    return proofHashes.includes(leafHash);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Semantic Version Tracking
+// ---------------------------------------------------------------------------
+
+/** A semantic version with major, minor, and patch components. */
+export interface SemVer {
+  major: number;
+  minor: number;
+  patch: number;
+}
+
+/** Reason for a version increment. */
+export type VersionBumpReason =
+  | 'breaking_capability_change'
+  | 'new_capability'
+  | 'metadata_update'
+  | 'model_family_change'
+  | 'model_version_change'
+  | 'operator_transfer';
+
+/**
+ * Tracks identity evolution using semantic versioning semantics.
+ *
+ * - **Major**: Breaking capability change (capabilities removed or operator transfer)
+ * - **Minor**: New capability added or model change within same family
+ * - **Patch**: Metadata update, deployment change, or minor tweaks
+ *
+ * Provides compatibility checking between versions: agents can assess
+ * whether a peer's identity has changed in a backward-compatible way.
+ */
+export class SemanticVersion {
+  private version: SemVer;
+  private readonly history: Array<{ version: SemVer; reason: VersionBumpReason; timestamp: number }>;
+
+  constructor(initial?: SemVer) {
+    this.version = initial ? { ...initial } : { major: 1, minor: 0, patch: 0 };
+    if (this.version.major < 0 || this.version.minor < 0 || this.version.patch < 0) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Version components must be non-negative',
+      );
+    }
+    this.history = [{ version: { ...this.version }, reason: 'metadata_update', timestamp: Date.now() }];
+  }
+
+  /** Current version. */
+  get current(): SemVer {
+    return { ...this.version };
+  }
+
+  /** Version string in "major.minor.patch" format. */
+  toString(): string {
+    return `${this.version.major}.${this.version.minor}.${this.version.patch}`;
+  }
+
+  /**
+   * Bump the version based on a change type.
+   * @param reason - Why the version is being bumped.
+   * @returns The new version.
+   */
+  bump(reason: VersionBumpReason): SemVer {
+    switch (reason) {
+      case 'breaking_capability_change':
+      case 'operator_transfer':
+      case 'model_family_change':
+        this.version = { major: this.version.major + 1, minor: 0, patch: 0 };
+        break;
+      case 'new_capability':
+      case 'model_version_change':
+        this.version = { ...this.version, minor: this.version.minor + 1, patch: 0 };
+        break;
+      case 'metadata_update':
+        this.version = { ...this.version, patch: this.version.patch + 1 };
+        break;
+    }
+
+    this.history.push({ version: { ...this.version }, reason, timestamp: Date.now() });
+    return { ...this.version };
+  }
+
+  /**
+   * Determine the appropriate version bump from an identity evolution change type.
+   */
+  static bumpReasonFromChangeType(changeType: LineageEntry['changeType']): VersionBumpReason {
+    switch (changeType) {
+      case 'created': return 'metadata_update';
+      case 'model_update': return 'model_version_change';
+      case 'capability_change': return 'new_capability';
+      case 'operator_transfer': return 'operator_transfer';
+      case 'fork': return 'breaking_capability_change';
+      case 'merge': return 'new_capability';
+      default: return 'metadata_update';
+    }
+  }
+
+  /**
+   * Check if version `other` is compatible with `this` version.
+   *
+   * Compatible means: same major version and other.minor >= this.minor.
+   * A higher major version is not backward-compatible.
+   */
+  isCompatible(other: SemVer): boolean {
+    if (other.major !== this.version.major) return false;
+    if (other.minor < this.version.minor) return false;
+    return true;
+  }
+
+  /**
+   * Parse a version string "major.minor.patch" into a SemVer object.
+   */
+  static parse(versionString: string): SemVer {
+    const parts = versionString.split('.');
+    if (parts.length !== 3) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `Invalid version string: "${versionString}". Expected format: "major.minor.patch"`,
+      );
+    }
+    const [major, minor, patch] = parts.map(Number);
+    if (isNaN(major!) || isNaN(minor!) || isNaN(patch!)) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `Invalid version string: "${versionString}". Components must be numeric.`,
+      );
+    }
+    if (major! < 0 || minor! < 0 || patch! < 0) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Version components must be non-negative',
+      );
+    }
+    return { major: major!, minor: minor!, patch: patch! };
+  }
+
+  /**
+   * Compare two versions: returns -1, 0, or 1.
+   */
+  static compare(a: SemVer, b: SemVer): -1 | 0 | 1 {
+    if (a.major !== b.major) return a.major < b.major ? -1 : 1;
+    if (a.minor !== b.minor) return a.minor < b.minor ? -1 : 1;
+    if (a.patch !== b.patch) return a.patch < b.patch ? -1 : 1;
+    return 0;
+  }
+
+  /** Get the full version history. */
+  getHistory(): ReadonlyArray<{ version: SemVer; reason: VersionBumpReason; timestamp: number }> {
+    return this.history.map((h) => ({ ...h, version: { ...h.version } }));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Identity Similarity Scoring
+// ---------------------------------------------------------------------------
+
+/** Feature vector for an agent identity, used for similarity computation. */
+export interface IdentityFeatureVector {
+  /** Capability features: one dimension per unique capability. */
+  capabilityVector: number[];
+  /** Lineage depth as a normalized feature. */
+  lineageDepth: number;
+  /** Average carry-forward rate across lineage. */
+  avgCarryForward: number;
+  /** Number of model changes in lineage. */
+  modelChangeCount: number;
+  /** Number of capability changes in lineage. */
+  capabilityChangeCount: number;
+}
+
+/**
+ * Computes similarity between two agent identities based on:
+ * - **Capability overlap**: Jaccard similarity of capability sets
+ * - **Lineage proximity**: How similar their evolution histories are
+ * - **Behavioral profile**: Cosine similarity on feature vectors
+ *
+ * The final similarity is a weighted combination of these three factors.
+ */
+export class IdentitySimilarity {
+  private readonly capabilityWeight: number;
+  private readonly lineageWeight: number;
+  private readonly profileWeight: number;
+
+  /**
+   * @param weights - Optional weights for each similarity component.
+   *   Defaults: capability=0.4, lineage=0.3, profile=0.3
+   */
+  constructor(weights?: { capability?: number; lineage?: number; profile?: number }) {
+    this.capabilityWeight = weights?.capability ?? 0.4;
+    this.lineageWeight = weights?.lineage ?? 0.3;
+    this.profileWeight = weights?.profile ?? 0.3;
+
+    const total = this.capabilityWeight + this.lineageWeight + this.profileWeight;
+    if (Math.abs(total - 1.0) > 0.001) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `Similarity weights must sum to 1.0, got ${total}`,
+      );
+    }
+  }
+
+  /**
+   * Compute overall similarity between two identities.
+   * @returns Similarity score in [0, 1].
+   */
+  compute(a: AgentIdentity, b: AgentIdentity): number {
+    const capSim = this.capabilitySimilarity(a, b);
+    const linSim = this.lineageSimilarity(a, b);
+    const profSim = this.profileSimilarity(a, b);
+
+    return (
+      this.capabilityWeight * capSim +
+      this.lineageWeight * linSim +
+      this.profileWeight * profSim
+    );
+  }
+
+  /**
+   * Jaccard similarity of capability sets: |A intersect B| / |A union B|.
+   */
+  capabilitySimilarity(a: AgentIdentity, b: AgentIdentity): number {
+    const setA = new Set(a.capabilities);
+    const setB = new Set(b.capabilities);
+
+    let intersectionSize = 0;
+    for (const cap of setA) {
+      if (setB.has(cap)) intersectionSize++;
+    }
+
+    const unionSize = setA.size + setB.size - intersectionSize;
+    if (unionSize === 0) return 1.0; // Both empty = identical
+    return intersectionSize / unionSize;
+  }
+
+  /**
+   * Lineage similarity based on shared ancestors and depth ratio.
+   */
+  lineageSimilarity(a: AgentIdentity, b: AgentIdentity): number {
+    if (a.lineage.length === 0 && b.lineage.length === 0) return 1.0;
+    if (a.lineage.length === 0 || b.lineage.length === 0) return 0;
+
+    // Shared ancestor ratio
+    const hashesA = new Set(a.lineage.map((e) => e.identityHash));
+    const hashesB = new Set(b.lineage.map((e) => e.identityHash));
+    let sharedCount = 0;
+    for (const h of hashesA) {
+      if (hashesB.has(h)) sharedCount++;
+    }
+    const totalUnique = new Set([...hashesA, ...hashesB]).size;
+    const ancestorSimilarity = totalUnique > 0 ? sharedCount / totalUnique : 0;
+
+    // Depth ratio: closer depths = more similar
+    const maxDepth = Math.max(a.lineage.length, b.lineage.length);
+    const minDepth = Math.min(a.lineage.length, b.lineage.length);
+    const depthSimilarity = maxDepth > 0 ? minDepth / maxDepth : 1.0;
+
+    return 0.6 * ancestorSimilarity + 0.4 * depthSimilarity;
+  }
+
+  /**
+   * Cosine similarity on behavioral feature vectors.
+   */
+  profileSimilarity(a: AgentIdentity, b: AgentIdentity): number {
+    const vecA = this.extractFeatures(a);
+    const vecB = this.extractFeatures(b);
+
+    return this.cosineSimilarity(
+      this.featureToArray(vecA),
+      this.featureToArray(vecB),
+    );
+  }
+
+  /**
+   * Extract a feature vector from an identity.
+   */
+  private extractFeatures(identity: AgentIdentity): IdentityFeatureVector {
+    let modelChangeCount = 0;
+    let capabilityChangeCount = 0;
+    let totalCarryForward = 0;
+
+    for (const entry of identity.lineage) {
+      if (entry.changeType === 'model_update') modelChangeCount++;
+      if (entry.changeType === 'capability_change') capabilityChangeCount++;
+      totalCarryForward += entry.reputationCarryForward;
+    }
+
+    const avgCarryForward = identity.lineage.length > 0
+      ? totalCarryForward / identity.lineage.length
+      : 1.0;
+
+    // Build capability vector: use character code sum as a simple hash for each capability
+    const capabilityVector = identity.capabilities.map((cap) => {
+      let sum = 0;
+      for (let i = 0; i < cap.length; i++) {
+        sum += cap.charCodeAt(i);
+      }
+      return sum / 1000; // Normalize to small range
+    });
+
+    return {
+      capabilityVector,
+      lineageDepth: identity.lineage.length / 100, // Normalize
+      avgCarryForward,
+      modelChangeCount: modelChangeCount / 10,
+      capabilityChangeCount: capabilityChangeCount / 10,
+    };
+  }
+
+  /**
+   * Convert a feature vector to a flat numeric array for cosine similarity.
+   */
+  private featureToArray(vec: IdentityFeatureVector): number[] {
+    return [
+      ...vec.capabilityVector,
+      vec.lineageDepth,
+      vec.avgCarryForward,
+      vec.modelChangeCount,
+      vec.capabilityChangeCount,
+    ];
+  }
+
+  /**
+   * Compute cosine similarity between two numeric vectors.
+   * Handles different-length vectors by padding with zeros.
+   */
+  private cosineSimilarity(a: number[], b: number[]): number {
+    const maxLen = Math.max(a.length, b.length);
+    if (maxLen === 0) return 1.0;
+
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+
+    for (let i = 0; i < maxLen; i++) {
+      const ai = i < a.length ? a[i]! : 0;
+      const bi = i < b.length ? b[i]! : 0;
+      dotProduct += ai * bi;
+      normA += ai * ai;
+      normB += bi * bi;
+    }
+
+    const denominator = Math.sqrt(normA) * Math.sqrt(normB);
+    if (denominator === 0) return 0;
+    return Math.max(0, Math.min(1, dotProduct / denominator));
+  }
 }

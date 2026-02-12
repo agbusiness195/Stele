@@ -1,5 +1,6 @@
 import { sha256String, timestamp } from '@stele/crypto';
 import type { HashHex } from '@stele/crypto';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 import { poseidonHash, hashToField, fieldToHex, FIELD_PRIME } from './poseidon';
 
 import type {
@@ -97,11 +98,43 @@ export async function generateComplianceProof(
   const { covenantId, constraints, auditEntries, proofSystem = 'poseidon_hash' } = options;
 
   // Validate inputs
-  if (!covenantId || covenantId.length === 0) {
-    throw new Error('covenantId is required');
+  if (!covenantId || typeof covenantId !== 'string' || covenantId.trim().length === 0) {
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      'covenantId is required',
+      { hint: 'Pass the covenant document ID (a hex-encoded hash string).' }
+    );
   }
-  if (!constraints || constraints.length === 0) {
-    throw new Error('constraints string is required');
+  if (covenantId.length > 0 && !/^[0-9a-fA-F]+$/.test(covenantId)) {
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      'generateComplianceProof() requires a valid hex-encoded covenantId',
+      { hint: 'The covenantId must be a hex string. Use the id field from a CovenantDocument.' }
+    );
+  }
+  if (!constraints || typeof constraints !== 'string' || constraints.trim().length === 0) {
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      'constraints string is required',
+      { hint: 'Pass the CCL constraint text from the covenant document.' }
+    );
+  }
+  if (!Array.isArray(auditEntries)) {
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      'generateComplianceProof() requires auditEntries to be an array',
+      { hint: 'Pass an array of AuditEntryData objects. An empty array is allowed.' }
+    );
+  }
+  for (let i = 0; i < auditEntries.length; i++) {
+    const entry = auditEntries[i];
+    if (!entry || typeof entry !== 'object' || !entry.hash || typeof entry.hash !== 'string') {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `generateComplianceProof() audit entry at index ${i} is missing a valid hash field`,
+        { hint: 'Each audit entry must have a hash field containing a hex-encoded hash string.' }
+      );
+    }
   }
 
   // Compute commitments
@@ -160,6 +193,14 @@ export async function generateComplianceProof(
 export async function verifyComplianceProof(
   proof: ComplianceProof
 ): Promise<ProofVerificationResult> {
+  if (!proof || typeof proof !== 'object') {
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      'verifyComplianceProof() requires a valid proof object',
+      { hint: 'Pass a ComplianceProof object produced by generateComplianceProof().' }
+    );
+  }
+
   const errors: string[] = [];
 
   // --- Step 1: Check proof format ---

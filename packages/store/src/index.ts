@@ -8,6 +8,7 @@
  */
 
 import type { CovenantDocument } from '@stele/core';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 import type {
   CovenantStore,
@@ -121,10 +122,32 @@ export class MemoryStore implements CovenantStore {
    */
   async put(doc: CovenantDocument): Promise<void> {
     if (doc == null) {
-      throw new Error('put(): document is required');
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_DOC,
+        'put(): document is required',
+        { hint: 'Pass a valid CovenantDocument object to store.' }
+      );
+    }
+    if (typeof doc !== 'object') {
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_DOC,
+        'put(): document must be an object',
+        { hint: 'Pass a valid CovenantDocument object with at least an id field.' }
+      );
     }
     if (!doc.id || (typeof doc.id === 'string' && doc.id.trim().length === 0)) {
-      throw new Error('put(): document.id is required and must be a non-empty string');
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_ID,
+        'put(): document.id is required and must be a non-empty string',
+        { hint: 'Ensure the document has a non-empty id field. Use buildCovenant() to generate properly identified documents.' }
+      );
+    }
+    if (!doc.issuer || !doc.beneficiary || !doc.constraints) {
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_DOC,
+        'put(): document is missing required fields (issuer, beneficiary, or constraints)',
+        { hint: 'Ensure the document has issuer, beneficiary, and constraints fields. Use buildCovenant() to generate complete documents.' }
+      );
     }
     this.data.set(doc.id, doc);
     this.emit('put', doc.id, doc);
@@ -143,6 +166,13 @@ export class MemoryStore implements CovenantStore {
    * ```
    */
   async get(id: string): Promise<CovenantDocument | undefined> {
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_ID,
+        'get(): id must be a non-empty string',
+        { hint: 'Pass the document ID (a hex-encoded hash) to retrieve.' }
+      );
+    }
     return this.data.get(id);
   }
 
@@ -163,6 +193,13 @@ export class MemoryStore implements CovenantStore {
    * @returns `true` if the document was found and deleted, `false` if not found.
    */
   async delete(id: string): Promise<boolean> {
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_ID,
+        'delete(): id must be a non-empty string',
+        { hint: 'Pass the document ID (a hex-encoded hash) to delete.' }
+      );
+    }
     const existed = this.data.delete(id);
     if (existed) {
       this.emit('delete', id);

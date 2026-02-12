@@ -9,6 +9,7 @@ import {
 } from '@stele/crypto';
 import type { KeyPair, HashHex } from '@stele/crypto';
 import type { Severity } from '@stele/ccl';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 export type {
   ExecutionReceipt,
@@ -790,5 +791,841 @@ export async function verifyEndorsement(endorsement: Endorsement): Promise<boole
     return await verify(messageBytes, sigBytes, pubKeyBytes);
   } catch {
     return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// DAG-Based Receipt Chain
+// ---------------------------------------------------------------------------
+
+/** A node in the receipt DAG, supporting multiple parents for concurrent execution. */
+export interface ReceiptDAGNode {
+  /** The receipt hash serving as node identifier. */
+  receiptHash: HashHex;
+  /** Parent receipt hashes (empty for root nodes). */
+  parentHashes: HashHex[];
+  /** The execution receipt associated with this node. */
+  receipt: ExecutionReceipt;
+}
+
+/**
+ * A directed acyclic graph of execution receipts supporting concurrent
+ * execution paths.
+ *
+ * Unlike a linear chain where each receipt points to one predecessor,
+ * a DAG allows multiple parents per node (merge points where concurrent
+ * executions rejoin) and multiple children per node (fork points where
+ * execution branches).
+ *
+ * This enables accurate reputation tracking when an agent is executing
+ * multiple covenants concurrently.
+ */
+export class ReceiptDAG {
+  private readonly nodes: Map<HashHex, ReceiptDAGNode> = new Map();
+  private readonly children: Map<HashHex, Set<HashHex>> = new Map();
+
+  /**
+   * Add a receipt to the DAG.
+   * @param receipt - The execution receipt.
+   * @param parentHashes - Hashes of parent receipts (empty for root nodes).
+   * @throws SteleError if any parent hash is not in the DAG.
+   */
+  addNode(receipt: ExecutionReceipt, parentHashes: HashHex[] = []): void {
+    if (this.nodes.has(receipt.receiptHash)) {
+      throw new SteleError(
+        `Receipt ${receipt.receiptHash} already exists in DAG`,
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
+    }
+    for (const parentHash of parentHashes) {
+      if (!this.nodes.has(parentHash)) {
+        throw new SteleError(
+          `Parent receipt ${parentHash} not found in DAG`,
+          SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        );
+      }
+    }
+
+    const node: ReceiptDAGNode = {
+      receiptHash: receipt.receiptHash,
+      parentHashes: [...parentHashes],
+      receipt,
+    };
+    this.nodes.set(receipt.receiptHash, node);
+
+    // Update children index
+    if (!this.children.has(receipt.receiptHash)) {
+      this.children.set(receipt.receiptHash, new Set());
+    }
+    for (const parentHash of parentHashes) {
+      let childSet = this.children.get(parentHash);
+      if (!childSet) {
+        childSet = new Set();
+        this.children.set(parentHash, childSet);
+      }
+      childSet.add(receipt.receiptHash);
+    }
+  }
+
+  /** Get a node by receipt hash, or undefined. */
+  getNode(hash: HashHex): ReceiptDAGNode | undefined {
+    const node = this.nodes.get(hash);
+    if (!node) return undefined;
+    return { ...node, parentHashes: [...node.parentHashes] };
+  }
+
+  /** Get all root nodes (nodes with no parents). */
+  getRoots(): HashHex[] {
+    const roots: HashHex[] = [];
+    for (const node of this.nodes.values()) {
+      if (node.parentHashes.length === 0) {
+        roots.push(node.receiptHash);
+      }
+    }
+    return roots;
+  }
+
+  /** Get all leaf nodes (nodes with no children). */
+  getLeaves(): HashHex[] {
+    const leaves: HashHex[] = [];
+    for (const hash of this.nodes.keys()) {
+      const childSet = this.children.get(hash);
+      if (!childSet || childSet.size === 0) {
+        leaves.push(hash);
+      }
+    }
+    return leaves;
+  }
+
+  /** Total number of nodes in the DAG. */
+  get size(): number {
+    return this.nodes.size;
+  }
+
+  /**
+   * Find the lowest common ancestors (LCAs) of two nodes.
+   *
+   * Uses the standard algorithm: walk backwards from both nodes,
+   * tracking all ancestors of each. The LCA is the first node
+   * that appears in both ancestor sets.
+   *
+   * @returns Array of common ancestor hashes, or empty if none exist.
+   */
+  findCommonAncestors(hashA: HashHex, hashB: HashHex): HashHex[] {
+    if (!this.nodes.has(hashA)) {
+      throw new SteleError(
+        `Node ${hashA} not found in DAG`,
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
+    }
+    if (!this.nodes.has(hashB)) {
+      throw new SteleError(
+        `Node ${hashB} not found in DAG`,
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
+    }
+
+    if (hashA === hashB) return [hashA];
+
+    // Collect all ancestors of A (including A itself)
+    const ancestorsA = new Set<HashHex>();
+    const queueA: HashHex[] = [hashA];
+    while (queueA.length > 0) {
+      const current = queueA.shift()!;
+      if (ancestorsA.has(current)) continue;
+      ancestorsA.add(current);
+      const node = this.nodes.get(current);
+      if (node) {
+        for (const parent of node.parentHashes) {
+          queueA.push(parent);
+        }
+      }
+    }
+
+    // Walk ancestors of B; collect those that are also ancestors of A
+    const commonAncestors: HashHex[] = [];
+    const ancestorsB = new Set<HashHex>();
+    const queueB: HashHex[] = [hashB];
+    while (queueB.length > 0) {
+      const current = queueB.shift()!;
+      if (ancestorsB.has(current)) continue;
+      ancestorsB.add(current);
+      if (ancestorsA.has(current)) {
+        commonAncestors.push(current);
+      }
+      const node = this.nodes.get(current);
+      if (node) {
+        for (const parent of node.parentHashes) {
+          queueB.push(parent);
+        }
+      }
+    }
+
+    // Filter to only lowest common ancestors (not ancestors of other LCAs)
+    // An LCA is a common ancestor that is not an ancestor of any other common ancestor
+    const lcaSet = new Set(commonAncestors);
+    const result: HashHex[] = [];
+    for (const ca of commonAncestors) {
+      let isLowest = true;
+      for (const other of commonAncestors) {
+        if (other === ca) continue;
+        // Check if ca is an ancestor of other
+        if (this.isAncestor(ca, other)) {
+          isLowest = false;
+          break;
+        }
+      }
+      if (isLowest) {
+        result.push(ca);
+      }
+    }
+
+    return result.length > 0 ? result : commonAncestors;
+  }
+
+  /**
+   * Check if potentialAncestor is an ancestor of node.
+   */
+  private isAncestor(potentialAncestor: HashHex, node: HashHex): boolean {
+    const visited = new Set<HashHex>();
+    const queue: HashHex[] = [node];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (current === potentialAncestor) return true;
+      if (visited.has(current)) continue;
+      visited.add(current);
+      const n = this.nodes.get(current);
+      if (n) {
+        for (const parent of n.parentHashes) {
+          queue.push(parent);
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Compute reputation across all parallel branches using a topological
+   * traversal of the DAG. At merge points, scores from parallel branches
+   * are averaged (weighted by branch length).
+   *
+   * @param config - Scoring configuration.
+   * @returns Weighted reputation score in [0, 1].
+   */
+  computeDAGReputation(config?: ScoringConfig): number {
+    const cfg = config ?? DEFAULT_SCORING_CONFIG;
+    if (this.nodes.size === 0) return 0;
+
+    // Topological sort via Kahn's algorithm
+    const inDegree = new Map<HashHex, number>();
+    for (const [hash, node] of this.nodes) {
+      inDegree.set(hash, node.parentHashes.length);
+    }
+
+    const queue: HashHex[] = [];
+    for (const [hash, deg] of inDegree) {
+      if (deg === 0) queue.push(hash);
+    }
+
+    const sorted: HashHex[] = [];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      sorted.push(current);
+      const childSet = this.children.get(current);
+      if (childSet) {
+        for (const child of childSet) {
+          const newDeg = (inDegree.get(child) ?? 1) - 1;
+          inDegree.set(child, newDeg);
+          if (newDeg === 0) queue.push(child);
+        }
+      }
+    }
+
+    // Compute per-node score and propagate through the DAG
+    const nodeScores = new Map<HashHex, number>();
+    const now = Date.now();
+
+    for (const hash of sorted) {
+      const node = this.nodes.get(hash)!;
+      const receipt = node.receipt;
+
+      // Compute this receipt's score
+      const completedMs = new Date(receipt.completedAt).getTime();
+      const ageSeconds = Math.max(0, (now - completedMs) / 1000);
+      const recencyWeight = Math.pow(cfg.recencyDecay, ageSeconds / cfg.recencyPeriod);
+
+      let outcomeScore: number;
+      switch (receipt.outcome) {
+        case 'fulfilled':
+          outcomeScore = 1.0;
+          break;
+        case 'partial':
+          outcomeScore = 0.5;
+          break;
+        case 'failed':
+          outcomeScore = 0.0;
+          break;
+        case 'breached': {
+          const sev: Severity = receipt.breachSeverity ?? 'medium';
+          outcomeScore = -(cfg.breachPenalty[sev] ?? 0.15);
+          break;
+        }
+      }
+
+      let score = recencyWeight * outcomeScore;
+
+      // At merge points, blend with parent scores
+      if (node.parentHashes.length > 0) {
+        let parentSum = 0;
+        let parentCount = 0;
+        for (const parentHash of node.parentHashes) {
+          const parentScore = nodeScores.get(parentHash);
+          if (parentScore !== undefined) {
+            parentSum += parentScore;
+            parentCount++;
+          }
+        }
+        if (parentCount > 0) {
+          const parentAvg = parentSum / parentCount;
+          // Blend: 60% this node's score, 40% inherited from parents
+          score = 0.6 * score + 0.4 * parentAvg;
+        }
+      }
+
+      nodeScores.set(hash, score);
+    }
+
+    // Final score: average of all leaf node scores
+    const leaves = this.getLeaves();
+    if (leaves.length === 0) return 0;
+
+    let totalScore = 0;
+    for (const leaf of leaves) {
+      totalScore += nodeScores.get(leaf) ?? 0;
+    }
+
+    return Math.max(0, Math.min(1, totalScore / leaves.length));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Multi-Model Decay
+// ---------------------------------------------------------------------------
+
+/** Supported decay function types. */
+export type DecayModelType = 'exponential' | 'weibull' | 'gamma';
+
+/** Configuration for a reputation decay model. */
+export interface DecayModelConfig {
+  /** The decay function type. */
+  model: DecayModelType;
+  /**
+   * Parameters specific to the chosen model:
+   * - exponential: { lambda: number } where decay = e^(-lambda * t)
+   * - weibull: { k: number; lambda: number } where decay = e^(-(t/lambda)^k)
+   * - gamma: { alpha: number; beta: number } where decay approximated via incomplete gamma
+   */
+  params: Record<string, number>;
+}
+
+/**
+ * Computes reputation decay using different statistical distributions.
+ *
+ * Supports three models:
+ * - **Exponential**: Constant hazard rate. Reputation decays at the same
+ *   rate regardless of age. Simple but may not capture real-world patterns.
+ * - **Weibull**: Flexible hazard rate. k < 1 gives decreasing hazard
+ *   (early reputation matters more), k > 1 gives increasing hazard
+ *   (old reputation decays faster).
+ * - **Gamma**: The decay follows a gamma-distribution-shaped curve,
+ *   allowing a peak in "relevance" at some intermediate age.
+ */
+export class ReputationDecayModel {
+  private readonly modelType: DecayModelType;
+  private readonly params: Record<string, number>;
+
+  constructor(config: DecayModelConfig) {
+    this.modelType = config.model;
+    this.params = { ...config.params };
+
+    switch (this.modelType) {
+      case 'exponential': {
+        const lambda = this.params['lambda'];
+        if (lambda === undefined || lambda <= 0) {
+          throw new SteleError(
+            'Exponential decay requires lambda > 0',
+            SteleErrorCode.PROTOCOL_INVALID_INPUT,
+          );
+        }
+        break;
+      }
+      case 'weibull': {
+        const k = this.params['k'];
+        const lambda = this.params['lambda'];
+        if (k === undefined || k <= 0) {
+          throw new SteleError(
+            'Weibull decay requires k > 0',
+            SteleErrorCode.PROTOCOL_INVALID_INPUT,
+          );
+        }
+        if (lambda === undefined || lambda <= 0) {
+          throw new SteleError(
+            'Weibull decay requires lambda > 0',
+            SteleErrorCode.PROTOCOL_INVALID_INPUT,
+          );
+        }
+        break;
+      }
+      case 'gamma': {
+        const alpha = this.params['alpha'];
+        const beta = this.params['beta'];
+        if (alpha === undefined || alpha <= 0) {
+          throw new SteleError(
+            'Gamma decay requires alpha > 0',
+            SteleErrorCode.PROTOCOL_INVALID_INPUT,
+          );
+        }
+        if (beta === undefined || beta <= 0) {
+          throw new SteleError(
+            'Gamma decay requires beta > 0',
+            SteleErrorCode.PROTOCOL_INVALID_INPUT,
+          );
+        }
+        break;
+      }
+      default:
+        throw new SteleError(
+          `Unknown decay model: ${config.model}`,
+          SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        );
+    }
+  }
+
+  /**
+   * Compute the decay factor at time t.
+   * @param t - Time elapsed (in the same units used to configure the model). Must be >= 0.
+   * @returns A decay factor in [0, 1] where 1 = fully preserved, 0 = fully decayed.
+   */
+  decay(t: number): number {
+    if (t < 0) {
+      throw new SteleError(
+        'Time t must be non-negative',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
+    }
+    if (t === 0) return 1;
+
+    switch (this.modelType) {
+      case 'exponential': {
+        const lambda = this.params['lambda']!;
+        return Math.exp(-lambda * t);
+      }
+      case 'weibull': {
+        const k = this.params['k']!;
+        const lambda = this.params['lambda']!;
+        return Math.exp(-Math.pow(t / lambda, k));
+      }
+      case 'gamma': {
+        // Use the survival function of the gamma distribution:
+        // S(t) = 1 - P(alpha, beta*t) where P is the regularized lower incomplete gamma
+        const alpha = this.params['alpha']!;
+        const beta = this.params['beta']!;
+        return 1 - regularizedGammaP(alpha, beta * t);
+      }
+    }
+  }
+
+  /**
+   * Apply decay to a reputation score.
+   * @param score - Current reputation score.
+   * @param t - Time elapsed.
+   * @returns Decayed reputation score.
+   */
+  apply(score: number, t: number): number {
+    return score * this.decay(t);
+  }
+
+  /** The model type. */
+  get type(): DecayModelType {
+    return this.modelType;
+  }
+}
+
+/**
+ * Regularized lower incomplete gamma function P(a, x).
+ * Uses series expansion for small x, continued fraction for large x.
+ * This is a standard numerical approximation.
+ */
+function regularizedGammaP(a: number, x: number): number {
+  if (x < 0) return 0;
+  if (x === 0) return 0;
+
+  // Use series expansion: P(a,x) = e^(-x) * x^a * sum(x^n / gamma(a+n+1))
+  if (x < a + 1) {
+    return gammaPSeries(a, x);
+  } else {
+    // Use continued fraction for large x
+    return 1 - gammaQContinuedFraction(a, x);
+  }
+}
+
+/** Series expansion for regularized lower incomplete gamma. */
+function gammaPSeries(a: number, x: number): number {
+  const maxIterations = 200;
+  const epsilon = 1e-10;
+
+  let sum = 1 / a;
+  let term = 1 / a;
+
+  for (let n = 1; n < maxIterations; n++) {
+    term *= x / (a + n);
+    sum += term;
+    if (Math.abs(term) < Math.abs(sum) * epsilon) break;
+  }
+
+  return sum * Math.exp(-x + a * Math.log(x) - lnGamma(a));
+}
+
+/** Continued fraction for upper incomplete gamma Q(a, x). */
+function gammaQContinuedFraction(a: number, x: number): number {
+  const maxIterations = 200;
+  const epsilon = 1e-10;
+  const fpMin = 1e-30;
+
+  let b = x + 1 - a;
+  let c = 1 / fpMin;
+  let d = 1 / b;
+  let h = d;
+
+  for (let i = 1; i < maxIterations; i++) {
+    const an = -i * (i - a);
+    b += 2;
+    d = an * d + b;
+    if (Math.abs(d) < fpMin) d = fpMin;
+    c = b + an / c;
+    if (Math.abs(c) < fpMin) c = fpMin;
+    d = 1 / d;
+    const del = d * c;
+    h *= del;
+    if (Math.abs(del - 1) < epsilon) break;
+  }
+
+  return Math.exp(-x + a * Math.log(x) - lnGamma(a)) * h;
+}
+
+/** Log-gamma function using Stirling's approximation (Lanczos). */
+function lnGamma(x: number): number {
+  // Lanczos approximation coefficients
+  const g = 7;
+  const c = [
+    0.99999999999980993,
+    676.5203681218851,
+    -1259.1392167224028,
+    771.32342877765313,
+    -176.61502916214059,
+    12.507343278686905,
+    -0.13857109526572012,
+    9.9843695780195716e-6,
+    1.5056327351493116e-7,
+  ];
+
+  if (x < 0.5) {
+    // Reflection formula
+    return Math.log(Math.PI / Math.sin(Math.PI * x)) - lnGamma(1 - x);
+  }
+
+  x -= 1;
+  let a = c[0]!;
+  const t = x + g + 0.5;
+  for (let i = 1; i < g + 2; i++) {
+    a += c[i]! / (x + i);
+  }
+
+  return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+}
+
+// ---------------------------------------------------------------------------
+// Graduated Stake Burning
+// ---------------------------------------------------------------------------
+
+/** Configuration for the graduated burn penalty curve. */
+export interface GraduatedBurnConfig {
+  /** Minimum burn fraction (applied for the mildest breaches). */
+  minBurnFraction: number;
+  /** Maximum burn fraction (applied for the most severe breaches). */
+  maxBurnFraction: number;
+  /**
+   * Exponent for the penalty curve. Controls non-linearity:
+   * - 1.0 = linear scaling
+   * - > 1.0 = superlinear (harsh on severe breaches)
+   * - < 1.0 = sublinear (lenient on severe breaches)
+   */
+  curveExponent: number;
+  /** Weight of agent history in adjusting the burn (0 = ignore history, 1 = max adjustment). */
+  historyWeight: number;
+}
+
+const DEFAULT_BURN_CONFIG: GraduatedBurnConfig = {
+  minBurnFraction: 0.05,
+  maxBurnFraction: 1.0,
+  curveExponent: 1.5,
+  historyWeight: 0.3,
+};
+
+/**
+ * Replaces all-or-nothing stake burning with proportional penalties.
+ *
+ * The burn amount is calculated based on:
+ * 1. **Breach severity** - mapped to a base severity score in [0, 1]
+ * 2. **Agent history** - agents with more past breaches get a higher penalty
+ * 3. **Stake amount** - the burn is a fraction of the staked amount
+ *
+ * The penalty curve is: burnFraction = min + (max - min) * adjustedSeverity^exponent
+ * where adjustedSeverity incorporates both the breach severity and agent history.
+ */
+export class GraduatedBurner {
+  private readonly config: GraduatedBurnConfig;
+
+  constructor(config?: Partial<GraduatedBurnConfig>) {
+    this.config = { ...DEFAULT_BURN_CONFIG, ...config };
+
+    if (this.config.minBurnFraction < 0 || this.config.minBurnFraction > 1) {
+      throw new SteleError(
+        'minBurnFraction must be in [0, 1]',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
+    }
+    if (this.config.maxBurnFraction < this.config.minBurnFraction || this.config.maxBurnFraction > 1) {
+      throw new SteleError(
+        'maxBurnFraction must be in [minBurnFraction, 1]',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
+    }
+    if (this.config.curveExponent <= 0) {
+      throw new SteleError(
+        'curveExponent must be > 0',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
+    }
+    if (this.config.historyWeight < 0 || this.config.historyWeight > 1) {
+      throw new SteleError(
+        'historyWeight must be in [0, 1]',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
+    }
+  }
+
+  /**
+   * Calculate the burn amount for a stake.
+   *
+   * @param stakeAmount - Total staked amount.
+   * @param severity - Breach severity.
+   * @param pastBreachCount - Number of past breaches by this agent.
+   * @param totalPastExecutions - Total executions by this agent (for normalization).
+   * @returns Object with burnAmount and burnFraction.
+   */
+  calculateBurn(
+    stakeAmount: number,
+    severity: Severity,
+    pastBreachCount: number,
+    totalPastExecutions: number,
+  ): { burnAmount: number; burnFraction: number } {
+    if (stakeAmount < 0) {
+      throw new SteleError(
+        'stakeAmount must be non-negative',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
+    }
+    if (pastBreachCount < 0 || !Number.isInteger(pastBreachCount)) {
+      throw new SteleError(
+        'pastBreachCount must be a non-negative integer',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
+    }
+    if (totalPastExecutions < 0 || !Number.isInteger(totalPastExecutions)) {
+      throw new SteleError(
+        'totalPastExecutions must be a non-negative integer',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
+    }
+
+    // Map severity to a base score in [0, 1]
+    const baseSeverity = this.severityScore(severity);
+
+    // Compute history adjustment: breach ratio scaled by historyWeight
+    const breachRatio = totalPastExecutions > 0
+      ? pastBreachCount / totalPastExecutions
+      : 0;
+    const historyAdjustment = this.config.historyWeight * breachRatio;
+
+    // Combined severity, clamped to [0, 1]
+    const adjustedSeverity = Math.min(1, baseSeverity + historyAdjustment);
+
+    // Apply the penalty curve
+    const { minBurnFraction, maxBurnFraction, curveExponent } = this.config;
+    const burnFraction = minBurnFraction +
+      (maxBurnFraction - minBurnFraction) * Math.pow(adjustedSeverity, curveExponent);
+
+    const clampedFraction = Math.max(0, Math.min(1, burnFraction));
+    const burnAmount = stakeAmount * clampedFraction;
+
+    return { burnAmount, burnFraction: clampedFraction };
+  }
+
+  /**
+   * Map severity to a base score in [0, 1].
+   */
+  private severityScore(severity: Severity): number {
+    switch (severity) {
+      case 'critical':
+        return 1.0;
+      case 'high':
+        return 0.75;
+      case 'medium':
+        return 0.5;
+      case 'low':
+        return 0.25;
+      default:
+        return 0.5;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Reputation Aggregation (Weighted Median)
+// ---------------------------------------------------------------------------
+
+/** A reputation score from a single source for aggregation. */
+export interface ReputationSource {
+  /** Identifier of the reputation source. */
+  sourceId: string;
+  /** The reputation score reported by this source. */
+  score: number;
+  /** Weight/reliability of this source (higher = more trusted). */
+  weight: number;
+}
+
+/**
+ * Aggregates reputation scores from multiple independent sources
+ * using weighted median (robust to outliers) rather than simple averaging.
+ *
+ * The weighted median is the value where the cumulative weight of
+ * all smaller values equals 50% of the total weight. This provides
+ * Byzantine fault tolerance: up to ~50% of sources can be malicious
+ * without affecting the result (vs ~0% for simple averaging).
+ */
+export class ReputationAggregator {
+  /**
+   * Compute the weighted median of reputation scores.
+   *
+   * @param sources - Array of reputation sources with scores and weights.
+   * @returns The weighted median score.
+   * @throws SteleError if sources is empty or contains invalid values.
+   */
+  aggregate(sources: ReputationSource[]): number {
+    if (sources.length === 0) {
+      throw new SteleError(
+        'At least one reputation source is required',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
+    }
+
+    for (const source of sources) {
+      if (source.score < 0 || source.score > 1) {
+        throw new SteleError(
+          `Invalid score ${source.score} for source ${source.sourceId}: must be in [0, 1]`,
+          SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        );
+      }
+      if (source.weight < 0) {
+        throw new SteleError(
+          `Invalid weight ${source.weight} for source ${source.sourceId}: must be non-negative`,
+          SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        );
+      }
+    }
+
+    // Filter out zero-weight sources
+    const nonZero = sources.filter((s) => s.weight > 0);
+    if (nonZero.length === 0) {
+      throw new SteleError(
+        'At least one source must have positive weight',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
+    }
+
+    // Sort by score
+    const sorted = [...nonZero].sort((a, b) => a.score - b.score);
+    const totalWeight = sorted.reduce((sum, s) => sum + s.weight, 0);
+    const halfWeight = totalWeight / 2;
+
+    // Find the weighted median: the score where cumulative weight reaches 50%
+    let cumWeight = 0;
+    for (let i = 0; i < sorted.length; i++) {
+      cumWeight += sorted[i]!.weight;
+      if (cumWeight >= halfWeight) {
+        // If we're exactly at the boundary and there's a next value,
+        // interpolate between current and next
+        if (cumWeight === halfWeight && i + 1 < sorted.length) {
+          return (sorted[i]!.score + sorted[i + 1]!.score) / 2;
+        }
+        return sorted[i]!.score;
+      }
+    }
+
+    // Fallback: return the last score (shouldn't reach here with valid input)
+    return sorted[sorted.length - 1]!.score;
+  }
+
+  /**
+   * Compute both the weighted median and a confidence interval.
+   *
+   * The confidence interval is based on the weighted interquartile range (IQR).
+   * A narrow IQR indicates high consensus; a wide IQR indicates disagreement.
+   *
+   * @param sources - Array of reputation sources.
+   * @returns Object with median, lower quartile, upper quartile, and consensus score.
+   */
+  aggregateWithConfidence(sources: ReputationSource[]): {
+    median: number;
+    lowerQuartile: number;
+    upperQuartile: number;
+    consensus: number;
+  } {
+    const median = this.aggregate(sources);
+
+    const nonZero = sources.filter((s) => s.weight > 0);
+    const sorted = [...nonZero].sort((a, b) => a.score - b.score);
+    const totalWeight = sorted.reduce((sum, s) => sum + s.weight, 0);
+
+    const lowerQuartile = this.weightedQuantile(sorted, totalWeight, 0.25);
+    const upperQuartile = this.weightedQuantile(sorted, totalWeight, 0.75);
+
+    // Consensus: 1 - IQR (normalized). High consensus when IQR is small.
+    const iqr = upperQuartile - lowerQuartile;
+    const consensus = Math.max(0, 1 - iqr);
+
+    return { median, lowerQuartile, upperQuartile, consensus };
+  }
+
+  /**
+   * Compute a weighted quantile.
+   */
+  private weightedQuantile(
+    sorted: ReputationSource[],
+    totalWeight: number,
+    quantile: number,
+  ): number {
+    const target = totalWeight * quantile;
+    let cumWeight = 0;
+
+    for (let i = 0; i < sorted.length; i++) {
+      cumWeight += sorted[i]!.weight;
+      if (cumWeight >= target) {
+        return sorted[i]!.score;
+      }
+    }
+
+    return sorted[sorted.length - 1]!.score;
   }
 }

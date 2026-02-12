@@ -1,4 +1,5 @@
 import { sha256Object, generateId } from '@stele/crypto';
+import { SteleError } from '@stele/types';
 
 export type {
   TriggerType,
@@ -644,4 +645,731 @@ export function expirationForecast(
     remainingWeight,
     violationTrend,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Multi-Model Decay
+// ---------------------------------------------------------------------------
+
+/** Supported decay model types. */
+export type DecayModelType = 'exponential' | 'linear' | 'step' | 'seasonal';
+
+/** Configuration for a single decay model. */
+export interface DecayModelConfig {
+  type: DecayModelType;
+  /** Decay rate for exponential, slope for linear, period for seasonal. */
+  rate: number;
+  /** For step: array of [time_fraction, value_multiplier] breakpoints. */
+  steps?: Array<[number, number]>;
+  /** For seasonal: amplitude of the seasonal component (0-1). */
+  amplitude?: number;
+  /** For seasonal: phase offset in radians. */
+  phase?: number;
+}
+
+/**
+ * DecayModel supports multiple decay functions and their composition.
+ *
+ * Supported models:
+ * - Exponential: value(t) = e^(-rate * t)
+ * - Linear: value(t) = max(0, 1 - rate * t)
+ * - Step: value(t) = step_value at the highest breakpoint <= t
+ * - Seasonal: value(t) = 1 + amplitude * sin(2*pi*rate*t + phase)
+ *
+ * Models can be composed by multiplying their outputs:
+ *   composed(t) = model1(t) * model2(t) * ...
+ *
+ * This allows, e.g., exponential decay with a seasonal overlay.
+ */
+export class DecayModel {
+  private models: DecayModelConfig[];
+
+  constructor(models: DecayModelConfig[]) {
+    if (models.length === 0) {
+      throw new SteleError('STELE_E940' as any, 'At least one decay model is required');
+    }
+    for (const m of models) {
+      this.validateModel(m);
+    }
+    this.models = [...models];
+  }
+
+  private validateModel(model: DecayModelConfig): void {
+    if (model.type === 'exponential' && model.rate < 0) {
+      throw new SteleError('STELE_E940' as any, 'Exponential decay rate must be >= 0');
+    }
+    if (model.type === 'linear' && model.rate < 0) {
+      throw new SteleError('STELE_E940' as any, 'Linear decay rate must be >= 0');
+    }
+    if (model.type === 'step') {
+      if (!model.steps || model.steps.length === 0) {
+        throw new SteleError('STELE_E940' as any, 'Step decay requires at least one breakpoint');
+      }
+      for (const [t, v] of model.steps) {
+        if (t < 0 || t > 1) {
+          throw new SteleError('STELE_E940' as any, `Step time fraction must be in [0, 1], got ${t}`);
+        }
+        if (v < 0) {
+          throw new SteleError('STELE_E940' as any, `Step value must be >= 0, got ${v}`);
+        }
+      }
+    }
+    if (model.type === 'seasonal') {
+      if (model.rate <= 0) {
+        throw new SteleError('STELE_E940' as any, 'Seasonal frequency (rate) must be > 0');
+      }
+      if (model.amplitude !== undefined && (model.amplitude < 0 || model.amplitude > 1)) {
+        throw new SteleError('STELE_E940' as any, `Seasonal amplitude must be in [0, 1], got ${model.amplitude}`);
+      }
+    }
+  }
+
+  /**
+   * Evaluate a single model at normalized time t (0 = start, 1 = end of lifetime).
+   */
+  private evaluateOne(model: DecayModelConfig, t: number): number {
+    switch (model.type) {
+      case 'exponential':
+        return Math.exp(-model.rate * t);
+
+      case 'linear':
+        return Math.max(0, 1 - model.rate * t);
+
+      case 'step': {
+        // Sort steps by time fraction
+        const sorted = [...model.steps!].sort((a, b) => a[0] - b[0]);
+        let value = 1.0; // Default before first step
+        for (const [time, val] of sorted) {
+          if (t >= time) {
+            value = val;
+          } else {
+            break;
+          }
+        }
+        return value;
+      }
+
+      case 'seasonal': {
+        const amplitude = model.amplitude ?? 0.2;
+        const phase = model.phase ?? 0;
+        // Seasonal oscillation centered around 1.0
+        return 1.0 + amplitude * Math.sin(2 * Math.PI * model.rate * t + phase);
+      }
+
+      default:
+        throw new SteleError('STELE_E941' as any, `Unknown decay model type: ${model.type}`);
+    }
+  }
+
+  /**
+   * Evaluate the composed decay at normalized time t.
+   * All model outputs are multiplied together.
+   *
+   * @param t - Normalized time in [0, 1] where 0=start, 1=end of lifetime
+   * @param initialWeight - Starting weight (default 1.0)
+   * @returns The decayed weight value
+   */
+  evaluate(t: number, initialWeight: number = 1.0): number {
+    if (initialWeight < 0) {
+      throw new SteleError('STELE_E940' as any, 'initialWeight must be >= 0');
+    }
+
+    let composedFactor = 1.0;
+    for (const model of this.models) {
+      composedFactor *= this.evaluateOne(model, t);
+    }
+
+    return Math.max(0, initialWeight * composedFactor);
+  }
+
+  /**
+   * Generate a decay schedule sampled at evenly-spaced points.
+   */
+  schedule(initialWeight: number, steps: number): DecayPoint[] {
+    if (steps < 2) {
+      throw new SteleError('STELE_E940' as any, 'steps must be >= 2');
+    }
+
+    const points: DecayPoint[] = [];
+    for (let i = 0; i < steps; i++) {
+      const t = i / (steps - 1);
+      points.push({ time: t, value: this.evaluate(t, initialWeight) });
+    }
+    return points;
+  }
+
+  /**
+   * Find the time fraction at which the value drops below a threshold.
+   * Uses binary search.
+   *
+   * @returns Normalized time fraction, or null if threshold is never reached
+   */
+  findThresholdTime(initialWeight: number, threshold: number): number | null {
+    if (threshold <= 0) return null;
+    if (this.evaluate(0, initialWeight) < threshold) return 0;
+    if (this.evaluate(1, initialWeight) >= threshold) return null;
+
+    let lo = 0;
+    let hi = 1;
+    for (let i = 0; i < 100; i++) {
+      const mid = (lo + hi) / 2;
+      if (this.evaluate(mid, initialWeight) >= threshold) {
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+
+    return hi;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Continuous Trigger Scoring
+// ---------------------------------------------------------------------------
+
+/** Configuration for a continuous trigger. */
+export interface ContinuousTriggerConfig {
+  /** Trigger type (same as EvolutionTrigger types). */
+  type: TriggerType;
+  /** Center of the sigmoid threshold. */
+  threshold: number;
+  /** Steepness of the sigmoid curve (higher = sharper transition). Default 10. */
+  steepness?: number;
+  /** Weight of this trigger in the combined score (default 1.0). */
+  weight?: number;
+  /** Action to take when trigger activation is high. */
+  action: TriggerAction;
+}
+
+/** Result of continuous trigger evaluation. */
+export interface ContinuousTriggerResult {
+  /** Per-trigger activation scores (0 to 1). */
+  activations: Array<{ type: TriggerType; activation: number; weight: number }>;
+  /** Combined weighted score (0 to 1). */
+  combinedScore: number;
+  /** Whether the combined score exceeds the activation threshold. */
+  activated: boolean;
+  /** The activation threshold used. */
+  activationThreshold: number;
+}
+
+/**
+ * ContinuousTrigger replaces boolean trigger evaluation with smooth
+ * sigmoid-based scoring. Instead of hard thresholds, triggers have
+ * soft thresholds with configurable steepness.
+ *
+ * The sigmoid activation function is:
+ *   sigma(x) = 1 / (1 + e^(-steepness * (x - threshold)))
+ *
+ * This maps any real-valued input to a score in (0, 1):
+ * - At x = threshold: activation = 0.5
+ * - Above threshold: activation approaches 1
+ * - Below threshold: activation approaches 0
+ * - Steepness controls how sharp the transition is
+ */
+export class ContinuousTrigger {
+  private triggers: ContinuousTriggerConfig[];
+  private readonly activationThreshold: number;
+
+  constructor(triggers: ContinuousTriggerConfig[], activationThreshold: number = 0.5) {
+    if (triggers.length === 0) {
+      throw new SteleError('STELE_E940' as any, 'At least one trigger is required');
+    }
+    if (activationThreshold < 0 || activationThreshold > 1) {
+      throw new SteleError('STELE_E940' as any, 'activationThreshold must be in [0, 1]');
+    }
+    for (const t of triggers) {
+      if (t.steepness !== undefined && t.steepness <= 0) {
+        throw new SteleError('STELE_E940' as any, 'steepness must be > 0');
+      }
+      if (t.weight !== undefined && t.weight < 0) {
+        throw new SteleError('STELE_E940' as any, 'weight must be >= 0');
+      }
+    }
+    this.triggers = triggers;
+    this.activationThreshold = activationThreshold;
+  }
+
+  /**
+   * Sigmoid activation function.
+   * Returns a value in (0, 1) representing the degree of activation.
+   */
+  private sigmoid(value: number, threshold: number, steepness: number): number {
+    return 1 / (1 + Math.exp(-steepness * (value - threshold)));
+  }
+
+  /**
+   * Extract the relevant numeric value from agent state for a trigger type.
+   */
+  private extractValue(type: TriggerType, agentState: AgentState, covenant: CovenantState): number {
+    switch (type) {
+      case 'reputation_threshold':
+        return agentState.reputationScore;
+      case 'breach_event':
+        return agentState.breachCount;
+      case 'time_elapsed': {
+        const lastTransition = covenant.lastTransitionAt ?? 0;
+        return agentState.currentTime - lastTransition;
+      }
+      case 'capability_change':
+        return agentState.capabilities.length;
+      case 'governance_vote': {
+        if (!agentState.governanceVotes) return 0;
+        const votes = Object.values(agentState.governanceVotes);
+        return votes.filter(v => v).length / Math.max(votes.length, 1);
+      }
+      default:
+        return 0;
+    }
+  }
+
+  /**
+   * Evaluate all triggers against the current state, returning
+   * continuous activation scores instead of boolean decisions.
+   */
+  evaluate(agentState: AgentState, covenant: CovenantState): ContinuousTriggerResult {
+    const activations: Array<{ type: TriggerType; activation: number; weight: number }> = [];
+    let totalWeight = 0;
+    let weightedSum = 0;
+
+    for (const trigger of this.triggers) {
+      const value = this.extractValue(trigger.type, agentState, covenant);
+      const steepness = trigger.steepness ?? 10;
+      const weight = trigger.weight ?? 1.0;
+      const activation = this.sigmoid(value, trigger.threshold, steepness);
+
+      activations.push({ type: trigger.type, activation, weight });
+      weightedSum += activation * weight;
+      totalWeight += weight;
+    }
+
+    const combinedScore = totalWeight > 0 ? weightedSum / totalWeight : 0;
+
+    return {
+      activations,
+      combinedScore,
+      activated: combinedScore >= this.activationThreshold,
+      activationThreshold: this.activationThreshold,
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Holt-Winters Forecasting (Double Exponential Smoothing)
+// ---------------------------------------------------------------------------
+
+/** Configuration for the violation forecaster. */
+export interface ForecastConfig {
+  /** Smoothing factor for the level (0 < alpha < 1). */
+  alpha: number;
+  /** Smoothing factor for the trend (0 < beta < 1). */
+  beta: number;
+  /** Number of future periods to forecast. */
+  forecastPeriods: number;
+  /** Confidence level for bands (default 0.95). */
+  confidenceLevel?: number;
+}
+
+/** A single forecast data point. */
+export interface ForecastPoint {
+  /** Time period index. */
+  period: number;
+  /** Forecasted violation rate. */
+  rate: number;
+  /** Upper confidence bound. */
+  upperBound: number;
+  /** Lower confidence bound. */
+  lowerBound: number;
+}
+
+/** Result of violation forecasting. */
+export interface ForecastResult {
+  /** The forecasted data points. */
+  forecasts: ForecastPoint[];
+  /** Final level component. */
+  level: number;
+  /** Final trend component. */
+  trend: number;
+  /** Mean Absolute Error on the training data. */
+  mae: number;
+  /** Direction of the forecast ('increasing', 'decreasing', 'stable'). */
+  direction: 'increasing' | 'decreasing' | 'stable';
+}
+
+/**
+ * ViolationForecaster uses Holt's method (double exponential smoothing)
+ * to forecast future violation rates.
+ *
+ * Holt's method maintains two components:
+ * - Level (l_t): the current smoothed value
+ * - Trend (b_t): the current smoothed slope
+ *
+ * Update equations:
+ *   l_t = alpha * y_t + (1 - alpha) * (l_{t-1} + b_{t-1})
+ *   b_t = beta * (l_t - l_{t-1}) + (1 - beta) * b_{t-1}
+ *
+ * Forecast:
+ *   y_{t+h} = l_t + h * b_t
+ *
+ * Confidence bands are computed from the residual standard error.
+ */
+export class ViolationForecaster {
+  private readonly config: ForecastConfig;
+
+  constructor(config: ForecastConfig) {
+    if (config.alpha <= 0 || config.alpha >= 1) {
+      throw new SteleError('STELE_E940' as any, 'alpha must be in (0, 1)');
+    }
+    if (config.beta <= 0 || config.beta >= 1) {
+      throw new SteleError('STELE_E940' as any, 'beta must be in (0, 1)');
+    }
+    if (config.forecastPeriods < 1) {
+      throw new SteleError('STELE_E940' as any, 'forecastPeriods must be >= 1');
+    }
+    if (config.confidenceLevel !== undefined) {
+      if (config.confidenceLevel <= 0 || config.confidenceLevel >= 1) {
+        throw new SteleError('STELE_E940' as any, 'confidenceLevel must be in (0, 1)');
+      }
+    }
+    this.config = config;
+  }
+
+  /**
+   * Forecast future violation rates based on historical data.
+   *
+   * @param historicalRates - Array of observed violation rates ordered by time period.
+   *                          Must have at least 2 data points.
+   * @returns ForecastResult with predicted rates and confidence bands
+   */
+  forecast(historicalRates: number[]): ForecastResult {
+    if (historicalRates.length < 2) {
+      throw new SteleError('STELE_E940' as any, 'At least 2 historical data points required');
+    }
+
+    for (let i = 0; i < historicalRates.length; i++) {
+      if (typeof historicalRates[i] !== 'number' || isNaN(historicalRates[i]!)) {
+        throw new SteleError('STELE_E940' as any, `historicalRates[${i}] must be a valid number`);
+      }
+    }
+
+    const { alpha, beta, forecastPeriods } = this.config;
+    const confidenceLevel = this.config.confidenceLevel ?? 0.95;
+
+    // Initialize: level = first value, trend = average difference
+    let level = historicalRates[0]!;
+    let trend = (historicalRates[historicalRates.length - 1]! - historicalRates[0]!) /
+      (historicalRates.length - 1);
+
+    // Fit the model and compute residuals
+    const residuals: number[] = [];
+
+    for (let t = 1; t < historicalRates.length; t++) {
+      const predicted = level + trend;
+      const actual = historicalRates[t]!;
+      residuals.push(actual - predicted);
+
+      // Update level and trend
+      const prevLevel = level;
+      level = alpha * actual + (1 - alpha) * (level + trend);
+      trend = beta * (level - prevLevel) + (1 - beta) * trend;
+    }
+
+    // Compute Mean Absolute Error
+    const mae = residuals.length > 0
+      ? residuals.reduce((sum, r) => sum + Math.abs(r), 0) / residuals.length
+      : 0;
+
+    // Compute residual standard error for confidence bands
+    const sse = residuals.reduce((sum, r) => sum + r * r, 0);
+    const sigma = Math.sqrt(sse / Math.max(residuals.length - 1, 1));
+
+    // Z-score for confidence level (approximation for common levels)
+    const zScore = this.approximateZScore(confidenceLevel);
+
+    // Generate forecasts
+    const forecasts: ForecastPoint[] = [];
+    const n = historicalRates.length;
+
+    for (let h = 1; h <= forecastPeriods; h++) {
+      const rate = level + h * trend;
+      // Confidence interval widens with forecast horizon
+      // Variance grows linearly with h for Holt's method
+      const forecastStdErr = sigma * Math.sqrt(1 + h * alpha * alpha);
+      const margin = zScore * forecastStdErr;
+
+      forecasts.push({
+        period: n + h,
+        rate,
+        upperBound: rate + margin,
+        lowerBound: Math.max(0, rate - margin), // Violation rates can't be negative
+      });
+    }
+
+    // Determine direction
+    let direction: 'increasing' | 'decreasing' | 'stable';
+    if (trend > sigma * 0.1) {
+      direction = 'increasing';
+    } else if (trend < -sigma * 0.1) {
+      direction = 'decreasing';
+    } else {
+      direction = 'stable';
+    }
+
+    return {
+      forecasts,
+      level,
+      trend,
+      mae,
+      direction,
+    };
+  }
+
+  /**
+   * Approximate the Z-score for a given confidence level.
+   * Uses a simple lookup for common values.
+   */
+  private approximateZScore(confidence: number): number {
+    if (confidence >= 0.99) return 2.576;
+    if (confidence >= 0.975) return 2.241;
+    if (confidence >= 0.95) return 1.96;
+    if (confidence >= 0.9) return 1.645;
+    if (confidence >= 0.8) return 1.282;
+    // Fallback: use probit approximation
+    const p = (1 + confidence) / 2;
+    const t = Math.sqrt(-2 * Math.log(1 - p));
+    return t - (2.515517 + 0.802853 * t + 0.010328 * t * t) /
+      (1 + 1.432788 * t + 0.189269 * t * t + 0.001308 * t * t * t);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Temporal Constraint Algebra
+// ---------------------------------------------------------------------------
+
+/** A temporal constraint with a time range and enforcement weight. */
+export interface TemporalConstraint {
+  /** Unique identifier for this constraint. */
+  id: string;
+  /** Start time (normalized fraction in [0, 1]). */
+  start: number;
+  /** End time (normalized fraction in [0, 1]). */
+  end: number;
+  /** Enforcement weight in [0, 1]. */
+  weight: number;
+  /** Constraint identifier (e.g., a CCL rule reference). */
+  constraintRef: string;
+}
+
+/** Result of a temporal algebra operation. */
+export interface TemporalAlgebraResult {
+  /** The resulting constraints after the operation. */
+  constraints: TemporalConstraint[];
+  /** The operation that was applied. */
+  operation: 'intersection' | 'union' | 'difference';
+  /** Human-readable description of the result. */
+  description: string;
+}
+
+/**
+ * TemporalConstraintAlgebra provides operations for combining temporal
+ * constraints: intersection (tightest of both), union (loosest), and
+ * difference (A minus B).
+ *
+ * Constraints are modeled as weighted intervals on a normalized [0, 1]
+ * time range. The algebra operates on these intervals:
+ *
+ * - Intersection: overlapping time ranges, taking the maximum weight
+ *   (most restrictive). Only the overlapping portions survive.
+ *
+ * - Union: merged time ranges, taking the minimum weight (least
+ *   restrictive) in overlapping regions.
+ *
+ * - Difference: portions of A that don't overlap with B, preserving
+ *   A's weight.
+ */
+export class TemporalConstraintAlgebra {
+  /**
+   * Validate a temporal constraint.
+   */
+  private validate(constraint: TemporalConstraint): void {
+    if (constraint.start < 0 || constraint.start > 1) {
+      throw new SteleError('STELE_E940' as any, `start must be in [0, 1], got ${constraint.start}`);
+    }
+    if (constraint.end < 0 || constraint.end > 1) {
+      throw new SteleError('STELE_E940' as any, `end must be in [0, 1], got ${constraint.end}`);
+    }
+    if (constraint.start > constraint.end) {
+      throw new SteleError('STELE_E940' as any, `start (${constraint.start}) must be <= end (${constraint.end})`);
+    }
+    if (constraint.weight < 0 || constraint.weight > 1) {
+      throw new SteleError('STELE_E940' as any, `weight must be in [0, 1], got ${constraint.weight}`);
+    }
+  }
+
+  /**
+   * Intersection: compute the tightest constraints from both sets.
+   *
+   * For each pair of overlapping constraints (one from A, one from B),
+   * creates a new constraint covering only the overlap with the maximum
+   * weight (more restrictive).
+   */
+  intersection(setA: TemporalConstraint[], setB: TemporalConstraint[]): TemporalAlgebraResult {
+    for (const c of setA) this.validate(c);
+    for (const c of setB) this.validate(c);
+
+    const results: TemporalConstraint[] = [];
+
+    for (const a of setA) {
+      for (const b of setB) {
+        // Find overlap
+        const overlapStart = Math.max(a.start, b.start);
+        const overlapEnd = Math.min(a.end, b.end);
+
+        if (overlapStart < overlapEnd) {
+          results.push({
+            id: `${a.id}_AND_${b.id}`,
+            start: overlapStart,
+            end: overlapEnd,
+            weight: Math.max(a.weight, b.weight), // Most restrictive
+            constraintRef: `${a.constraintRef} AND ${b.constraintRef}`,
+          });
+        }
+      }
+    }
+
+    return {
+      constraints: results,
+      operation: 'intersection',
+      description: `Intersection produced ${results.length} constraint(s) from ${setA.length} x ${setB.length} inputs`,
+    };
+  }
+
+  /**
+   * Union: compute the loosest constraints from both sets.
+   *
+   * Merges overlapping time ranges. In regions where both A and B have
+   * constraints, takes the minimum weight (less restrictive). Non-overlapping
+   * regions are included as-is.
+   *
+   * Uses an interval sweep-line algorithm for correct merging.
+   */
+  union(setA: TemporalConstraint[], setB: TemporalConstraint[]): TemporalAlgebraResult {
+    for (const c of setA) this.validate(c);
+    for (const c of setB) this.validate(c);
+
+    // Combine all constraints and sort by start time
+    const all = [...setA, ...setB].sort((a, b) => a.start - b.start || a.end - b.end);
+
+    if (all.length === 0) {
+      return { constraints: [], operation: 'union', description: 'Union of empty sets is empty' };
+    }
+
+    // Sweep-line merge
+    const merged: TemporalConstraint[] = [];
+    let current = { ...all[0]! };
+
+    for (let i = 1; i < all.length; i++) {
+      const next = all[i]!;
+
+      if (next.start <= current.end) {
+        // Overlapping: extend and take minimum weight in overlap
+        const overlapWeight = Math.min(current.weight, next.weight);
+        // If non-overlapping part of current has different weight, split
+        if (next.start > current.start && current.weight !== overlapWeight) {
+          // Emit the non-overlapping prefix
+          merged.push({
+            ...current,
+            id: `${current.id}_prefix`,
+            end: next.start,
+          });
+          current = {
+            ...current,
+            id: `${current.id}_AND_${next.id}`,
+            start: next.start,
+            end: Math.max(current.end, next.end),
+            weight: overlapWeight,
+            constraintRef: `${current.constraintRef} OR ${next.constraintRef}`,
+          };
+        } else {
+          current = {
+            ...current,
+            id: `${current.id}_OR_${next.id}`,
+            end: Math.max(current.end, next.end),
+            weight: overlapWeight,
+            constraintRef: `${current.constraintRef} OR ${next.constraintRef}`,
+          };
+        }
+      } else {
+        // No overlap: emit current and start new
+        merged.push(current);
+        current = { ...next };
+      }
+    }
+    merged.push(current);
+
+    return {
+      constraints: merged,
+      operation: 'union',
+      description: `Union merged ${setA.length + setB.length} constraints into ${merged.length}`,
+    };
+  }
+
+  /**
+   * Difference: compute constraints in A but not overlapping with B.
+   *
+   * For each constraint in A, subtracts the time ranges covered by B.
+   * The remaining fragments of A are returned with their original weight.
+   */
+  difference(setA: TemporalConstraint[], setB: TemporalConstraint[]): TemporalAlgebraResult {
+    for (const c of setA) this.validate(c);
+    for (const c of setB) this.validate(c);
+
+    const results: TemporalConstraint[] = [];
+
+    for (const a of setA) {
+      // Start with the full range of a
+      let fragments: Array<[number, number]> = [[a.start, a.end]];
+
+      // Subtract each b interval
+      for (const b of setB) {
+        const newFragments: Array<[number, number]> = [];
+        for (const [fStart, fEnd] of fragments) {
+          if (b.end <= fStart || b.start >= fEnd) {
+            // No overlap, keep fragment
+            newFragments.push([fStart, fEnd]);
+          } else {
+            // Overlap: split fragment
+            if (fStart < b.start) {
+              newFragments.push([fStart, b.start]);
+            }
+            if (fEnd > b.end) {
+              newFragments.push([b.end, fEnd]);
+            }
+          }
+        }
+        fragments = newFragments;
+      }
+
+      // Convert remaining fragments to constraints
+      for (let i = 0; i < fragments.length; i++) {
+        const [fStart, fEnd] = fragments[i]!;
+        if (fEnd > fStart) {
+          results.push({
+            id: `${a.id}_diff_${i}`,
+            start: fStart,
+            end: fEnd,
+            weight: a.weight,
+            constraintRef: a.constraintRef,
+          });
+        }
+      }
+    }
+
+    return {
+      constraints: results,
+      operation: 'difference',
+      description: `Difference produced ${results.length} fragment(s) from ${setA.length} constraints minus ${setB.length}`,
+    };
+  }
 }

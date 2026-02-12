@@ -1093,3 +1093,112 @@ export class QuickCovenant {
 
 // Re-export adapters
 export * from './adapters/index.js';
+
+// ─── Store ────────────────────────────────────────────────────────────────────
+export { MemoryStore, FileStore, SqliteStore, QueryBuilder, createQuery, StoreIndex, IndexedStore, createTransaction } from '@stele/store';
+export type {
+  CovenantStore,
+  StoreFilter,
+  StoreEvent,
+  StoreEventType,
+  StoreEventCallback,
+  SQLiteDriver,
+  PaginationOptions,
+  PaginatedResult,
+  SortField,
+  SortOrder,
+  IndexField,
+  Transaction,
+} from '@stele/store';
+
+// ─── Breach Detection ─────────────────────────────────────────────────────────
+export { createBreachAttestation, verifyBreachAttestation, TrustGraph } from '@stele/breach';
+export type {
+  BreachAttestation,
+  TrustStatus,
+  TrustNode,
+  BreachEvent,
+} from '@stele/breach';
+
+// ─── Reputation ───────────────────────────────────────────────────────────────
+export {
+  computeReputationScore,
+  createReceipt,
+  verifyReceipt,
+  countersignReceipt,
+  verifyReceiptChain,
+  computeReceiptsMerkleRoot,
+  DEFAULT_SCORING_CONFIG,
+  createStake,
+  releaseStake,
+  burnStake,
+  createDelegation,
+  burnDelegation,
+  coBurnDelegation,
+  createEndorsement,
+  verifyEndorsement,
+} from '@stele/reputation';
+export type {
+  ReputationScore,
+  ExecutionReceipt,
+  ReputationStake,
+  ReputationDelegation,
+  Endorsement,
+  ScoringConfig,
+} from '@stele/reputation';
+
+// ─── Proof ────────────────────────────────────────────────────────────────────
+export {
+  generateComplianceProof,
+  verifyComplianceProof,
+  computeAuditCommitment,
+  computeConstraintCommitment,
+  poseidonHash,
+  hashToField,
+  fieldToHex,
+  FIELD_PRIME,
+} from '@stele/proof';
+export type {
+  ComplianceProof,
+  ProofVerificationResult,
+  ProofGenerationOptions,
+  AuditEntryData,
+} from '@stele/proof';
+
+// ─── Attestation ──────────────────────────────────────────────────────────────
+export {
+  createAttestation,
+  verifyAttestation,
+  signAttestation,
+  isSigned,
+  reconcile,
+  getDiscrepancies,
+  attestationChainVerify,
+  computeAttestationCoverage,
+} from '@stele/attestation';
+export type {
+  ExternalAttestation,
+  AttestationReconciliation,
+  Discrepancy,
+  ReceiptSummary,
+  AttestationChainLink,
+  ChainVerificationResult,
+  AgentAction,
+  AttestationCoverageResult,
+} from '@stele/attestation';
+
+// ─── Verifier ─────────────────────────────────────────────────────────────────
+export { Verifier, verifyBatch } from '@stele/verifier';
+export type {
+  VerifierOptions,
+  VerificationReport,
+  ChainVerificationReport,
+  ChainDocumentResult,
+  ChainIntegrityCheck,
+  NarrowingCheckResult,
+  ActionVerificationReport,
+  BatchVerificationReport,
+  BatchSummary,
+  VerificationRecord,
+  VerificationKind,
+} from '@stele/verifier';

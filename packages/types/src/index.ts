@@ -35,6 +35,10 @@ export enum SteleErrorCode {
   SERIALIZATION_ERROR = 'SERIALIZATION_ERROR',
   /** A chain narrowing validation detected a broadening violation. */
   NARROWING_VIOLATION = 'NARROWING_VIOLATION',
+  /** A protocol-layer function received invalid input. */
+  PROTOCOL_INVALID_INPUT = 'STELE_E940',
+  /** A protocol-layer computation failed (numerical, algorithmic, or convergence). */
+  PROTOCOL_COMPUTATION_FAILED = 'STELE_E941',
 }
 
 // ─── Error classes ──────────────────────────────────────────────────────────────
