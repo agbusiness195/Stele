@@ -34,6 +34,21 @@ export type { SQLiteDriver } from './sqlite-store';
 // ─── Filter helpers ─────────────────────────────────────────────────────────────
 
 /**
+ * Return true when the filter has at least one criterion set.
+ * Used to short-circuit list/count when callers pass an empty `{}`.
+ */
+function hasFilterCriteria(filter: StoreFilter): boolean {
+  return (
+    filter.issuerId !== undefined ||
+    filter.beneficiaryId !== undefined ||
+    filter.createdAfter !== undefined ||
+    filter.createdBefore !== undefined ||
+    filter.hasChain !== undefined ||
+    (filter.tags !== undefined && filter.tags.length > 0)
+  );
+}
+
+/**
  * Test whether a document matches every criterion in the given filter.
  * All filter fields use AND semantics.
  */
@@ -219,11 +234,17 @@ export class MemoryStore implements CovenantStore {
    * ```
    */
   async list(filter?: StoreFilter): Promise<CovenantDocument[]> {
-    const all = Array.from(this.data.values());
-    if (!filter) {
-      return all;
+    if (!filter || !hasFilterCriteria(filter)) {
+      return Array.from(this.data.values());
     }
-    return all.filter((doc) => matchesFilter(doc, filter));
+    // Iterate the Map directly to avoid allocating a full intermediate array.
+    const results: CovenantDocument[] = [];
+    for (const doc of this.data.values()) {
+      if (matchesFilter(doc, filter)) {
+        results.push(doc);
+      }
+    }
+    return results;
   }
 
   /**
@@ -233,7 +254,7 @@ export class MemoryStore implements CovenantStore {
    * @returns The number of matching documents.
    */
   async count(filter?: StoreFilter): Promise<number> {
-    if (!filter) {
+    if (!filter || !hasFilterCriteria(filter)) {
       return this.data.size;
     }
     let n = 0;

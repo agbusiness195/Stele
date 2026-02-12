@@ -467,17 +467,17 @@ export class SteleClient {
     // ── Input validation (Stripe-quality errors at the public API boundary) ──
     if (!options.issuer || !options.issuer.id) {
       throw new Error(
-        'issuer.id is required and must be a non-empty string',
+        "SteleClient.createCovenant(): issuer.id is required. Provide a non-empty string identifying the issuing party.",
       );
     }
     if (!options.beneficiary || !options.beneficiary.id) {
       throw new Error(
-        'beneficiary.id is required and must be a non-empty string',
+        "SteleClient.createCovenant(): beneficiary.id is required. Provide a non-empty string identifying the beneficiary party.",
       );
     }
     if (!options.constraints || options.constraints.trim().length === 0) {
       throw new Error(
-        "constraints must be a non-empty CCL string. Example: permit read on '/data/**'",
+        "SteleClient.createCovenant(): constraints must be a non-empty CCL string. Example: permit read on '/data/**'",
       );
     }
 
@@ -493,7 +493,7 @@ export class SteleClient {
     const privateKey = options.privateKey ?? this._keyPair?.privateKey;
     if (!privateKey) {
       throw new Error(
-        'No private key available. Call client.generateKeyPair() first, or pass { privateKey } in the options.',
+        "SteleClient.createCovenant(): No private key available. Either call client.generateKeyPair() first, or pass { privateKey } in the options.",
       );
     }
 
@@ -596,7 +596,7 @@ export class SteleClient {
     const kp = signerKeyPair ?? this._keyPair;
     if (!kp) {
       throw new Error(
-        'No key pair available. Call client.generateKeyPair() first, or pass a KeyPair in the method options.',
+        "SteleClient.countersign(): No key pair available. Either call client.generateKeyPair() first, or pass a KeyPair as the third argument.",
       );
     }
 
@@ -639,12 +639,12 @@ export class SteleClient {
   ): Promise<EvaluationResult> {
     if (!action || action.trim().length === 0) {
       throw new Error(
-        'action must be a non-empty string (e.g., "read", "write", "api.call")',
+        "SteleClient.evaluateAction(): action must be a non-empty string (e.g., 'read', 'write', 'api.call').",
       );
     }
     if (!resource || resource.trim().length === 0) {
       throw new Error(
-        'resource must be a non-empty string (e.g., "/data/**", "/api/endpoint")',
+        "SteleClient.evaluateAction(): resource must be a non-empty string (e.g., '/data/**', '/api/endpoint').",
       );
     }
 
@@ -695,7 +695,7 @@ export class SteleClient {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
       throw new Error(
-        'No key pair available. Call client.generateKeyPair() first, or pass a KeyPair in the method options.',
+        "SteleClient.createIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
 
@@ -744,7 +744,7 @@ export class SteleClient {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
       throw new Error(
-        'No key pair available. Call client.generateKeyPair() first, or pass a KeyPair in the method options.',
+        "SteleClient.evolveIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
 
