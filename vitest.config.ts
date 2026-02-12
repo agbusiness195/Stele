@@ -4,10 +4,10 @@ import * as path from 'path';
 const packages = [
   'alignment', 'antifragile', 'attestation', 'breach', 'canary', 'ccl',
   'cli', 'composition', 'consensus', 'core', 'crypto', 'derivatives',
-  'enforcement', 'evm', 'gametheory', 'identity', 'legal', 'mcp-server',
-  'mcp', 'negotiation', 'norms', 'proof', 'react', 'recursive',
-  'reputation', 'robustness', 'sdk', 'store', 'substrate', 'temporal',
-  'types', 'verifier',
+  'discovery', 'enforcement', 'evm', 'gametheory', 'identity', 'legal',
+  'mcp-server', 'mcp', 'negotiation', 'norms', 'proof', 'react',
+  'recursive', 'reputation', 'robustness', 'schema', 'sdk', 'store',
+  'substrate', 'temporal', 'types', 'verifier',
 ];
 
 const alias: Record<string, string> = {};
@@ -19,7 +19,7 @@ export default defineConfig({
   resolve: { alias },
   test: {
     globals: true,
-    include: ['packages/*/src/**/*.test.ts', 'packages/*/__tests__/**/*.test.ts', 'tests/**/*.test.ts', 'benchmarks/**/*.test.ts'],
+    include: ['packages/*/src/**/*.test.ts', 'packages/*/__tests__/**/*.test.ts', 'tests/**/*.test.ts', 'benchmarks/**/*.test.ts', 'test-vectors/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       include: ['packages/*/src/**/*.ts'],

@@ -14,6 +14,8 @@
     { "path": "../identity" },
     { "path": "../store" },
     { "path": "../verifier" },
-    { "path": "../negotiation" }
+    { "path": "../negotiation" },
+    { "path": "../discovery" },
+    { "path": "../schema" }
   ]
 }

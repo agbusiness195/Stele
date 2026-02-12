@@ -1202,3 +1202,50 @@ export type {
   VerificationRecord,
   VerificationKind,
 } from '@stele/verifier';
+
+// ─── Discovery ─────────────────────────────────────────────────────────────────
+export {
+  DiscoveryClient,
+  DiscoveryServer,
+  buildDiscoveryDocument,
+  validateDiscoveryDocument,
+  buildKeyEntry,
+  buildKeySet,
+  WELL_KNOWN_PATH,
+  CONFIGURATION_PATH,
+  STELE_MEDIA_TYPE,
+  MAX_DOCUMENT_AGE_MS,
+} from '@stele/discovery';
+export type {
+  DiscoveryDocument,
+  AgentKeyEntry,
+  AgentKeySet,
+  CovenantRegistryEntry,
+  CovenantRegistryResponse,
+  NegotiationRequest,
+  NegotiationResponse,
+  CrossPlatformVerificationRequest,
+  CrossPlatformVerificationResponse,
+  FetchOptions,
+  BuildDiscoveryDocumentOptions,
+  DiscoveryValidationResult,
+  DiscoveryClientOptions,
+  DiscoveryServerOptions,
+  RouteHandler,
+} from '@stele/discovery';
+
+// ─── Schema ────────────────────────────────────────────────────────────────────
+export {
+  COVENANT_SCHEMA,
+  DISCOVERY_DOCUMENT_SCHEMA,
+  AGENT_KEY_SCHEMA,
+  CCL_EVALUATION_CONTEXT_SCHEMA,
+  validateCovenantSchema,
+  validateDiscoverySchema,
+  validateAgentKeySchema,
+  getAllSchemas,
+} from '@stele/schema';
+export type {
+  SchemaValidationError,
+  SchemaValidationResult,
+} from '@stele/schema';

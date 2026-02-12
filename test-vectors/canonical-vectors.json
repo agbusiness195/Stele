@@ -1,0 +1,1074 @@
+{
+  "_meta": {
+    "generated_at": "2026-02-12T19:14:38.958Z",
+    "protocol_version": "1.0",
+    "generator": "@stele/test-vectors",
+    "description": "Canonical test vectors for the Stele protocol. Any conformant implementation MUST produce identical results for these inputs.",
+    "total_vectors": 56,
+    "categories": [
+      "crypto",
+      "ccl",
+      "covenant",
+      "identity",
+      "chain"
+    ],
+    "category_counts": {
+      "crypto": 12,
+      "ccl": 32,
+      "covenant": 6,
+      "identity": 3,
+      "chain": 3
+    }
+  },
+  "vectors": {
+    "crypto": [
+      {
+        "category": "crypto",
+        "name": "sha256-empty",
+        "description": "SHA-256 hash of \"\"",
+        "input": {
+          "message": ""
+        },
+        "expected": {
+          "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      {
+        "category": "crypto",
+        "name": "sha256-hello",
+        "description": "SHA-256 hash of \"hello\"",
+        "input": {
+          "message": "hello"
+        },
+        "expected": {
+          "hash": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      {
+        "category": "crypto",
+        "name": "sha256-The-quick-brown-fox-",
+        "description": "SHA-256 hash of \"The quick brown fox jumps over the lazy \"",
+        "input": {
+          "message": "The quick brown fox jumps over the lazy dog"
+        },
+        "expected": {
+          "hash": "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592"
+        }
+      },
+      {
+        "category": "crypto",
+        "name": "sha256---action---read---re",
+        "description": "SHA-256 hash of \"{\"action\":\"read\",\"resource\":\"/data\"}\"",
+        "input": {
+          "message": "{\"action\":\"read\",\"resource\":\"/data\"}"
+        },
+        "expected": {
+          "hash": "28bd65473640e1a7a72cd10d2a775b9a478e491ff54279cb5829286eeff527dd"
+        }
+      },
+      {
+        "category": "crypto",
+        "name": "jcs-canonicalize-0",
+        "description": "JCS (RFC 8785) canonicalization of test object 0",
+        "input": {
+          "object": {
+            "b": 2,
+            "a": 1
+          }
+        },
+        "expected": {
+          "canonical": "{\"a\":1,\"b\":2}"
+        }
+      },
+      {
+        "category": "crypto",
+        "name": "jcs-canonicalize-1",
+        "description": "JCS (RFC 8785) canonicalization of test object 1",
+        "input": {
+          "object": {
+            "z": "last",
+            "a": "first",
+            "m": "middle"
+          }
+        },
+        "expected": {
+          "canonical": "{\"a\":\"first\",\"m\":\"middle\",\"z\":\"last\"}"
+        }
+      },
+      {
+        "category": "crypto",
+        "name": "jcs-canonicalize-2",
+        "description": "JCS (RFC 8785) canonicalization of test object 2",
+        "input": {
+          "object": {
+            "nested": {
+              "b": 2,
+              "a": 1
+            },
+            "top": "value"
+          }
+        },
+        "expected": {
+          "canonical": "{\"nested\":{\"a\":1,\"b\":2},\"top\":\"value\"}"
+        }
+      },
+      {
+        "category": "crypto",
+        "name": "jcs-canonicalize-3",
+        "description": "JCS (RFC 8785) canonicalization of test object 3",
+        "input": {
+          "object": {
+            "unicode": "é",
+            "ascii": "e"
+          }
+        },
+        "expected": {
+          "canonical": "{\"ascii\":\"e\",\"unicode\":\"é\"}"
+        }
+      },
+      {
+        "category": "crypto",
+        "name": "jcs-canonicalize-4",
+        "description": "JCS (RFC 8785) canonicalization of test object 4",
+        "input": {
+          "object": {
+            "numbers": [
+              3,
+              1,
+              2
+            ],
+            "sorted": false
+          }
+        },
+        "expected": {
+          "canonical": "{\"numbers\":[3,1,2],\"sorted\":false}"
+        }
+      },
+      {
+        "category": "crypto",
+        "name": "ed25519-sign-hello-world",
+        "description": "Ed25519 sign/verify of \"hello world\"",
+        "input": {
+          "message": "hello world",
+          "publicKey": "4066236425921fed9041b6b8bf432a4ff6063434ed6a103d7745fcc2e81039e2",
+          "privateKey": "dc16b78aca8d39a7c00180ac157a2b45127a59dcae83105b5ff870a8065c129e"
+        },
+        "expected": {
+          "signature": "9457b8bce67d7e847b59cda1859288391565ca0915fff9a9783caa3856a34203bbe149b90d5075d3098dcb8d6eb350989cb4406eb4d1e1f50531169ea7572d09",
+          "valid": true
+        }
+      },
+      {
+        "category": "crypto",
+        "name": "ed25519-sign-The-Stele-Protocol",
+        "description": "Ed25519 sign/verify of \"The Stele Protocol\"",
+        "input": {
+          "message": "The Stele Protocol",
+          "publicKey": "4066236425921fed9041b6b8bf432a4ff6063434ed6a103d7745fcc2e81039e2",
+          "privateKey": "dc16b78aca8d39a7c00180ac157a2b45127a59dcae83105b5ff870a8065c129e"
+        },
+        "expected": {
+          "signature": "082a08648cfbe32143c96c1bb544969115433ac9086d78f5ce1aa424a573da89ad4a3d979dff6ea5f62c9f6122c447e968829d4cdde8b7c3be650ab43268a602",
+          "valid": true
+        }
+      },
+      {
+        "category": "crypto",
+        "name": "ed25519-sign---action---read---re",
+        "description": "Ed25519 sign/verify of \"{\"action\":\"read\",\"resource\":\"/data\"}\"",
+        "input": {
+          "message": "{\"action\":\"read\",\"resource\":\"/data\"}",
+          "publicKey": "4066236425921fed9041b6b8bf432a4ff6063434ed6a103d7745fcc2e81039e2",
+          "privateKey": "dc16b78aca8d39a7c00180ac157a2b45127a59dcae83105b5ff870a8065c129e"
+        },
+        "expected": {
+          "signature": "4f062c4604b3a32e70321e79b91af9b72fa8ce85f952d218ecb26c88580af1a5e507770d5183033c51ff0a98a267ee498990edd1fb0f425e4a54717811b78307",
+          "valid": true
+        }
+      }
+    ],
+    "ccl": [
+      {
+        "category": "ccl",
+        "name": "evaluate-simple-permit",
+        "description": "CCL evaluation: simple-permit",
+        "input": {
+          "source": "permit read on '/data/**'",
+          "action": "read",
+          "resource": "/data/users",
+          "context": {}
+        },
+        "expected": {
+          "permitted": true,
+          "reason": "Matched permit rule for read on /data/**",
+          "matchedRule": {
+            "type": "permit",
+            "action": "/data/**"
+          }
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "evaluate-simple-deny",
+        "description": "CCL evaluation: simple-deny",
+        "input": {
+          "source": "deny delete on '/system/**'",
+          "action": "delete",
+          "resource": "/system/config",
+          "context": {}
+        },
+        "expected": {
+          "permitted": false,
+          "reason": "Matched deny rule for delete on /system/**",
+          "matchedRule": {
+            "type": "deny",
+            "action": "/system/**"
+          }
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "evaluate-deny-wins",
+        "description": "CCL evaluation: deny-wins",
+        "input": {
+          "source": "permit read on '/data/**'\ndeny read on '/data/secret'",
+          "action": "read",
+          "resource": "/data/secret",
+          "context": {}
+        },
+        "expected": {
+          "permitted": false,
+          "reason": "Matched deny rule for read on /data/secret",
+          "matchedRule": {
+            "type": "deny",
+            "action": "/data/secret"
+          }
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "evaluate-default-deny",
+        "description": "CCL evaluation: default-deny",
+        "input": {
+          "source": "permit read on '/data/**'",
+          "action": "write",
+          "resource": "/data/users",
+          "context": {}
+        },
+        "expected": {
+          "permitted": false,
+          "reason": "No matching rules found; default deny",
+          "matchedRule": null
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "evaluate-condition-match",
+        "description": "CCL evaluation: condition-match",
+        "input": {
+          "source": "permit read on '/data/**' when role = 'admin'",
+          "action": "read",
+          "resource": "/data/users",
+          "context": {
+            "role": "admin"
+          }
+        },
+        "expected": {
+          "permitted": true,
+          "reason": "Matched permit rule for read on /data/**",
+          "matchedRule": {
+            "type": "permit",
+            "action": "/data/**"
+          }
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "evaluate-condition-no-match",
+        "description": "CCL evaluation: condition-no-match",
+        "input": {
+          "source": "permit read on '/data/**' when role = 'admin'",
+          "action": "read",
+          "resource": "/data/users",
+          "context": {
+            "role": "user"
+          }
+        },
+        "expected": {
+          "permitted": false,
+          "reason": "No matching rules found; default deny",
+          "matchedRule": null
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "evaluate-wildcard-action",
+        "description": "CCL evaluation: wildcard-action",
+        "input": {
+          "source": "permit ** on '/public/**'",
+          "action": "anything.deep.nested",
+          "resource": "/public/page",
+          "context": {}
+        },
+        "expected": {
+          "permitted": true,
+          "reason": "Matched permit rule for ** on /public/**",
+          "matchedRule": {
+            "type": "permit",
+            "action": "/public/**"
+          }
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "evaluate-rate-limit-only",
+        "description": "CCL evaluation: rate-limit-only",
+        "input": {
+          "source": "limit api.call 100 per 1 hours",
+          "action": "api.call",
+          "resource": "/api/endpoint",
+          "context": {}
+        },
+        "expected": {
+          "permitted": false,
+          "reason": "No matching rules found; default deny",
+          "matchedRule": null
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "evaluate-multiple-rules",
+        "description": "CCL evaluation: multiple-rules",
+        "input": {
+          "source": "permit read on '/data/**'\npermit write on '/data/public/**'\ndeny write on '/data/private/**'",
+          "action": "write",
+          "resource": "/data/public/file.txt",
+          "context": {}
+        },
+        "expected": {
+          "permitted": true,
+          "reason": "Matched permit rule for write on /data/public/**",
+          "matchedRule": {
+            "type": "permit",
+            "action": "/data/public/**"
+          }
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "evaluate-require-statement",
+        "description": "CCL evaluation: require-statement",
+        "input": {
+          "source": "require audit on '/sensitive/**'",
+          "action": "audit",
+          "resource": "/sensitive/data",
+          "context": {}
+        },
+        "expected": {
+          "permitted": false,
+          "reason": "No matching rules found; default deny",
+          "matchedRule": null
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "action-match-read-vs-read",
+        "description": "Action matching: \"read\" vs \"read\"",
+        "input": {
+          "pattern": "read",
+          "action": "read"
+        },
+        "expected": {
+          "matches": true
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "action-match-read-vs-write",
+        "description": "Action matching: \"read\" vs \"write\"",
+        "input": {
+          "pattern": "read",
+          "action": "write"
+        },
+        "expected": {
+          "matches": false
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "action-match-*-vs-read",
+        "description": "Action matching: \"*\" vs \"read\"",
+        "input": {
+          "pattern": "*",
+          "action": "read"
+        },
+        "expected": {
+          "matches": true
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "action-match-**-vs-api.call.nested",
+        "description": "Action matching: \"**\" vs \"api.call.nested\"",
+        "input": {
+          "pattern": "**",
+          "action": "api.call.nested"
+        },
+        "expected": {
+          "matches": true
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "action-match-api.*-vs-api.call",
+        "description": "Action matching: \"api.*\" vs \"api.call\"",
+        "input": {
+          "pattern": "api.*",
+          "action": "api.call"
+        },
+        "expected": {
+          "matches": true
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "action-match-api.*-vs-api.call.nested",
+        "description": "Action matching: \"api.*\" vs \"api.call.nested\"",
+        "input": {
+          "pattern": "api.*",
+          "action": "api.call.nested"
+        },
+        "expected": {
+          "matches": false
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "action-match-api.**-vs-api.call.nested",
+        "description": "Action matching: \"api.**\" vs \"api.call.nested\"",
+        "input": {
+          "pattern": "api.**",
+          "action": "api.call.nested"
+        },
+        "expected": {
+          "matches": true
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "resource-match--data-vs--data",
+        "description": "Resource matching: \"/data\" vs \"/data\"",
+        "input": {
+          "pattern": "/data",
+          "resource": "/data"
+        },
+        "expected": {
+          "matches": true
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "resource-match--data-vs--data-sub",
+        "description": "Resource matching: \"/data\" vs \"/data/sub\"",
+        "input": {
+          "pattern": "/data",
+          "resource": "/data/sub"
+        },
+        "expected": {
+          "matches": false
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "resource-match--data-starstar-vs--data-sub-deep",
+        "description": "Resource matching: \"/data/**\" vs \"/data/sub/deep\"",
+        "input": {
+          "pattern": "/data/**",
+          "resource": "/data/sub/deep"
+        },
+        "expected": {
+          "matches": true
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "resource-match--data-star-vs--data-sub",
+        "description": "Resource matching: \"/data/*\" vs \"/data/sub\"",
+        "input": {
+          "pattern": "/data/*",
+          "resource": "/data/sub"
+        },
+        "expected": {
+          "matches": true
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "resource-match--data-star-vs--data-sub-deep",
+        "description": "Resource matching: \"/data/*\" vs \"/data/sub/deep\"",
+        "input": {
+          "pattern": "/data/*",
+          "resource": "/data/sub/deep"
+        },
+        "expected": {
+          "matches": false
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "resource-match-starstar-vs--anything-at-all",
+        "description": "Resource matching: \"**\" vs \"/anything/at/all\"",
+        "input": {
+          "pattern": "**",
+          "resource": "/anything/at/all"
+        },
+        "expected": {
+          "matches": true
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "rate-limit-under-limit",
+        "description": "Rate limiting: under-limit",
+        "input": {
+          "source": "limit api.call 100 per 1 hours",
+          "action": "api.call",
+          "currentCount": 50,
+          "periodStartMs": 1770923677914,
+          "nowMs": 1770923678914
+        },
+        "expected": {
+          "exceeded": false,
+          "remaining": 50
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "rate-limit-at-limit",
+        "description": "Rate limiting: at-limit",
+        "input": {
+          "source": "limit api.call 100 per 1 hours",
+          "action": "api.call",
+          "currentCount": 100,
+          "periodStartMs": 1770923677914,
+          "nowMs": 1770923678914
+        },
+        "expected": {
+          "exceeded": true,
+          "remaining": 0
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "rate-limit-over-limit",
+        "description": "Rate limiting: over-limit",
+        "input": {
+          "source": "limit api.call 100 per 1 hours",
+          "action": "api.call",
+          "currentCount": 150,
+          "periodStartMs": 1770923677914,
+          "nowMs": 1770923678914
+        },
+        "expected": {
+          "exceeded": true,
+          "remaining": 0
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "rate-limit-period-expired",
+        "description": "Rate limiting: period-expired",
+        "input": {
+          "source": "limit api.call 100 per 1 hours",
+          "action": "api.call",
+          "currentCount": 150,
+          "periodStartMs": 1770920078913,
+          "nowMs": 1770923678914
+        },
+        "expected": {
+          "exceeded": false,
+          "remaining": 100
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "serialize-permit-read-on---data----",
+        "description": "CCL serialize round-trip: \"permit read on '/data/**'\"",
+        "input": {
+          "source": "permit read on '/data/**'"
+        },
+        "expected": {
+          "serialized": "permit read on '/data/**'"
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "serialize-deny-delete-on---system----",
+        "description": "CCL serialize round-trip: \"deny delete on '/system/**'\"",
+        "input": {
+          "source": "deny delete on '/system/**'"
+        },
+        "expected": {
+          "serialized": "deny delete on '/system/**'"
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "serialize-permit-read-on---data-----when",
+        "description": "CCL serialize round-trip: \"permit read on '/data/**' when role = 'a\"",
+        "input": {
+          "source": "permit read on '/data/**' when role = 'admin'"
+        },
+        "expected": {
+          "serialized": "permit read on '/data/**' when role = 'admin'"
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "serialize-limit-api-call-100-per-1-hours",
+        "description": "CCL serialize round-trip: \"limit api.call 100 per 1 hours\"",
+        "input": {
+          "source": "limit api.call 100 per 1 hours"
+        },
+        "expected": {
+          "serialized": "limit api.call 100 per 1 hours"
+        }
+      },
+      {
+        "category": "ccl",
+        "name": "serialize-require-audit-on---sensitive--",
+        "description": "CCL serialize round-trip: \"require audit on '/sensitive/**'\"",
+        "input": {
+          "source": "require audit on '/sensitive/**'"
+        },
+        "expected": {
+          "serialized": "require audit on '/sensitive/**'"
+        }
+      }
+    ],
+    "covenant": [
+      {
+        "category": "covenant",
+        "name": "build-basic",
+        "description": "Build a basic covenant document and capture intermediate values",
+        "input": {
+          "issuer": {
+            "id": "test-issuer",
+            "publicKey": "4066236425921fed9041b6b8bf432a4ff6063434ed6a103d7745fcc2e81039e2",
+            "role": "issuer"
+          },
+          "beneficiary": {
+            "id": "test-beneficiary",
+            "publicKey": "e419692296b0d0d14d3dea5817c2026e41db3e49d8e536a053d8dfce51882b92",
+            "role": "beneficiary"
+          },
+          "constraints": "permit read on '/data/**'\ndeny delete on '/system/**'",
+          "signerPrivateKey": "dc16b78aca8d39a7c00180ac157a2b45127a59dcae83105b5ff870a8065c129e"
+        },
+        "expected": {
+          "version": "1.0",
+          "id": "aba2ec3b2513d0524b19df0b52385d37ea9b1e7711253d07bedc45c63df2c5b9",
+          "canonical_form": "{\"beneficiary\":{\"id\":\"test-beneficiary\",\"publicKey\":\"e419692296b0d0d14d3dea5817c2026e41db3e49d8e536a053d8dfce51882b92\",\"role\":\"beneficiary\"},\"constraints\":\"permit read on '/data/**'\\ndeny delete on '/system/**'\",\"createdAt\":\"2026-02-12T19:14:38.916Z\",\"issuer\":{\"id\":\"test-issuer\",\"publicKey\":\"4066236425921fed9041b6b8bf432a4ff6063434ed6a103d7745fcc2e81039e2\",\"role\":\"issuer\"},\"nonce\":\"02e9140178a21beb74ba66ca598b56f96519312ec10a2299a9787d914cfa59fc\",\"version\":\"1.0\"}",
+          "canonical_hash_matches_id": true,
+          "nonce": "02e9140178a21beb74ba66ca598b56f96519312ec10a2299a9787d914cfa59fc",
+          "nonce_length": 64,
+          "signature": "021af5b6c39c120a09e84ab5507b2a5fd87c5098f160f0284424407b4ceab60aee4eda7b7192ee4baf503549185c648deca2419e4d564ad33d847bb1aaf4fc03",
+          "createdAt": "2026-02-12T19:14:38.916Z"
+        }
+      },
+      {
+        "category": "covenant",
+        "name": "verify-valid",
+        "description": "Verify a valid covenant document -- all 11 checks should pass",
+        "input": {
+          "document": {
+            "id": "aba2ec3b2513d0524b19df0b52385d37ea9b1e7711253d07bedc45c63df2c5b9",
+            "version": "1.0",
+            "issuer": {
+              "id": "test-issuer",
+              "publicKey": "4066236425921fed9041b6b8bf432a4ff6063434ed6a103d7745fcc2e81039e2",
+              "role": "issuer"
+            },
+            "beneficiary": {
+              "id": "test-beneficiary",
+              "publicKey": "e419692296b0d0d14d3dea5817c2026e41db3e49d8e536a053d8dfce51882b92",
+              "role": "beneficiary"
+            },
+            "constraints": "permit read on '/data/**'\ndeny delete on '/system/**'",
+            "nonce": "02e9140178a21beb74ba66ca598b56f96519312ec10a2299a9787d914cfa59fc",
+            "createdAt": "2026-02-12T19:14:38.916Z",
+            "signature": "021af5b6c39c120a09e84ab5507b2a5fd87c5098f160f0284424407b4ceab60aee4eda7b7192ee4baf503549185c648deca2419e4d564ad33d847bb1aaf4fc03"
+          }
+        },
+        "expected": {
+          "valid": true,
+          "checks": [
+            {
+              "name": "id_match",
+              "passed": true
+            },
+            {
+              "name": "signature_valid",
+              "passed": true
+            },
+            {
+              "name": "not_expired",
+              "passed": true
+            },
+            {
+              "name": "active",
+              "passed": true
+            },
+            {
+              "name": "ccl_parses",
+              "passed": true
+            },
+            {
+              "name": "enforcement_valid",
+              "passed": true
+            },
+            {
+              "name": "proof_valid",
+              "passed": true
+            },
+            {
+              "name": "chain_depth",
+              "passed": true
+            },
+            {
+              "name": "document_size",
+              "passed": true
+            },
+            {
+              "name": "countersignatures",
+              "passed": true
+            },
+            {
+              "name": "nonce_present",
+              "passed": true
+            }
+          ]
+        }
+      },
+      {
+        "category": "covenant",
+        "name": "verify-tampered-signature",
+        "description": "Verify a covenant with tampered signature (should fail)",
+        "input": {
+          "document": {
+            "id": "aba2ec3b2513d0524b19df0b52385d37ea9b1e7711253d07bedc45c63df2c5b9",
+            "version": "1.0",
+            "issuer": {
+              "id": "test-issuer",
+              "publicKey": "4066236425921fed9041b6b8bf432a4ff6063434ed6a103d7745fcc2e81039e2",
+              "role": "issuer"
+            },
+            "beneficiary": {
+              "id": "test-beneficiary",
+              "publicKey": "e419692296b0d0d14d3dea5817c2026e41db3e49d8e536a053d8dfce51882b92",
+              "role": "beneficiary"
+            },
+            "constraints": "permit read on '/data/**'\ndeny delete on '/system/**'",
+            "nonce": "02e9140178a21beb74ba66ca598b56f96519312ec10a2299a9787d914cfa59fc",
+            "createdAt": "2026-02-12T19:14:38.916Z",
+            "signature": "f21af5b6c39c120a09e84ab5507b2a5fd87c5098f160f0284424407b4ceab60aee4eda7b7192ee4baf503549185c648deca2419e4d564ad33d847bb1aaf4fc03"
+          },
+          "tamper": "first character of signature modified"
+        },
+        "expected": {
+          "valid": false,
+          "failed_checks": [
+            "signature_valid"
+          ]
+        }
+      },
+      {
+        "category": "covenant",
+        "name": "verify-tampered-constraints",
+        "description": "Verify a covenant with tampered constraints (should fail id_match and signature)",
+        "input": {
+          "document": {
+            "id": "aba2ec3b2513d0524b19df0b52385d37ea9b1e7711253d07bedc45c63df2c5b9",
+            "version": "1.0",
+            "issuer": {
+              "id": "test-issuer",
+              "publicKey": "4066236425921fed9041b6b8bf432a4ff6063434ed6a103d7745fcc2e81039e2",
+              "role": "issuer"
+            },
+            "beneficiary": {
+              "id": "test-beneficiary",
+              "publicKey": "e419692296b0d0d14d3dea5817c2026e41db3e49d8e536a053d8dfce51882b92",
+              "role": "beneficiary"
+            },
+            "constraints": "permit write on '/data/**'",
+            "nonce": "02e9140178a21beb74ba66ca598b56f96519312ec10a2299a9787d914cfa59fc",
+            "createdAt": "2026-02-12T19:14:38.916Z",
+            "signature": "021af5b6c39c120a09e84ab5507b2a5fd87c5098f160f0284424407b4ceab60aee4eda7b7192ee4baf503549185c648deca2419e4d564ad33d847bb1aaf4fc03"
+          },
+          "tamper": "constraints modified after signing"
+        },
+        "expected": {
+          "valid": false,
+          "failed_checks": [
+            "id_match",
+            "signature_valid"
+          ]
+        }
+      },
+      {
+        "category": "covenant",
+        "name": "countersign",
+        "description": "Countersign a covenant document with an auditor",
+        "input": {
+          "document_id": "aba2ec3b2513d0524b19df0b52385d37ea9b1e7711253d07bedc45c63df2c5b9",
+          "signerPublicKey": "a81244cbedd62a0af05e1b4b1ad4426aac3118558f0b29429967d5d81e06aa5a",
+          "signerPrivateKey": "ec341cf3b4eac018577d3af1dd3b0b09a2267dfd97fb6d688266688fa5dcc495",
+          "signerRole": "auditor"
+        },
+        "expected": {
+          "countersignature_count": 1,
+          "countersigner_role": "auditor",
+          "countersigner_publicKey": "a81244cbedd62a0af05e1b4b1ad4426aac3118558f0b29429967d5d81e06aa5a",
+          "countersignature_signature": "acc9ca1a5c4f5fcd40915824748c15dbd8e6c82f49d279d53aa6dfdf4172f7e8c81c1b75e36092201864102367af5e63391e12b8a613b914df90510176542f00"
+        }
+      },
+      {
+        "category": "covenant",
+        "name": "verify-countersigned",
+        "description": "Verify a countersigned covenant document",
+        "input": {
+          "document": {
+            "id": "aba2ec3b2513d0524b19df0b52385d37ea9b1e7711253d07bedc45c63df2c5b9",
+            "version": "1.0",
+            "issuer": {
+              "id": "test-issuer",
+              "publicKey": "4066236425921fed9041b6b8bf432a4ff6063434ed6a103d7745fcc2e81039e2",
+              "role": "issuer"
+            },
+            "beneficiary": {
+              "id": "test-beneficiary",
+              "publicKey": "e419692296b0d0d14d3dea5817c2026e41db3e49d8e536a053d8dfce51882b92",
+              "role": "beneficiary"
+            },
+            "constraints": "permit read on '/data/**'\ndeny delete on '/system/**'",
+            "nonce": "02e9140178a21beb74ba66ca598b56f96519312ec10a2299a9787d914cfa59fc",
+            "createdAt": "2026-02-12T19:14:38.916Z",
+            "signature": "021af5b6c39c120a09e84ab5507b2a5fd87c5098f160f0284424407b4ceab60aee4eda7b7192ee4baf503549185c648deca2419e4d564ad33d847bb1aaf4fc03",
+            "countersignatures": [
+              {
+                "signerPublicKey": "a81244cbedd62a0af05e1b4b1ad4426aac3118558f0b29429967d5d81e06aa5a",
+                "signerRole": "auditor",
+                "signature": "acc9ca1a5c4f5fcd40915824748c15dbd8e6c82f49d279d53aa6dfdf4172f7e8c81c1b75e36092201864102367af5e63391e12b8a613b914df90510176542f00",
+                "timestamp": "2026-02-12T19:14:38.933Z"
+              }
+            ]
+          }
+        },
+        "expected": {
+          "valid": true,
+          "checks": [
+            {
+              "name": "id_match",
+              "passed": true
+            },
+            {
+              "name": "signature_valid",
+              "passed": true
+            },
+            {
+              "name": "not_expired",
+              "passed": true
+            },
+            {
+              "name": "active",
+              "passed": true
+            },
+            {
+              "name": "ccl_parses",
+              "passed": true
+            },
+            {
+              "name": "enforcement_valid",
+              "passed": true
+            },
+            {
+              "name": "proof_valid",
+              "passed": true
+            },
+            {
+              "name": "chain_depth",
+              "passed": true
+            },
+            {
+              "name": "document_size",
+              "passed": true
+            },
+            {
+              "name": "countersignatures",
+              "passed": true
+            },
+            {
+              "name": "nonce_present",
+              "passed": true
+            }
+          ]
+        }
+      }
+    ],
+    "identity": [
+      {
+        "category": "identity",
+        "name": "create-basic",
+        "description": "Create a basic agent identity",
+        "input": {
+          "operatorPublicKey": "4066236425921fed9041b6b8bf432a4ff6063434ed6a103d7745fcc2e81039e2",
+          "operatorPrivateKey": "dc16b78aca8d39a7c00180ac157a2b45127a59dcae83105b5ff870a8065c129e",
+          "operatorIdentifier": "test-operator",
+          "model": {
+            "provider": "anthropic",
+            "modelId": "claude-3"
+          },
+          "capabilities": [
+            "read",
+            "write",
+            "api.call"
+          ],
+          "deployment": {
+            "runtime": "container"
+          }
+        },
+        "expected": {
+          "id": "3fda42df29156902a5ea1226d132079c90895fd088db95533ebf2b805c02855b",
+          "has_id": true,
+          "model_provider": "anthropic",
+          "model_modelId": "claude-3",
+          "capabilities_sorted": [
+            "api.call",
+            "read",
+            "write"
+          ],
+          "capabilities_count": 3,
+          "capabilityManifestHash": "6f2b84d3b305a1a1a9c05809ebc94f13d4221029353edcff808072f176dece25",
+          "lineage_length": 1,
+          "lineage_first_changeType": "created",
+          "lineage_first_reputationCarryForward": 1,
+          "version": 1,
+          "signature": "13b2dec721f17fed6ff254ab2fda1717372c0259c6a437534483caf1d1cdf59fe31700f0f7c090b9506e3b8ef02a8d0a3b57112b1c0a4600c44e31d748b5de04"
+        }
+      },
+      {
+        "category": "identity",
+        "name": "evolve-model-update",
+        "description": "Evolve an identity with a model update",
+        "input": {
+          "originalIdentityId": "3fda42df29156902a5ea1226d132079c90895fd088db95533ebf2b805c02855b",
+          "operatorPublicKey": "4066236425921fed9041b6b8bf432a4ff6063434ed6a103d7745fcc2e81039e2",
+          "operatorPrivateKey": "dc16b78aca8d39a7c00180ac157a2b45127a59dcae83105b5ff870a8065c129e",
+          "changeType": "model_update",
+          "description": "Upgraded to claude-4",
+          "updates": {
+            "model": {
+              "provider": "anthropic",
+              "modelId": "claude-4"
+            }
+          }
+        },
+        "expected": {
+          "new_id": "98f3d93191076ffca6f75e054b4fdb77eeb0fe78a78aaef1221932b8ef9730c8",
+          "new_id_differs": true,
+          "model_updated": true,
+          "model_provider": "anthropic",
+          "lineage_grew": true,
+          "lineage_length": 2,
+          "latest_changeType": "model_update",
+          "latest_parentHash": "05ca356be35faee837cc703b57d0be3b63b6064e4c864af90429b3f76235d206",
+          "version": 2,
+          "signature": "4da66e3067e2ce85c5f846154d4eff41d99e8025f01c8ed6c4746b34c468d3faffb72620d4dd031e403ab1276623ad199856c5f062a0f6c2c2ba26002f9b3f0d"
+        }
+      },
+      {
+        "category": "identity",
+        "name": "evolve-capability-change",
+        "description": "Evolve an identity with a capability expansion",
+        "input": {
+          "originalIdentityId": "3fda42df29156902a5ea1226d132079c90895fd088db95533ebf2b805c02855b",
+          "changeType": "capability_change",
+          "updates": {
+            "capabilities": [
+              "read",
+              "write",
+              "api.call",
+              "admin"
+            ]
+          }
+        },
+        "expected": {
+          "new_id": "c29efda98358a3f9648e2ae293c57d181bcff856ec84257b1c01694fb36624c9",
+          "capabilities_sorted": [
+            "admin",
+            "api.call",
+            "read",
+            "write"
+          ],
+          "capabilities_count": 4,
+          "capabilityManifestHash": "f5d317d3294f8564f4834d8dd9afc26b17e1d2d9e1eb468a7f7a0840bafb2580",
+          "lineage_length": 2,
+          "latest_reputationCarryForward": 0.9
+        }
+      }
+    ],
+    "chain": [
+      {
+        "category": "chain",
+        "name": "valid-narrowing",
+        "description": "Child narrows parent permissions (valid delegation)",
+        "input": {
+          "parentConstraints": "permit read on '/data/**'\npermit write on '/data/**'",
+          "childConstraints": "permit read on '/data/public/**'",
+          "childChain": {
+            "parentId": "218d52f1207ee887cae32937558af00186bb484a4b1991ba64bf1529a7211f0c",
+            "relation": "delegates",
+            "depth": 1
+          }
+        },
+        "expected": {
+          "valid": true,
+          "violations_count": 0
+        }
+      },
+      {
+        "category": "chain",
+        "name": "invalid-broadening",
+        "description": "Child broadens parent permissions (invalid -- permits what parent denies)",
+        "input": {
+          "parentConstraints": "permit read on '/data/**'\ndeny write on '/data/private/**'",
+          "childConstraints": "permit write on '/data/private/**'"
+        },
+        "expected": {
+          "valid": false,
+          "violations_count": 2,
+          "violation_reasons": [
+            "Child permits 'write' on '/data/private/**' which parent denies",
+            "Child permit 'write' on '/data/private/**' is not a subset of any parent permit"
+          ]
+        }
+      },
+      {
+        "category": "chain",
+        "name": "outside-parent-scope",
+        "description": "Child permits resources outside parent scope (invalid)",
+        "input": {
+          "parentConstraints": "permit read on '/data/**'\npermit write on '/data/**'",
+          "childConstraints": "permit read on '/admin/**'"
+        },
+        "expected": {
+          "valid": false,
+          "violations_count": 1,
+          "violation_reasons": [
+            "Child permit 'read' on '/admin/**' is not a subset of any parent permit"
+          ]
+        }
+      }
+    ]
+  }
+}

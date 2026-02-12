@@ -28,7 +28,9 @@
     "packages/norms",
     "packages/substrate",
     "packages/derivatives",
-    "packages/legal"
+    "packages/legal",
+    "packages/discovery",
+    "packages/schema"
   ],
   "scripts": {
     "build": "npm run build --workspaces",

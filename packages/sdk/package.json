@@ -35,7 +35,9 @@
     "@stele/breach": "0.1.0",
     "@stele/reputation": "0.1.0",
     "@stele/proof": "0.1.0",
-    "@stele/attestation": "0.1.0"
+    "@stele/attestation": "0.1.0",
+    "@stele/discovery": "0.1.0",
+    "@stele/schema": "0.1.0"
   },
   "license": "MIT",
   "engines": {

@@ -41,7 +41,9 @@
     { "path": "packages/norms" },
     { "path": "packages/substrate" },
     { "path": "packages/derivatives" },
-    { "path": "packages/legal" }
+    { "path": "packages/legal" },
+    { "path": "packages/discovery" },
+    { "path": "packages/schema" }
   ]
 }
 
