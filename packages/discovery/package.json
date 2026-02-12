@@ -1,6 +1,7 @@
 {
   "name": "@stele/discovery",
   "version": "0.1.0",
+  "description": "Cross-platform discovery protocol for .well-known/stele/ endpoints",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,6 +17,7 @@
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "bundle": "tsup src/index.ts --format cjs,esm",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "vitest run",
     "prepublishOnly": "npm run build"
   },
   "files": ["dist", "README.md", "LICENSE"],
@@ -32,5 +34,10 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/discovery"
   },
+  "homepage": "https://stele.dev",
+  "bugs": {
+    "url": "https://github.com/agbusiness195/stele/issues"
+  },
+  "author": "Stele Labs, Inc.",
   "keywords": ["stele", "discovery", "well-known", "cross-platform", "ai-accountability"]
 }

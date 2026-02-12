@@ -1,5 +1,5 @@
 import { sha256Object, generateId } from '@stele/crypto';
-import { SteleError } from '@stele/types';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 export type {
   TriggerType,
@@ -686,7 +686,7 @@ export class DecayModel {
 
   constructor(models: DecayModelConfig[]) {
     if (models.length === 0) {
-      throw new SteleError('STELE_E940' as any, 'At least one decay model is required');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'At least one decay model is required');
     }
     for (const m of models) {
       this.validateModel(m);
@@ -696,30 +696,30 @@ export class DecayModel {
 
   private validateModel(model: DecayModelConfig): void {
     if (model.type === 'exponential' && model.rate < 0) {
-      throw new SteleError('STELE_E940' as any, 'Exponential decay rate must be >= 0');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Exponential decay rate must be >= 0');
     }
     if (model.type === 'linear' && model.rate < 0) {
-      throw new SteleError('STELE_E940' as any, 'Linear decay rate must be >= 0');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Linear decay rate must be >= 0');
     }
     if (model.type === 'step') {
       if (!model.steps || model.steps.length === 0) {
-        throw new SteleError('STELE_E940' as any, 'Step decay requires at least one breakpoint');
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Step decay requires at least one breakpoint');
       }
       for (const [t, v] of model.steps) {
         if (t < 0 || t > 1) {
-          throw new SteleError('STELE_E940' as any, `Step time fraction must be in [0, 1], got ${t}`);
+          throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Step time fraction must be in [0, 1], got ${t}`);
         }
         if (v < 0) {
-          throw new SteleError('STELE_E940' as any, `Step value must be >= 0, got ${v}`);
+          throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Step value must be >= 0, got ${v}`);
         }
       }
     }
     if (model.type === 'seasonal') {
       if (model.rate <= 0) {
-        throw new SteleError('STELE_E940' as any, 'Seasonal frequency (rate) must be > 0');
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Seasonal frequency (rate) must be > 0');
       }
       if (model.amplitude !== undefined && (model.amplitude < 0 || model.amplitude > 1)) {
-        throw new SteleError('STELE_E940' as any, `Seasonal amplitude must be in [0, 1], got ${model.amplitude}`);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Seasonal amplitude must be in [0, 1], got ${model.amplitude}`);
       }
     }
   }
@@ -757,7 +757,7 @@ export class DecayModel {
       }
 
       default:
-        throw new SteleError('STELE_E941' as any, `Unknown decay model type: ${model.type}`);
+        throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Unknown decay model type: ${model.type}`);
     }
   }
 
@@ -771,7 +771,7 @@ export class DecayModel {
    */
   evaluate(t: number, initialWeight: number = 1.0): number {
     if (initialWeight < 0) {
-      throw new SteleError('STELE_E940' as any, 'initialWeight must be >= 0');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'initialWeight must be >= 0');
     }
 
     let composedFactor = 1.0;
@@ -787,7 +787,7 @@ export class DecayModel {
    */
   schedule(initialWeight: number, steps: number): DecayPoint[] {
     if (steps < 2) {
-      throw new SteleError('STELE_E940' as any, 'steps must be >= 2');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'steps must be >= 2');
     }
 
     const points: DecayPoint[] = [];
@@ -874,17 +874,17 @@ export class ContinuousTrigger {
 
   constructor(triggers: ContinuousTriggerConfig[], activationThreshold: number = 0.5) {
     if (triggers.length === 0) {
-      throw new SteleError('STELE_E940' as any, 'At least one trigger is required');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'At least one trigger is required');
     }
     if (activationThreshold < 0 || activationThreshold > 1) {
-      throw new SteleError('STELE_E940' as any, 'activationThreshold must be in [0, 1]');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'activationThreshold must be in [0, 1]');
     }
     for (const t of triggers) {
       if (t.steepness !== undefined && t.steepness <= 0) {
-        throw new SteleError('STELE_E940' as any, 'steepness must be > 0');
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'steepness must be > 0');
       }
       if (t.weight !== undefined && t.weight < 0) {
-        throw new SteleError('STELE_E940' as any, 'weight must be >= 0');
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'weight must be >= 0');
       }
     }
     this.triggers = triggers;
@@ -1019,17 +1019,17 @@ export class ViolationForecaster {
 
   constructor(config: ForecastConfig) {
     if (config.alpha <= 0 || config.alpha >= 1) {
-      throw new SteleError('STELE_E940' as any, 'alpha must be in (0, 1)');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'alpha must be in (0, 1)');
     }
     if (config.beta <= 0 || config.beta >= 1) {
-      throw new SteleError('STELE_E940' as any, 'beta must be in (0, 1)');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'beta must be in (0, 1)');
     }
     if (config.forecastPeriods < 1) {
-      throw new SteleError('STELE_E940' as any, 'forecastPeriods must be >= 1');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'forecastPeriods must be >= 1');
     }
     if (config.confidenceLevel !== undefined) {
       if (config.confidenceLevel <= 0 || config.confidenceLevel >= 1) {
-        throw new SteleError('STELE_E940' as any, 'confidenceLevel must be in (0, 1)');
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'confidenceLevel must be in (0, 1)');
       }
     }
     this.config = config;
@@ -1044,12 +1044,12 @@ export class ViolationForecaster {
    */
   forecast(historicalRates: number[]): ForecastResult {
     if (historicalRates.length < 2) {
-      throw new SteleError('STELE_E940' as any, 'At least 2 historical data points required');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'At least 2 historical data points required');
     }
 
     for (let i = 0; i < historicalRates.length; i++) {
       if (typeof historicalRates[i] !== 'number' || isNaN(historicalRates[i]!)) {
-        throw new SteleError('STELE_E940' as any, `historicalRates[${i}] must be a valid number`);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `historicalRates[${i}] must be a valid number`);
       }
     }
 
@@ -1194,16 +1194,16 @@ export class TemporalConstraintAlgebra {
    */
   private validate(constraint: TemporalConstraint): void {
     if (constraint.start < 0 || constraint.start > 1) {
-      throw new SteleError('STELE_E940' as any, `start must be in [0, 1], got ${constraint.start}`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `start must be in [0, 1], got ${constraint.start}`);
     }
     if (constraint.end < 0 || constraint.end > 1) {
-      throw new SteleError('STELE_E940' as any, `end must be in [0, 1], got ${constraint.end}`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `end must be in [0, 1], got ${constraint.end}`);
     }
     if (constraint.start > constraint.end) {
-      throw new SteleError('STELE_E940' as any, `start (${constraint.start}) must be <= end (${constraint.end})`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `start (${constraint.start}) must be <= end (${constraint.end})`);
     }
     if (constraint.weight < 0 || constraint.weight > 1) {
-      throw new SteleError('STELE_E940' as any, `weight must be in [0, 1], got ${constraint.weight}`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `weight must be in [0, 1], got ${constraint.weight}`);
     }
   }
 

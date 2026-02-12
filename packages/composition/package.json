@@ -1,6 +1,7 @@
 {
   "name": "@stele/composition",
   "version": "0.1.0",
+  "description": "Covenant composition with merge, intersect, and chain operations",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,6 +17,7 @@
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "bundle": "tsup src/index.ts --format cjs,esm",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "vitest run",
     "prepublishOnly": "npm run build"
   },
   "files": [
@@ -39,6 +41,11 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/composition"
   },
+  "homepage": "https://stele.dev",
+  "bugs": {
+    "url": "https://github.com/agbusiness195/stele/issues"
+  },
+  "author": "Stele Labs, Inc.",
   "keywords": [
     "stele",
     "covenant",

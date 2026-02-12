@@ -51,18 +51,18 @@ export interface ConformanceFailure {
  */
 export interface ConformanceTarget {
   /** Build a signed covenant document from builder options. */
-  buildCovenant: (options: any) => Promise<any>;
+  buildCovenant: (options: unknown) => Promise<unknown>;
   /** Verify a covenant document. Returns `{ valid, checks }`. */
-  verifyCovenant: (doc: any) => Promise<any>;
+  verifyCovenant: (doc: unknown) => Promise<unknown>;
   /** Evaluate an action/resource against a covenant's CCL constraints. */
   evaluateAction: (
-    doc: any,
+    doc: unknown,
     action: string,
     resource: string,
-    context?: any,
-  ) => Promise<any>;
+    context?: unknown,
+  ) => Promise<unknown>;
   /** Generate an Ed25519 key pair. Returns `{ privateKey, publicKey, publicKeyHex }`. */
-  generateKeyPair: () => Promise<any>;
+  generateKeyPair: () => Promise<unknown>;
   /** Sign a message with an Ed25519 private key. */
   sign: (message: Uint8Array, privateKey: Uint8Array) => Promise<Uint8Array>;
   /** Verify an Ed25519 signature. */
@@ -74,7 +74,7 @@ export interface ConformanceTarget {
   /** SHA-256 hash returning a lowercase hex string. */
   sha256: (data: Uint8Array) => Promise<string> | string;
   /** Parse CCL source text into a CCLDocument. */
-  parseCCL: (source: string) => any;
+  parseCCL: (source: string) => unknown;
 }
 
 // ─── Internal types ─────────────────────────────────────────────────────────
@@ -83,6 +83,43 @@ export interface ConformanceTarget {
 interface CategoryResult {
   failures: ConformanceFailure[];
   total: number;
+}
+
+/** Internal: shape returned by generateKeyPair for conformance use. */
+interface ConformanceKeyPair {
+  privateKey: Uint8Array;
+  publicKey: Uint8Array;
+  publicKeyHex: string;
+}
+
+/** Internal: shape of a single verification check. */
+interface ConformanceCheck {
+  name: string;
+  passed: boolean;
+}
+
+/** Internal: shape returned by verifyCovenant for conformance use. */
+interface ConformanceVerifyResult {
+  valid: boolean;
+  checks?: ConformanceCheck[];
+}
+
+/** Internal: shape of a covenant document for conformance use. */
+interface ConformanceDoc {
+  id: string;
+  version: string;
+  issuer: { id: string; publicKey: string; role: string };
+  beneficiary: { id: string; publicKey: string; role: string };
+  constraints: string;
+  nonce: string;
+  createdAt: string;
+  signature: string;
+  [key: string]: unknown;
+}
+
+/** Internal: shape of a parsed CCL document for conformance use. */
+interface ConformanceCCLDoc {
+  limits?: Array<{ count: number; periodSeconds: number }>;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -128,7 +165,7 @@ function referenceCanonicalizeJson(obj: unknown): string {
  * Reference canonical form: strips `id`, `signature`, `countersignatures`
  * and produces deterministic JSON.
  */
-function referenceCanonicalForm(doc: any): string {
+function referenceCanonicalForm(doc: Record<string, unknown>): string {
   const { id: _id, signature: _sig, countersignatures: _cs, ...body } = doc;
   return referenceCanonicalizeJson(body);
 }
@@ -215,7 +252,7 @@ export async function cryptoConformance(
   // ── Ed25519 sign/verify round-trip ──────────────────────────────────────
   total++;
   try {
-    const kp = await target.generateKeyPair();
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
     const message = textEncode('stele conformance test message');
     const sig = await target.sign(message, kp.privateKey);
     const valid = await target.verify(message, sig, kp.publicKey);
@@ -267,7 +304,7 @@ export async function cryptoConformance(
   // ── Signature verification rejects tampered messages ────────────────────
   total++;
   try {
-    const kp = await target.generateKeyPair();
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
     const message = textEncode('original message');
     const sig = await target.sign(message, kp.privateKey);
     const tampered = textEncode('tampered message');
@@ -295,8 +332,8 @@ export async function cryptoConformance(
   // ── Different keys produce different signatures ─────────────────────────
   total++;
   try {
-    const kp1 = await target.generateKeyPair();
-    const kp2 = await target.generateKeyPair();
+    const kp1 = (await target.generateKeyPair()) as ConformanceKeyPair;
+    const kp2 = (await target.generateKeyPair()) as ConformanceKeyPair;
     const message = textEncode('same message different keys');
     const sig1 = await target.sign(message, kp1.privateKey);
     const sig2 = await target.sign(message, kp2.privateKey);
@@ -325,8 +362,8 @@ export async function cryptoConformance(
   // ── Wrong public key rejects valid signature ────────────────────────────
   total++;
   try {
-    const kpA = await target.generateKeyPair();
-    const kpB = await target.generateKeyPair();
+    const kpA = (await target.generateKeyPair()) as ConformanceKeyPair;
+    const kpB = (await target.generateKeyPair()) as ConformanceKeyPair;
     const message = textEncode('cross-key verification test');
     const sig = await target.sign(message, kpA.privateKey);
     const valid = await target.verify(message, sig, kpB.publicKey);
@@ -347,7 +384,7 @@ export async function cryptoConformance(
   // ── Signature is 64 bytes ──────────────────────────────────────────────
   total++;
   try {
-    const kp = await target.generateKeyPair();
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
     const message = textEncode('signature length test');
     const sig = await target.sign(message, kp.privateKey);
     if (sig.length !== 64) {
@@ -372,7 +409,7 @@ export async function cryptoConformance(
   // ── Public key is 32 bytes ─────────────────────────────────────────────
   total++;
   try {
-    const kp = await target.generateKeyPair();
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
     if (kp.publicKey.length !== 32) {
       failures.push({
         test: 'ed25519-pubkey-length',
@@ -424,9 +461,9 @@ export async function cclConformance(
     constraints: string,
     action: string,
     resource: string,
-    context?: any,
+    context?: unknown,
   ): Promise<{ permitted: boolean }> {
-    const kp = await target.generateKeyPair();
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
     const doc = await target.buildCovenant({
       issuer: {
         id: 'conformance-issuer',
@@ -441,7 +478,9 @@ export async function cclConformance(
       constraints,
       privateKey: kp.privateKey,
     });
-    return target.evaluateAction(doc, action, resource, context);
+    return target.evaluateAction(doc, action, resource, context) as Promise<{
+      permitted: boolean;
+    }>;
   }
 
   // ── permit read on '/data' permits read on /data ────────────────────────
@@ -581,7 +620,9 @@ export async function cclConformance(
   // ── Rate limits parse correctly ────────────────────────────────────────
   total++;
   try {
-    const cclDoc = target.parseCCL('limit api.call 1000 per 1 hours');
+    const cclDoc = target.parseCCL(
+      'limit api.call 1000 per 1 hours',
+    ) as ConformanceCCLDoc;
     if (!cclDoc.limits || cclDoc.limits.length !== 1) {
       failures.push({
         test: 'ccl-rate-limit-parse',
@@ -745,8 +786,8 @@ export async function covenantConformance(
   const category = 'covenant';
 
   // Helper: build a standard test covenant with optional overrides.
-  async function buildTestCovenant(overrides?: any) {
-    const kp = await target.generateKeyPair();
+  async function buildTestCovenant(overrides?: Record<string, unknown>) {
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
     const defaults = {
       issuer: {
         id: 'test-issuer',
@@ -762,7 +803,10 @@ export async function covenantConformance(
       privateKey: kp.privateKey,
     };
     return {
-      doc: await target.buildCovenant({ ...defaults, ...overrides }),
+      doc: (await target.buildCovenant({
+        ...defaults,
+        ...overrides,
+      })) as ConformanceDoc,
       kp,
     };
   }
@@ -771,11 +815,11 @@ export async function covenantConformance(
   total++;
   try {
     const { doc } = await buildTestCovenant();
-    const result = await target.verifyCovenant(doc);
+    const result = (await target.verifyCovenant(doc)) as ConformanceVerifyResult;
     if (!result.valid) {
       const failedChecks = result.checks
-        ?.filter((c: any) => !c.passed)
-        .map((c: any) => c.name)
+        ?.filter((c: ConformanceCheck) => !c.passed)
+        .map((c: ConformanceCheck) => c.name)
         .join(', ');
       failures.push({
         test: 'covenant-build-verify-roundtrip',
@@ -800,7 +844,7 @@ export async function covenantConformance(
   try {
     const { doc } = await buildTestCovenant();
     const tampered = { ...doc, constraints: "deny write on '/all'" };
-    const result = await target.verifyCovenant(tampered);
+    const result = (await target.verifyCovenant(tampered)) as ConformanceVerifyResult;
     if (result.valid) {
       failures.push({
         test: 'covenant-tamper-detection',
@@ -818,8 +862,8 @@ export async function covenantConformance(
   // ── Expired covenant detected ──────────────────────────────────────────
   total++;
   try {
-    const kp = await target.generateKeyPair();
-    const doc = await target.buildCovenant({
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
+    const doc = (await target.buildCovenant({
       issuer: {
         id: 'test-issuer',
         publicKey: kp.publicKeyHex,
@@ -833,10 +877,10 @@ export async function covenantConformance(
       constraints: "permit read on '/data'",
       privateKey: kp.privateKey,
       expiresAt: '2000-01-01T00:00:00.000Z',
-    });
-    const result = await target.verifyCovenant(doc);
+    })) as ConformanceDoc;
+    const result = (await target.verifyCovenant(doc)) as ConformanceVerifyResult;
     const expiryCheck = result.checks?.find(
-      (c: any) => c.name === 'not_expired',
+      (c: ConformanceCheck) => c.name === 'not_expired',
     );
     if (!expiryCheck || expiryCheck.passed) {
       failures.push({
@@ -866,8 +910,8 @@ export async function covenantConformance(
       ...doc,
       id: '0000000000000000000000000000000000000000000000000000000000000000',
     };
-    const result = await target.verifyCovenant(badId);
-    const idCheck = result.checks?.find((c: any) => c.name === 'id_match');
+    const result = (await target.verifyCovenant(badId)) as ConformanceVerifyResult;
+    const idCheck = result.checks?.find((c: ConformanceCheck) => c.name === 'id_match');
     if (!idCheck || idCheck.passed) {
       failures.push({
         test: 'covenant-id-integrity',
@@ -886,9 +930,9 @@ export async function covenantConformance(
   try {
     const { doc } = await buildTestCovenant();
     const badCCL = { ...doc, constraints: 'not valid ccl at all ###' };
-    const result = await target.verifyCovenant(badCCL);
+    const result = (await target.verifyCovenant(badCCL)) as ConformanceVerifyResult;
     const cclCheck = result.checks?.find(
-      (c: any) => c.name === 'ccl_parses',
+      (c: ConformanceCheck) => c.name === 'ccl_parses',
     );
     if (!cclCheck || cclCheck.passed) {
       failures.push({
@@ -1094,7 +1138,7 @@ export async function interopConformance(
   // reference implementation.
   total++;
   try {
-    const kp = await target.generateKeyPair();
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
     const doc = await target.buildCovenant({
       issuer: {
         id: 'interop-issuer',
@@ -1138,7 +1182,7 @@ export async function interopConformance(
   // ── JSON serialize/deserialize round-trip ──────────────────────────────
   total++;
   try {
-    const kp = await target.generateKeyPair();
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
     const doc = await target.buildCovenant({
       issuer: {
         id: 'roundtrip-issuer',
@@ -1180,7 +1224,7 @@ export async function interopConformance(
   // ── Document ID format ─────────────────────────────────────────────────
   total++;
   try {
-    const kp = await target.generateKeyPair();
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
     const doc = await target.buildCovenant({
       issuer: {
         id: 'format-issuer',
@@ -1219,7 +1263,7 @@ export async function interopConformance(
   // ── Protocol version is "1.0" ──────────────────────────────────────────
   total++;
   try {
-    const kp = await target.generateKeyPair();
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
     const doc = await target.buildCovenant({
       issuer: {
         id: 'version-issuer',
@@ -1256,7 +1300,7 @@ export async function interopConformance(
   // ── Nonce format (64-char hex) ─────────────────────────────────────────
   total++;
   try {
-    const kp = await target.generateKeyPair();
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
     const doc = await target.buildCovenant({
       issuer: {
         id: 'nonce-issuer',
@@ -1295,7 +1339,7 @@ export async function interopConformance(
   // ── createdAt is valid ISO 8601 ────────────────────────────────────────
   total++;
   try {
-    const kp = await target.generateKeyPair();
+    const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
     const doc = await target.buildCovenant({
       issuer: {
         id: 'timestamp-issuer',

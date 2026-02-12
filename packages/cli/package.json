@@ -1,6 +1,7 @@
 {
   "name": "@stele/cli",
   "version": "0.1.0",
+  "description": "Command-line interface for the Stele covenant framework",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,6 +19,7 @@
     "build": "tsup src/index.ts --format cjs --dts",
     "bundle": "tsup src/index.ts --format cjs",
     "dev": "tsup src/index.ts --format cjs --dts --watch",
+    "test": "vitest run",
     "prepublishOnly": "npm run build"
   },
   "files": [
@@ -48,6 +50,11 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/cli"
   },
+  "homepage": "https://stele.dev",
+  "bugs": {
+    "url": "https://github.com/agbusiness195/stele/issues"
+  },
+  "author": "Stele Labs, Inc.",
   "keywords": [
     "stele",
     "covenant",
