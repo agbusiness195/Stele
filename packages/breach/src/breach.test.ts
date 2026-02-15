@@ -699,8 +699,6 @@ describe('createBreachAttestation - detailed structure', () => {
   it('two attestations from the same reporter have different IDs', async () => {
     const kp = await generateKeyPair();
     const att1 = await makeAttestation(kp, 'high');
-    // Ensure different timestamp by waiting 1ms
-    await new Promise((r) => setTimeout(r, 1));
     const att2 = await makeAttestation(kp, 'high');
     // Different timestamps will produce different IDs
     expect(att1.id).not.toBe(att2.id);

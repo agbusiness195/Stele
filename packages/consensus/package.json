@@ -1,7 +1,6 @@
 {
   "name": "@stele/consensus",
   "version": "0.1.0",
-  "description": "Byzantine fault-tolerant consensus protocols for covenant agreement",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,14 +9,13 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "default": "./dist/index.js"
+      "default": "./dist/index.mjs"
     }
   },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "bundle": "tsup src/index.ts --format cjs,esm",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "test": "vitest run",
     "prepublishOnly": "npm run build"
   },
   "files": [
@@ -40,11 +38,6 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/consensus"
   },
-  "homepage": "https://stele.dev",
-  "bugs": {
-    "url": "https://github.com/agbusiness195/stele/issues"
-  },
-  "author": "Stele Labs, Inc.",
   "keywords": [
     "stele",
     "covenant",

@@ -461,7 +461,7 @@ function parseCCLConstraint(constraint: string): ParsedConstraint | null {
 
   return {
     action,
-    target: parts[1]!,
+    target: parts[1],
     rest: parts.slice(2).join(' '),
   };
 }

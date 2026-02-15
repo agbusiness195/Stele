@@ -771,8 +771,8 @@ describe('Serialization Snapshot Stability', () => {
       metadata: { tags: ['test', 'integration'], description: 'Full test covenant' },
       expiresAt: '2099-12-31T23:59:59.999Z',
       activatesAt: '2020-01-01T00:00:00.000Z',
-      enforcement: { type: 'monitor', config: {} },
-      proof: { type: 'audit_log', config: {} },
+      enforcement: { type: 'monitor' },
+      proof: { type: 'audit_log' },
     });
 
     const json = serializeCovenant(doc);

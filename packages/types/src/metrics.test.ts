@@ -411,8 +411,8 @@ describe('MetricsRegistry', () => {
 
       expect(snapshot.counters['req']).toBe(5);
       expect(snapshot.gauges['conn']).toBe(3);
-      expect(snapshot.histograms['lat']!.count).toBe(1);
-      expect(snapshot.histograms['lat']!.sum).toBe(42);
+      expect(snapshot.histograms['lat'].count).toBe(1);
+      expect(snapshot.histograms['lat'].sum).toBe(42);
     });
 
     it('should return empty objects when no metrics exist', () => {
@@ -460,7 +460,7 @@ describe('MetricsRegistry', () => {
       const snapshot = registry.getAll();
       expect(snapshot.counters['req']).toBe(0);
       expect(snapshot.gauges['conn']).toBe(0);
-      expect(snapshot.histograms['lat']!.count).toBe(0);
+      expect(snapshot.histograms['lat'].count).toBe(0);
     });
   });
 });

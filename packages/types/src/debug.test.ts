@@ -150,7 +150,7 @@ describe('createDebugLogger — enabled', () => {
     const logger = createDebugLogger('stele:crypto');
     logger.log('generating key');
     expect(spy).toHaveBeenCalledOnce();
-    const args = spy.mock.calls[0]!;
+    const args = spy.mock.calls[0];
     // First arg is timestamp (ISO string), second is namespace prefix
     expect(typeof args[0]).toBe('string');
     expect(args[1]).toBe('[stele:crypto]');
@@ -163,7 +163,7 @@ describe('createDebugLogger — enabled', () => {
     const logger = createDebugLogger('stele:ccl');
     logger.warn('deprecated syntax');
     expect(spy).toHaveBeenCalledOnce();
-    const args = spy.mock.calls[0]!;
+    const args = spy.mock.calls[0];
     expect(args[1]).toBe('[stele:ccl]');
     expect(args[2]).toBe('WARN');
     expect(args[3]).toBe('deprecated syntax');
@@ -175,7 +175,7 @@ describe('createDebugLogger — enabled', () => {
     const logger = createDebugLogger('stele:store');
     logger.error('write failed');
     expect(spy).toHaveBeenCalledOnce();
-    const args = spy.mock.calls[0]!;
+    const args = spy.mock.calls[0];
     expect(args[1]).toBe('[stele:store]');
     expect(args[2]).toBe('ERROR');
     expect(args[3]).toBe('write failed');
@@ -186,7 +186,7 @@ describe('createDebugLogger — enabled', () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const logger = createDebugLogger('stele:sdk');
     logger.log('test');
-    const ts = spy.mock.calls[0]![0] as string;
+    const ts = spy.mock.calls[0][0] as string;
     const parsed = new Date(ts);
     expect(Number.isNaN(parsed.getTime())).toBe(false);
     spy.mockRestore();
@@ -196,7 +196,7 @@ describe('createDebugLogger — enabled', () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const logger = createDebugLogger('stele:crypto');
     logger.log('key', 'value', 42);
-    const args = spy.mock.calls[0]!;
+    const args = spy.mock.calls[0];
     expect(args[2]).toBe('key');
     expect(args[3]).toBe('value');
     expect(args[4]).toBe(42);
@@ -219,7 +219,7 @@ describe('createDebugLogger — time()', () => {
     // Simulate some passage of time (even minimal)
     stop();
     expect(spy).toHaveBeenCalledOnce();
-    const args = spy.mock.calls[0]!;
+    const args = spy.mock.calls[0];
     expect(args[1]).toBe('[stele:crypto]');
     // The third arg should be the label with elapsed ms
     const timerOutput = args[2] as string;
@@ -232,10 +232,10 @@ describe('createDebugLogger — time()', () => {
     const logger = createDebugLogger('stele:core');
     const stop = logger.time('compute');
     stop();
-    const timerOutput = spy.mock.calls[0]![2] as string;
+    const timerOutput = spy.mock.calls[0][2] as string;
     const match = timerOutput.match(/compute: (\d+\.\d+)ms/);
     expect(match).not.toBeNull();
-    const elapsed = parseFloat(match![1]!);
+    const elapsed = parseFloat(match![1]);
     expect(elapsed).toBeGreaterThanOrEqual(0);
     spy.mockRestore();
   });
@@ -248,8 +248,8 @@ describe('createDebugLogger — time()', () => {
     stop2();
     stop1();
     expect(spy).toHaveBeenCalledTimes(2);
-    expect((spy.mock.calls[0]![2] as string)).toContain('op2:');
-    expect((spy.mock.calls[1]![2] as string)).toContain('op1:');
+    expect((spy.mock.calls[0][2] as string)).toContain('op2:');
+    expect((spy.mock.calls[1][2] as string)).toContain('op1:');
     spy.mockRestore();
   });
 });

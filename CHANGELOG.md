@@ -5,44 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.0] - 2026-02-12
-
-### Added
-
-#### Interop Layer
-- **@stele/discovery**: `.well-known/stele/` discovery protocol with `DiscoveryServer`,
-  `DiscoveryClient`, agent key registry, and capability negotiation.
-- **@stele/schema**: JSON Schema (Draft 2020-12) for `CovenantDocument`,
-  `DiscoveryDocument`, and `AgentKeyEntry` with `validateCovenantDocument()`,
-  `validateDiscoveryDocument()`, and `validateAgentKeyEntry()`.
-
-#### Testing & Verification
-- **Conformance Suite**: 5th category `securityConformance` covering nonce uniqueness,
-  ID uniqueness, empty/zero signature rejection, private key length, and public key
-  hex consistency. Total conformance checks now 40+.
-- **Test Vectors**: 56 canonical test vectors in `test-vectors/canonical-vectors.json`
-  for cross-implementation verification.
-- **Benchmarks**: `runBenchmarkSuite()` with 13 operations, p99 SLA targets, and
-  histogram reporting.
-
-#### Developer Experience
-- **@stele/cli**: Shell completions for Bash, Zsh, and Fish; `stele doctor`
-  environment diagnostics; JSON/table output formatting; config file management.
-
-### Changed
-- Raised coverage thresholds from 80/75/80/80 to 99/97/99/99.
-- Updated all error constructors to use `SteleErrorCode` enum consistently.
-- Added `@types/node` for proper TypeScript type coverage of Node.js globals.
-- Fixed 224 TypeScript strict-mode errors across the entire codebase.
-- Updated README badges to reflect actual counts (5,158+ tests, 85 suites, 34 packages).
-
-### Fixed
-- TypeScript `TextEncoder`, `btoa`, `atob`, `process`, `console` references now
-  properly resolved via `@types/node`.
-- Strict null check errors in test and source files (TS2532, TS18048).
-- `SteleErrorCode` type mismatches in negotiation, consensus, and temporal packages.
-- Removed `as any` casts from conformance suite in favour of proper type assertions.
-
 ## [0.1.0] - 2025-02-07
 
 ### Added

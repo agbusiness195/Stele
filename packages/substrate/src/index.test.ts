@@ -455,45 +455,45 @@ describe('SUBSTRATE_DEFAULTS', () => {
     const types: SubstrateType[] = ['ai-agent', 'robot', 'iot-device', 'autonomous-vehicle', 'smart-contract', 'drone'];
     for (const t of types) {
       expect(SUBSTRATE_DEFAULTS[t]).toBeDefined();
-      expect(SUBSTRATE_DEFAULTS[t]!.constraints).toBeDefined();
-      expect(Array.isArray(SUBSTRATE_DEFAULTS[t]!.constraints)).toBe(true);
-      expect(SUBSTRATE_DEFAULTS[t]!.safetyBounds).toBeDefined();
-      expect(Array.isArray(SUBSTRATE_DEFAULTS[t]!.safetyBounds)).toBe(true);
+      expect(SUBSTRATE_DEFAULTS[t].constraints).toBeDefined();
+      expect(Array.isArray(SUBSTRATE_DEFAULTS[t].constraints)).toBe(true);
+      expect(SUBSTRATE_DEFAULTS[t].safetyBounds).toBeDefined();
+      expect(Array.isArray(SUBSTRATE_DEFAULTS[t].safetyBounds)).toBe(true);
     }
   });
 
   it('robot defaults use valid CCL deny/limit patterns', () => {
-    const robot = SUBSTRATE_DEFAULTS['robot']!;
+    const robot = SUBSTRATE_DEFAULTS['robot'];
     expect(robot.constraints).toContain("deny force on '**' when force_value > 100");
     expect(robot.constraints).toContain("limit speed 2 per 1 movement");
   });
 
   it('drone defaults use valid CCL limit/require patterns', () => {
-    const drone = SUBSTRATE_DEFAULTS['drone']!;
+    const drone = SUBSTRATE_DEFAULTS['drone'];
     expect(drone.constraints).toContain("limit altitude 120 per 1 flight");
     expect(drone.constraints).toContain("require geofence within 10 per 1 flight");
   });
 
   it('ai-agent defaults use valid CCL limit patterns', () => {
-    const agent = SUBSTRATE_DEFAULTS['ai-agent']!;
+    const agent = SUBSTRATE_DEFAULTS['ai-agent'];
     expect(agent.constraints).toContain("limit response_time 5000 per 1 request");
     expect(agent.constraints).toContain("limit memory_usage 4096 per 1 instance");
   });
 
   it('iot-device defaults use valid CCL limit patterns', () => {
-    const iot = SUBSTRATE_DEFAULTS['iot-device']!;
+    const iot = SUBSTRATE_DEFAULTS['iot-device'];
     expect(iot.constraints).toContain("limit data.transmit 1000 per 60 seconds");
     expect(iot.constraints).toContain("limit power.draw 5 per 1 cycle");
   });
 
   it('autonomous-vehicle defaults use valid CCL limit/require patterns', () => {
-    const av = SUBSTRATE_DEFAULTS['autonomous-vehicle']!;
+    const av = SUBSTRATE_DEFAULTS['autonomous-vehicle'];
     expect(av.constraints).toContain("limit speed 130 per 1 travel");
     expect(av.constraints).toContain("require following_distance > 2 per 1 travel");
   });
 
   it('smart-contract defaults use valid CCL limit/deny patterns', () => {
-    const sc = SUBSTRATE_DEFAULTS['smart-contract']!;
+    const sc = SUBSTRATE_DEFAULTS['smart-contract'];
     expect(sc.constraints).toContain("limit gas_usage 30000000 per 1 transaction");
     expect(sc.constraints).toContain("deny reentrancy on '**' when call_depth > 0");
   });
@@ -501,7 +501,7 @@ describe('SUBSTRATE_DEFAULTS', () => {
   it('all default constraints follow CCL patterns (deny/limit/require)', () => {
     const types: SubstrateType[] = ['ai-agent', 'robot', 'iot-device', 'autonomous-vehicle', 'smart-contract', 'drone'];
     for (const t of types) {
-      for (const constraint of SUBSTRATE_DEFAULTS[t]!.constraints) {
+      for (const constraint of SUBSTRATE_DEFAULTS[t].constraints) {
         const isValid =
           constraint.startsWith('deny ') ||
           constraint.startsWith('limit ') ||
@@ -536,20 +536,20 @@ describe('substrate integration', () => {
     expect(covenant.constraints).toEqual(['force lt 100 N']);
 
     // Constraint check
-    expect(checkPhysicalConstraint(constraints[0]!, 80)).toBe(true);
-    expect(checkPhysicalConstraint(constraints[0]!, 120)).toBe(false);
+    expect(checkPhysicalConstraint(constraints[0], 80)).toBe(true);
+    expect(checkPhysicalConstraint(constraints[0], 120)).toBe(false);
 
     // Safety bound check
-    const safe = checkSafetyBound(bounds[0]!, 80);
+    const safe = checkSafetyBound(bounds[0], 80);
     expect(safe.safe).toBe(true);
     expect(safe.limitHit).toBe('none');
 
-    const softHit = checkSafetyBound(bounds[0]!, 120);
+    const softHit = checkSafetyBound(bounds[0], 120);
     expect(softHit.safe).toBe(true);
     expect(softHit.limitHit).toBe('soft');
     expect(softHit.action).toBe('halt');
 
-    const hardHit = checkSafetyBound(bounds[0]!, 200);
+    const hardHit = checkSafetyBound(bounds[0], 200);
     expect(hardHit.safe).toBe(false);
     expect(hardHit.limitHit).toBe('hard');
     expect(hardHit.action).toBe('halt');
@@ -561,10 +561,10 @@ describe('substrate integration', () => {
       const covenant = translateCovenant(['custom-rule-1'], t);
       expect(covenant.constraints).toContain('custom-rule-1');
       // Should have at least the default constraints
-      for (const defaultConstraint of SUBSTRATE_DEFAULTS[t]!.constraints) {
+      for (const defaultConstraint of SUBSTRATE_DEFAULTS[t].constraints) {
         expect(covenant.constraints).toContain(defaultConstraint);
       }
-      expect(covenant.safetyBounds).toEqual(SUBSTRATE_DEFAULTS[t]!.safetyBounds);
+      expect(covenant.safetyBounds).toEqual(SUBSTRATE_DEFAULTS[t].safetyBounds);
     }
   });
 });
@@ -704,56 +704,56 @@ describe('constraintTranslation', () => {
     expect(result.targetSubstrate).toBe('ai-agent');
     expect(result.overallFeasibility).toBe(true);
     expect(result.rules.length).toBeGreaterThanOrEqual(1);
-    expect(result.rules[0]!.mechanism).toBe('output-filter');
-    expect(result.rules[0]!.enforcementLevel).toBe('software');
+    expect(result.rules[0].mechanism).toBe('output-filter');
+    expect(result.rules[0].enforcementLevel).toBe('software');
   });
 
   it('translates a deny constraint for smart-contract as require-revert', () => {
     const result = constraintTranslation("deny reentrancy on '**' when call_depth > 0", 'smart-contract');
-    expect(result.rules[0]!.mechanism).toBe('require-revert');
-    expect(result.rules[0]!.enforcementLevel).toBe('contractual');
+    expect(result.rules[0].mechanism).toBe('require-revert');
+    expect(result.rules[0].enforcementLevel).toBe('contractual');
   });
 
   it('translates a deny constraint for robot with hardware interlock and safety monitor', () => {
     const result = constraintTranslation("deny force on '**' when force_value > 100", 'robot');
     expect(result.rules.length).toBe(2);
-    expect(result.rules[0]!.mechanism).toBe('hardware-interlock');
-    expect(result.rules[0]!.enforcementLevel).toBe('hardware');
-    expect(result.rules[1]!.mechanism).toBe('safety-monitor');
+    expect(result.rules[0].mechanism).toBe('hardware-interlock');
+    expect(result.rules[0].enforcementLevel).toBe('hardware');
+    expect(result.rules[1].mechanism).toBe('safety-monitor');
   });
 
   it('translates a limit constraint for ai-agent as rate-limiter with audit-logger', () => {
     const result = constraintTranslation("limit response_time 5000 per 1 request", 'ai-agent');
     expect(result.rules.length).toBe(2);
-    expect(result.rules[0]!.mechanism).toBe('rate-limiter');
-    expect(result.rules[1]!.mechanism).toBe('audit-logger');
+    expect(result.rules[0].mechanism).toBe('rate-limiter');
+    expect(result.rules[1].mechanism).toBe('audit-logger');
   });
 
   it('translates a limit constraint for drone as geofence-limiter', () => {
     const result = constraintTranslation("limit altitude 120 per 1 flight", 'drone');
-    expect(result.rules[0]!.mechanism).toBe('geofence-limiter');
-    expect(result.rules[0]!.enforcementLevel).toBe('hardware');
+    expect(result.rules[0].mechanism).toBe('geofence-limiter');
+    expect(result.rules[0].enforcementLevel).toBe('hardware');
   });
 
   it('translates a require constraint for autonomous-vehicle as sensor-fusion-gate', () => {
     const result = constraintTranslation("require following_distance > 2 per 1 travel", 'autonomous-vehicle');
-    expect(result.rules[0]!.mechanism).toBe('sensor-fusion-gate');
-    expect(result.rules[0]!.enforcementLevel).toBe('hardware');
+    expect(result.rules[0].mechanism).toBe('sensor-fusion-gate');
+    expect(result.rules[0].enforcementLevel).toBe('hardware');
   });
 
   it('translates a require constraint for iot-device as state-check', () => {
     const result = constraintTranslation("require temperature_ok before transmit", 'iot-device');
-    expect(result.rules[0]!.mechanism).toBe('state-check');
-    expect(result.rules[0]!.enforcementLevel).toBe('software');
+    expect(result.rules[0].mechanism).toBe('state-check');
+    expect(result.rules[0].enforcementLevel).toBe('software');
   });
 
   it('returns advisory rule for unparseable constraint', () => {
     const result = constraintTranslation("some-weird-format", 'ai-agent');
     expect(result.overallFeasibility).toBe(false);
     expect(result.rules.length).toBe(1);
-    expect(result.rules[0]!.mechanism).toBe('manual-review');
-    expect(result.rules[0]!.enforcementLevel).toBe('advisory');
-    expect(result.rules[0]!.feasible).toBe(false);
+    expect(result.rules[0].mechanism).toBe('manual-review');
+    expect(result.rules[0].enforcementLevel).toBe('advisory');
+    expect(result.rules[0].feasible).toBe(false);
   });
 
   it('throws for empty constraint string', () => {
@@ -825,7 +825,7 @@ describe('substrateCapabilityMatrix', () => {
 
   it('ai-agent cannot enforce physical bounds', () => {
     const matrix = substrateCapabilityMatrix(['ai-agent']);
-    const aiRow = matrix.substrates[0]!;
+    const aiRow = matrix.substrates[0];
     const physBound = aiRow.capabilities.find(c => c.capability === 'enforce-physical-bound');
     expect(physBound).toBeDefined();
     expect(physBound!.supported).toBe(false);
@@ -834,7 +834,7 @@ describe('substrateCapabilityMatrix', () => {
 
   it('robot can enforce physical bounds at hardware level', () => {
     const matrix = substrateCapabilityMatrix(['robot']);
-    const robotRow = matrix.substrates[0]!;
+    const robotRow = matrix.substrates[0];
     const physBound = robotRow.capabilities.find(c => c.capability === 'enforce-physical-bound');
     expect(physBound).toBeDefined();
     expect(physBound!.supported).toBe(true);
@@ -843,7 +843,7 @@ describe('substrateCapabilityMatrix', () => {
 
   it('smart-contract cannot do data-encryption (on-chain data is public)', () => {
     const matrix = substrateCapabilityMatrix(['smart-contract']);
-    const scRow = matrix.substrates[0]!;
+    const scRow = matrix.substrates[0];
     const encryption = scRow.capabilities.find(c => c.capability === 'data-encryption');
     expect(encryption).toBeDefined();
     expect(encryption!.supported).toBe(false);
@@ -851,7 +851,7 @@ describe('substrateCapabilityMatrix', () => {
 
   it('drone can enforce geofence at hardware level', () => {
     const matrix = substrateCapabilityMatrix(['drone']);
-    const droneRow = matrix.substrates[0]!;
+    const droneRow = matrix.substrates[0];
     const geofence = droneRow.capabilities.find(c => c.capability === 'enforce-geofence');
     expect(geofence).toBeDefined();
     expect(geofence!.supported).toBe(true);
@@ -861,8 +861,8 @@ describe('substrateCapabilityMatrix', () => {
   it('filters to only requested substrate types', () => {
     const matrix = substrateCapabilityMatrix(['ai-agent', 'drone']);
     expect(matrix.substrates).toHaveLength(2);
-    expect(matrix.substrates[0]!.substrateType).toBe('ai-agent');
-    expect(matrix.substrates[1]!.substrateType).toBe('drone');
+    expect(matrix.substrates[0].substrateType).toBe('ai-agent');
+    expect(matrix.substrates[1].substrateType).toBe('drone');
   });
 
   it('throws for invalid substrate type in filter', () => {
