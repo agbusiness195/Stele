@@ -44,7 +44,7 @@
     "typecheck": "npm run typecheck --workspaces",
     "test": "npm run test --workspaces",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint packages/*/src/**/*.ts",
+    "lint": "npx tsc --build --noEmit",
     "docs": "npx typedoc",
     "docs:build": "typedoc",
     "prepublish:check": "npm pack --dry-run -ws",

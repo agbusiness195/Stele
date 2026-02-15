@@ -74,7 +74,10 @@
     "stele",
     "covenant",
     "ai-accountability",
-    "sdk"
+    "sdk",
+    "ai-agents",
+    "trust",
+    "governance"
   ],
   "module": "./dist/index.mjs"
 }

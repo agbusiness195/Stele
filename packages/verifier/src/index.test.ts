@@ -778,4 +778,530 @@ describe('@stele/verifier', () => {
       expect(kinds.has('action')).toBe(true);
     });
   });
+
+  // ── Edge-case tests ─────────────────────────────────────────────────
+
+  describe('edge cases: empty chain array', () => {
+    let verifier: Verifier;
+
+    beforeEach(() => {
+      verifier = new Verifier({ verifierId: 'edge-empty' });
+    });
+
+    it('returns valid=false for an empty chain', async () => {
+      const report = await verifier.verifyChain([]);
+      expect(report.valid).toBe(false);
+    });
+
+    it('has exactly one integrity check named chain_non_empty', async () => {
+      const report = await verifier.verifyChain([]);
+      expect(report.integrityChecks).toHaveLength(1);
+      expect(report.integrityChecks[0]!.name).toBe('chain_non_empty');
+      expect(report.integrityChecks[0]!.passed).toBe(false);
+      expect(report.integrityChecks[0]!.message).toBe('Chain is empty');
+    });
+
+    it('has empty documentResults and narrowingResults for empty chain', async () => {
+      const report = await verifier.verifyChain([]);
+      expect(report.documentResults).toHaveLength(0);
+      expect(report.narrowingResults).toHaveLength(0);
+    });
+
+    it('records empty chain verification in history with empty documentIds', async () => {
+      await verifier.verifyChain([]);
+      const history = verifier.getHistory();
+      const chainRecords = history.filter((h) => h.kind === 'chain');
+      expect(chainRecords).toHaveLength(1);
+      expect(chainRecords[0]!.documentIds).toEqual([]);
+      expect(chainRecords[0]!.valid).toBe(false);
+    });
+
+    it('includes verifierId and timing even for empty chain', async () => {
+      const report = await verifier.verifyChain([]);
+      expect(report.verifierId).toBe('edge-empty');
+      expect(report.timestamp).toBeTruthy();
+      expect(report.durationMs).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe('edge cases: single document chain (no parent references)', () => {
+    let verifier: Verifier;
+
+    beforeEach(() => {
+      verifier = new Verifier({ verifierId: 'edge-single' });
+    });
+
+    it('a single root document with no chain ref is valid', async () => {
+      const { doc } = await buildValidDoc();
+      // doc has no chain reference, which is expected for a root
+      expect(doc.chain).toBeUndefined();
+      const report = await verifier.verifyChain([doc]);
+      expect(report.valid).toBe(true);
+    });
+
+    it('single-doc chain has no narrowing results', async () => {
+      const { doc } = await buildValidDoc();
+      const report = await verifier.verifyChain([doc]);
+      expect(report.narrowingResults).toHaveLength(0);
+    });
+
+    it('single-doc chain passes all integrity checks', async () => {
+      const { doc } = await buildValidDoc();
+      const report = await verifier.verifyChain([doc]);
+      for (const check of report.integrityChecks) {
+        expect(check.passed).toBe(true);
+      }
+    });
+
+    it('single-doc chain has exactly one document result', async () => {
+      const { doc } = await buildValidDoc();
+      const report = await verifier.verifyChain([doc]);
+      expect(report.documentResults).toHaveLength(1);
+      expect(report.documentResults[0]!.document.id).toBe(doc.id);
+      expect(report.documentResults[0]!.report.valid).toBe(true);
+    });
+
+    it('single-doc chain with invalid doc still checks chain structure', async () => {
+      const { doc } = await buildValidDoc();
+      const tampered = { ...doc, id: 'aaaa' + doc.id.slice(4) };
+      const report = await verifier.verifyChain([tampered as CovenantDocument]);
+      expect(report.valid).toBe(false);
+      // The all_documents_valid check should fail
+      const allDocsCheck = report.integrityChecks.find(
+        (c) => c.name === 'all_documents_valid',
+      );
+      expect(allDocsCheck?.passed).toBe(false);
+    });
+
+    it('records single-doc chain verification in history', async () => {
+      const { doc } = await buildValidDoc();
+      verifier.clearHistory();
+      await verifier.verifyChain([doc]);
+      const history = verifier.getHistory();
+      const chainRecords = history.filter((h) => h.kind === 'chain');
+      expect(chainRecords).toHaveLength(1);
+      expect(chainRecords[0]!.documentIds).toEqual([doc.id]);
+      expect(chainRecords[0]!.valid).toBe(true);
+    });
+  });
+
+  describe('edge cases: history eviction at maxHistorySize boundary', () => {
+    it('does not evict when exactly at maxHistorySize', async () => {
+      const verifier = new Verifier({ verifierId: 'evict-boundary', maxHistorySize: 3 });
+      const { doc: d1 } = await buildValidDoc();
+      const { doc: d2 } = await buildValidDoc();
+      const { doc: d3 } = await buildValidDoc();
+
+      await verifier.verify(d1);
+      await verifier.verify(d2);
+      await verifier.verify(d3);
+
+      const history = verifier.getHistory();
+      expect(history).toHaveLength(3);
+      expect(history[0]!.documentIds[0]).toBe(d1.id);
+      expect(history[1]!.documentIds[0]).toBe(d2.id);
+      expect(history[2]!.documentIds[0]).toBe(d3.id);
+    });
+
+    it('evicts exactly one entry when one over maxHistorySize', async () => {
+      const verifier = new Verifier({ verifierId: 'evict-one-over', maxHistorySize: 3 });
+      const { doc: d1 } = await buildValidDoc();
+      const { doc: d2 } = await buildValidDoc();
+      const { doc: d3 } = await buildValidDoc();
+      const { doc: d4 } = await buildValidDoc();
+
+      await verifier.verify(d1);
+      await verifier.verify(d2);
+      await verifier.verify(d3);
+      await verifier.verify(d4);
+
+      const history = verifier.getHistory();
+      expect(history).toHaveLength(3);
+      // d1 should have been evicted
+      expect(history[0]!.documentIds[0]).toBe(d2.id);
+      expect(history[1]!.documentIds[0]).toBe(d3.id);
+      expect(history[2]!.documentIds[0]).toBe(d4.id);
+    });
+
+    it('maxHistorySize of 1 keeps only the latest record', async () => {
+      const verifier = new Verifier({ verifierId: 'evict-one', maxHistorySize: 1 });
+      const { doc: d1 } = await buildValidDoc();
+      const { doc: d2 } = await buildValidDoc();
+      const { doc: d3 } = await buildValidDoc();
+
+      await verifier.verify(d1);
+      expect(verifier.getHistory()).toHaveLength(1);
+      expect(verifier.getHistory()[0]!.documentIds[0]).toBe(d1.id);
+
+      await verifier.verify(d2);
+      expect(verifier.getHistory()).toHaveLength(1);
+      expect(verifier.getHistory()[0]!.documentIds[0]).toBe(d2.id);
+
+      await verifier.verify(d3);
+      expect(verifier.getHistory()).toHaveLength(1);
+      expect(verifier.getHistory()[0]!.documentIds[0]).toBe(d3.id);
+    });
+
+    it('chain verification also respects maxHistorySize (chain + individual records)', async () => {
+      // verifyChain calls verify() for each doc, then records a 'chain' entry.
+      // A 2-doc chain = 2 single records + 1 chain record = 3 total entries
+      const verifier = new Verifier({ verifierId: 'evict-chain', maxHistorySize: 3 });
+      const { docs } = await buildChain(2);
+      await verifier.verifyChain(docs);
+
+      const history = verifier.getHistory();
+      // 2 single doc verifications + 1 chain = 3, exactly at limit
+      expect(history).toHaveLength(3);
+      expect(history[0]!.kind).toBe('single');
+      expect(history[1]!.kind).toBe('single');
+      expect(history[2]!.kind).toBe('chain');
+    });
+
+    it('chain verification with small maxHistorySize evicts older single records', async () => {
+      // With maxHistorySize=2 and a 2-doc chain:
+      // After first single: [single1]
+      // After second single: [single1, single2]
+      // After chain record: [single2, chain] (single1 evicted)
+      const verifier = new Verifier({ verifierId: 'evict-chain-small', maxHistorySize: 2 });
+      const { docs } = await buildChain(2);
+      await verifier.verifyChain(docs);
+
+      const history = verifier.getHistory();
+      expect(history).toHaveLength(2);
+      expect(history[1]!.kind).toBe('chain');
+    });
+
+    it('clearHistory resets eviction tracking (history can grow again after clear)', async () => {
+      const verifier = new Verifier({ verifierId: 'evict-clear', maxHistorySize: 2 });
+      const { doc: d1 } = await buildValidDoc();
+      const { doc: d2 } = await buildValidDoc();
+      const { doc: d3 } = await buildValidDoc();
+
+      await verifier.verify(d1);
+      await verifier.verify(d2);
+      await verifier.verify(d3);
+      expect(verifier.getHistory()).toHaveLength(2);
+
+      verifier.clearHistory();
+      expect(verifier.getHistory()).toHaveLength(0);
+
+      // Can grow back to maxHistorySize
+      await verifier.verify(d1);
+      await verifier.verify(d2);
+      expect(verifier.getHistory()).toHaveLength(2);
+    });
+  });
+
+  describe('edge cases: narrowing validation (child broadening parent)', () => {
+    let verifier: Verifier;
+
+    beforeEach(() => {
+      verifier = new Verifier({ verifierId: 'edge-narrow' });
+    });
+
+    it('child permitting a broader action than parent is a violation', async () => {
+      const { issuerKeyPair, beneficiaryKeyPair, issuer, beneficiary } = await makeParties();
+
+      // Parent permits only read on data
+      const parent = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+      });
+
+      // Child tries to permit write on data (broader — not in parent's permits)
+      const child = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit write on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+        chain: { parentId: parent.id, relation: 'restricts', depth: 1 },
+      });
+
+      const report = await verifier.verifyChain([parent, child]);
+      expect(report.valid).toBe(false);
+      expect(report.narrowingResults).toHaveLength(1);
+      expect(report.narrowingResults[0]!.valid).toBe(false);
+      expect(report.narrowingResults[0]!.violations.length).toBeGreaterThan(0);
+    });
+
+    it('child permitting on broader resource than parent is a violation', async () => {
+      const { issuerKeyPair, beneficiaryKeyPair, issuer, beneficiary } = await makeParties();
+
+      // Parent permits read on specific data path
+      const parent = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data/users'",
+        privateKey: issuerKeyPair.privateKey,
+      });
+
+      // Child tries to permit read on broader resource
+      const child = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on '**'",
+        privateKey: issuerKeyPair.privateKey,
+        chain: { parentId: parent.id, relation: 'restricts', depth: 1 },
+      });
+
+      const report = await verifier.verifyChain([parent, child]);
+      expect(report.valid).toBe(false);
+      expect(report.narrowingResults[0]!.valid).toBe(false);
+    });
+
+    it('child with same constraints as parent is valid (not broadening)', async () => {
+      const { docs } = await buildChain(2);
+      // buildChain uses identical constraints for all docs
+      const report = await verifier.verifyChain(docs);
+      expect(report.valid).toBe(true);
+      expect(report.narrowingResults).toHaveLength(1);
+      expect(report.narrowingResults[0]!.valid).toBe(true);
+    });
+
+    it('child permitting what parent explicitly denies is a violation', async () => {
+      const { issuerKeyPair, beneficiaryKeyPair, issuer, beneficiary } = await makeParties();
+
+      const parent = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "deny delete on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+      });
+
+      const child = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit delete on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+        chain: { parentId: parent.id, relation: 'restricts', depth: 1 },
+      });
+
+      const report = await verifier.verifyChain([parent, child]);
+      expect(report.valid).toBe(false);
+      const narrowing = report.narrowingResults[0]!;
+      expect(narrowing.valid).toBe(false);
+      expect(narrowing.violations.length).toBeGreaterThan(0);
+      expect(narrowing.childId).toBe(child.id);
+      expect(narrowing.parentId).toBe(parent.id);
+    });
+
+    it('three-level chain: grandchild broadening grandparent via wildcard', async () => {
+      const { issuerKeyPair, beneficiaryKeyPair, issuer, beneficiary } = await makeParties();
+
+      const root = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+      });
+
+      const mid = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+        chain: { parentId: root.id, relation: 'restricts', depth: 1 },
+      });
+
+      // Grandchild broadens: permits wildcard action
+      const leaf = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit ** on '**'",
+        privateKey: issuerKeyPair.privateKey,
+        chain: { parentId: mid.id, relation: 'restricts', depth: 2 },
+      });
+
+      const report = await verifier.verifyChain([root, mid, leaf]);
+      expect(report.valid).toBe(false);
+      // First narrowing (root->mid) should be valid
+      expect(report.narrowingResults[0]!.valid).toBe(true);
+      // Second narrowing (mid->leaf) should be invalid (broadening)
+      expect(report.narrowingResults[1]!.valid).toBe(false);
+    });
+
+    it('narrowing violation includes descriptive reason', async () => {
+      const { issuerKeyPair, beneficiaryKeyPair, issuer, beneficiary } = await makeParties();
+
+      const parent = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "deny write on 'secrets'",
+        privateKey: issuerKeyPair.privateKey,
+      });
+
+      const child = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit write on 'secrets'",
+        privateKey: issuerKeyPair.privateKey,
+        chain: { parentId: parent.id, relation: 'restricts', depth: 1 },
+      });
+
+      const report = await verifier.verifyChain([parent, child]);
+      const violation = report.narrowingResults[0]!.violations[0]!;
+      expect(typeof violation.reason).toBe('string');
+      expect(violation.reason.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('edge cases: depth monotonicity with gaps', () => {
+    let verifier: Verifier;
+
+    beforeEach(() => {
+      verifier = new Verifier({ verifierId: 'edge-depth' });
+    });
+
+    it('depth gap (0 -> 2 instead of 0 -> 1) is detected', async () => {
+      const { issuerKeyPair, beneficiaryKeyPair, issuer, beneficiary } = await makeParties();
+
+      const root = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+      });
+
+      // Child has depth=2 instead of expected depth=1
+      const child = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+        chain: { parentId: root.id, relation: 'restricts', depth: 2 },
+      });
+
+      const report = await verifier.verifyChain([root, child]);
+      expect(report.valid).toBe(false);
+      const depthCheck = report.integrityChecks.find(
+        (c) => c.name === 'depth_monotonic',
+      );
+      expect(depthCheck?.passed).toBe(false);
+      expect(depthCheck?.message).toContain('not monotonically increasing');
+    });
+
+    it('depth going backwards (depth claimed as 0 on non-root) is detected', async () => {
+      const { issuerKeyPair, beneficiaryKeyPair, issuer, beneficiary } = await makeParties();
+
+      const root = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+      });
+
+      // Build with valid depth first, then tamper to simulate depth=0
+      const child = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+        chain: { parentId: root.id, relation: 'restricts', depth: 1 },
+      });
+
+      // Tamper the chain depth to 0 (buildCovenant won't allow this directly)
+      const tampered = {
+        ...child,
+        chain: { ...child.chain!, depth: 0 },
+      } as CovenantDocument;
+
+      const report = await verifier.verifyChain([root, tampered]);
+      expect(report.valid).toBe(false);
+      const depthCheck = report.integrityChecks.find(
+        (c) => c.name === 'depth_monotonic',
+      );
+      expect(depthCheck?.passed).toBe(false);
+    });
+
+    it('three-doc chain with correct depths (1, 2) passes', async () => {
+      const { docs } = await buildChain(3);
+      const report = await verifier.verifyChain(docs);
+      const depthCheck = report.integrityChecks.find(
+        (c) => c.name === 'depth_monotonic',
+      );
+      expect(depthCheck?.passed).toBe(true);
+    });
+
+    it('three-doc chain with middle depth gap (depth=1, depth=3) fails', async () => {
+      const { issuerKeyPair, beneficiaryKeyPair, issuer, beneficiary } = await makeParties();
+
+      const root = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+      });
+
+      const mid = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+        chain: { parentId: root.id, relation: 'restricts', depth: 1 },
+      });
+
+      // Leaf claims depth=3 instead of expected depth=2
+      const leaf = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+        chain: { parentId: mid.id, relation: 'restricts', depth: 3 },
+      });
+
+      const report = await verifier.verifyChain([root, mid, leaf]);
+      expect(report.valid).toBe(false);
+      const depthCheck = report.integrityChecks.find(
+        (c) => c.name === 'depth_monotonic',
+      );
+      expect(depthCheck?.passed).toBe(false);
+    });
+
+    it('duplicate depths (depth=1, depth=1) are detected', async () => {
+      const { issuerKeyPair, beneficiaryKeyPair, issuer, beneficiary } = await makeParties();
+
+      const root = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+      });
+
+      const mid = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+        chain: { parentId: root.id, relation: 'restricts', depth: 1 },
+      });
+
+      // Leaf also claims depth=1 instead of expected depth=2
+      const leaf = await buildCovenant({
+        issuer,
+        beneficiary,
+        constraints: "permit read on 'data'",
+        privateKey: issuerKeyPair.privateKey,
+        chain: { parentId: mid.id, relation: 'restricts', depth: 1 },
+      });
+
+      const report = await verifier.verifyChain([root, mid, leaf]);
+      expect(report.valid).toBe(false);
+      const depthCheck = report.integrityChecks.find(
+        (c) => c.name === 'depth_monotonic',
+      );
+      expect(depthCheck?.passed).toBe(false);
+    });
+
+    it('root document with no chain field passes depth check (no depth to verify)', async () => {
+      const { doc } = await buildValidDoc();
+      expect(doc.chain).toBeUndefined();
+      const report = await verifier.verifyChain([doc]);
+      const depthCheck = report.integrityChecks.find(
+        (c) => c.name === 'depth_monotonic',
+      );
+      expect(depthCheck?.passed).toBe(true);
+    });
+  });
 });

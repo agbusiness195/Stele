@@ -77,10 +77,9 @@ export class SteleEventEmitter {
    * Uses an array (rather than a Set) to preserve insertion order and
    * to allow the same function reference to be registered more than once.
    */
-  private readonly _listeners = new Map<
-    keyof SteleLifecycleEventMap,
-    ListenerEntry<SteleLifecycleEventMap[keyof SteleLifecycleEventMap]>[]
-  >();
+  // Use `any` internally – public API methods enforce correct types via generics.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly _listeners = new Map<keyof SteleLifecycleEventMap, ListenerEntry<any>[]>();
 
   // ── on ──────────────────────────────────────────────────────────────────
 

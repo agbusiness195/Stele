@@ -47,7 +47,10 @@
     "stele",
     "covenant",
     "ai-accountability",
-    "types"
+    "types",
+    "typescript",
+    "protocol",
+    "schema"
   ],
   "module": "./dist/index.mjs"
 }

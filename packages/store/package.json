@@ -49,7 +49,10 @@
     "stele",
     "covenant",
     "ai-accountability",
-    "storage"
+    "storage",
+    "sqlite",
+    "document-store",
+    "pluggable"
   ],
   "module": "./dist/index.mjs"
 }

@@ -1318,6 +1318,629 @@ describe('DiscoveryClient', () => {
   });
 });
 
+// ─── Discovery Client Edge Cases ─────────────────────────────────────────────
+
+describe('DiscoveryClient edge cases', () => {
+  let mockFetch: ReturnType<typeof vi.fn>;
+  let client: DiscoveryClient;
+  let validDoc: DiscoveryDocument;
+
+  beforeEach(async () => {
+    validDoc = await buildDiscoveryDocument({ issuer: TEST_ISSUER });
+    mockFetch = vi.fn();
+    client = new DiscoveryClient({
+      fetchFn: mockFetch as unknown as typeof fetch,
+      fetchOptions: { verifySignature: false, timeout: 5000 },
+    });
+  });
+
+  // ── HTTP Error Responses ──────────────────────────────────────────────
+
+  describe('HTTP error responses', () => {
+    it('throws on 404 Not Found during discover', async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse({}, false, 404));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Discovery fetch failed: 404/,
+      );
+    });
+
+    it('throws on 500 Internal Server Error during discover', async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse({}, false, 500));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Discovery fetch failed: 500/,
+      );
+    });
+
+    it('throws on 403 Forbidden during discover', async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse({}, false, 403));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Discovery fetch failed: 403/,
+      );
+    });
+
+    it('throws on 502 Bad Gateway during discover', async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse({}, false, 502));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Discovery fetch failed: 502/,
+      );
+    });
+
+    it('throws on HTTP error when fetching agent keys', async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(validDoc)) // discover succeeds
+        .mockResolvedValueOnce(mockResponse({}, false, 500)); // keys endpoint fails
+
+      await expect(client.getAgentKeys(TEST_ISSUER, 'agent-1')).rejects.toThrow(
+        /Discovery fetch failed: 500/,
+      );
+    });
+
+    it('throws on HTTP error when querying covenants', async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(validDoc)) // discover succeeds
+        .mockResolvedValueOnce(mockResponse({}, false, 503)); // covenants endpoint fails
+
+      await expect(client.queryCovenants(TEST_ISSUER)).rejects.toThrow(
+        /Discovery fetch failed: 503/,
+      );
+    });
+
+    it('throws on HTTP error when looking up key by ID', async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(validDoc)) // discover succeeds
+        .mockResolvedValueOnce(mockResponse({}, false, 404)); // keys endpoint 404
+
+      await expect(client.getKeyById(TEST_ISSUER, 'kid-abc')).rejects.toThrow(
+        /Discovery fetch failed: 404/,
+      );
+    });
+
+    it('includes the URL in the HTTP error message', async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse({}, false, 500));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        new RegExp(`${TEST_ISSUER.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`),
+      );
+    });
+  });
+
+  // ── Network Timeouts & Failures ───────────────────────────────────────
+
+  describe('network timeouts and failures', () => {
+    it('throws when fetch rejects with a network error', async () => {
+      mockFetch.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow('Failed to fetch');
+    });
+
+    it('throws when fetch rejects with an abort error (timeout)', async () => {
+      const abortError = new DOMException('The operation was aborted', 'AbortError');
+      mockFetch.mockRejectedValueOnce(abortError);
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(/aborted/i);
+    });
+
+    it('throws when fetch rejects during getAgentKeys', async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(validDoc)) // discover succeeds
+        .mockRejectedValueOnce(new TypeError('Network request failed'));
+
+      await expect(client.getAgentKeys(TEST_ISSUER, 'agent-1')).rejects.toThrow(
+        'Network request failed',
+      );
+    });
+
+    it('throws when fetch rejects during verifyCovenant POST', async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(validDoc)) // discover succeeds
+        .mockRejectedValueOnce(new TypeError('Connection refused'));
+
+      await expect(client.verifyCovenant(TEST_ISSUER, 'cov-1')).rejects.toThrow(
+        'Connection refused',
+      );
+    });
+
+    it('throws when fetch rejects during queryCovenants', async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(validDoc)) // discover succeeds
+        .mockRejectedValueOnce(new Error('ECONNRESET'));
+
+      await expect(client.queryCovenants(TEST_ISSUER)).rejects.toThrow('ECONNRESET');
+    });
+  });
+
+  // ── Cache Expiration Logic ────────────────────────────────────────────
+
+  describe('cache expiration logic', () => {
+    it('re-fetches after cache TTL expires', async () => {
+      vi.useFakeTimers();
+      try {
+        mockFetch.mockResolvedValue(mockResponse(validDoc));
+
+        // First call fetches from network
+        await client.discover(TEST_ISSUER);
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+
+        // Second call uses cache
+        await client.discover(TEST_ISSUER);
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+
+        // Advance time past default cacheTtl (300_000ms = 5 minutes)
+        vi.advanceTimersByTime(300_001);
+
+        // Third call should re-fetch because cache expired
+        await client.discover(TEST_ISSUER);
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('uses custom cacheTtl from fetch options', async () => {
+      vi.useFakeTimers();
+      try {
+        const shortCacheClient = new DiscoveryClient({
+          fetchFn: mockFetch as unknown as typeof fetch,
+          fetchOptions: { verifySignature: false, cacheTtl: 1000 },
+        });
+
+        mockFetch.mockResolvedValue(mockResponse(validDoc));
+
+        await shortCacheClient.discover(TEST_ISSUER);
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+
+        // Advance time past the short TTL
+        vi.advanceTimersByTime(1001);
+
+        await shortCacheClient.discover(TEST_ISSUER);
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('serves from cache when TTL has not expired', async () => {
+      vi.useFakeTimers();
+      try {
+        mockFetch.mockResolvedValue(mockResponse(validDoc));
+
+        await client.discover(TEST_ISSUER);
+
+        // Advance time but stay within the default 5 min TTL
+        vi.advanceTimersByTime(299_999);
+
+        await client.discover(TEST_ISSUER);
+        expect(mockFetch).toHaveBeenCalledTimes(1); // Still using cache
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('per-call cacheTtl overrides default TTL for that request', async () => {
+      vi.useFakeTimers();
+      try {
+        mockFetch.mockResolvedValue(mockResponse(validDoc));
+
+        // First discover with a custom short TTL
+        await client.discover(TEST_ISSUER, { cacheTtl: 500 });
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+
+        // Advance past the short TTL
+        vi.advanceTimersByTime(501);
+
+        // Should re-fetch because the cache entry used the 500ms TTL
+        await client.discover(TEST_ISSUER);
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('clearCache for a specific platform does not affect others', async () => {
+      const otherDoc = await buildDiscoveryDocument({ issuer: 'https://other.example' });
+
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(validDoc))
+        .mockResolvedValueOnce(mockResponse(otherDoc));
+
+      await client.discover(TEST_ISSUER);
+      await client.discover('https://other.example');
+
+      // Clear only the TEST_ISSUER cache
+      client.clearCache(TEST_ISSUER);
+
+      // other.example should still be cached
+      await client.discover('https://other.example');
+      expect(mockFetch).toHaveBeenCalledTimes(2); // No additional fetch for other.example
+
+      // TEST_ISSUER requires a re-fetch
+      mockFetch.mockResolvedValueOnce(mockResponse(validDoc));
+      await client.discover(TEST_ISSUER);
+      expect(mockFetch).toHaveBeenCalledTimes(3);
+    });
+
+    it('clearCache with trailing slash matches platform entries', async () => {
+      mockFetch.mockResolvedValue(mockResponse(validDoc));
+
+      await client.discover(TEST_ISSUER);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+
+      // Clear using URL with trailing slash
+      client.clearCache(TEST_ISSUER + '/');
+
+      await client.discover(TEST_ISSUER);
+      expect(mockFetch).toHaveBeenCalledTimes(2); // Re-fetched after clear
+    });
+  });
+
+  // ── Invalid JSON Responses ────────────────────────────────────────────
+
+  describe('invalid JSON responses', () => {
+    it('throws when discover response returns invalid JSON', async () => {
+      const badJsonResponse = {
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: async () => { throw new SyntaxError('Unexpected token < in JSON'); },
+        headers: new Headers(),
+        redirected: false,
+        type: 'basic' as Response['type'],
+        url: '',
+        body: null,
+        bodyUsed: false,
+        clone: () => badJsonResponse,
+        text: async () => '<html>Not JSON</html>',
+        arrayBuffer: async () => new ArrayBuffer(0),
+        blob: async () => new Blob(),
+        formData: async () => new FormData(),
+      } as unknown as Response;
+
+      mockFetch.mockResolvedValueOnce(badJsonResponse);
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Unexpected token/,
+      );
+    });
+
+    it('throws when getAgentKeys response returns invalid JSON', async () => {
+      const badJsonResponse = {
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: async () => { throw new SyntaxError('Unexpected end of JSON input'); },
+        headers: new Headers(),
+        redirected: false,
+        type: 'basic' as Response['type'],
+        url: '',
+        body: null,
+        bodyUsed: false,
+        clone: () => badJsonResponse,
+        text: async () => '',
+        arrayBuffer: async () => new ArrayBuffer(0),
+        blob: async () => new Blob(),
+        formData: async () => new FormData(),
+      } as unknown as Response;
+
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(validDoc)) // discover succeeds
+        .mockResolvedValueOnce(badJsonResponse); // keys endpoint returns garbage
+
+      await expect(client.getAgentKeys(TEST_ISSUER, 'agent-1')).rejects.toThrow(
+        /Unexpected end of JSON/,
+      );
+    });
+
+    it('throws when verifyCovenant response returns invalid JSON', async () => {
+      const badJsonResponse = {
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: async () => { throw new SyntaxError('Bad JSON'); },
+        headers: new Headers(),
+        redirected: false,
+        type: 'basic' as Response['type'],
+        url: '',
+        body: null,
+        bodyUsed: false,
+        clone: () => badJsonResponse,
+        text: async () => 'not json',
+        arrayBuffer: async () => new ArrayBuffer(0),
+        blob: async () => new Blob(),
+        formData: async () => new FormData(),
+      } as unknown as Response;
+
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(validDoc)) // discover succeeds
+        .mockResolvedValueOnce(badJsonResponse); // verify endpoint returns garbage
+
+      await expect(client.verifyCovenant(TEST_ISSUER, 'cov-1')).rejects.toThrow(
+        /Bad JSON/,
+      );
+    });
+  });
+
+  // ── Discovery Document Validation Failures ────────────────────────────
+
+  describe('discovery document validation failures', () => {
+    it('rejects document with missing issuer', async () => {
+      const badDoc = { ...validDoc };
+      delete (badDoc as Record<string, unknown>).issuer;
+      mockFetch.mockResolvedValueOnce(mockResponse(badDoc));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Invalid discovery document/,
+      );
+    });
+
+    it('rejects document with empty keys_endpoint', async () => {
+      const badDoc = { ...validDoc, keys_endpoint: '' };
+      mockFetch.mockResolvedValueOnce(mockResponse(badDoc));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Invalid discovery document/,
+      );
+    });
+
+    it('rejects document with missing covenants_endpoint', async () => {
+      const badDoc = { ...validDoc };
+      delete (badDoc as Record<string, unknown>).covenants_endpoint;
+      mockFetch.mockResolvedValueOnce(mockResponse(badDoc));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Invalid discovery document/,
+      );
+    });
+
+    it('rejects document with empty protocol_versions_supported', async () => {
+      const badDoc = { ...validDoc, protocol_versions_supported: [] };
+      mockFetch.mockResolvedValueOnce(mockResponse(badDoc));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Invalid discovery document/,
+      );
+    });
+
+    it('rejects document with non-array signature_schemes_supported', async () => {
+      const badDoc = { ...validDoc, signature_schemes_supported: 'ed25519' };
+      mockFetch.mockResolvedValueOnce(mockResponse(badDoc));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Invalid discovery document/,
+      );
+    });
+
+    it('rejects document with missing hash_algorithms_supported', async () => {
+      const badDoc = { ...validDoc };
+      delete (badDoc as Record<string, unknown>).hash_algorithms_supported;
+      mockFetch.mockResolvedValueOnce(mockResponse(badDoc));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Invalid discovery document/,
+      );
+    });
+
+    it('rejects document with non-string updated_at', async () => {
+      const badDoc = { ...validDoc, updated_at: 12345 };
+      mockFetch.mockResolvedValueOnce(mockResponse(badDoc));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Invalid discovery document/,
+      );
+    });
+
+    it('rejects document that is a plain array instead of object', async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse([1, 2, 3]));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Invalid discovery document/,
+      );
+    });
+
+    it('rejects document that is null', async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse(null));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Invalid discovery document/,
+      );
+    });
+
+    it('rejects document with multiple validation errors', async () => {
+      const badDoc = { updated_at: 999 }; // Missing most fields
+      mockFetch.mockResolvedValueOnce(mockResponse(badDoc));
+
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Invalid discovery document/,
+      );
+    });
+
+    it('rejects document with tampered signature when verifySignature is true', async () => {
+      const kp = await generateKeyPair();
+      const signedDoc = await buildDiscoveryDocument({
+        issuer: TEST_ISSUER,
+        signingKeyPair: kp,
+      });
+
+      // Tamper with the document
+      signedDoc.platform_name = 'EVIL PLATFORM';
+
+      const verifyingClient = new DiscoveryClient({
+        fetchFn: vi.fn().mockResolvedValueOnce(mockResponse(signedDoc)),
+        fetchOptions: { verifySignature: true },
+      });
+
+      await expect(verifyingClient.discover(TEST_ISSUER)).rejects.toThrow(
+        /Invalid discovery document/,
+      );
+    });
+
+    it('does not cache a document that fails validation', async () => {
+      const badDoc = { ...validDoc, issuer: '' };
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(badDoc)) // first call: invalid
+        .mockResolvedValueOnce(mockResponse(validDoc)); // second call: valid
+
+      // First call fails
+      await expect(client.discover(TEST_ISSUER)).rejects.toThrow(
+        /Invalid discovery document/,
+      );
+
+      // Second call should re-fetch (not use cached invalid doc)
+      const doc = await client.discover(TEST_ISSUER);
+      expect(doc.issuer).toBe(TEST_ISSUER);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // ── Fetch Not Available ───────────────────────────────────────────────
+
+  describe('fetch not available', () => {
+    it('throws descriptive error when no fetch implementation is available', async () => {
+      // Save original fetch
+      const originalFetch = globalThis.fetch;
+      try {
+        // Remove global fetch to simulate environments without it
+        (globalThis as Record<string, unknown>).fetch = undefined;
+
+        // Create a client without providing fetchFn
+        const noFetchClient = new DiscoveryClient();
+
+        await expect(noFetchClient.discover(TEST_ISSUER)).rejects.toThrow(
+          /No fetch implementation available/,
+        );
+      } finally {
+        // Restore
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it('error message suggests providing fetchFn option', async () => {
+      const originalFetch = globalThis.fetch;
+      try {
+        (globalThis as Record<string, unknown>).fetch = undefined;
+        const noFetchClient = new DiscoveryClient();
+
+        await expect(noFetchClient.discover(TEST_ISSUER)).rejects.toThrow(
+          /Provide a fetchFn in options/,
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it('works when custom fetchFn is provided even without global fetch', async () => {
+      const originalFetch = globalThis.fetch;
+      try {
+        (globalThis as Record<string, unknown>).fetch = undefined;
+
+        const customClient = new DiscoveryClient({
+          fetchFn: vi.fn().mockResolvedValueOnce(mockResponse(validDoc)),
+          fetchOptions: { verifySignature: false },
+        });
+
+        const doc = await customClient.discover(TEST_ISSUER);
+        expect(doc.issuer).toBe(TEST_ISSUER);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+  });
+
+  // ── Additional Edge Cases ─────────────────────────────────────────────
+
+  describe('additional edge cases', () => {
+    it('discover propagates errors from discover call in getAgentKeys', async () => {
+      // No mocked responses, so discover will fail for getAgentKeys
+      mockFetch.mockResolvedValueOnce(mockResponse({}, false, 500));
+
+      await expect(client.getAgentKeys(TEST_ISSUER, 'agent-1')).rejects.toThrow(
+        /Discovery fetch failed: 500/,
+      );
+    });
+
+    it('discover propagates errors from discover call in queryCovenants', async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse({}, false, 404));
+
+      await expect(client.queryCovenants(TEST_ISSUER)).rejects.toThrow(
+        /Discovery fetch failed: 404/,
+      );
+    });
+
+    it('discover propagates errors from discover call in verifyCovenant', async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse({}, false, 500));
+
+      await expect(client.verifyCovenant(TEST_ISSUER, 'cov-1')).rejects.toThrow(
+        /Discovery fetch failed: 500/,
+      );
+    });
+
+    it('discover propagates errors from discover call in negotiate', async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse({}, false, 500));
+
+      await expect(
+        client.negotiate(TEST_ISSUER, {
+          protocolVersions: ['1.0'],
+          signatureSchemes: ['ed25519'],
+          hashAlgorithms: ['sha256'],
+        }),
+      ).rejects.toThrow(/Discovery fetch failed: 500/);
+    });
+
+    it('handles empty keys array in getAgentKeys response', async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(validDoc))
+        .mockResolvedValueOnce(mockResponse({ keys: [] }));
+
+      const keys = await client.getAgentKeys(TEST_ISSUER, 'agent-1');
+      expect(keys).toHaveLength(0);
+    });
+
+    it('verifyCovenant includes covenant_id in the POST body', async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(validDoc))
+        .mockResolvedValueOnce(
+          mockResponse({
+            covenant_id: 'my-cov-id',
+            valid: true,
+            checks: [],
+            timestamp: new Date().toISOString(),
+          }),
+        );
+
+      await client.verifyCovenant(TEST_ISSUER, 'my-cov-id');
+
+      const postBody = JSON.parse(mockFetch.mock.calls[1]![1].body);
+      expect(postBody.covenant_id).toBe('my-cov-id');
+      expect(postBody.requesting_platform).toBe('local');
+    });
+
+    it('getAgentKeys URL-encodes special characters in agent ID', async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(validDoc))
+        .mockResolvedValueOnce(mockResponse({ keys: [] }));
+
+      await client.getAgentKeys(TEST_ISSUER, 'agent with spaces & symbols');
+
+      const calledUrl = mockFetch.mock.calls[1]![0] as string;
+      expect(calledUrl).toContain('agent_id=agent%20with%20spaces%20%26%20symbols');
+    });
+
+    it('getKeyById URL-encodes special characters in kid', async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockResponse(validDoc))
+        .mockResolvedValueOnce(mockResponse({ keys: [] }));
+
+      await client.getKeyById(TEST_ISSUER, 'kid/with+special=chars');
+
+      const calledUrl = mockFetch.mock.calls[1]![0] as string;
+      expect(calledUrl).toContain('kid=kid%2Fwith%2Bspecial%3Dchars');
+    });
+  });
+});
+
 // ─── Integration: Server + Client ────────────────────────────────────────────
 
 describe('Server + Client integration', () => {

@@ -297,7 +297,7 @@ describe('SDK > Protocol Re-exports', () => {
     });
 
     it('error classes are proper Error subclasses', () => {
-      const denied = new sdk.MonitorDeniedError('test');
+      const denied = new sdk.MonitorDeniedError('test-action', 'test-resource', undefined, undefined);
       expect(denied).toBeInstanceOf(Error);
       const capErr = new sdk.CapabilityError('test');
       expect(capErr).toBeInstanceOf(Error);
