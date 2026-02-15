@@ -49,7 +49,11 @@
   "keywords": [
     "stele",
     "covenant",
-    "ai-accountability"
+    "ai-accountability",
+    "evm",
+    "ethereum",
+    "solidity",
+    "blockchain"
   ],
   "module": "./dist/index.mjs"
 }

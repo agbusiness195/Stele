@@ -37,7 +37,21 @@
     "@stele/proof": "0.1.0",
     "@stele/attestation": "0.1.0",
     "@stele/discovery": "0.1.0",
-    "@stele/schema": "0.1.0"
+    "@stele/schema": "0.1.0",
+    "@stele/temporal": "0.1.0",
+    "@stele/canary": "0.1.0",
+    "@stele/gametheory": "0.1.0",
+    "@stele/composition": "0.1.0",
+    "@stele/antifragile": "0.1.0",
+    "@stele/consensus": "0.1.0",
+    "@stele/robustness": "0.1.0",
+    "@stele/recursive": "0.1.0",
+    "@stele/alignment": "0.1.0",
+    "@stele/norms": "0.1.0",
+    "@stele/substrate": "0.1.0",
+    "@stele/derivatives": "0.1.0",
+    "@stele/legal": "0.1.0",
+    "@stele/enforcement": "0.1.0"
   },
   "license": "MIT",
   "engines": {

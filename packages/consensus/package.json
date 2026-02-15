@@ -50,6 +50,10 @@
   "keywords": [
     "stele",
     "covenant",
-    "ai-accountability"
+    "ai-accountability",
+    "consensus",
+    "byzantine-fault-tolerance",
+    "quorum",
+    "accountability"
   ]
 }

@@ -59,7 +59,11 @@
   "keywords": [
     "stele",
     "covenant",
-    "ai-accountability"
+    "ai-accountability",
+    "cli",
+    "command-line",
+    "audit",
+    "developer-tools"
   ],
   "module": "./dist/index.mjs"
 }

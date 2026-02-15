@@ -5,7 +5,9 @@
   "license": "MIT",
   "author": "Stele Labs, Inc.",
   "homepage": "https://stele.dev",
-  "bugs": "https://github.com/agbusiness195/stele/issues",
+  "bugs": {
+    "url": "https://github.com/agbusiness195/stele/issues"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "module": "./dist/index.mjs",

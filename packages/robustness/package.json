@@ -33,7 +33,9 @@
   "license": "MIT",
   "author": "Stele Labs, Inc.",
   "homepage": "https://stele.dev",
-  "bugs": "https://github.com/agbusiness195/stele/issues",
+  "bugs": {
+    "url": "https://github.com/agbusiness195/stele/issues"
+  },
   "engines": {
     "node": ">=18"
   },
@@ -48,6 +50,10 @@
   "keywords": [
     "stele",
     "covenant",
-    "ai-accountability"
+    "ai-accountability",
+    "robustness",
+    "fuzzing",
+    "adversarial",
+    "formal-verification"
   ]
 }
