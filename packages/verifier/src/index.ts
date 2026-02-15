@@ -32,7 +32,6 @@ import {
 import type { EvaluationContext } from '@stele/ccl';
 
 import { generateId } from '@stele/crypto';
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 import type {
   VerifierOptions,
@@ -219,20 +218,6 @@ export class Verifier {
    * ```
    */
   async verify(doc: CovenantDocument): Promise<VerificationReport> {
-    if (!doc || typeof doc !== 'object') {
-      throw new SteleError(
-        SteleErrorCode.SIGNATURE_INVALID,
-        'verify() requires a valid CovenantDocument object',
-        { hint: 'Pass a CovenantDocument produced by buildCovenant() from @stele/core.' }
-      );
-    }
-    if (!doc.id || typeof doc.id !== 'string') {
-      throw new SteleError(
-        SteleErrorCode.SIGNATURE_INVALID,
-        'verify() requires a document with a valid id field',
-        { hint: 'Ensure the document has a non-empty id field. Use buildCovenant() to generate properly identified documents.' }
-      );
-    }
     const startMs = Date.now();
     const warnings = collectWarnings(doc);
 
@@ -446,27 +431,6 @@ export class Verifier {
     resource: string,
     context?: EvaluationContext,
   ): Promise<ActionVerificationReport> {
-    if (!doc || typeof doc !== 'object') {
-      throw new SteleError(
-        SteleErrorCode.SIGNATURE_INVALID,
-        'verifyAction() requires a valid CovenantDocument object',
-        { hint: 'Pass a CovenantDocument produced by buildCovenant() from @stele/core.' }
-      );
-    }
-    if (!action || typeof action !== 'string' || action.trim().length === 0) {
-      throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
-        'verifyAction() requires a non-empty action string',
-        { hint: 'Pass an action name like "read", "write", or "file.read".' }
-      );
-    }
-    if (typeof resource !== 'string') {
-      throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
-        'verifyAction() requires a resource string',
-        { hint: 'Pass a resource path like "/data/users" or "**".' }
-      );
-    }
     const startMs = Date.now();
 
     // Verify the document first
@@ -545,13 +509,6 @@ export async function verifyBatch(
   docs: CovenantDocument[],
   options?: VerifierOptions,
 ): Promise<BatchVerificationReport> {
-  if (!Array.isArray(docs)) {
-    throw new SteleError(
-      SteleErrorCode.PROTOCOL_INVALID_INPUT,
-      'verifyBatch() requires an array of CovenantDocument objects',
-      { hint: 'Pass an array of documents to verify in batch.' }
-    );
-  }
   const startMs = Date.now();
   const verifier = new Verifier(options);
 

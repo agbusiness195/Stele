@@ -11,8 +11,6 @@ import {
 
 import type { HashHex, KeyPair } from '@stele/crypto';
 
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
-
 import {
   parse,
   evaluate,
@@ -64,7 +62,7 @@ const GENESIS_HASH: HashHex = '0000000000000000000000000000000000000000000000000
 /**
  * Thrown when the Monitor denies an action in 'enforce' mode.
  */
-export class MonitorDeniedError extends SteleError {
+export class MonitorDeniedError extends Error {
   readonly action: string;
   readonly resource: string;
   readonly matchedRule: Statement | undefined;
@@ -79,14 +77,7 @@ export class MonitorDeniedError extends SteleError {
     const ruleDesc = matchedRule
       ? `matched ${matchedRule.type} rule`
       : 'no matching permit rule';
-    super(
-      SteleErrorCode.ACTION_DENIED,
-      `Action '${action}' on resource '${resource}' denied: ${ruleDesc}`,
-      {
-        hint: `Check the CCL constraints for action '${action}' on resource '${resource}'.`,
-        context: { action, resource },
-      },
-    );
+    super(`Action '${action}' on resource '${resource}' denied: ${ruleDesc}`);
     this.name = 'MonitorDeniedError';
     this.action = action;
     this.resource = resource;
@@ -98,18 +89,11 @@ export class MonitorDeniedError extends SteleError {
 /**
  * Thrown when a CapabilityGate operation fails due to missing or invalid capabilities.
  */
-export class CapabilityError extends SteleError {
+export class CapabilityError extends Error {
   readonly action: string;
 
   constructor(action: string, message?: string) {
-    super(
-      SteleErrorCode.ACTION_DENIED,
-      message ?? `No capability registered for action '${action}'`,
-      {
-        hint: `Ensure the action '${action}' is permitted by the CCL constraints before registering a handler.`,
-        context: { action },
-      },
-    );
+    super(message ?? `No capability registered for action '${action}'`);
     this.name = 'CapabilityError';
     this.action = action;
   }
@@ -178,20 +162,6 @@ export class Monitor {
     constraints: string,
     config?: Partial<MonitorConfig>,
   ) {
-    if (!covenantId || typeof covenantId !== 'string' || covenantId.trim().length === 0) {
-      throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
-        'Monitor requires a non-empty covenantId',
-        { hint: 'Pass the covenant document ID (a hex-encoded hash) as the first argument.' }
-      );
-    }
-    if (!constraints || typeof constraints !== 'string' || constraints.trim().length === 0) {
-      throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
-        'Monitor requires a non-empty constraints string',
-        { hint: 'Pass valid CCL constraint text as the second argument.' }
-      );
-    }
     this.covenantId = covenantId;
     this.doc = parse(constraints);
     this.config = {
@@ -218,20 +188,6 @@ export class Monitor {
     resource: string,
     context?: Record<string, unknown>,
   ): Promise<EvaluationResult> {
-    if (!action || typeof action !== 'string' || action.trim().length === 0) {
-      throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
-        'Monitor.evaluate() requires a non-empty action string',
-        { hint: 'Pass an action name like "file.read" or "data.write".' }
-      );
-    }
-    if (typeof resource !== 'string') {
-      throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
-        'Monitor.evaluate() requires a resource string',
-        { hint: 'Pass a resource path like "/data/users" or "**".' }
-      );
-    }
     const ctx = context ?? {};
     const now = timestamp();
 
@@ -306,27 +262,6 @@ export class Monitor {
     handler: ActionHandler<T>,
     context?: Record<string, unknown>,
   ): Promise<T> {
-    if (!action || typeof action !== 'string' || action.trim().length === 0) {
-      throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
-        'Monitor.execute() requires a non-empty action string',
-        { hint: 'Pass an action name like "file.read" or "data.write".' }
-      );
-    }
-    if (typeof resource !== 'string') {
-      throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
-        'Monitor.execute() requires a resource string',
-        { hint: 'Pass a resource path like "/data/users" or "**".' }
-      );
-    }
-    if (typeof handler !== 'function') {
-      throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
-        'Monitor.execute() requires a handler function',
-        { hint: 'Pass an async function (resource, context) => T as the handler.' }
-      );
-    }
     const ctx = context ?? {};
     const now = timestamp();
 
@@ -464,11 +399,7 @@ export class Monitor {
    */
   generateMerkleProof(entryIndex: number): MerkleProof {
     if (entryIndex < 0 || entryIndex >= this.entries.length) {
-      throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
-        `Entry index ${entryIndex} is out of range [0, ${this.entries.length})`,
-        { hint: `Provide an entry index between 0 and ${this.entries.length - 1}.` }
-      );
+      throw new Error(`Entry index ${entryIndex} is out of range [0, ${this.entries.length})`);
     }
 
     const leaves = this.entries.map((e) => e.hash);

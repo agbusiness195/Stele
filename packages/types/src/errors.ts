@@ -93,38 +93,6 @@ export enum SteleErrorCode {
   AUTH_INVALID_KEY = 'STELE_E801',
   /** Authentication attempts have been rate limited. */
   AUTH_RATE_LIMITED = 'STELE_E802',
-
-  // Crypto (9xx)
-  /** A hex-encoded string was malformed or invalid. */
-  CRYPTO_INVALID_HEX = 'STELE_E900',
-  /** A cryptographic key was invalid or malformed. */
-  CRYPTO_INVALID_KEY = 'STELE_E901',
-  /** A cryptographic signing operation failed. */
-  CRYPTO_SIGNATURE_FAILED = 'STELE_E902',
-
-  // Reputation (91x)
-  /** A reputation receipt was invalid or malformed. */
-  REPUTATION_INVALID_RECEIPT = 'STELE_E910',
-  /** A reputation computation failed. */
-  REPUTATION_COMPUTATION_FAILED = 'STELE_E911',
-
-  // Breach (92x)
-  /** A breach attestation was invalid or malformed. */
-  BREACH_INVALID_ATTESTATION = 'STELE_E920',
-  /** A breach severity value was invalid. */
-  BREACH_INVALID_SEVERITY = 'STELE_E921',
-
-  // Attestation (93x)
-  /** An attestation was invalid or malformed. */
-  ATTESTATION_INVALID = 'STELE_E930',
-  /** An attestation reconciliation operation failed. */
-  ATTESTATION_RECONCILIATION_FAILED = 'STELE_E931',
-
-  // Protocol general (94x)
-  /** A protocol input was invalid or malformed. */
-  PROTOCOL_INVALID_INPUT = 'STELE_E940',
-  /** A protocol computation failed. */
-  PROTOCOL_COMPUTATION_FAILED = 'STELE_E941',
 }
 
 // ─── Error class ────────────────────────────────────────────────────────────────

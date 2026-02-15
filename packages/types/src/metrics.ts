@@ -207,7 +207,7 @@ export class Histogram {
 
     const percentile = (p: number): number => {
       const rank = Math.ceil((p / 100) * count) - 1;
-      return sorted[Math.max(0, rank)] ?? 0;
+      return sorted[Math.max(0, rank)];
     };
 
     const bucketCounts: Record<string, number> = {};

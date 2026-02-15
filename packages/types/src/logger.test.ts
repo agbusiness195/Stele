@@ -55,7 +55,7 @@ describe('Logger — default creation', () => {
     const logger = new Logger();
     logger.info('hello');
     expect(spy).toHaveBeenCalledOnce();
-    const parsed = JSON.parse(spy.mock.calls[0]![0] as string);
+    const parsed = JSON.parse(spy.mock.calls[0][0] as string);
     expect(parsed.message).toBe('hello');
     spy.mockRestore();
   });
@@ -66,29 +66,29 @@ describe('Logger — log at each level', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     logger.debug('dbg');
     expect(entries).toHaveLength(1);
-    expect(entries[0]!.level).toBe('DEBUG');
-    expect(entries[0]!.message).toBe('dbg');
+    expect(entries[0].level).toBe('DEBUG');
+    expect(entries[0].message).toBe('dbg');
   });
 
   it('emits INFO entries', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     logger.info('inf');
     expect(entries).toHaveLength(1);
-    expect(entries[0]!.level).toBe('INFO');
+    expect(entries[0].level).toBe('INFO');
   });
 
   it('emits WARN entries', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     logger.warn('wrn');
     expect(entries).toHaveLength(1);
-    expect(entries[0]!.level).toBe('WARN');
+    expect(entries[0].level).toBe('WARN');
   });
 
   it('emits ERROR entries', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     logger.error('err');
     expect(entries).toHaveLength(1);
-    expect(entries[0]!.level).toBe('ERROR');
+    expect(entries[0].level).toBe('ERROR');
   });
 });
 
@@ -106,8 +106,8 @@ describe('Logger — level filtering', () => {
     logger.warn('yes');
     logger.error('yes');
     expect(entries).toHaveLength(2);
-    expect(entries[0]!.level).toBe('WARN');
-    expect(entries[1]!.level).toBe('ERROR');
+    expect(entries[0].level).toBe('WARN');
+    expect(entries[1].level).toBe('ERROR');
   });
 
   it('suppresses DEBUG, INFO, and WARN when level is ERROR', () => {
@@ -117,7 +117,7 @@ describe('Logger — level filtering', () => {
     logger.warn('no');
     logger.error('yes');
     expect(entries).toHaveLength(1);
-    expect(entries[0]!.level).toBe('ERROR');
+    expect(entries[0].level).toBe('ERROR');
   });
 
   it('SILENT suppresses all output', () => {
@@ -138,7 +138,7 @@ describe('Logger — custom output', () => {
     logger.info('test');
     expect(output).toHaveBeenCalledOnce();
     expect(captured).toHaveLength(1);
-    expect(captured[0]!.message).toBe('test');
+    expect(captured[0].message).toBe('test');
   });
 
   it('does not call output when message is below threshold', () => {
@@ -157,7 +157,7 @@ describe('Logger — child loggers', () => {
     const child = logger.child('storage');
     child.info('connected');
     expect(entries).toHaveLength(1);
-    expect(entries[0]!.component).toBe('storage');
+    expect(entries[0].component).toBe('storage');
   });
 
   it('child inherits the parent level', () => {
@@ -181,21 +181,21 @@ describe('Logger — child loggers', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG, 'core');
     const child = logger.child('storage');
     child.info('ready');
-    expect(entries[0]!.component).toBe('core.storage');
+    expect(entries[0].component).toBe('core.storage');
   });
 
   it('supports multi-level nesting', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG, 'app');
     const child = logger.child('db').child('pool');
     child.info('acquired');
-    expect(entries[0]!.component).toBe('app.db.pool');
+    expect(entries[0].component).toBe('app.db.pool');
   });
 
   it('parent component is not set when parent has no component', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     const child = logger.child('metrics');
     child.info('tick');
-    expect(entries[0]!.component).toBe('metrics');
+    expect(entries[0].component).toBe('metrics');
   });
 });
 
@@ -203,34 +203,34 @@ describe('Logger — contextual fields', () => {
   it('includes extra fields in the log entry', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     logger.info('request', { method: 'GET', path: '/api' });
-    expect(entries[0]!.method).toBe('GET');
-    expect(entries[0]!.path).toBe('/api');
+    expect(entries[0].method).toBe('GET');
+    expect(entries[0].path).toBe('/api');
   });
 
   it('supports numeric field values', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     logger.info('latency', { ms: 42 });
-    expect(entries[0]!.ms).toBe(42);
+    expect(entries[0].ms).toBe(42);
   });
 
   it('supports boolean field values', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     logger.info('cache', { hit: true });
-    expect(entries[0]!.hit).toBe(true);
+    expect(entries[0].hit).toBe(true);
   });
 
   it('supports nested object field values', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     logger.info('user', { data: { id: 1, name: 'alice' } });
-    expect(entries[0]!.data).toEqual({ id: 1, name: 'alice' });
+    expect(entries[0].data).toEqual({ id: 1, name: 'alice' });
   });
 
   it('works without fields argument', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     logger.info('bare message');
-    expect(entries[0]!.message).toBe('bare message');
+    expect(entries[0].message).toBe('bare message');
     // Only standard keys should be present
-    expect(Object.keys(entries[0]!).sort()).toEqual(
+    expect(Object.keys(entries[0]).sort()).toEqual(
       ['level', 'message', 'timestamp'].sort(),
     );
   });
@@ -244,8 +244,8 @@ describe('Logger — setLevel / getLevel', () => {
     logger.info('suppressed');
     logger.error('after');
     expect(entries).toHaveLength(2);
-    expect(entries[0]!.message).toBe('before');
-    expect(entries[1]!.message).toBe('after');
+    expect(entries[0].message).toBe('before');
+    expect(entries[1].message).toBe('after');
   });
 
   it('getLevel reflects the current level', () => {
@@ -263,7 +263,7 @@ describe('Logger — setLevel / getLevel', () => {
     logger.info('parent silent');
     child.info('child still active');
     expect(entries).toHaveLength(1);
-    expect(entries[0]!.component).toBe('c');
+    expect(entries[0].component).toBe('c');
   });
 });
 
@@ -271,7 +271,7 @@ describe('LogEntry structure', () => {
   it('always contains level, message, and timestamp', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     logger.debug('structural check');
-    const entry = entries[0]!;
+    const entry = entries[0];
     expect(entry).toHaveProperty('level');
     expect(entry).toHaveProperty('message');
     expect(entry).toHaveProperty('timestamp');
@@ -280,20 +280,20 @@ describe('LogEntry structure', () => {
   it('does not include component when none is set', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     logger.info('no component');
-    expect(entries[0]!.component).toBeUndefined();
-    expect('component' in entries[0]!).toBe(false);
+    expect(entries[0].component).toBeUndefined();
+    expect('component' in entries[0]).toBe(false);
   });
 
   it('includes component when set', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG, 'mycomp');
     logger.info('with component');
-    expect(entries[0]!.component).toBe('mycomp');
+    expect(entries[0].component).toBe('mycomp');
   });
 
   it('timestamp is a valid ISO 8601 string', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     logger.info('ts check');
-    const ts = entries[0]!.timestamp;
+    const ts = entries[0].timestamp;
     expect(typeof ts).toBe('string');
     const parsed = new Date(ts);
     expect(parsed.toISOString()).toBe(ts);
@@ -305,7 +305,7 @@ describe('LogEntry structure', () => {
     const { logger, entries } = captureLogger(LogLevel.DEBUG);
     logger.info('timing');
     const after = new Date().getTime();
-    const entryTime = new Date(entries[0]!.timestamp).getTime();
+    const entryTime = new Date(entries[0].timestamp).getTime();
     expect(entryTime).toBeGreaterThanOrEqual(before);
     expect(entryTime).toBeLessThanOrEqual(after);
   });
@@ -346,7 +346,7 @@ describe('createLogger factory', () => {
       output: (e) => entries.push(e),
     });
     logger.info('test');
-    expect(entries[0]!.component).toBe('factory');
+    expect(entries[0].component).toBe('factory');
   });
 });
 

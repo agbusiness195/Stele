@@ -44,18 +44,20 @@ async function main() {
   const model: ModelAttestation = {
     provider: 'anthropic',
     modelId: 'claude',
-    modelVersion: '3.5-sonnet',
-    attestationHash: 'sha256:abc123def456' as `${string}`,
+    version: '3.5-sonnet',
+    hash: 'sha256:abc123def456',
   };
 
   const deployment: DeploymentContext = {
-    runtime: 'process',
-    region: 'us-east-1',
+    environment: 'production',
+    runtime: 'node' as const,
+    constraints: ['no-network-access', 'read-only-filesystem'],
   };
 
-  console.log('Model:', `${model.provider}/${model.modelId}@${model.modelVersion}`);
+  console.log('Model:', `${model.provider}/${model.modelId}@${model.version}`);
+  console.log('Environment:', deployment.environment);
   console.log('Runtime:', deployment.runtime);
-  console.log('Region:', deployment.region);
+  console.log('Constraints:', deployment.constraints.join(', '));
 
   // ── Step 3: Create the initial identity ─────────────────────────────────
   // The identity binds the operator, model, capabilities, and deployment
@@ -100,8 +102,8 @@ async function main() {
   const upgradedModel: ModelAttestation = {
     provider: 'anthropic',
     modelId: 'claude',
-    modelVersion: '4.0-opus',
-    attestationHash: 'sha256:xyz789ghi012' as `${string}`,
+    version: '4.0-opus',
+    hash: 'sha256:xyz789ghi012',
   };
 
   const evolved1 = await client.evolveIdentity(identity, {
@@ -112,7 +114,7 @@ async function main() {
 
   console.log('New identity ID:      ', evolved1.id.slice(0, 32) + '...');
   console.log('Version:              ', evolved1.version);
-  console.log('Model:                ', `${evolved1.model.provider}/${evolved1.model.modelId}@${evolved1.model.modelVersion}`);
+  console.log('Model:                ', `${evolved1.model.provider}/${evolved1.model.modelId}@${evolved1.model.version}`);
   console.log('Updated at:           ', evolved1.updatedAt);
 
   // Verify the evolved identity
@@ -177,9 +179,9 @@ async function main() {
   const otherClient = new SteleClient({ keyPair: otherKeys });
   const otherIdentity = await otherClient.createIdentity({
     operatorIdentifier: 'operator:other-org',
-    model: { provider: 'openai', modelId: 'gpt-4', modelVersion: '1.0' },
+    model: { provider: 'openai', modelId: 'gpt-4', version: '1.0', hash: 'sha256:other' },
     capabilities: ['text-generation'],
-    deployment: { runtime: 'process' },
+    deployment: { environment: 'staging', runtime: 'node' as const, constraints: [] },
   });
 
   console.log('v3 and other share ancestor:', shareAncestor(evolved2, otherIdentity));

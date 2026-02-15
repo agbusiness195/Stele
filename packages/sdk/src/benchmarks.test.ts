@@ -5,27 +5,7 @@ describe('Performance SLAs', () => {
   it('all SLA targets are met', async () => {
     const results = await runBenchmarkSuite();
     console.log(formatBenchmarkResults(results));
-
-    // When running as part of the full test suite (82 files concurrently),
-    // CPU contention inflates p99 latencies. Apply a tolerance multiplier.
-    const CONTENTION_MULTIPLIER = 5;
-    const failed = results.results.filter((r: any) => !r.slaPassed);
-    const hardFailed = results.results.filter(
-      (r: any) => r.p99 > r.slaTarget * CONTENTION_MULTIPLIER,
-    );
-
-    if (failed.length > 0) {
-      console.warn(`SLA misses (${failed.length}/${results.results.length}):`);
-      for (const f of failed) {
-        const withinTolerance = f.p99 <= f.slaTarget * CONTENTION_MULTIPLIER;
-        console.warn(
-          `  ${f.name}: p99=${f.p99.toFixed(2)}ms target=${f.slaTarget}ms ${withinTolerance ? '(within contention tolerance)' : 'HARD FAIL'}`,
-        );
-      }
-    }
-
-    // Hard failures exceed even the contention tolerance — these indicate real regressions
-    expect(hardFailed.length).toBe(0);
+    expect(results.allPassed).toBe(true);
   }, 60_000); // 60s timeout for benchmarks
 
   it('PERFORMANCE_SLAS covers all critical operations', () => {

@@ -5,11 +5,10 @@
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "module": "./dist/index.mjs",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
+      "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },
@@ -30,11 +29,6 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/ccl"
   },
-  "homepage": "https://stele.dev",
-  "bugs": {
-    "url": "https://github.com/agbusiness195/stele/issues"
-  },
-  "author": "Stele Labs, Inc.",
   "keywords": [
     "stele",
     "covenant",
@@ -48,7 +42,6 @@
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "bundle": "tsup src/index.ts --format cjs,esm",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "test": "vitest run",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

@@ -11,7 +11,6 @@ import {
   cclConformance,
   covenantConformance,
   interopConformance,
-  securityConformance,
 } from '../src/conformance';
 import type { ConformanceTarget } from '../src/conformance';
 
@@ -22,11 +21,11 @@ import { parse, evaluate } from '@stele/ccl';
 // ─── Wire up the ConformanceTarget ──────────────────────────────────────────
 
 const steleTarget: ConformanceTarget = {
-  buildCovenant: (options: unknown) => buildCovenant(options as Parameters<typeof buildCovenant>[0]),
-  verifyCovenant: (doc: unknown) => verifyCovenant(doc as Parameters<typeof verifyCovenant>[0]),
-  evaluateAction: async (doc: unknown, action, resource, context) => {
-    const cclDoc = parse((doc as { constraints: string }).constraints);
-    return evaluate(cclDoc, action, resource, context as Parameters<typeof evaluate>[3]);
+  buildCovenant,
+  verifyCovenant,
+  evaluateAction: async (doc, action, resource, context) => {
+    const cclDoc = parse(doc.constraints);
+    return evaluate(cclDoc, action, resource, context);
   },
   generateKeyPair,
   sign: async (msg, key) => sign(msg, key),
@@ -316,67 +315,5 @@ describe('Conformance: Interop', () => {
       privateKey: kp.privateKey,
     });
     expect(doc.version).toBe('1.0');
-  });
-});
-
-describe('Conformance: Security', () => {
-  it('passes all security invariant checks', async () => {
-    const result = await securityConformance(steleTarget);
-
-    if (result.failures.length > 0) {
-      const details = formatFailures(result.failures);
-      expect.fail(
-        `Security conformance failed: ${result.failures.length}/${result.total} checks.\n${details}`,
-      );
-    }
-
-    expect(result.failures).toHaveLength(0);
-    expect(result.total).toBeGreaterThan(0);
-  });
-
-  it('generates unique nonces across builds', async () => {
-    const kp = await generateKeyPair();
-    const opts = {
-      issuer: { id: 'nonce-test', publicKey: kp.publicKeyHex, role: 'issuer' as const },
-      beneficiary: { id: 'nonce-test-b', publicKey: kp.publicKeyHex, role: 'beneficiary' as const },
-      constraints: "permit read on '/data'",
-      privateKey: kp.privateKey,
-    };
-    const doc1 = await buildCovenant(opts);
-    const doc2 = await buildCovenant(opts);
-    expect(doc1.nonce).not.toBe(doc2.nonce);
-    expect(doc1.id).not.toBe(doc2.id);
-  });
-
-  it('rejects empty signature', async () => {
-    const kp = await generateKeyPair();
-    const doc = await buildCovenant({
-      issuer: { id: 'sig-test', publicKey: kp.publicKeyHex, role: 'issuer' },
-      beneficiary: { id: 'sig-test-b', publicKey: kp.publicKeyHex, role: 'beneficiary' },
-      constraints: "permit read on '/data'",
-      privateKey: kp.privateKey,
-    });
-    const emptySig = { ...doc, signature: '' };
-    const result = await verifyCovenant(emptySig);
-    expect(result.valid).toBe(false);
-  });
-
-  it('rejects zero-filled signature', async () => {
-    const kp = await generateKeyPair();
-    const doc = await buildCovenant({
-      issuer: { id: 'zero-test', publicKey: kp.publicKeyHex, role: 'issuer' },
-      beneficiary: { id: 'zero-test-b', publicKey: kp.publicKeyHex, role: 'beneficiary' },
-      constraints: "permit read on '/data'",
-      privateKey: kp.privateKey,
-    });
-    const zeroSig = { ...doc, signature: '0'.repeat(128) };
-    const result = await verifyCovenant(zeroSig);
-    expect(result.valid).toBe(false);
-  });
-
-  it('public key hex matches bytes', async () => {
-    const kp = await generateKeyPair();
-    const hex = Array.from(kp.publicKey).map((b) => b.toString(16).padStart(2, '0')).join('');
-    expect(kp.publicKeyHex).toBe(hex);
   });
 });

@@ -943,7 +943,7 @@ describe('multi-agent collaboration flow', () => {
       operatorIdentifier: 'agent-alpha',
       model: { provider: 'anthropic', modelId: 'claude-opus-4', modelVersion: '1.0', attestationType: 'provider_signed' },
       capabilities: ['file.read', 'file.write'],
-      deployment: { runtime: 'container', region: 'us-east' },
+      deployment: { runtime: 'container', environment: 'production', region: 'us-east' },
     });
 
     const agent2 = await createIdentity({
@@ -951,7 +951,7 @@ describe('multi-agent collaboration flow', () => {
       operatorIdentifier: 'agent-beta',
       model: { provider: 'anthropic', modelId: 'claude-sonnet-4-5-20250929', modelVersion: '1.0', attestationType: 'provider_signed' },
       capabilities: ['api.call', 'review.generate'],
-      deployment: { runtime: 'process', region: 'eu-west' },
+      deployment: { runtime: 'process', environment: 'staging', region: 'eu-west' },
     });
 
     const agent3 = await createIdentity({
@@ -959,7 +959,7 @@ describe('multi-agent collaboration flow', () => {
       operatorIdentifier: 'agent-gamma',
       model: { provider: 'openai', modelId: 'gpt-4', modelVersion: '1.0', attestationType: 'self_reported' },
       capabilities: ['network.send', 'network.receive'],
-      deployment: { runtime: 'browser', region: 'ap-south' },
+      deployment: { runtime: 'serverless', environment: 'testing', region: 'ap-south' },
     });
 
     expect(agent1.id).not.toBe(agent2.id);
@@ -1192,7 +1192,7 @@ describe('identity evolution + proof flow', () => {
       operatorIdentifier: 'acme-ops',
       model: { provider: 'anthropic', modelId: 'claude-opus-4', modelVersion: '1.0', attestationType: 'provider_signed' },
       capabilities: ['file.read'],
-      deployment: { runtime: 'container', region: 'us-east' },
+      deployment: { runtime: 'container', environment: 'production', region: 'us-east' },
     });
 
     expect(identity.lineage).toHaveLength(1);
@@ -1224,11 +1224,11 @@ describe('identity evolution + proof flow', () => {
       operatorKeyPair: kp,
       changeType: 'capability_change',
       description: 'Deployment migration',
-      updates: { deployment: { runtime: 'browser', region: 'eu-west' } },
+      updates: { deployment: { runtime: 'serverless', region: 'eu-west' } },
     });
 
     expect(identity.lineage).toHaveLength(4);
-    expect(identity.deployment.runtime).toBe('browser');
+    expect(identity.deployment.runtime).toBe('serverless');
 
     // Verify identity chain
     const verifyResult = await verifyIdentity(identity);

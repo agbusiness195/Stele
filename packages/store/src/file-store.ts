@@ -19,7 +19,6 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 
 import type { CovenantDocument } from '@stele/core';
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 import type {
   CovenantStore,
@@ -142,8 +141,8 @@ export class FileStore implements CovenantStore {
     try {
       const raw = await fs.readFile(this.indexPath, 'utf-8');
       return JSON.parse(raw) as StoreIndex;
-    } catch (err: unknown) {
-      if (err instanceof Error && (err as NodeJS.ErrnoException).code === 'ENOENT') {
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
         return { entries: {} };
       }
       throw err;
@@ -212,18 +211,10 @@ export class FileStore implements CovenantStore {
 
   async put(doc: CovenantDocument): Promise<void> {
     if (doc == null) {
-      throw new SteleError(
-        SteleErrorCode.STORE_MISSING_DOC,
-        'put(): document is required',
-        { hint: 'Pass a valid CovenantDocument object to store.' }
-      );
+      throw new Error('put(): document is required');
     }
     if (!doc.id || (typeof doc.id === 'string' && doc.id.trim().length === 0)) {
-      throw new SteleError(
-        SteleErrorCode.STORE_MISSING_ID,
-        'put(): document.id is required and must be a non-empty string',
-        { hint: 'Ensure the document has a non-empty id field. Use buildCovenant() to generate properly identified documents.' }
-      );
+      throw new Error('put(): document.id is required and must be a non-empty string');
     }
     await this.ensureDir();
     await this.atomicWrite(this.docPath(doc.id), JSON.stringify(doc, null, 2));
@@ -239,8 +230,8 @@ export class FileStore implements CovenantStore {
     try {
       const raw = await fs.readFile(this.docPath(id), 'utf-8');
       return JSON.parse(raw) as CovenantDocument;
-    } catch (err: unknown) {
-      if (err instanceof Error && (err as NodeJS.ErrnoException).code === 'ENOENT') {
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
         return undefined;
       }
       throw err;
@@ -261,8 +252,8 @@ export class FileStore implements CovenantStore {
       delete index.entries[id];
       try {
         await fs.unlink(this.docPath(id));
-      } catch (err: unknown) {
-        if (!(err instanceof Error && (err as NodeJS.ErrnoException).code === 'ENOENT')) throw err;
+      } catch (err: any) {
+        if (err.code !== 'ENOENT') throw err;
       }
       await this.writeIndex(index);
       return true;
@@ -356,8 +347,8 @@ export class FileStore implements CovenantStore {
           delete index.entries[id];
           try {
             await fs.unlink(this.docPath(id));
-          } catch (err: unknown) {
-            if (!(err instanceof Error && (err as NodeJS.ErrnoException).code === 'ENOENT')) throw err;
+          } catch (err: any) {
+            if (err.code !== 'ENOENT') throw err;
           }
           deletedIds.push(id);
         }

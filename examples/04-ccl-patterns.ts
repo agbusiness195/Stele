@@ -138,16 +138,16 @@ function main() {
 
   console.log('Rate limit rules:');
   for (const limit of rateLimitCCL.limits) {
-    console.log(`  ${limit.action}: ${limit.count} per ${limit.periodSeconds} seconds`);
+    console.log(`  ${limit.action}: ${limit.count} per ${limit.periodCount} ${limit.periodUnit}`);
   }
 
   // Check rate limits programmatically
-  const rateLimitResult1 = checkRateLimit(rateLimitCCL, 'api.call', 500, Date.now());
+  const rateLimitResult1 = checkRateLimit(rateLimitCCL, 'api.call', 500);
   console.log('\nRate limit check (api.call, 500 used):');
   console.log('  Exceeded:', rateLimitResult1.exceeded);
   console.log('  Remaining:', rateLimitResult1.remaining);
 
-  const rateLimitResult2 = checkRateLimit(rateLimitCCL, 'api.call', 1001, Date.now());
+  const rateLimitResult2 = checkRateLimit(rateLimitCCL, 'api.call', 1001);
   console.log('\nRate limit check (api.call, 1001 used):');
   console.log('  Exceeded:', rateLimitResult2.exceeded);
   console.log('  Remaining:', rateLimitResult2.remaining);

@@ -973,7 +973,7 @@ describe('Scenario 4: Full Protocol Lifecycle', () => {
       operatorIdentifier: 'lifecycle-test-operator',
       model: { provider: 'anthropic', modelId: 'claude-opus-4', modelVersion: '1.0', attestationType: 'provider_signed' },
       capabilities: ['file.read', 'api.call', 'review.generate'],
-      deployment: { runtime: 'container', region: 'us-east' },
+      deployment: { runtime: 'container', environment: 'production', region: 'us-east' },
     });
     expect(identity.id).toMatch(/^[0-9a-f]{64}$/);
 

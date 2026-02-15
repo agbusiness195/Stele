@@ -315,8 +315,8 @@ describe('MiddlewarePipeline — error handling', () => {
     ).rejects.toThrow('boom');
 
     expect(onErrorFn).toHaveBeenCalledOnce();
-    expect(onErrorFn.mock.calls[0]![1]).toBeInstanceOf(Error);
-    expect(onErrorFn.mock.calls[0]![1].message).toBe('boom');
+    expect(onErrorFn.mock.calls[0][1]).toBeInstanceOf(Error);
+    expect(onErrorFn.mock.calls[0][1].message).toBe('boom');
   });
 
   it('calls onError with correct context', async () => {
@@ -820,7 +820,7 @@ describe('MiddlewarePipeline — error propagation', () => {
     ).rejects.toThrow('string error');
 
     expect(onErrorFn).toHaveBeenCalledOnce();
-    expect(onErrorFn.mock.calls[0]![1]).toBeInstanceOf(Error);
+    expect(onErrorFn.mock.calls[0][1]).toBeInstanceOf(Error);
   });
 });
 
