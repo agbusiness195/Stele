@@ -8,7 +8,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
+      "import": "./dist/index.mjs",
       "default": "./dist/index.js"
     }
   },
@@ -16,11 +16,12 @@
     "stele": "./dist/cli.js"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format cjs --dts",
+    "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
     "bundle": "tsup src/index.ts --format cjs",
     "dev": "tsup src/index.ts --format cjs --dts --watch",
     "test": "vitest run",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc --noEmit"
   },
   "files": [
     "dist",
@@ -59,5 +60,6 @@
     "stele",
     "covenant",
     "ai-accountability"
-  ]
+  ],
+  "module": "./dist/index.mjs"
 }
