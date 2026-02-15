@@ -5,13 +5,20 @@
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
     "dist",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepublishOnly": "npm run build"
@@ -40,6 +47,10 @@
     "stele",
     "covenant",
     "ai-accountability",
-    "types"
-  ]
+    "types",
+    "typescript",
+    "protocol",
+    "schema"
+  ],
+  "module": "./dist/index.mjs"
 }

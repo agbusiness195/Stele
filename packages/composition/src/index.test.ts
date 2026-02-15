@@ -7,8 +7,25 @@ import {
   findConflicts,
   decomposeCovenants,
   compositionComplexity,
+  TRUST_IDENTITY,
+  TRUST_ZERO,
+  trustCompose,
+  trustIntersect,
+  trustNegate,
+  trustTensorProduct,
+  trustInverse,
+  proveAlgebraicProperties,
+  defineSafetyEnvelope,
+  proposeImprovement,
+  applyImprovement,
+  verifyEnvelopeIntegrity,
 } from './index.js';
-import type { CovenantSummary, CompositionProof } from './types.js';
+import type {
+  CovenantSummary,
+  CompositionProof,
+  TrustValue,
+  SafetyEnvelope,
+} from './types.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -794,5 +811,578 @@ describe('compositionComplexity', () => {
     const result = compositionComplexity(covenants);
     expect(result.totalRules).toBe(0);
     expect(result.agentCount).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Trust Algebra
+// ---------------------------------------------------------------------------
+
+describe('Trust Algebra', () => {
+  const tvA: TrustValue = {
+    dimensions: { integrity: 0.9, competence: 0.8, reliability: 0.7 },
+    confidence: 0.85,
+  };
+  const tvB: TrustValue = {
+    dimensions: { integrity: 0.6, competence: 0.5, reliability: 0.4 },
+    confidence: 0.7,
+  };
+  const tvC: TrustValue = {
+    dimensions: { integrity: 0.3, competence: 0.9 },
+    confidence: 0.5,
+  };
+
+  describe('TRUST_IDENTITY and TRUST_ZERO', () => {
+    it('TRUST_IDENTITY has empty dimensions and confidence 1', () => {
+      expect(TRUST_IDENTITY.dimensions).toEqual({});
+      expect(TRUST_IDENTITY.confidence).toBe(1);
+    });
+
+    it('TRUST_ZERO has empty dimensions and confidence 0', () => {
+      expect(TRUST_ZERO.dimensions).toEqual({});
+      expect(TRUST_ZERO.confidence).toBe(0);
+    });
+  });
+
+  describe('trustCompose', () => {
+    it('multiplies shared dimensions and confidence', () => {
+      const result = trustCompose(tvA, tvB);
+      expect(result.dimensions.integrity).toBeCloseTo(0.9 * 0.6, 10);
+      expect(result.dimensions.competence).toBeCloseTo(0.8 * 0.5, 10);
+      expect(result.dimensions.reliability).toBeCloseTo(0.7 * 0.4, 10);
+      expect(result.confidence).toBeCloseTo(0.85 * 0.7, 10);
+    });
+
+    it('returns only intersection of keys', () => {
+      const result = trustCompose(tvA, tvC);
+      expect(Object.keys(result.dimensions).sort()).toEqual(['competence', 'integrity']);
+      expect(result.dimensions.reliability).toBeUndefined();
+    });
+
+    it('returns empty dimensions when no keys overlap', () => {
+      const noOverlap: TrustValue = { dimensions: { speed: 0.5 }, confidence: 0.9 };
+      const result = trustCompose(tvA, noOverlap);
+      expect(Object.keys(result.dimensions)).toHaveLength(0);
+      expect(result.confidence).toBeCloseTo(0.85 * 0.9, 10);
+    });
+
+    it('compose with TRUST_IDENTITY yields empty dimensions (no shared keys)', () => {
+      const result = trustCompose(tvA, TRUST_IDENTITY);
+      expect(Object.keys(result.dimensions)).toHaveLength(0);
+      expect(result.confidence).toBeCloseTo(0.85 * 1, 10);
+    });
+
+    it('compose with TRUST_ZERO yields confidence 0', () => {
+      const result = trustCompose(tvA, TRUST_ZERO);
+      expect(result.confidence).toBe(0);
+    });
+  });
+
+  describe('trustIntersect', () => {
+    it('takes the minimum of shared dimensions and confidence', () => {
+      const result = trustIntersect(tvA, tvB);
+      expect(result.dimensions.integrity).toBe(0.6);
+      expect(result.dimensions.competence).toBe(0.5);
+      expect(result.dimensions.reliability).toBe(0.4);
+      expect(result.confidence).toBe(0.7);
+    });
+
+    it('union of keys: includes dimensions from both values', () => {
+      const x: TrustValue = { dimensions: { a: 0.9 }, confidence: 0.5 };
+      const y: TrustValue = { dimensions: { b: 0.3 }, confidence: 0.8 };
+      const result = trustIntersect(x, y);
+      expect(Object.keys(result.dimensions).sort()).toEqual(['a', 'b']);
+      expect(result.dimensions.a).toBe(0.9);
+      expect(result.dimensions.b).toBe(0.3);
+    });
+
+    it('for shared keys, takes minimum', () => {
+      const result = trustIntersect(tvA, tvC);
+      expect(result.dimensions.integrity).toBe(0.3);
+      expect(result.dimensions.competence).toBe(0.8);
+      // reliability only in tvA
+      expect(result.dimensions.reliability).toBe(0.7);
+    });
+
+    it('confidence is min of both', () => {
+      const result = trustIntersect(tvA, tvC);
+      expect(result.confidence).toBe(0.5);
+    });
+  });
+
+  describe('trustNegate', () => {
+    it('computes 1 - each dimension value', () => {
+      const result = trustNegate(tvA);
+      expect(result.dimensions.integrity).toBeCloseTo(0.1, 10);
+      expect(result.dimensions.competence).toBeCloseTo(0.2, 10);
+      expect(result.dimensions.reliability).toBeCloseTo(0.3, 10);
+    });
+
+    it('preserves confidence', () => {
+      const result = trustNegate(tvA);
+      expect(result.confidence).toBe(0.85);
+    });
+
+    it('double negation returns original', () => {
+      const result = trustNegate(trustNegate(tvA));
+      expect(result.dimensions.integrity).toBeCloseTo(0.9, 10);
+      expect(result.dimensions.competence).toBeCloseTo(0.8, 10);
+      expect(result.dimensions.reliability).toBeCloseTo(0.7, 10);
+      expect(result.confidence).toBe(0.85);
+    });
+
+    it('negation of zero dimensions gives 1', () => {
+      const zeroVal: TrustValue = { dimensions: { x: 0 }, confidence: 0.5 };
+      const result = trustNegate(zeroVal);
+      expect(result.dimensions.x).toBe(1);
+    });
+
+    it('negation of 1 dimensions gives 0', () => {
+      const oneVal: TrustValue = { dimensions: { x: 1 }, confidence: 0.5 };
+      const result = trustNegate(oneVal);
+      expect(result.dimensions.x).toBe(0);
+    });
+  });
+
+  describe('trustTensorProduct', () => {
+    it('creates cross-products of all dimensions', () => {
+      const x: TrustValue = { dimensions: { a: 0.5, b: 0.3 }, confidence: 0.8 };
+      const y: TrustValue = { dimensions: { c: 0.4, d: 0.6 }, confidence: 0.9 };
+      const result = trustTensorProduct(x, y);
+      expect(Object.keys(result.dimensions).sort()).toEqual([
+        'a\u00D7c', 'a\u00D7d', 'b\u00D7c', 'b\u00D7d',
+      ]);
+      expect(result.dimensions['a\u00D7c']).toBeCloseTo(0.5 * 0.4, 10);
+      expect(result.dimensions['a\u00D7d']).toBeCloseTo(0.5 * 0.6, 10);
+      expect(result.dimensions['b\u00D7c']).toBeCloseTo(0.3 * 0.4, 10);
+      expect(result.dimensions['b\u00D7d']).toBeCloseTo(0.3 * 0.6, 10);
+    });
+
+    it('multiplies confidence', () => {
+      const x: TrustValue = { dimensions: { a: 0.5 }, confidence: 0.8 };
+      const y: TrustValue = { dimensions: { b: 0.3 }, confidence: 0.9 };
+      const result = trustTensorProduct(x, y);
+      expect(result.confidence).toBeCloseTo(0.72, 10);
+    });
+
+    it('returns empty dimensions when either has no dimensions', () => {
+      const result = trustTensorProduct(tvA, TRUST_IDENTITY);
+      expect(Object.keys(result.dimensions)).toHaveLength(0);
+    });
+  });
+
+  describe('trustInverse', () => {
+    it('computes 1/each dimension value', () => {
+      const result = trustInverse(tvA);
+      expect(result).not.toBeNull();
+      expect(result!.dimensions.integrity).toBeCloseTo(1 / 0.9, 10);
+      expect(result!.dimensions.competence).toBeCloseTo(1 / 0.8, 10);
+      expect(result!.dimensions.reliability).toBeCloseTo(1 / 0.7, 10);
+    });
+
+    it('preserves confidence', () => {
+      const result = trustInverse(tvA);
+      expect(result).not.toBeNull();
+      expect(result!.confidence).toBe(0.85);
+    });
+
+    it('returns null if any dimension is 0', () => {
+      const zeroVal: TrustValue = { dimensions: { x: 0, y: 0.5 }, confidence: 0.5 };
+      const result = trustInverse(zeroVal);
+      expect(result).toBeNull();
+    });
+
+    it('inverse of inverse returns original dimensions', () => {
+      const inv = trustInverse(tvA);
+      expect(inv).not.toBeNull();
+      const invInv = trustInverse(inv!);
+      expect(invInv).not.toBeNull();
+      expect(invInv!.dimensions.integrity).toBeCloseTo(0.9, 10);
+      expect(invInv!.dimensions.competence).toBeCloseTo(0.8, 10);
+      expect(invInv!.dimensions.reliability).toBeCloseTo(0.7, 10);
+    });
+
+    it('compose(a, inverse(a)) yields 1 for each dimension', () => {
+      const inv = trustInverse(tvA);
+      expect(inv).not.toBeNull();
+      const result = trustCompose(tvA, inv!);
+      for (const key of Object.keys(result.dimensions)) {
+        expect(result.dimensions[key]).toBeCloseTo(1, 10);
+      }
+    });
+
+    it('handles value with empty dimensions', () => {
+      const emptyDims: TrustValue = { dimensions: {}, confidence: 0.5 };
+      const result = trustInverse(emptyDims);
+      expect(result).not.toBeNull();
+      expect(Object.keys(result!.dimensions)).toHaveLength(0);
+    });
+  });
+
+  describe('proveAlgebraicProperties', () => {
+    it('returns proofs for all 5 properties', () => {
+      const proofs = proveAlgebraicProperties([tvA, tvB, tvC]);
+      expect(proofs).toHaveLength(5);
+      const names = proofs.map(p => p.property);
+      expect(names).toContain('associativity of compose');
+      expect(names).toContain('commutativity of compose');
+      expect(names).toContain('identity element');
+      expect(names).toContain('inverse');
+      expect(names).toContain('distributivity');
+    });
+
+    it('associativity holds for standard values', () => {
+      const proofs = proveAlgebraicProperties([tvA, tvB, tvC]);
+      const assoc = proofs.find(p => p.property === 'associativity of compose');
+      expect(assoc).toBeDefined();
+      expect(assoc!.holds).toBe(true);
+    });
+
+    it('commutativity holds for standard values', () => {
+      const proofs = proveAlgebraicProperties([tvA, tvB, tvC]);
+      const comm = proofs.find(p => p.property === 'commutativity of compose');
+      expect(comm).toBeDefined();
+      expect(comm!.holds).toBe(true);
+    });
+
+    it('identity element holds for standard values', () => {
+      const proofs = proveAlgebraicProperties([tvA, tvB, tvC]);
+      const identity = proofs.find(p => p.property === 'identity element');
+      expect(identity).toBeDefined();
+      expect(identity!.holds).toBe(true);
+    });
+
+    it('inverse property holds for standard values', () => {
+      const proofs = proveAlgebraicProperties([tvA, tvB, tvC]);
+      const inv = proofs.find(p => p.property === 'inverse');
+      expect(inv).toBeDefined();
+      expect(inv!.holds).toBe(true);
+    });
+
+    it('generates random samples when none are provided', () => {
+      const proofs = proveAlgebraicProperties();
+      expect(proofs).toHaveLength(5);
+      // All should hold for randomly generated values (multiplication is assoc/comm)
+      const assoc = proofs.find(p => p.property === 'associativity of compose');
+      expect(assoc!.holds).toBe(true);
+    });
+
+    it('generates random samples when fewer than 3 are provided', () => {
+      const proofs = proveAlgebraicProperties([tvA]);
+      expect(proofs).toHaveLength(5);
+    });
+
+    it('distributivity result is reported', () => {
+      const proofs = proveAlgebraicProperties([tvA, tvB, tvC]);
+      const dist = proofs.find(p => p.property === 'distributivity');
+      expect(dist).toBeDefined();
+      // Distributivity may or may not hold depending on values
+      expect(typeof dist!.holds).toBe('boolean');
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Bounded Self-Improvement
+// ---------------------------------------------------------------------------
+
+describe('Bounded Self-Improvement', () => {
+  function makeEnvelope(): SafetyEnvelope {
+    return defineSafetyEnvelope({
+      invariants: ['safety-first', 'no-harm'],
+      parameters: {
+        learningRate: { min: 0.001, max: 0.1, current: 0.01 },
+        temperature: { min: 0.0, max: 2.0, current: 1.0 },
+        maxRetries: { min: 1, max: 10, current: 3 },
+      },
+      immutableKernel: ['evaluate', 'enforce'],
+    });
+  }
+
+  describe('defineSafetyEnvelope', () => {
+    it('creates an envelope with invariants, parameters, and kernel', () => {
+      const envelope = makeEnvelope();
+      expect(envelope.invariants).toEqual(['safety-first', 'no-harm']);
+      expect(envelope.parameterRanges.learningRate).toEqual({ min: 0.001, max: 0.1, current: 0.01 });
+      expect(envelope.parameterRanges.temperature).toEqual({ min: 0.0, max: 2.0, current: 1.0 });
+      expect(envelope.parameterRanges.maxRetries).toEqual({ min: 1, max: 10, current: 3 });
+      expect(envelope.immutableKernel).toEqual(['evaluate', 'enforce']);
+    });
+
+    it('defaults immutableKernel to empty array', () => {
+      const envelope = defineSafetyEnvelope({
+        invariants: ['test'],
+        parameters: { x: { min: 0, max: 1, current: 0.5 } },
+      });
+      expect(envelope.immutableKernel).toEqual([]);
+    });
+
+    it('creates a defensive copy of parameters', () => {
+      const params = { x: { min: 0, max: 1, current: 0.5 } };
+      const envelope = defineSafetyEnvelope({ invariants: [], parameters: params });
+      params.x.current = 999;
+      expect(envelope.parameterRanges.x!.current).toBe(0.5);
+    });
+
+    it('creates a defensive copy of invariants', () => {
+      const invariants = ['safety'];
+      const envelope = defineSafetyEnvelope({ invariants, parameters: {} });
+      invariants.push('modified');
+      expect(envelope.invariants).toEqual(['safety']);
+    });
+  });
+
+  describe('proposeImprovement', () => {
+    it('creates a verified proposal when value is within range', () => {
+      const envelope = makeEnvelope();
+      const proposal = proposeImprovement({
+        envelope,
+        parameter: 'learningRate',
+        proposedValue: 0.05,
+        expectedImprovement: 0.1,
+      });
+      expect(proposal.parameter).toBe('learningRate');
+      expect(proposal.currentValue).toBe(0.01);
+      expect(proposal.proposedValue).toBe(0.05);
+      expect(proposal.expectedImprovement).toBe(0.1);
+      expect(proposal.safetyVerified).toBe(true);
+      expect(proposal.rollbackPlan).toEqual({ parameter: 'learningRate', restoreValue: 0.01 });
+    });
+
+    it('marks safetyVerified false when value exceeds max', () => {
+      const envelope = makeEnvelope();
+      const proposal = proposeImprovement({
+        envelope,
+        parameter: 'learningRate',
+        proposedValue: 0.5,
+        expectedImprovement: 0.2,
+      });
+      expect(proposal.safetyVerified).toBe(false);
+    });
+
+    it('marks safetyVerified false when value is below min', () => {
+      const envelope = makeEnvelope();
+      const proposal = proposeImprovement({
+        envelope,
+        parameter: 'learningRate',
+        proposedValue: 0.0001,
+        expectedImprovement: 0.2,
+      });
+      expect(proposal.safetyVerified).toBe(false);
+    });
+
+    it('marks safetyVerified false for unknown parameter', () => {
+      const envelope = makeEnvelope();
+      const proposal = proposeImprovement({
+        envelope,
+        parameter: 'unknownParam',
+        proposedValue: 0.5,
+        expectedImprovement: 0.1,
+      });
+      expect(proposal.safetyVerified).toBe(false);
+    });
+
+    it('accepts value at exact min boundary', () => {
+      const envelope = makeEnvelope();
+      const proposal = proposeImprovement({
+        envelope,
+        parameter: 'learningRate',
+        proposedValue: 0.001,
+        expectedImprovement: 0.01,
+      });
+      expect(proposal.safetyVerified).toBe(true);
+    });
+
+    it('accepts value at exact max boundary', () => {
+      const envelope = makeEnvelope();
+      const proposal = proposeImprovement({
+        envelope,
+        parameter: 'learningRate',
+        proposedValue: 0.1,
+        expectedImprovement: 0.01,
+      });
+      expect(proposal.safetyVerified).toBe(true);
+    });
+
+    it('generates a unique id', () => {
+      const envelope = makeEnvelope();
+      const p1 = proposeImprovement({ envelope, parameter: 'learningRate', proposedValue: 0.02, expectedImprovement: 0.1 });
+      const p2 = proposeImprovement({ envelope, parameter: 'temperature', proposedValue: 1.5, expectedImprovement: 0.1 });
+      expect(p1.id).toContain('learningRate');
+      expect(p2.id).toContain('temperature');
+    });
+  });
+
+  describe('applyImprovement', () => {
+    it('applies a verified proposal and returns updated envelope', () => {
+      const envelope = makeEnvelope();
+      const proposal = proposeImprovement({
+        envelope,
+        parameter: 'learningRate',
+        proposedValue: 0.05,
+        expectedImprovement: 0.1,
+      });
+      const result = applyImprovement(envelope, proposal);
+      expect(result.applied).toBe(true);
+      expect(result.reason).toContain('updated');
+      expect(result.newEnvelope.parameterRanges.learningRate!.current).toBe(0.05);
+    });
+
+    it('does not modify the original envelope', () => {
+      const envelope = makeEnvelope();
+      const proposal = proposeImprovement({
+        envelope,
+        parameter: 'learningRate',
+        proposedValue: 0.05,
+        expectedImprovement: 0.1,
+      });
+      applyImprovement(envelope, proposal);
+      expect(envelope.parameterRanges.learningRate!.current).toBe(0.01);
+    });
+
+    it('rejects proposal when safetyVerified is false', () => {
+      const envelope = makeEnvelope();
+      const proposal = proposeImprovement({
+        envelope,
+        parameter: 'learningRate',
+        proposedValue: 999,
+        expectedImprovement: 0.1,
+      });
+      expect(proposal.safetyVerified).toBe(false);
+      const result = applyImprovement(envelope, proposal);
+      expect(result.applied).toBe(false);
+      expect(result.reason).toContain('safety verification failed');
+      expect(result.newEnvelope.parameterRanges.learningRate!.current).toBe(0.01);
+    });
+
+    it('rejects proposal when proposed value equals current value', () => {
+      const envelope = makeEnvelope();
+      const proposal = proposeImprovement({
+        envelope,
+        parameter: 'learningRate',
+        proposedValue: 0.01,
+        expectedImprovement: 0,
+      });
+      expect(proposal.safetyVerified).toBe(true);
+      const result = applyImprovement(envelope, proposal);
+      expect(result.applied).toBe(false);
+      expect(result.reason).toContain('equals current value');
+    });
+
+    it('returns updated envelope even when rejected', () => {
+      const envelope = makeEnvelope();
+      const proposal = proposeImprovement({
+        envelope,
+        parameter: 'learningRate',
+        proposedValue: 999,
+        expectedImprovement: 0.1,
+      });
+      const result = applyImprovement(envelope, proposal);
+      expect(result.newEnvelope).toBeDefined();
+      expect(result.newEnvelope.parameterRanges.learningRate!.current).toBe(0.01);
+    });
+
+    it('includes rollback plan in the proposal', () => {
+      const envelope = makeEnvelope();
+      const proposal = proposeImprovement({
+        envelope,
+        parameter: 'temperature',
+        proposedValue: 1.5,
+        expectedImprovement: 0.2,
+      });
+      const result = applyImprovement(envelope, proposal);
+      expect(result.applied).toBe(true);
+      expect(result.proposal.rollbackPlan).toEqual({ parameter: 'temperature', restoreValue: 1.0 });
+    });
+
+    it('can apply multiple sequential improvements', () => {
+      const envelope = makeEnvelope();
+
+      const p1 = proposeImprovement({ envelope, parameter: 'learningRate', proposedValue: 0.05, expectedImprovement: 0.1 });
+      const r1 = applyImprovement(envelope, p1);
+      expect(r1.applied).toBe(true);
+
+      const p2 = proposeImprovement({ envelope: r1.newEnvelope, parameter: 'temperature', proposedValue: 1.5, expectedImprovement: 0.2 });
+      const r2 = applyImprovement(r1.newEnvelope, p2);
+      expect(r2.applied).toBe(true);
+
+      expect(r2.newEnvelope.parameterRanges.learningRate!.current).toBe(0.05);
+      expect(r2.newEnvelope.parameterRanges.temperature!.current).toBe(1.5);
+    });
+  });
+
+  describe('verifyEnvelopeIntegrity', () => {
+    it('returns valid for a well-formed envelope', () => {
+      const envelope = makeEnvelope();
+      const result = verifyEnvelopeIntegrity(envelope);
+      expect(result.valid).toBe(true);
+      expect(result.violations).toEqual([]);
+    });
+
+    it('detects parameter below minimum', () => {
+      const envelope = makeEnvelope();
+      envelope.parameterRanges.learningRate!.current = -1;
+      const result = verifyEnvelopeIntegrity(envelope);
+      expect(result.valid).toBe(false);
+      expect(result.violations.length).toBe(1);
+      expect(result.violations[0]).toContain('learningRate');
+      expect(result.violations[0]).toContain('below minimum');
+    });
+
+    it('detects parameter above maximum', () => {
+      const envelope = makeEnvelope();
+      envelope.parameterRanges.temperature!.current = 5.0;
+      const result = verifyEnvelopeIntegrity(envelope);
+      expect(result.valid).toBe(false);
+      expect(result.violations.length).toBe(1);
+      expect(result.violations[0]).toContain('temperature');
+      expect(result.violations[0]).toContain('above maximum');
+    });
+
+    it('detects multiple violations', () => {
+      const envelope = makeEnvelope();
+      envelope.parameterRanges.learningRate!.current = -1;
+      envelope.parameterRanges.temperature!.current = 100;
+      envelope.parameterRanges.maxRetries!.current = 0;
+      const result = verifyEnvelopeIntegrity(envelope);
+      expect(result.valid).toBe(false);
+      expect(result.violations.length).toBe(3);
+    });
+
+    it('valid when parameters are at boundaries', () => {
+      const envelope = defineSafetyEnvelope({
+        invariants: [],
+        parameters: {
+          x: { min: 0, max: 1, current: 0 },
+          y: { min: 0, max: 1, current: 1 },
+        },
+      });
+      const result = verifyEnvelopeIntegrity(envelope);
+      expect(result.valid).toBe(true);
+      expect(result.violations).toEqual([]);
+    });
+
+    it('valid for envelope with no parameters', () => {
+      const envelope = defineSafetyEnvelope({
+        invariants: ['test'],
+        parameters: {},
+      });
+      const result = verifyEnvelopeIntegrity(envelope);
+      expect(result.valid).toBe(true);
+      expect(result.violations).toEqual([]);
+    });
+
+    it('returns valid after a legitimate improvement is applied', () => {
+      const envelope = makeEnvelope();
+      const proposal = proposeImprovement({
+        envelope,
+        parameter: 'learningRate',
+        proposedValue: 0.05,
+        expectedImprovement: 0.1,
+      });
+      const result = applyImprovement(envelope, proposal);
+      const integrity = verifyEnvelopeIntegrity(result.newEnvelope);
+      expect(integrity.valid).toBe(true);
+    });
   });
 });

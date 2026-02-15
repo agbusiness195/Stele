@@ -7,9 +7,12 @@ import {
   toHex,
   fromHex,
   timestamp,
+  generateId,
 } from '@stele/crypto';
 
 import type { HashHex, KeyPair } from '@stele/crypto';
+
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 import {
   parse,
@@ -62,7 +65,7 @@ const GENESIS_HASH: HashHex = '0000000000000000000000000000000000000000000000000
 /**
  * Thrown when the Monitor denies an action in 'enforce' mode.
  */
-export class MonitorDeniedError extends Error {
+export class MonitorDeniedError extends SteleError {
   readonly action: string;
   readonly resource: string;
   readonly matchedRule: Statement | undefined;
@@ -77,7 +80,14 @@ export class MonitorDeniedError extends Error {
     const ruleDesc = matchedRule
       ? `matched ${matchedRule.type} rule`
       : 'no matching permit rule';
-    super(`Action '${action}' on resource '${resource}' denied: ${ruleDesc}`);
+    super(
+      SteleErrorCode.ACTION_DENIED,
+      `Action '${action}' on resource '${resource}' denied: ${ruleDesc}`,
+      {
+        hint: `Check the CCL constraints for action '${action}' on resource '${resource}'.`,
+        context: { action, resource },
+      },
+    );
     this.name = 'MonitorDeniedError';
     this.action = action;
     this.resource = resource;
@@ -89,11 +99,18 @@ export class MonitorDeniedError extends Error {
 /**
  * Thrown when a CapabilityGate operation fails due to missing or invalid capabilities.
  */
-export class CapabilityError extends Error {
+export class CapabilityError extends SteleError {
   readonly action: string;
 
   constructor(action: string, message?: string) {
-    super(message ?? `No capability registered for action '${action}'`);
+    super(
+      SteleErrorCode.ACTION_DENIED,
+      message ?? `No capability registered for action '${action}'`,
+      {
+        hint: `Ensure the action '${action}' is permitted by the CCL constraints before registering a handler.`,
+        context: { action },
+      },
+    );
     this.name = 'CapabilityError';
     this.action = action;
   }
@@ -162,6 +179,20 @@ export class Monitor {
     constraints: string,
     config?: Partial<MonitorConfig>,
   ) {
+    if (!covenantId || typeof covenantId !== 'string' || covenantId.trim().length === 0) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Monitor requires a non-empty covenantId',
+        { hint: 'Pass the covenant document ID (a hex-encoded hash) as the first argument.' }
+      );
+    }
+    if (!constraints || typeof constraints !== 'string' || constraints.trim().length === 0) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Monitor requires a non-empty constraints string',
+        { hint: 'Pass valid CCL constraint text as the second argument.' }
+      );
+    }
     this.covenantId = covenantId;
     this.doc = parse(constraints);
     this.config = {
@@ -188,6 +219,20 @@ export class Monitor {
     resource: string,
     context?: Record<string, unknown>,
   ): Promise<EvaluationResult> {
+    if (!action || typeof action !== 'string' || action.trim().length === 0) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Monitor.evaluate() requires a non-empty action string',
+        { hint: 'Pass an action name like "file.read" or "data.write".' }
+      );
+    }
+    if (typeof resource !== 'string') {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Monitor.evaluate() requires a resource string',
+        { hint: 'Pass a resource path like "/data/users" or "**".' }
+      );
+    }
     const ctx = context ?? {};
     const now = timestamp();
 
@@ -262,6 +307,27 @@ export class Monitor {
     handler: ActionHandler<T>,
     context?: Record<string, unknown>,
   ): Promise<T> {
+    if (!action || typeof action !== 'string' || action.trim().length === 0) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Monitor.execute() requires a non-empty action string',
+        { hint: 'Pass an action name like "file.read" or "data.write".' }
+      );
+    }
+    if (typeof resource !== 'string') {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Monitor.execute() requires a resource string',
+        { hint: 'Pass a resource path like "/data/users" or "**".' }
+      );
+    }
+    if (typeof handler !== 'function') {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Monitor.execute() requires a handler function',
+        { hint: 'Pass an async function (resource, context) => T as the handler.' }
+      );
+    }
     const ctx = context ?? {};
     const now = timestamp();
 
@@ -399,7 +465,11 @@ export class Monitor {
    */
   generateMerkleProof(entryIndex: number): MerkleProof {
     if (entryIndex < 0 || entryIndex >= this.entries.length) {
-      throw new Error(`Entry index ${entryIndex} is out of range [0, ${this.entries.length})`);
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `Entry index ${entryIndex} is out of range [0, ${this.entries.length})`,
+        { hint: `Provide an entry index between 0 and ${this.entries.length - 1}.` }
+      );
     }
 
     const leaves = this.entries.map((e) => e.hash);
@@ -976,6 +1046,444 @@ function computeMerkleRootFromHashes(hashes: HashHex[]): HashHex {
   }
 
   return level[0]!;
+}
+
+// ─── Behavioral Provenance ────────────────────────────────────────────────────
+
+/**
+ * A single provenance record linking an action to the specific covenant
+ * authorization that permitted it.
+ *
+ * Each record carries a cryptographic chain linking it to the exact CCL
+ * rule that justified the action — not "didn't violate" but "here is the
+ * exact justification."
+ */
+export interface ProvenanceRecord {
+  /** Unique identifier for this record. */
+  actionId: string;
+  /** The action that was performed. */
+  action: string;
+  /** The resource targeted by the action. */
+  resource: string;
+  /** Unix epoch timestamp (milliseconds) when the action occurred. */
+  timestamp: number;
+  /** The covenant ID that governs this action. */
+  covenantId: string;
+  /** Which specific CCL rule authorized this action. */
+  ruleReference: string;
+  /** Hash of the covenant rule that permitted this action. */
+  authorizationHash: string;
+  /** Chain link to the previous record's hash. */
+  previousRecordHash: string;
+  /** Hash of this entire record. */
+  recordHash: string;
+}
+
+/**
+ * A chain of provenance records for a specific agent, forming a
+ * tamper-evident trail of authorized actions.
+ */
+export interface ProvenanceChain {
+  /** The agent whose actions are tracked. */
+  agentId: string;
+  /** The ordered list of provenance records. */
+  records: ProvenanceRecord[];
+  /** Hash of the most recent record. */
+  chainHead: string;
+  /** Total number of records in the chain. */
+  chainLength: number;
+  /** Whether the chain integrity has been verified. */
+  integrityVerified: boolean;
+}
+
+/**
+ * Create a provenance record linking an action to its covenant authorization.
+ *
+ * Generates a unique actionId, computes the authorizationHash from the
+ * covenant ID and rule reference, and produces a recordHash covering
+ * all fields to ensure tamper evidence.
+ *
+ * @param params - The action, resource, covenant, and rule details.
+ * @returns A complete ProvenanceRecord with all hashes computed.
+ */
+export function createProvenanceRecord(params: {
+  action: string;
+  resource: string;
+  covenantId: string;
+  ruleReference: string;
+  previousRecordHash?: string;
+}): ProvenanceRecord {
+  const actionId = generateId();
+  const ts = Date.now();
+  const previousRecordHash = params.previousRecordHash ?? 'genesis';
+  const authorizationHash = sha256String(params.covenantId + '|' + params.ruleReference);
+  const recordHash = sha256String(
+    actionId + '|' +
+    params.action + '|' +
+    params.resource + '|' +
+    String(ts) + '|' +
+    authorizationHash + '|' +
+    previousRecordHash,
+  );
+
+  return {
+    actionId,
+    action: params.action,
+    resource: params.resource,
+    timestamp: ts,
+    covenantId: params.covenantId,
+    ruleReference: params.ruleReference,
+    authorizationHash,
+    previousRecordHash,
+    recordHash,
+  };
+}
+
+/**
+ * Build a provenance chain from an ordered array of records.
+ *
+ * Verifies that each record correctly links to the previous record
+ * via the previousRecordHash field. The chain head is set to the
+ * hash of the last record.
+ *
+ * @param agentId - The agent whose actions are tracked.
+ * @param records - The ordered list of provenance records.
+ * @returns A ProvenanceChain with integrity verification results.
+ */
+export function buildProvenanceChain(agentId: string, records: ProvenanceRecord[]): ProvenanceChain {
+  if (records.length === 0) {
+    return {
+      agentId,
+      records: [],
+      chainHead: 'genesis',
+      chainLength: 0,
+      integrityVerified: true,
+    };
+  }
+
+  let integrityVerified = true;
+
+  // Verify chain linkage
+  for (let i = 0; i < records.length; i++) {
+    const record = records[i]!;
+    if (i === 0) {
+      // First record should link to 'genesis'
+      if (record.previousRecordHash !== 'genesis') {
+        integrityVerified = false;
+        break;
+      }
+    } else {
+      // Subsequent records should link to previous record's hash
+      if (record.previousRecordHash !== records[i - 1]!.recordHash) {
+        integrityVerified = false;
+        break;
+      }
+    }
+  }
+
+  const lastRecord = records[records.length - 1]!;
+
+  return {
+    agentId,
+    records: [...records],
+    chainHead: lastRecord.recordHash,
+    chainLength: records.length,
+    integrityVerified,
+  };
+}
+
+/**
+ * Verify the integrity of a provenance chain.
+ *
+ * Checks that every record in the chain correctly links to the previous
+ * record's hash and identifies any broken links or orphaned records.
+ *
+ * @param chain - The provenance chain to verify.
+ * @returns An object with validity status, broken link indices, and orphaned record indices.
+ */
+export function verifyProvenance(chain: ProvenanceChain): {
+  valid: boolean;
+  brokenLinks: number[];
+  orphanedRecords: number[];
+} {
+  const brokenLinks: number[] = [];
+  const orphanedRecords: number[] = [];
+
+  if (chain.records.length === 0) {
+    return { valid: true, brokenLinks, orphanedRecords };
+  }
+
+  // Build a set of all record hashes for orphan detection
+  const recordHashes = new Set<string>();
+  for (const record of chain.records) {
+    recordHashes.add(record.recordHash);
+  }
+
+  for (let i = 0; i < chain.records.length; i++) {
+    const record = chain.records[i]!;
+
+    if (i === 0) {
+      // First record should link to 'genesis'
+      if (record.previousRecordHash !== 'genesis') {
+        brokenLinks.push(i);
+      }
+    } else {
+      // Check that previousRecordHash matches the previous record's hash
+      const expectedPrevious = chain.records[i - 1]!.recordHash;
+      if (record.previousRecordHash !== expectedPrevious) {
+        brokenLinks.push(i);
+      }
+    }
+
+    // Check for orphaned records: a record that references a previousRecordHash
+    // that is neither 'genesis' nor any record's hash in the chain
+    if (
+      record.previousRecordHash !== 'genesis' &&
+      !recordHashes.has(record.previousRecordHash)
+    ) {
+      orphanedRecords.push(i);
+    }
+  }
+
+  return {
+    valid: brokenLinks.length === 0 && orphanedRecords.length === 0,
+    brokenLinks,
+    orphanedRecords,
+  };
+}
+
+/**
+ * Query a provenance chain by filtering on action, resource, covenantId,
+ * or time range. All filter criteria are optional and combined with AND logic.
+ *
+ * @param chain - The provenance chain to query.
+ * @param params - Filter criteria.
+ * @returns An array of matching provenance records.
+ */
+export function queryProvenance(chain: ProvenanceChain, params: {
+  action?: string;
+  resource?: string;
+  covenantId?: string;
+  timeRange?: { start: number; end: number };
+}): ProvenanceRecord[] {
+  return chain.records.filter((record) => {
+    if (params.action !== undefined && record.action !== params.action) {
+      return false;
+    }
+    if (params.resource !== undefined && record.resource !== params.resource) {
+      return false;
+    }
+    if (params.covenantId !== undefined && record.covenantId !== params.covenantId) {
+      return false;
+    }
+    if (params.timeRange !== undefined) {
+      if (record.timestamp < params.timeRange.start || record.timestamp > params.timeRange.end) {
+        return false;
+      }
+    }
+    return true;
+  });
+}
+
+// ─── Defense in Depth ─────────────────────────────────────────────────────────
+
+/**
+ * A single layer in a defense-in-depth security model.
+ *
+ * Each layer represents an independent security mechanism (runtime restriction,
+ * external attestation, or ZK proof) with its own bypass probability.
+ */
+export interface DefenseLayer {
+  /** Human-readable name for this defense layer. */
+  name: string;
+  /** The type of defense mechanism. */
+  type: 'runtime' | 'attestation' | 'proof';
+  /** Probability of bypassing this layer (0-1). */
+  bypassProbability: number;
+  /** Whether this layer is currently active. */
+  active: boolean;
+  /** Timestamp of last verification (milliseconds since epoch). */
+  lastVerified: number;
+}
+
+/**
+ * Configuration for a defense-in-depth security model.
+ *
+ * Specifies the layers, minimum active layer count, and the maximum
+ * acceptable breach probability threshold.
+ */
+export interface DefenseInDepthConfig {
+  /** The defense layers in this configuration. */
+  layers: DefenseLayer[];
+  /** Minimum number of layers that must be active. */
+  minimumLayers: number;
+  /** Maximum acceptable compound breach probability. */
+  maxAcceptableBreachProbability: number;
+}
+
+/**
+ * Analysis result for a defense-in-depth configuration.
+ *
+ * Contains the computed compound breach probability (product of all
+ * active layer bypass probabilities), threshold comparison, and
+ * improvement recommendations.
+ */
+export interface DefenseAnalysis {
+  /** The configuration that was analyzed. */
+  config: DefenseInDepthConfig;
+  /** Number of currently active layers. */
+  activeLayers: number;
+  /** Product of all active layers' bypass probabilities. */
+  independentBreachProbability: number;
+  /** Whether the breach probability meets the configured threshold. */
+  meetsThreshold: boolean;
+  /** The active layer with the highest bypass probability. */
+  weakestLayer: DefenseLayer | null;
+  /** Human-readable recommendation for improving the defense posture. */
+  recommendation: string;
+}
+
+/**
+ * Create a defense-in-depth configuration with three standard layers:
+ * runtime restriction, external attestation, and ZK proof.
+ *
+ * P(undetected breach) = P(bypass runtime) x P(bypass attestation) x P(bypass proof)
+ *
+ * @param params - Optional overrides for bypass probabilities and thresholds.
+ * @returns A DefenseInDepthConfig with three active layers.
+ */
+export function createDefenseConfig(params?: {
+  runtimeBypass?: number;
+  attestationBypass?: number;
+  proofBypass?: number;
+  minimumLayers?: number;
+  maxBreachProb?: number;
+}): DefenseInDepthConfig {
+  const now = Date.now();
+
+  return {
+    layers: [
+      {
+        name: 'runtime',
+        type: 'runtime',
+        bypassProbability: params?.runtimeBypass ?? 0.1,
+        active: true,
+        lastVerified: now,
+      },
+      {
+        name: 'attestation',
+        type: 'attestation',
+        bypassProbability: params?.attestationBypass ?? 0.05,
+        active: true,
+        lastVerified: now,
+      },
+      {
+        name: 'proof',
+        type: 'proof',
+        bypassProbability: params?.proofBypass ?? 0.01,
+        active: true,
+        lastVerified: now,
+      },
+    ],
+    minimumLayers: params?.minimumLayers ?? 2,
+    maxAcceptableBreachProbability: params?.maxBreachProb ?? 0.001,
+  };
+}
+
+/**
+ * Analyze a defense-in-depth configuration.
+ *
+ * Computes the independent breach probability as the product of all
+ * active layers' bypass probabilities, identifies the weakest layer,
+ * and generates a recommendation if the threshold is not met.
+ *
+ * @param config - The defense configuration to analyze.
+ * @returns A DefenseAnalysis with breach probability and recommendations.
+ */
+export function analyzeDefense(config: DefenseInDepthConfig): DefenseAnalysis {
+  const activeLayers = config.layers.filter((l) => l.active);
+  const activeCount = activeLayers.length;
+
+  // Compute compound breach probability (product of independent bypasses)
+  let independentBreachProbability = 1;
+  for (const layer of activeLayers) {
+    independentBreachProbability *= layer.bypassProbability;
+  }
+
+  // If no active layers, breach probability is 1 (certain breach)
+  if (activeCount === 0) {
+    independentBreachProbability = 1;
+  }
+
+  const meetsThreshold = independentBreachProbability <= config.maxAcceptableBreachProbability;
+
+  // Find the weakest layer (highest bypass probability among active layers)
+  let weakestLayer: DefenseLayer | null = null;
+  for (const layer of activeLayers) {
+    if (weakestLayer === null || layer.bypassProbability > weakestLayer.bypassProbability) {
+      weakestLayer = layer;
+    }
+  }
+
+  // Generate recommendation
+  let recommendation: string;
+  if (activeCount < config.minimumLayers) {
+    recommendation = `Only ${activeCount} layer(s) active, but ${config.minimumLayers} required. Enable additional defense layers to meet minimum requirements.`;
+  } else if (!meetsThreshold) {
+    if (weakestLayer) {
+      recommendation = `Breach probability ${independentBreachProbability.toExponential(2)} exceeds threshold ${config.maxAcceptableBreachProbability}. Strengthen the '${weakestLayer.name}' layer (bypass probability: ${weakestLayer.bypassProbability}) to reduce overall risk.`;
+    } else {
+      recommendation = `Breach probability ${independentBreachProbability.toExponential(2)} exceeds threshold ${config.maxAcceptableBreachProbability}. Add more defense layers.`;
+    }
+  } else {
+    recommendation = `Defense posture meets threshold. Breach probability: ${independentBreachProbability.toExponential(2)}.`;
+  }
+
+  return {
+    config,
+    activeLayers: activeCount,
+    independentBreachProbability,
+    meetsThreshold,
+    weakestLayer,
+    recommendation,
+  };
+}
+
+/**
+ * Add a custom defense layer to an existing configuration.
+ *
+ * Returns a new configuration with the additional layer appended.
+ * The original configuration is not modified.
+ *
+ * @param config - The existing defense configuration.
+ * @param layer - The new defense layer to add.
+ * @returns A new DefenseInDepthConfig with the added layer.
+ */
+export function addDefenseLayer(config: DefenseInDepthConfig, layer: DefenseLayer): DefenseInDepthConfig {
+  return {
+    ...config,
+    layers: [...config.layers, layer],
+  };
+}
+
+/**
+ * Disable a named defense layer in the configuration.
+ *
+ * Returns a new configuration with the named layer set to inactive.
+ * If disabling the layer would drop the active count below the minimum,
+ * a warning is included in the analysis recommendation.
+ *
+ * @param config - The existing defense configuration.
+ * @param layerName - The name of the layer to disable.
+ * @returns A new DefenseInDepthConfig with the named layer disabled.
+ */
+export function disableLayer(config: DefenseInDepthConfig, layerName: string): DefenseInDepthConfig {
+  return {
+    ...config,
+    layers: config.layers.map((layer) =>
+      layer.name === layerName ? { ...layer, active: false } : { ...layer },
+    ),
+  };
 }
 
 // ─── Audit Chain ──────────────────────────────────────────────────────────────

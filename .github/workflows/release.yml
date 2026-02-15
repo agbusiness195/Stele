@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - "v*"
+      - "v[0-9]+.[0-9]+.[0-9]+*"
 
 concurrency:
   group: release-${{ github.ref }}
@@ -129,11 +129,20 @@ jobs:
       max-parallel: 5
       matrix:
         package:
+          - ccl
           - sdk
           - cli
+          - enforcement
+          - identity
+          - reputation
+          - breach
+          - proof
+          - mcp
           - mcp-server
           - react
           - evm
+          - discovery
+          - schema
           - attestation
           - canary
           - gametheory
@@ -188,14 +197,16 @@ jobs:
       - name: Wait for npm registry propagation
         run: sleep 30
 
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Verify all packages on npm
         run: |
-          packages=(
-            types crypto core store verifier sdk cli mcp-server react evm
-            attestation canary gametheory composition antifragile negotiation
-            consensus robustness temporal recursive alignment norms substrate
-            derivatives legal
-          )
+          # Auto-discover packages from the packages/ directory
+          packages=()
+          for pkg_dir in packages/*/; do
+            packages+=("$(basename "$pkg_dir")")
+          done
           expected="${{ steps.version.outputs.version }}"
           passed=0
           failed=0

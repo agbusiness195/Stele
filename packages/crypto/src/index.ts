@@ -1,6 +1,7 @@
 import * as ed from '@noble/ed25519';
 import { sha256 as nobleSha256 } from '@noble/hashes/sha256';
 import { randomBytes } from '@noble/hashes/utils';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 export type {
   KeyPair,
@@ -31,7 +32,21 @@ import type { KeyPair, PrivateKey, Signature, HashHex, Base64Url, Nonce } from '
  */
 export async function generateKeyPair(): Promise<KeyPair> {
   const privateKey = randomBytes(32);
+  if (privateKey.length !== 32) {
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_INVALID_KEY,
+      `Expected 32-byte private key from CSPRNG, got ${privateKey.length} bytes`,
+      { hint: 'This indicates a platform CSPRNG issue. Ensure your environment supports crypto.getRandomValues().' }
+    );
+  }
   const publicKey = await ed.getPublicKeyAsync(privateKey);
+  if (publicKey.length !== 32) {
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_INVALID_KEY,
+      `Expected 32-byte public key from Ed25519 derivation, got ${publicKey.length} bytes`,
+      { hint: 'This indicates an issue with the Ed25519 implementation. Check @noble/ed25519 version.' }
+    );
+  }
   return {
     privateKey,
     publicKey,
@@ -55,6 +70,13 @@ export async function generateKeyPair(): Promise<KeyPair> {
  * ```
  */
 export async function keyPairFromPrivateKey(privateKey: Uint8Array): Promise<KeyPair> {
+  if (!(privateKey instanceof Uint8Array) || privateKey.length !== 32) {
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_INVALID_KEY,
+      `Private key must be a 32-byte Uint8Array, got ${privateKey instanceof Uint8Array ? `${privateKey.length} bytes` : typeof privateKey}`,
+      { hint: 'Provide a 32-byte Uint8Array as the Ed25519 private key.' }
+    );
+  }
   const publicKey = await ed.getPublicKeyAsync(privateKey);
   return {
     privateKey: new Uint8Array(privateKey),
@@ -294,6 +316,13 @@ export function base64urlDecode(encoded: Base64Url): Uint8Array {
  * ```
  */
 export function toHex(data: Uint8Array): string {
+  if (!(data instanceof Uint8Array)) {
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_INVALID_HEX,
+      `toHex() expects a Uint8Array, got ${typeof data}`,
+      { hint: 'Pass a Uint8Array to toHex(). Use new TextEncoder().encode(str) to convert strings.' }
+    );
+  }
   let hex = '';
   for (let i = 0; i < data.length; i++) {
     hex += data[i]!.toString(16).padStart(2, '0');
@@ -314,8 +343,26 @@ export function toHex(data: Uint8Array): string {
  * ```
  */
 export function fromHex(hex: string): Uint8Array {
+  if (typeof hex !== 'string') {
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_INVALID_HEX,
+      `fromHex() expects a string, got ${typeof hex}`,
+      { hint: 'Pass a hexadecimal string (e.g. "a1b2c3") to fromHex().' }
+    );
+  }
   if (hex.length % 2 !== 0) {
-    throw new Error('Invalid hex string: odd length');
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_INVALID_HEX,
+      `Invalid hex string: odd length (${hex.length})`,
+      { hint: 'Hex strings must have even length. Each byte is represented by two hex characters.' }
+    );
+  }
+  if (hex.length > 0 && !/^[0-9a-fA-F]+$/.test(hex)) {
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_INVALID_HEX,
+      'Invalid hex string: contains non-hexadecimal characters',
+      { hint: 'Hex strings must only contain characters 0-9 and a-f (case-insensitive).' }
+    );
   }
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {

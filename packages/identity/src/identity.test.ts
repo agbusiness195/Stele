@@ -14,6 +14,14 @@ import {
   serializeIdentity,
   deserializeIdentity,
   DEFAULT_EVOLUTION_POLICY,
+  triggerReverification,
+  computeDecayedTrust,
+  completeReverification,
+} from './index';
+import type {
+  ModelUpdateEvent,
+  ReverificationRequirement,
+  ReverificationResult,
 } from './index';
 
 import type {
@@ -1904,5 +1912,574 @@ describe('serialization - additional coverage', () => {
     const { identity } = await createTestIdentity();
     const json = serializeIdentity(identity);
     expect(() => JSON.parse(json)).not.toThrow();
+  });
+});
+
+// ===========================================================================
+// Model Updates Trigger Re-verification
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// triggerReverification
+// ---------------------------------------------------------------------------
+describe('triggerReverification', () => {
+  function makeEvent(overrides?: Partial<ModelUpdateEvent>): ModelUpdateEvent {
+    return {
+      agentId: 'agent-1',
+      previousModelHash: 'abc123',
+      newModelHash: 'def456',
+      updateType: 'major_update',
+      timestamp: 1000000,
+      operatorAcknowledged: true,
+      ...overrides,
+    };
+  }
+
+  it('returns correct grace period for minor_patch (72 hours)', () => {
+    const req = triggerReverification(makeEvent({ updateType: 'minor_patch' }));
+    expect(req.gracePeriodMs).toBe(72 * 60 * 60 * 1000);
+    expect(req.trustReductionFactor).toBe(0.9);
+    expect(req.autoDecayRate).toBe(0.01);
+  });
+
+  it('returns correct grace period for major_update (48 hours)', () => {
+    const req = triggerReverification(makeEvent({ updateType: 'major_update' }));
+    expect(req.gracePeriodMs).toBe(48 * 60 * 60 * 1000);
+    expect(req.trustReductionFactor).toBe(0.7);
+    expect(req.autoDecayRate).toBe(0.05);
+  });
+
+  it('returns correct grace period for architecture_change (24 hours)', () => {
+    const req = triggerReverification(makeEvent({ updateType: 'architecture_change' }));
+    expect(req.gracePeriodMs).toBe(24 * 60 * 60 * 1000);
+    expect(req.trustReductionFactor).toBe(0.5);
+    expect(req.autoDecayRate).toBe(0.1);
+  });
+
+  it('returns correct grace period for provider_switch (24 hours)', () => {
+    const req = triggerReverification(makeEvent({ updateType: 'provider_switch' }));
+    expect(req.gracePeriodMs).toBe(24 * 60 * 60 * 1000);
+    expect(req.trustReductionFactor).toBe(0.3);
+    expect(req.autoDecayRate).toBe(0.1);
+  });
+
+  it('always requires canary_rerun and lineage_verification', () => {
+    const types: ModelUpdateEvent['updateType'][] = ['minor_patch', 'major_update', 'architecture_change', 'provider_switch'];
+
+    for (const updateType of types) {
+      const req = triggerReverification(makeEvent({ updateType }));
+      expect(req.requiredActions).toContain('canary_rerun');
+      expect(req.requiredActions).toContain('lineage_verification');
+    }
+  });
+
+  it('architecture_change requires full_behavioral_audit', () => {
+    const req = triggerReverification(makeEvent({ updateType: 'architecture_change' }));
+    expect(req.requiredActions).toContain('full_behavioral_audit');
+  });
+
+  it('provider_switch requires full_behavioral_audit', () => {
+    const req = triggerReverification(makeEvent({ updateType: 'provider_switch' }));
+    expect(req.requiredActions).toContain('full_behavioral_audit');
+  });
+
+  it('minor_patch does NOT require full_behavioral_audit', () => {
+    const req = triggerReverification(makeEvent({ updateType: 'minor_patch' }));
+    expect(req.requiredActions).not.toContain('full_behavioral_audit');
+  });
+
+  it('major_update does NOT require full_behavioral_audit', () => {
+    const req = triggerReverification(makeEvent({ updateType: 'major_update' }));
+    expect(req.requiredActions).not.toContain('full_behavioral_audit');
+  });
+
+  it('computes deadline as timestamp + gracePeriodMs', () => {
+    const event = makeEvent({ timestamp: 5000000 });
+    const req = triggerReverification(event);
+    expect(req.deadline).toBe(5000000 + req.gracePeriodMs);
+  });
+
+  it('preserves the original event in the requirement', () => {
+    const event = makeEvent();
+    const req = triggerReverification(event);
+    expect(req.event).toBe(event);
+    expect(req.event.agentId).toBe('agent-1');
+    expect(req.event.previousModelHash).toBe('abc123');
+    expect(req.event.newModelHash).toBe('def456');
+  });
+
+  it('throws on empty agentId', () => {
+    expect(() => triggerReverification(makeEvent({ agentId: '' }))).toThrow();
+  });
+
+  it('trust reduction factors are ordered: minor > major > architecture > provider', () => {
+    const minor = triggerReverification(makeEvent({ updateType: 'minor_patch' }));
+    const major = triggerReverification(makeEvent({ updateType: 'major_update' }));
+    const arch = triggerReverification(makeEvent({ updateType: 'architecture_change' }));
+    const provider = triggerReverification(makeEvent({ updateType: 'provider_switch' }));
+
+    expect(minor.trustReductionFactor).toBeGreaterThan(major.trustReductionFactor);
+    expect(major.trustReductionFactor).toBeGreaterThan(arch.trustReductionFactor);
+    expect(arch.trustReductionFactor).toBeGreaterThan(provider.trustReductionFactor);
+  });
+
+  it('grace periods are ordered: minor > major > architecture = provider', () => {
+    const minor = triggerReverification(makeEvent({ updateType: 'minor_patch' }));
+    const major = triggerReverification(makeEvent({ updateType: 'major_update' }));
+    const arch = triggerReverification(makeEvent({ updateType: 'architecture_change' }));
+    const provider = triggerReverification(makeEvent({ updateType: 'provider_switch' }));
+
+    expect(minor.gracePeriodMs).toBeGreaterThan(major.gracePeriodMs);
+    expect(major.gracePeriodMs).toBeGreaterThan(arch.gracePeriodMs);
+    expect(arch.gracePeriodMs).toBe(provider.gracePeriodMs);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// computeDecayedTrust
+// ---------------------------------------------------------------------------
+describe('computeDecayedTrust', () => {
+  function makeRequirement(overrides?: Partial<ReverificationRequirement>): ReverificationRequirement {
+    const event: ModelUpdateEvent = {
+      agentId: 'agent-1',
+      previousModelHash: 'abc',
+      newModelHash: 'def',
+      updateType: 'major_update',
+      timestamp: 1000000,
+      operatorAcknowledged: true,
+    };
+    return {
+      event,
+      gracePeriodMs: 48 * 60 * 60 * 1000,
+      trustReductionFactor: 0.7,
+      requiredActions: ['canary_rerun', 'lineage_verification'],
+      autoDecayRate: 0.05,
+      deadline: 1000000 + 48 * 60 * 60 * 1000,
+      ...overrides,
+    };
+  }
+
+  it('returns trustReductionFactor during grace period', () => {
+    const req = makeRequirement();
+    const trust = computeDecayedTrust(req, req.deadline - 1000);
+    expect(trust).toBe(0.7);
+  });
+
+  it('returns trustReductionFactor exactly at deadline', () => {
+    const req = makeRequirement();
+    const trust = computeDecayedTrust(req, req.deadline);
+    expect(trust).toBe(0.7);
+  });
+
+  it('decays trust after deadline', () => {
+    const req = makeRequirement();
+    // 1 hour past deadline
+    const oneHourMs = 60 * 60 * 1000;
+    const trust = computeDecayedTrust(req, req.deadline + oneHourMs);
+    // 0.7 - 0.05 * 1 = 0.65
+    expect(trust).toBeCloseTo(0.65, 5);
+  });
+
+  it('decays trust proportionally to hours over deadline', () => {
+    const req = makeRequirement();
+    const oneHourMs = 60 * 60 * 1000;
+
+    // 2 hours past deadline: 0.7 - 0.05 * 2 = 0.6
+    expect(computeDecayedTrust(req, req.deadline + 2 * oneHourMs)).toBeCloseTo(0.6, 5);
+
+    // 5 hours past deadline: 0.7 - 0.05 * 5 = 0.45
+    expect(computeDecayedTrust(req, req.deadline + 5 * oneHourMs)).toBeCloseTo(0.45, 5);
+
+    // 10 hours past deadline: 0.7 - 0.05 * 10 = 0.2
+    expect(computeDecayedTrust(req, req.deadline + 10 * oneHourMs)).toBeCloseTo(0.2, 5);
+  });
+
+  it('never returns below 0', () => {
+    const req = makeRequirement();
+    const oneHourMs = 60 * 60 * 1000;
+
+    // 100 hours past deadline: 0.7 - 0.05 * 100 = -4.3 -> clamped to 0
+    const trust = computeDecayedTrust(req, req.deadline + 100 * oneHourMs);
+    expect(trust).toBe(0);
+  });
+
+  it('returns trustReductionFactor before the event timestamp', () => {
+    const req = makeRequirement();
+    // Before event timestamp is still before deadline
+    const trust = computeDecayedTrust(req, req.event.timestamp - 1000);
+    expect(trust).toBe(0.7);
+  });
+
+  it('works with minor_patch decay rate (0.01)', () => {
+    const req = makeRequirement({
+      trustReductionFactor: 0.9,
+      autoDecayRate: 0.01,
+    });
+    const oneHourMs = 60 * 60 * 1000;
+
+    // 5 hours past deadline: 0.9 - 0.01 * 5 = 0.85
+    const trust = computeDecayedTrust(req, req.deadline + 5 * oneHourMs);
+    expect(trust).toBeCloseTo(0.85, 5);
+  });
+
+  it('works with architecture_change decay rate (0.1)', () => {
+    const req = makeRequirement({
+      trustReductionFactor: 0.5,
+      autoDecayRate: 0.1,
+    });
+    const oneHourMs = 60 * 60 * 1000;
+
+    // 3 hours past deadline: 0.5 - 0.1 * 3 = 0.2
+    const trust = computeDecayedTrust(req, req.deadline + 3 * oneHourMs);
+    expect(trust).toBeCloseTo(0.2, 5);
+  });
+
+  it('reaches 0 at the exact right time for provider_switch', () => {
+    const req = makeRequirement({
+      trustReductionFactor: 0.3,
+      autoDecayRate: 0.1,
+    });
+    const oneHourMs = 60 * 60 * 1000;
+
+    // 3 hours past deadline: 0.3 - 0.1 * 3 = 0
+    const trust = computeDecayedTrust(req, req.deadline + 3 * oneHourMs);
+    expect(trust).toBeCloseTo(0, 5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// completeReverification
+// ---------------------------------------------------------------------------
+describe('completeReverification', () => {
+  function makeRequirement(overrides?: Partial<ReverificationRequirement>): ReverificationRequirement {
+    const event: ModelUpdateEvent = {
+      agentId: 'agent-1',
+      previousModelHash: 'abc',
+      newModelHash: 'def',
+      updateType: 'major_update',
+      timestamp: 1000000,
+      operatorAcknowledged: true,
+    };
+    return {
+      event,
+      gracePeriodMs: 48 * 60 * 60 * 1000,
+      trustReductionFactor: 0.7,
+      requiredActions: ['canary_rerun', 'lineage_verification'],
+      autoDecayRate: 0.05,
+      deadline: 1000000 + 48 * 60 * 60 * 1000,
+      ...overrides,
+    };
+  }
+
+  it('passes when canary >= 95%, lineage verified, no audit required', () => {
+    const result = completeReverification({
+      requirement: makeRequirement(),
+      canaryTotal: 100,
+      canaryPassed: 96,
+      lineageVerified: true,
+    });
+
+    expect(result.passed).toBe(true);
+    expect(result.newTrustLevel).toBe(1.0);
+    expect(result.lineagePreserved).toBe(true);
+    expect(result.agentId).toBe('agent-1');
+    expect(result.recommendation).toContain('restored to full trust');
+  });
+
+  it('passes with exactly 95% canary pass rate', () => {
+    const result = completeReverification({
+      requirement: makeRequirement(),
+      canaryTotal: 100,
+      canaryPassed: 95,
+      lineageVerified: true,
+    });
+
+    expect(result.passed).toBe(true);
+    expect(result.newTrustLevel).toBe(1.0);
+  });
+
+  it('fails with 94% canary pass rate', () => {
+    const result = completeReverification({
+      requirement: makeRequirement(),
+      canaryTotal: 100,
+      canaryPassed: 94,
+      lineageVerified: true,
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.newTrustLevel).toBeLessThan(1.0);
+    // newTrustLevel = 0.94 * 0.8 = 0.752
+    expect(result.newTrustLevel).toBeCloseTo(0.752, 3);
+    expect(result.recommendation).toContain('below 95%');
+  });
+
+  it('fails when lineage is not verified', () => {
+    const result = completeReverification({
+      requirement: makeRequirement(),
+      canaryTotal: 100,
+      canaryPassed: 100,
+      lineageVerified: false,
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.lineagePreserved).toBe(false);
+    // newTrustLevel = 1.0 * 0.5 = 0.5
+    expect(result.newTrustLevel).toBeCloseTo(0.5, 3);
+    expect(result.recommendation).toContain('Lineage could not be verified');
+  });
+
+  it('fails when both canary and lineage fail', () => {
+    const result = completeReverification({
+      requirement: makeRequirement(),
+      canaryTotal: 100,
+      canaryPassed: 50,
+      lineageVerified: false,
+    });
+
+    expect(result.passed).toBe(false);
+    // newTrustLevel = 0.5 * 0.5 = 0.25
+    expect(result.newTrustLevel).toBeCloseTo(0.25, 3);
+    expect(result.recommendation).toContain('below 95%');
+    expect(result.recommendation).toContain('lineage');
+  });
+
+  it('requires behavioral audit for architecture_change', () => {
+    const req = makeRequirement({
+      requiredActions: ['canary_rerun', 'lineage_verification', 'full_behavioral_audit'],
+    });
+
+    // Without behavioral audit
+    const resultFail = completeReverification({
+      requirement: req,
+      canaryTotal: 100,
+      canaryPassed: 100,
+      lineageVerified: true,
+      // behavioralAuditPassed not provided
+    });
+
+    expect(resultFail.passed).toBe(false);
+    expect(resultFail.recommendation).toContain('behavioral audit');
+
+    // With behavioral audit passed
+    const resultPass = completeReverification({
+      requirement: req,
+      canaryTotal: 100,
+      canaryPassed: 100,
+      lineageVerified: true,
+      behavioralAuditPassed: true,
+    });
+
+    expect(resultPass.passed).toBe(true);
+    expect(resultPass.newTrustLevel).toBe(1.0);
+  });
+
+  it('fails when behavioral audit fails', () => {
+    const req = makeRequirement({
+      requiredActions: ['canary_rerun', 'lineage_verification', 'full_behavioral_audit'],
+    });
+
+    const result = completeReverification({
+      requirement: req,
+      canaryTotal: 100,
+      canaryPassed: 100,
+      lineageVerified: true,
+      behavioralAuditPassed: false,
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.recommendation).toContain('behavioral audit');
+  });
+
+  it('includes canary results in output', () => {
+    const result = completeReverification({
+      requirement: makeRequirement(),
+      canaryTotal: 200,
+      canaryPassed: 190,
+      lineageVerified: true,
+    });
+
+    expect(result.canaryResults).toBeDefined();
+    expect(result.canaryResults!.total).toBe(200);
+    expect(result.canaryResults!.passed).toBe(190);
+    expect(result.canaryResults!.failed).toBe(10);
+  });
+
+  it('handles zero canary tests', () => {
+    const result = completeReverification({
+      requirement: makeRequirement(),
+      canaryTotal: 0,
+      canaryPassed: 0,
+      lineageVerified: true,
+    });
+
+    // canaryPassRate = 0 which is < 0.95
+    expect(result.passed).toBe(false);
+    expect(result.newTrustLevel).toBeCloseTo(0, 3); // 0 * 0.8 = 0
+  });
+
+  it('handles all canary tests passing', () => {
+    const result = completeReverification({
+      requirement: makeRequirement(),
+      canaryTotal: 1000,
+      canaryPassed: 1000,
+      lineageVerified: true,
+    });
+
+    expect(result.passed).toBe(true);
+    expect(result.newTrustLevel).toBe(1.0);
+    expect(result.canaryResults!.failed).toBe(0);
+  });
+
+  it('preserves agentId from the requirement event', () => {
+    const req = makeRequirement();
+    req.event.agentId = 'special-agent-007';
+
+    const result = completeReverification({
+      requirement: req,
+      canaryTotal: 100,
+      canaryPassed: 100,
+      lineageVerified: true,
+    });
+
+    expect(result.agentId).toBe('special-agent-007');
+  });
+
+  it('lineagePreserved reflects lineageVerified input', () => {
+    const resultTrue = completeReverification({
+      requirement: makeRequirement(),
+      canaryTotal: 100,
+      canaryPassed: 100,
+      lineageVerified: true,
+    });
+    expect(resultTrue.lineagePreserved).toBe(true);
+
+    const resultFalse = completeReverification({
+      requirement: makeRequirement(),
+      canaryTotal: 100,
+      canaryPassed: 100,
+      lineageVerified: false,
+    });
+    expect(resultFalse.lineagePreserved).toBe(false);
+  });
+
+  it('partial trust with lineage verified uses 0.8 multiplier', () => {
+    const result = completeReverification({
+      requirement: makeRequirement(),
+      canaryTotal: 100,
+      canaryPassed: 80,
+      lineageVerified: true,
+    });
+
+    expect(result.passed).toBe(false);
+    // newTrustLevel = 0.80 * 0.8 = 0.64
+    expect(result.newTrustLevel).toBeCloseTo(0.64, 3);
+  });
+
+  it('partial trust without lineage uses 0.5 multiplier', () => {
+    const result = completeReverification({
+      requirement: makeRequirement(),
+      canaryTotal: 100,
+      canaryPassed: 80,
+      lineageVerified: false,
+    });
+
+    expect(result.passed).toBe(false);
+    // newTrustLevel = 0.80 * 0.5 = 0.40
+    expect(result.newTrustLevel).toBeCloseTo(0.40, 3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Integration: triggerReverification + computeDecayedTrust + completeReverification
+// ---------------------------------------------------------------------------
+describe('re-verification integration', () => {
+  it('full lifecycle: trigger -> decay -> complete (pass)', () => {
+    const event: ModelUpdateEvent = {
+      agentId: 'agent-lifecycle',
+      previousModelHash: 'hash-old',
+      newModelHash: 'hash-new',
+      updateType: 'major_update',
+      timestamp: Date.now(),
+      operatorAcknowledged: true,
+    };
+
+    // Step 1: Trigger
+    const req = triggerReverification(event);
+    expect(req.trustReductionFactor).toBe(0.7);
+    expect(req.gracePeriodMs).toBe(48 * 60 * 60 * 1000);
+
+    // Step 2: Check trust during grace period
+    const trustDuring = computeDecayedTrust(req, req.deadline - 1000);
+    expect(trustDuring).toBe(0.7);
+
+    // Step 3: Complete re-verification successfully
+    const result = completeReverification({
+      requirement: req,
+      canaryTotal: 100,
+      canaryPassed: 98,
+      lineageVerified: true,
+    });
+    expect(result.passed).toBe(true);
+    expect(result.newTrustLevel).toBe(1.0);
+  });
+
+  it('full lifecycle: trigger -> decay past deadline -> complete (fail)', () => {
+    const event: ModelUpdateEvent = {
+      agentId: 'agent-slow',
+      previousModelHash: 'hash-old',
+      newModelHash: 'hash-new',
+      updateType: 'provider_switch',
+      timestamp: 1000000,
+      operatorAcknowledged: false,
+    };
+
+    // Step 1: Trigger
+    const req = triggerReverification(event);
+    expect(req.trustReductionFactor).toBe(0.3);
+    expect(req.autoDecayRate).toBe(0.1);
+
+    // Step 2: Trust at 2 hours past deadline
+    const oneHourMs = 60 * 60 * 1000;
+    const trustDecayed = computeDecayedTrust(req, req.deadline + 2 * oneHourMs);
+    // 0.3 - 0.1 * 2 = 0.1
+    expect(trustDecayed).toBeCloseTo(0.1, 5);
+
+    // Step 3: Trust at 4 hours past deadline -> 0
+    const trustGone = computeDecayedTrust(req, req.deadline + 4 * oneHourMs);
+    expect(trustGone).toBe(0);
+
+    // Step 4: Complete re-verification with poor results
+    const result = completeReverification({
+      requirement: req,
+      canaryTotal: 100,
+      canaryPassed: 70,
+      lineageVerified: false,
+      behavioralAuditPassed: false,
+    });
+    expect(result.passed).toBe(false);
+    expect(result.newTrustLevel).toBeCloseTo(0.35, 3); // 0.7 * 0.5
+  });
+
+  it('all update types produce valid requirements', () => {
+    const types: ModelUpdateEvent['updateType'][] = ['minor_patch', 'major_update', 'architecture_change', 'provider_switch'];
+
+    for (const updateType of types) {
+      const event: ModelUpdateEvent = {
+        agentId: `agent-${updateType}`,
+        previousModelHash: 'old',
+        newModelHash: 'new',
+        updateType,
+        timestamp: Date.now(),
+        operatorAcknowledged: true,
+      };
+
+      const req = triggerReverification(event);
+      expect(req.gracePeriodMs).toBeGreaterThan(0);
+      expect(req.trustReductionFactor).toBeGreaterThan(0);
+      expect(req.trustReductionFactor).toBeLessThanOrEqual(1);
+      expect(req.autoDecayRate).toBeGreaterThan(0);
+      expect(req.deadline).toBeGreaterThan(event.timestamp);
+      expect(req.requiredActions.length).toBeGreaterThanOrEqual(2);
+    }
   });
 });

@@ -5,11 +5,27 @@
     "outDir": "dist",
     "composite": true
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
-    { "path": "../types" },
-    { "path": "../sdk" },
-    { "path": "../store" },
-    { "path": "../core" }
+    {
+      "path": "../types"
+    },
+    {
+      "path": "../sdk"
+    },
+    {
+      "path": "../store"
+    },
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../identity"
+    },
+    {
+      "path": "../ccl"
+    }
   ]
 }

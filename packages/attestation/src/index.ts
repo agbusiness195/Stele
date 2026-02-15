@@ -369,3 +369,325 @@ export function computeAttestationCoverage(
     uncoveredActionIds,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Trust Entanglement
+// ---------------------------------------------------------------------------
+
+/**
+ * A cryptographically linked trust relationship between two agents.
+ * Verifying one agent partially verifies its entangled partners.
+ */
+export interface EntanglementLink {
+  sourceAgentId: string;
+  targetAgentId: string;
+  entanglementStrength: number; // 0-1, how strongly linked
+  mutualObligations: string[];  // shared covenant commitments
+  conditionalDependencies: string[]; // if source fails, what happens to target
+  createdAt: number;
+  linkHash: string; // hash binding both agents
+}
+
+/**
+ * A network of entangled trust relationships enabling sublinear verification cost.
+ */
+export interface EntanglementNetwork {
+  links: EntanglementLink[];
+  agents: Set<string>;
+  verificationCoverage: number; // 0-1, fraction of network verified by verifying subset
+  sublinearCostRatio: number; // actual_cost / full_cost
+}
+
+/**
+ * Create an entanglement link between two agents.
+ *
+ * The link is cryptographically bound via a hash of the sorted agent IDs,
+ * strength, and mutual obligations. This produces a deterministic identifier
+ * for the relationship regardless of which agent is considered source or target.
+ *
+ * @param params - Entanglement parameters including agent IDs, strength, and obligations.
+ * @returns An EntanglementLink with a computed linkHash.
+ *
+ * @example
+ * ```typescript
+ * const link = createEntanglement({
+ *   sourceAgentId: 'agent-a',
+ *   targetAgentId: 'agent-b',
+ *   strength: 0.8,
+ *   mutualObligations: ['data-privacy', 'response-time'],
+ * });
+ * ```
+ */
+export function createEntanglement(params: {
+  sourceAgentId: string;
+  targetAgentId: string;
+  strength: number;
+  mutualObligations?: string[];
+  conditionalDependencies?: string[];
+}): EntanglementLink {
+  if (!params.sourceAgentId || typeof params.sourceAgentId !== 'string') {
+    throw new Error('sourceAgentId must be a non-empty string');
+  }
+  if (!params.targetAgentId || typeof params.targetAgentId !== 'string') {
+    throw new Error('targetAgentId must be a non-empty string');
+  }
+  if (typeof params.strength !== 'number' || params.strength < 0 || params.strength > 1) {
+    throw new Error('strength must be a number between 0 and 1');
+  }
+
+  const mutualObligations = params.mutualObligations ?? [];
+  const conditionalDependencies = params.conditionalDependencies ?? [];
+  const createdAt = Date.now();
+
+  // linkHash = hash of sorted(sourceAgentId, targetAgentId) + strength + obligations
+  const sortedAgents = [params.sourceAgentId, params.targetAgentId].sort();
+  const linkHash = sha256Object({
+    agents: sortedAgents,
+    strength: params.strength,
+    obligations: mutualObligations,
+  });
+
+  return {
+    sourceAgentId: params.sourceAgentId,
+    targetAgentId: params.targetAgentId,
+    entanglementStrength: params.strength,
+    mutualObligations,
+    conditionalDependencies,
+    createdAt,
+    linkHash,
+  };
+}
+
+/**
+ * Build an entanglement network from a collection of links.
+ *
+ * Collects all unique agents, computes the verification coverage based on
+ * network-effect strength propagation, and calculates the sublinear cost ratio.
+ *
+ * The verification coverage formula accounts for transitive trust:
+ *   coverage = 1 - (1 - avgStrength)^avgLinksPerAgent
+ *
+ * The sublinear cost ratio is: sqrt(agents.size) / agents.size
+ *
+ * @param links - Array of entanglement links to form the network.
+ * @returns An EntanglementNetwork with computed coverage and cost metrics.
+ *
+ * @example
+ * ```typescript
+ * const network = buildEntanglementNetwork([link1, link2, link3]);
+ * console.log(network.verificationCoverage); // e.g. 0.75
+ * console.log(network.sublinearCostRatio);   // e.g. 0.577 for 3 agents
+ * ```
+ */
+export function buildEntanglementNetwork(links: EntanglementLink[]): EntanglementNetwork {
+  const agents = new Set<string>();
+
+  for (const link of links) {
+    agents.add(link.sourceAgentId);
+    agents.add(link.targetAgentId);
+  }
+
+  if (agents.size === 0) {
+    return {
+      links: [...links],
+      agents,
+      verificationCoverage: 0,
+      sublinearCostRatio: 1,
+    };
+  }
+
+  // Compute average strength across all links
+  const avgStrength = links.length > 0
+    ? links.reduce((sum, l) => sum + l.entanglementStrength, 0) / links.length
+    : 0;
+
+  // Compute average links per agent
+  const avgLinksPerAgent = links.length > 0
+    ? (links.length * 2) / agents.size // each link connects 2 agents
+    : 0;
+
+  // verificationCoverage = 1 - (1 - avgStrength)^avgLinksPerAgent (network effect)
+  const verificationCoverage = 1 - Math.pow(1 - avgStrength, avgLinksPerAgent);
+
+  // sublinearCostRatio = sqrt(agents.size) / agents.size
+  const sublinearCostRatio = Math.sqrt(agents.size) / agents.size;
+
+  return {
+    links: [...links],
+    agents,
+    verificationCoverage,
+    sublinearCostRatio,
+  };
+}
+
+/**
+ * Verify an agent and determine which other agents are transitively verified
+ * through entanglement links.
+ *
+ * Walks the entanglement graph from the verified agent using breadth-first search.
+ * Confidence decays multiplicatively with each hop (multiplied by link strength).
+ * Only agents with confidence > 0.1 are considered transitively verified.
+ *
+ * @param network - The entanglement network to search.
+ * @param verifiedAgentId - The agent that has been directly verified.
+ * @returns Verification results including transitively verified agents and cost savings.
+ *
+ * @example
+ * ```typescript
+ * const result = verifyEntangled(network, 'agent-a');
+ * console.log(result.transitivelyVerified); // ['agent-b', 'agent-c']
+ * console.log(result.costSavings);          // 0.66
+ * ```
+ */
+export function verifyEntangled(network: EntanglementNetwork, verifiedAgentId: string): {
+  directlyVerified: string;
+  transitivelyVerified: string[];
+  transitiveConfidence: Record<string, number>;
+  costSavings: number;
+} {
+  const transitiveConfidence: Record<string, number> = {};
+  const visited = new Set<string>();
+  visited.add(verifiedAgentId);
+
+  // Build adjacency list from links
+  const adjacency = new Map<string, Array<{ agentId: string; strength: number }>>();
+  for (const link of network.links) {
+    if (!adjacency.has(link.sourceAgentId)) {
+      adjacency.set(link.sourceAgentId, []);
+    }
+    if (!adjacency.has(link.targetAgentId)) {
+      adjacency.set(link.targetAgentId, []);
+    }
+    adjacency.get(link.sourceAgentId)!.push({
+      agentId: link.targetAgentId,
+      strength: link.entanglementStrength,
+    });
+    adjacency.get(link.targetAgentId)!.push({
+      agentId: link.sourceAgentId,
+      strength: link.entanglementStrength,
+    });
+  }
+
+  // BFS with confidence decay
+  const queue: Array<{ agentId: string; confidence: number }> = [];
+
+  // Seed with directly connected agents
+  const directNeighbors = adjacency.get(verifiedAgentId) ?? [];
+  for (const neighbor of directNeighbors) {
+    if (!visited.has(neighbor.agentId)) {
+      const confidence = neighbor.strength;
+      if (confidence > 0.1) {
+        transitiveConfidence[neighbor.agentId] = Math.max(
+          transitiveConfidence[neighbor.agentId] ?? 0,
+          confidence,
+        );
+        queue.push({ agentId: neighbor.agentId, confidence });
+        visited.add(neighbor.agentId);
+      }
+    }
+  }
+
+  // Continue BFS
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const neighbors = adjacency.get(current.agentId) ?? [];
+
+    for (const neighbor of neighbors) {
+      if (!visited.has(neighbor.agentId)) {
+        const confidence = current.confidence * neighbor.strength;
+        if (confidence > 0.1) {
+          transitiveConfidence[neighbor.agentId] = Math.max(
+            transitiveConfidence[neighbor.agentId] ?? 0,
+            confidence,
+          );
+          queue.push({ agentId: neighbor.agentId, confidence });
+          visited.add(neighbor.agentId);
+        }
+      }
+    }
+  }
+
+  const transitivelyVerified = Object.keys(transitiveConfidence);
+
+  // costSavings = (transitivelyVerified.length) / (network.agents.size)
+  const costSavings = network.agents.size > 0
+    ? transitivelyVerified.length / network.agents.size
+    : 0;
+
+  return {
+    directlyVerified: verifiedAgentId,
+    transitivelyVerified,
+    transitiveConfidence,
+    costSavings,
+  };
+}
+
+/**
+ * Assess the conditional risk of an agent failure cascading through the
+ * entanglement network.
+ *
+ * Finds all agents with conditional dependencies on the failed agent and
+ * computes the cascade risk as the ratio of affected link strengths to
+ * total network strength.
+ *
+ * @param network - The entanglement network to assess.
+ * @param failedAgentId - The agent that has failed.
+ * @returns Risk assessment with affected agents, cascade risk, and recommendations.
+ *
+ * @example
+ * ```typescript
+ * const risk = assessConditionalRisk(network, 'agent-a');
+ * console.log(risk.cascadeRisk);      // 0.4
+ * console.log(risk.affectedAgents);   // ['agent-b']
+ * console.log(risk.recommendations);  // ['Re-verify agent-b...']
+ * ```
+ */
+export function assessConditionalRisk(network: EntanglementNetwork, failedAgentId: string): {
+  affectedAgents: string[];
+  cascadeRisk: number;
+  recommendations: string[];
+} {
+  const affectedAgents: string[] = [];
+  let affectedStrength = 0;
+  let totalStrength = 0;
+
+  for (const link of network.links) {
+    totalStrength += link.entanglementStrength;
+
+    // Check if this link involves the failed agent and has conditional dependencies
+    const isSourceFailed = link.sourceAgentId === failedAgentId;
+    const isTargetFailed = link.targetAgentId === failedAgentId;
+
+    if ((isSourceFailed || isTargetFailed) && link.conditionalDependencies.length > 0) {
+      const affectedAgent = isSourceFailed ? link.targetAgentId : link.sourceAgentId;
+      if (!affectedAgents.includes(affectedAgent)) {
+        affectedAgents.push(affectedAgent);
+      }
+      affectedStrength += link.entanglementStrength;
+    }
+  }
+
+  const cascadeRisk = totalStrength > 0 ? affectedStrength / totalStrength : 0;
+
+  const recommendations: string[] = [];
+  if (affectedAgents.length === 0) {
+    recommendations.push('No conditional dependencies found. Network impact is minimal.');
+  } else {
+    for (const agent of affectedAgents) {
+      recommendations.push(
+        `Re-verify ${agent} independently due to conditional dependency on failed agent ${failedAgentId}.`,
+      );
+    }
+    if (cascadeRisk > 0.5) {
+      recommendations.push(
+        'High cascade risk detected. Consider isolating affected agents and performing full network re-verification.',
+      );
+    }
+  }
+
+  return {
+    affectedAgents,
+    cascadeRisk,
+    recommendations,
+  };
+}

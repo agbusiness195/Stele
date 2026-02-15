@@ -786,7 +786,7 @@ describe('edge cases', () => {
     await wrapped.handleToolCall!('read_file', { path: '/c' });
 
     const log = wrapped.getAuditLog();
-    const hashes = log.entries.map((e) => e.hash);
+    const hashes = log.entries.map((e: { hash: string }) => e.hash);
     const uniqueHashes = new Set(hashes);
     expect(uniqueHashes.size).toBe(3);
   });
@@ -1134,7 +1134,7 @@ describe('SteleGuard - edge cases', () => {
         name: `tool_${i}`,
         description: `Tool ${i}`,
       })),
-      handleToolCall: async (name) => ({ tool: name }),
+      handleToolCall: async (name: string) => ({ tool: name }),
     };
     const kp = await generateKeyPair();
 

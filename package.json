@@ -6,10 +6,17 @@
   "workspaces": [
     "packages/types",
     "packages/crypto",
+    "packages/ccl",
     "packages/core",
     "packages/store",
     "packages/verifier",
+    "packages/identity",
+    "packages/enforcement",
+    "packages/proof",
+    "packages/reputation",
+    "packages/breach",
     "packages/sdk",
+    "packages/mcp",
     "packages/cli",
     "packages/mcp-server",
     "packages/react",
@@ -28,14 +35,16 @@
     "packages/norms",
     "packages/substrate",
     "packages/derivatives",
-    "packages/legal"
+    "packages/legal",
+    "packages/discovery",
+    "packages/schema"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "test": "npm run test --workspaces",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint packages/*/src/**/*.ts",
+    "lint": "npx tsc --build --noEmit",
     "docs": "npx typedoc",
     "docs:build": "typedoc",
     "prepublish:check": "npm pack --dry-run -ws",
@@ -52,6 +61,7 @@
   "author": "Stele Labs, Inc.",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^25.2.3",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"

@@ -241,7 +241,7 @@ describe('DocumentMigrator', () => {
           description: 'Step 2',
           migrate(doc) {
             // Verify step1 was applied
-            const result = { ...doc, version: '1.0', step2: true };
+            const result: Record<string, unknown> = { ...doc, version: '1.0', step2: true };
             result.step1Seen = doc.step1 === true;
             return result;
           },

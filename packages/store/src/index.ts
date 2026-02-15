@@ -8,6 +8,7 @@
  */
 
 import type { CovenantDocument } from '@stele/core';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 import type {
   CovenantStore,
@@ -31,6 +32,21 @@ export { SqliteStore } from './sqlite-store';
 export type { SQLiteDriver } from './sqlite-store';
 
 // ─── Filter helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Return true when the filter has at least one criterion set.
+ * Used to short-circuit list/count when callers pass an empty `{}`.
+ */
+function hasFilterCriteria(filter: StoreFilter): boolean {
+  return (
+    filter.issuerId !== undefined ||
+    filter.beneficiaryId !== undefined ||
+    filter.createdAfter !== undefined ||
+    filter.createdBefore !== undefined ||
+    filter.hasChain !== undefined ||
+    (filter.tags !== undefined && filter.tags.length > 0)
+  );
+}
 
 /**
  * Test whether a document matches every criterion in the given filter.
@@ -99,7 +115,11 @@ export class MemoryStore implements CovenantStore {
       timestamp: new Date().toISOString(),
     };
     for (const cb of this.listeners) {
-      cb(event);
+      try {
+        cb(event);
+      } catch {
+        // Listener errors must not prevent other listeners from being notified
+      }
     }
   }
 
@@ -121,17 +141,41 @@ export class MemoryStore implements CovenantStore {
    */
   async put(doc: CovenantDocument): Promise<void> {
     if (doc == null) {
-      throw new Error('put(): document is required');
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_DOC,
+        'put(): document is required',
+        { hint: 'Pass a valid CovenantDocument object to store.' }
+      );
+    }
+    if (typeof doc !== 'object') {
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_DOC,
+        'put(): document must be an object',
+        { hint: 'Pass a valid CovenantDocument object with at least an id field.' }
+      );
     }
     if (!doc.id || (typeof doc.id === 'string' && doc.id.trim().length === 0)) {
-      throw new Error('put(): document.id is required and must be a non-empty string');
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_ID,
+        'put(): document.id is required and must be a non-empty string',
+        { hint: 'Ensure the document has a non-empty id field. Use buildCovenant() to generate properly identified documents.' }
+      );
     }
-    this.data.set(doc.id, doc);
+    if (!doc.issuer || !doc.beneficiary || !doc.constraints) {
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_DOC,
+        'put(): document is missing required fields (issuer, beneficiary, or constraints)',
+        { hint: 'Ensure the document has issuer, beneficiary, and constraints fields. Use buildCovenant() to generate complete documents.' }
+      );
+    }
+    this.data.set(doc.id, structuredClone(doc));
     this.emit('put', doc.id, doc);
   }
 
   /**
    * Retrieve a covenant document by its ID.
+   *
+   * Returns a defensive copy so callers cannot mutate the stored data.
    *
    * @param id - The document ID to look up.
    * @returns The document, or `undefined` if not found.
@@ -143,7 +187,15 @@ export class MemoryStore implements CovenantStore {
    * ```
    */
   async get(id: string): Promise<CovenantDocument | undefined> {
-    return this.data.get(id);
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_ID,
+        'get(): id must be a non-empty string',
+        { hint: 'Pass the document ID (a hex-encoded hash) to retrieve.' }
+      );
+    }
+    const doc = this.data.get(id);
+    return doc ? structuredClone(doc) : undefined;
   }
 
   /**
@@ -163,6 +215,13 @@ export class MemoryStore implements CovenantStore {
    * @returns `true` if the document was found and deleted, `false` if not found.
    */
   async delete(id: string): Promise<boolean> {
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_ID,
+        'delete(): id must be a non-empty string',
+        { hint: 'Pass the document ID (a hex-encoded hash) to delete.' }
+      );
+    }
     const existed = this.data.delete(id);
     if (existed) {
       this.emit('delete', id);
@@ -182,11 +241,17 @@ export class MemoryStore implements CovenantStore {
    * ```
    */
   async list(filter?: StoreFilter): Promise<CovenantDocument[]> {
-    const all = Array.from(this.data.values());
-    if (!filter) {
-      return all;
+    if (!filter || !hasFilterCriteria(filter)) {
+      return Array.from(this.data.values()).map(doc => structuredClone(doc));
     }
-    return all.filter((doc) => matchesFilter(doc, filter));
+    // Iterate the Map directly to avoid allocating a full intermediate array.
+    const results: CovenantDocument[] = [];
+    for (const doc of this.data.values()) {
+      if (matchesFilter(doc, filter)) {
+        results.push(structuredClone(doc));
+      }
+    }
+    return results;
   }
 
   /**
@@ -196,7 +261,7 @@ export class MemoryStore implements CovenantStore {
    * @returns The number of matching documents.
    */
   async count(filter?: StoreFilter): Promise<number> {
-    if (!filter) {
+    if (!filter || !hasFilterCriteria(filter)) {
       return this.data.size;
     }
     let n = 0;
@@ -218,9 +283,15 @@ export class MemoryStore implements CovenantStore {
    * @param docs - The documents to store.
    */
   async putBatch(docs: CovenantDocument[]): Promise<void> {
+    if (!Array.isArray(docs)) {
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_DOC,
+        'putBatch(): docs must be an array',
+        { hint: 'Pass an array of CovenantDocument objects.' }
+      );
+    }
     for (const doc of docs) {
-      this.data.set(doc.id, doc);
-      this.emit('put', doc.id, doc);
+      await this.put(doc);
     }
   }
 
@@ -231,7 +302,10 @@ export class MemoryStore implements CovenantStore {
    * @returns An array where each element is the document or `undefined` if not found.
    */
   async getBatch(ids: string[]): Promise<(CovenantDocument | undefined)[]> {
-    return ids.map((id) => this.data.get(id));
+    return ids.map((id) => {
+      const doc = this.data.get(id);
+      return doc ? structuredClone(doc) : undefined;
+    });
   }
 
   /**

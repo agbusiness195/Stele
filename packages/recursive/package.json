@@ -1,22 +1,25 @@
 {
   "name": "@stele/recursive",
   "version": "0.1.0",
+  "description": "Recursive covenant structures with self-referential constraints",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "module": "dist/index.mjs",
+  "module": "./dist/index.mjs",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "default": "./dist/index.mjs"
+      "default": "./dist/index.js"
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
     "bundle": "tsup src/index.ts --format cjs,esm",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "files": [
     "dist",
@@ -27,6 +30,11 @@
     "@stele/crypto": "0.1.0"
   },
   "license": "MIT",
+  "author": "Stele Labs, Inc.",
+  "homepage": "https://stele.dev",
+  "bugs": {
+    "url": "https://github.com/agbusiness195/stele/issues"
+  },
   "engines": {
     "node": ">=18"
   },
@@ -41,6 +49,10 @@
   "keywords": [
     "stele",
     "covenant",
-    "ai-accountability"
+    "ai-accountability",
+    "recursive",
+    "meta-covenant",
+    "trust-transitivity",
+    "verification"
   ]
 }

@@ -5,6 +5,13 @@
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.js"
+    }
+  },
   "bin": {
     "stele-mcp": "dist/bin.js"
   },
@@ -14,7 +21,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepublishOnly": "npm run build"
@@ -50,5 +57,6 @@
     "ai-accountability",
     "mcp",
     "model-context-protocol"
-  ]
+  ],
+  "module": "./dist/index.mjs"
 }

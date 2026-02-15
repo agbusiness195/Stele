@@ -14,6 +14,26 @@
     { "path": "../identity" },
     { "path": "../store" },
     { "path": "../verifier" },
-    { "path": "../negotiation" }
+    { "path": "../negotiation" },
+    { "path": "../discovery" },
+    { "path": "../schema" },
+    { "path": "../breach" },
+    { "path": "../reputation" },
+    { "path": "../proof" },
+    { "path": "../attestation" },
+    { "path": "../temporal" },
+    { "path": "../canary" },
+    { "path": "../gametheory" },
+    { "path": "../composition" },
+    { "path": "../antifragile" },
+    { "path": "../consensus" },
+    { "path": "../robustness" },
+    { "path": "../recursive" },
+    { "path": "../alignment" },
+    { "path": "../norms" },
+    { "path": "../substrate" },
+    { "path": "../derivatives" },
+    { "path": "../legal" },
+    { "path": "../enforcement" }
   ]
 }

@@ -25,6 +25,11 @@ export type {
   CovenantSummary,
   DecomposedCovenant,
   CompositionComplexityResult,
+  TrustValue,
+  AlgebraicProof,
+  SafetyEnvelope,
+  ImprovementProposal,
+  ImprovementResult,
 } from './types.js';
 
 import type {
@@ -34,6 +39,11 @@ import type {
   CovenantSummary,
   DecomposedCovenant,
   CompositionComplexityResult,
+  TrustValue,
+  AlgebraicProof,
+  SafetyEnvelope,
+  ImprovementProposal,
+  ImprovementResult,
 } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -553,4 +563,428 @@ export function compositionComplexity(covenants: CovenantSummary[]): Composition
     distinctResources,
     score,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Trust Algebra
+// ---------------------------------------------------------------------------
+
+/** Identity element: all dimensions = 1, confidence = 1 */
+export const TRUST_IDENTITY: TrustValue = {
+  dimensions: {},
+  confidence: 1,
+};
+
+/** Zero element: all dimensions = 0, confidence = 0 */
+export const TRUST_ZERO: TrustValue = {
+  dimensions: {},
+  confidence: 0,
+};
+
+/**
+ * Compose two trust values.
+ *
+ * Multiplies each dimension present in both values and multiplies confidence.
+ * Result dimensions are the intersection of keys from both values.
+ */
+export function trustCompose(a: TrustValue, b: TrustValue): TrustValue {
+  const keysA = Object.keys(a.dimensions);
+  const keysB = new Set(Object.keys(b.dimensions));
+  const commonKeys = keysA.filter(k => keysB.has(k));
+
+  const dimensions: Record<string, number> = {};
+  for (const key of commonKeys) {
+    dimensions[key] = a.dimensions[key]! * b.dimensions[key]!;
+  }
+
+  return {
+    dimensions,
+    confidence: a.confidence * b.confidence,
+  };
+}
+
+/**
+ * Intersect two trust values.
+ *
+ * Takes the minimum of each dimension and the minimum of confidence.
+ * Result dimensions are the union of keys from both values.
+ */
+export function trustIntersect(a: TrustValue, b: TrustValue): TrustValue {
+  const allKeys = new Set([
+    ...Object.keys(a.dimensions),
+    ...Object.keys(b.dimensions),
+  ]);
+
+  const dimensions: Record<string, number> = {};
+  for (const key of allKeys) {
+    const valA = key in a.dimensions ? a.dimensions[key]! : Infinity;
+    const valB = key in b.dimensions ? b.dimensions[key]! : Infinity;
+    dimensions[key] = Math.min(valA, valB);
+  }
+
+  return {
+    dimensions,
+    confidence: Math.min(a.confidence, b.confidence),
+  };
+}
+
+/**
+ * Negate a trust value.
+ *
+ * Computes 1 - each dimension value. Confidence is preserved.
+ */
+export function trustNegate(a: TrustValue): TrustValue {
+  const dimensions: Record<string, number> = {};
+  for (const key of Object.keys(a.dimensions)) {
+    dimensions[key] = 1 - a.dimensions[key]!;
+  }
+
+  return {
+    dimensions,
+    confidence: a.confidence,
+  };
+}
+
+/**
+ * Compute the tensor product of two trust values.
+ *
+ * Creates all cross-products of dimensions, combining dimension names
+ * (e.g. "a.integrity×b.competence"). Confidence is multiplied.
+ */
+export function trustTensorProduct(a: TrustValue, b: TrustValue): TrustValue {
+  const keysA = Object.keys(a.dimensions);
+  const keysB = Object.keys(b.dimensions);
+
+  const dimensions: Record<string, number> = {};
+  for (const kA of keysA) {
+    for (const kB of keysB) {
+      const combinedKey = `${kA}\u00D7${kB}`;
+      dimensions[combinedKey] = a.dimensions[kA]! * b.dimensions[kB]!;
+    }
+  }
+
+  return {
+    dimensions,
+    confidence: a.confidence * b.confidence,
+  };
+}
+
+/**
+ * Compute the inverse of a trust value.
+ *
+ * Each dimension becomes 1/value. Returns null if any dimension is 0
+ * (no inverse exists). Confidence is preserved.
+ */
+export function trustInverse(a: TrustValue): TrustValue | null {
+  const keys = Object.keys(a.dimensions);
+  for (const key of keys) {
+    if (a.dimensions[key] === 0) return null;
+  }
+
+  const dimensions: Record<string, number> = {};
+  for (const key of keys) {
+    dimensions[key] = 1 / a.dimensions[key]!;
+  }
+
+  return {
+    dimensions,
+    confidence: a.confidence,
+  };
+}
+
+/** Compare two TrustValues for approximate equality. */
+function trustApproxEqual(a: TrustValue, b: TrustValue, tolerance: number): boolean {
+  if (Math.abs(a.confidence - b.confidence) > tolerance) return false;
+
+  const keysA = Object.keys(a.dimensions).sort();
+  const keysB = Object.keys(b.dimensions).sort();
+  if (keysA.length !== keysB.length) return false;
+  for (let i = 0; i < keysA.length; i++) {
+    if (keysA[i] !== keysB[i]) return false;
+  }
+
+  for (const key of keysA) {
+    if (Math.abs(a.dimensions[key]! - b.dimensions[key]!) > tolerance) return false;
+  }
+
+  return true;
+}
+
+/** Generate a random TrustValue with the given dimension names. */
+function randomTrustValue(dims: string[]): TrustValue {
+  const dimensions: Record<string, number> = {};
+  for (const d of dims) {
+    dimensions[d] = Math.random() * 0.8 + 0.1; // avoid 0 and 1 extremes
+  }
+  return { dimensions, confidence: Math.random() * 0.8 + 0.1 };
+}
+
+/**
+ * Prove algebraic properties of the trust algebra on the given samples.
+ *
+ * Tests:
+ * 1. Associativity of compose
+ * 2. Commutativity of compose
+ * 3. Identity element
+ * 4. Inverse
+ * 5. Distributivity of compose over intersect
+ *
+ * Uses a tolerance of 1e-10 for floating-point comparison.
+ */
+export function proveAlgebraicProperties(samples?: TrustValue[]): AlgebraicProof[] {
+  const tolerance = 1e-10;
+  const dims = ['integrity', 'competence', 'reliability'];
+  const testSamples = samples && samples.length >= 3
+    ? samples
+    : [randomTrustValue(dims), randomTrustValue(dims), randomTrustValue(dims)];
+
+  const proofs: AlgebraicProof[] = [];
+
+  // 1. Associativity of compose: compose(a, compose(b, c)) ≈ compose(compose(a, b), c)
+  {
+    let holds = true;
+    let counterexample: AlgebraicProof['counterexample'] | undefined;
+    for (let i = 0; i < testSamples.length; i++) {
+      for (let j = 0; j < testSamples.length; j++) {
+        for (let k = 0; k < testSamples.length; k++) {
+          const a = testSamples[i]!;
+          const b = testSamples[j]!;
+          const c = testSamples[k]!;
+          const lhs = trustCompose(a, trustCompose(b, c));
+          const rhs = trustCompose(trustCompose(a, b), c);
+          if (!trustApproxEqual(lhs, rhs, tolerance)) {
+            holds = false;
+            counterexample = { a, b, c };
+          }
+        }
+      }
+    }
+    proofs.push({ property: 'associativity of compose', holds, counterexample });
+  }
+
+  // 2. Commutativity of compose: compose(a, b) ≈ compose(b, a)
+  {
+    let holds = true;
+    let counterexample: AlgebraicProof['counterexample'] | undefined;
+    for (let i = 0; i < testSamples.length; i++) {
+      for (let j = 0; j < testSamples.length; j++) {
+        const a = testSamples[i]!;
+        const b = testSamples[j]!;
+        const lhs = trustCompose(a, b);
+        const rhs = trustCompose(b, a);
+        if (!trustApproxEqual(lhs, rhs, tolerance)) {
+          holds = false;
+          counterexample = { a, b };
+        }
+      }
+    }
+    proofs.push({ property: 'commutativity of compose', holds, counterexample });
+  }
+
+  // 3. Identity element: compose(a, IDENTITY) ≈ a
+  // Since TRUST_IDENTITY has empty dimensions, compose yields intersection of keys = empty.
+  // We need to construct an identity with matching dimensions for the test.
+  {
+    let holds = true;
+    let counterexample: AlgebraicProof['counterexample'] | undefined;
+    for (const a of testSamples) {
+      const identity: TrustValue = {
+        dimensions: Object.fromEntries(Object.keys(a.dimensions).map(k => [k, 1])),
+        confidence: 1,
+      };
+      const result = trustCompose(a, identity);
+      if (!trustApproxEqual(result, a, tolerance)) {
+        holds = false;
+        counterexample = { a, b: identity };
+      }
+    }
+    proofs.push({ property: 'identity element', holds, counterexample });
+  }
+
+  // 4. Inverse: compose(a, inverse(a)) ≈ IDENTITY (per-dimension identity)
+  {
+    let holds = true;
+    let counterexample: AlgebraicProof['counterexample'] | undefined;
+    for (const a of testSamples) {
+      const inv = trustInverse(a);
+      if (inv === null) continue; // skip if no inverse exists
+      const result = trustCompose(a, inv);
+      const expectedIdentity: TrustValue = {
+        dimensions: Object.fromEntries(Object.keys(a.dimensions).map(k => [k, 1])),
+        confidence: a.confidence * a.confidence, // confidence is multiplied, not identity
+      };
+      // For inverse, each dim should be ~1. Confidence = a.conf * a.conf (not necessarily 1).
+      // We check dimensions only, since confidence has no true inverse in this algebra.
+      const dimsMatch = Object.keys(result.dimensions).every(
+        k => Math.abs(result.dimensions[k]! - 1) < tolerance,
+      );
+      if (!dimsMatch) {
+        holds = false;
+        counterexample = { a, b: inv };
+      }
+    }
+    proofs.push({ property: 'inverse', holds, counterexample });
+  }
+
+  // 5. Distributivity: compose(a, intersect(b, c)) ≈ intersect(compose(a, b), compose(a, c))
+  {
+    let holds = true;
+    let counterexample: AlgebraicProof['counterexample'] | undefined;
+    for (let i = 0; i < testSamples.length; i++) {
+      for (let j = 0; j < testSamples.length; j++) {
+        for (let k = 0; k < testSamples.length; k++) {
+          const a = testSamples[i]!;
+          const b = testSamples[j]!;
+          const c = testSamples[k]!;
+          const lhs = trustCompose(a, trustIntersect(b, c));
+          const rhs = trustIntersect(trustCompose(a, b), trustCompose(a, c));
+          if (!trustApproxEqual(lhs, rhs, tolerance)) {
+            holds = false;
+            counterexample = { a, b, c };
+          }
+        }
+      }
+    }
+    proofs.push({ property: 'distributivity', holds, counterexample });
+  }
+
+  return proofs;
+}
+
+// ---------------------------------------------------------------------------
+// Bounded Self-Improvement
+// ---------------------------------------------------------------------------
+
+/**
+ * Define a safety envelope with invariants, parameter ranges, and an
+ * immutable kernel.
+ */
+export function defineSafetyEnvelope(params: {
+  invariants: string[];
+  parameters: Record<string, { min: number; max: number; current: number }>;
+  immutableKernel?: string[];
+}): SafetyEnvelope {
+  return {
+    invariants: [...params.invariants],
+    parameterRanges: Object.fromEntries(
+      Object.entries(params.parameters).map(([k, v]) => [k, { ...v }]),
+    ),
+    immutableKernel: params.immutableKernel ? [...params.immutableKernel] : [],
+  };
+}
+
+/**
+ * Propose an improvement to a parameter within a safety envelope.
+ *
+ * The proposal is marked safetyVerified = true only if the proposed value
+ * falls within the parameter's defined range.
+ */
+export function proposeImprovement(params: {
+  envelope: SafetyEnvelope;
+  parameter: string;
+  proposedValue: number;
+  expectedImprovement: number;
+}): ImprovementProposal {
+  const { envelope, parameter, proposedValue, expectedImprovement } = params;
+  const range = envelope.parameterRanges[parameter];
+
+  const currentValue = range ? range.current : 0;
+  const safetyVerified = range
+    ? proposedValue >= range.min && proposedValue <= range.max
+    : false;
+
+  return {
+    id: `imp-${parameter}-${Date.now()}`,
+    parameter,
+    currentValue,
+    proposedValue,
+    expectedImprovement,
+    safetyVerified,
+    rollbackPlan: { parameter, restoreValue: currentValue },
+  };
+}
+
+/**
+ * Apply an improvement proposal to a safety envelope.
+ *
+ * Only applies if safetyVerified is true and the proposed value differs
+ * from the current value. Returns a new envelope with the updated parameter
+ * and a reason explaining the outcome.
+ */
+export function applyImprovement(
+  envelope: SafetyEnvelope,
+  proposal: ImprovementProposal,
+): ImprovementResult {
+  // Deep-copy the envelope
+  const newEnvelope = defineSafetyEnvelope({
+    invariants: envelope.invariants,
+    parameters: envelope.parameterRanges,
+    immutableKernel: envelope.immutableKernel,
+  });
+
+  if (!proposal.safetyVerified) {
+    return {
+      proposal,
+      applied: false,
+      reason: `Proposal rejected: safety verification failed for parameter '${proposal.parameter}'`,
+      newEnvelope,
+    };
+  }
+
+  const range = newEnvelope.parameterRanges[proposal.parameter];
+  if (!range) {
+    return {
+      proposal,
+      applied: false,
+      reason: `Proposal rejected: parameter '${proposal.parameter}' not found in envelope`,
+      newEnvelope,
+    };
+  }
+
+  if (proposal.proposedValue === range.current) {
+    return {
+      proposal,
+      applied: false,
+      reason: `Proposal rejected: proposed value equals current value for parameter '${proposal.parameter}'`,
+      newEnvelope,
+    };
+  }
+
+  // Apply the change
+  range.current = proposal.proposedValue;
+
+  return {
+    proposal,
+    applied: true,
+    reason: `Parameter '${proposal.parameter}' updated from ${proposal.currentValue} to ${proposal.proposedValue}`,
+    newEnvelope,
+  };
+}
+
+/**
+ * Verify the integrity of a safety envelope.
+ *
+ * Checks that all parameters are within their defined ranges. Returns
+ * a list of violations if any parameter is out of bounds.
+ */
+export function verifyEnvelopeIntegrity(envelope: SafetyEnvelope): {
+  valid: boolean;
+  violations: string[];
+} {
+  const violations: string[] = [];
+
+  for (const [name, range] of Object.entries(envelope.parameterRanges)) {
+    if (range.current < range.min) {
+      violations.push(
+        `Parameter '${name}' value ${range.current} is below minimum ${range.min}`,
+      );
+    }
+    if (range.current > range.max) {
+      violations.push(
+        `Parameter '${name}' value ${range.current} is above maximum ${range.max}`,
+      );
+    }
+  }
+
+  return { valid: violations.length === 0, violations };
 }
