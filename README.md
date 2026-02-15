@@ -2,8 +2,8 @@
 
 **The accountability primitive for AI agents.**
 
-![Tests](https://img.shields.io/badge/tests-5%2C163%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-85%20suites-blue)
+![Tests](https://img.shields.io/badge/tests-6%2C014%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-92%20suites-blue)
 ![Packages](https://img.shields.io/badge/packages-34-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
@@ -219,7 +219,7 @@ npm install
 # Build all packages (declarations + bundles)
 npm run build
 
-# Run the full test suite -- 5,158 tests across 85 suites
+# Run the full test suite -- 6,014 tests across 92 suites
 npx vitest run
 
 # Type-check the entire project

@@ -1,7 +1,7 @@
 {
   "name": "@stele/store",
   "version": "0.1.0",
-  "description": "Pluggable storage backends — SQLite, PostgreSQL, S3",
+  "description": "Pluggable storage backends \u2014 SQLite, PostgreSQL, S3",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,6 +14,7 @@
   },
   "files": [
     "dist",
+    "!dist/**/*.test.*",
     "README.md",
     "LICENSE"
   ],

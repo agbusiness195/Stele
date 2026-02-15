@@ -615,7 +615,11 @@ export class EVMClient {
       method: 'eth_chainId',
       params: [],
     }) as string;
-    return parseInt(result, 16);
+    const chainId = parseInt(result, 16);
+    if (isNaN(chainId)) {
+      throw new Error(`Invalid chain ID returned by provider: ${result}`);
+    }
+    return chainId;
   }
 }
 

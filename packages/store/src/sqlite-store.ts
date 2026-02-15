@@ -164,7 +164,15 @@ export class SqliteStore implements CovenantStore {
   /** Parse a `doc` column value back into a CovenantDocument. */
   private parseDoc(row: { doc: string } | undefined): CovenantDocument | undefined {
     if (!row) return undefined;
-    return JSON.parse(row.doc) as CovenantDocument;
+    try {
+      return JSON.parse(row.doc) as CovenantDocument;
+    } catch {
+      throw new SteleError(
+        SteleErrorCode.STORE_CORRUPTED,
+        `Failed to parse stored document: invalid JSON in database row`,
+        { hint: 'The database may contain corrupted data. Re-store the document to fix.' }
+      );
+    }
   }
 
   // ── Single-document CRUD ───────────────────────────────────────────────
@@ -210,7 +218,8 @@ export class SqliteStore implements CovenantStore {
   async list(filter?: StoreFilter): Promise<CovenantDocument[]> {
     const { sql, params } = this.buildSelectQuery('doc', filter);
     const rows = await this.driver.all<{ doc: string }>(sql, params);
-    return rows.map((row) => JSON.parse(row.doc) as CovenantDocument);
+    return rows.map((row) => this.parseDoc(row)!);
+
   }
 
   async count(filter?: StoreFilter): Promise<number> {

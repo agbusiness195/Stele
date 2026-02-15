@@ -71,6 +71,8 @@ export enum SteleErrorCode {
   STORE_NOT_FOUND = 'STELE_E502',
   /** The store write operation failed. */
   STORE_WRITE_FAILED = 'STELE_E503',
+  /** The store contains corrupted data that could not be deserialized. */
+  STORE_CORRUPTED = 'STELE_E504',
 
   // Identity (6xx)
   /** The identity document or format is invalid. */

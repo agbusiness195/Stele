@@ -100,11 +100,18 @@ Follow this checklist when adding a new package:
    {
      "name": "@stele/my-package",
      "version": "0.1.0",
-     "type": "module",
      "main": "dist/index.js",
+     "module": "./dist/index.mjs",
      "types": "dist/index.d.ts",
+     "exports": {
+       ".": {
+         "types": "./dist/index.d.ts",
+         "import": "./dist/index.mjs",
+         "default": "./dist/index.js"
+       }
+     },
      "scripts": {
-       "build": "tsup src/index.ts --format esm --dts",
+       "build": "tsup src/index.ts --format cjs,esm --dts",
        "typecheck": "tsc --noEmit",
        "test": "vitest run"
      },
@@ -113,6 +120,10 @@ Follow this checklist when adding a new package:
      }
    }
    ```
+
+   > **Important:** Do NOT add `"type": "module"` — tsup produces `.js` (CJS) and `.mjs` (ESM)
+   > output, and `type: module` breaks the CJS build. Always include `"default"` in exports
+   > as a fallback.
 3. **Create `tsconfig.json`** referencing the root config and package dependencies.
 4. **Create `src/index.ts`** with your exports.
 5. **Create `src/index.test.ts`** with at least basic smoke tests.
