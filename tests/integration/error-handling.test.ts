@@ -833,13 +833,12 @@ describe('SteleClient errors', () => {
         model: {
           provider: 'test',
           modelId: 'test-model',
-          version: '1.0',
-          attestation: 'self',
+          modelVersion: '1.0',
+          attestationType: 'self_reported',
         },
         capabilities: ['read'],
         deployment: {
-          runtime: 'node',
-          environment: 'test',
+          runtime: 'process',
         },
       }),
     ).rejects.toThrow(/No key pair/);
@@ -854,13 +853,12 @@ describe('SteleClient errors', () => {
       model: {
         provider: 'test',
         modelId: 'test-model',
-        version: '1.0',
-        attestation: 'self',
+        modelVersion: '1.0',
+        attestationType: 'self_reported',
       },
       capabilities: ['read'],
       deployment: {
-        runtime: 'node',
-        environment: 'test',
+        runtime: 'process',
       },
     });
 

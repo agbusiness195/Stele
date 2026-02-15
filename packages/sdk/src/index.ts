@@ -86,6 +86,7 @@ export {
   cclConformance,
   covenantConformance,
   interopConformance,
+  securityConformance,
 } from './conformance.js';
 export type {
   ConformanceResult,
@@ -467,17 +468,17 @@ export class SteleClient {
     // ── Input validation (Stripe-quality errors at the public API boundary) ──
     if (!options.issuer || !options.issuer.id) {
       throw new Error(
-        'issuer.id is required and must be a non-empty string',
+        "SteleClient.createCovenant(): issuer.id is required. Provide a non-empty string identifying the issuing party.",
       );
     }
     if (!options.beneficiary || !options.beneficiary.id) {
       throw new Error(
-        'beneficiary.id is required and must be a non-empty string',
+        "SteleClient.createCovenant(): beneficiary.id is required. Provide a non-empty string identifying the beneficiary party.",
       );
     }
     if (!options.constraints || options.constraints.trim().length === 0) {
       throw new Error(
-        "constraints must be a non-empty CCL string. Example: permit read on '/data/**'",
+        "SteleClient.createCovenant(): constraints must be a non-empty CCL string. Example: permit read on '/data/**'",
       );
     }
 
@@ -493,7 +494,7 @@ export class SteleClient {
     const privateKey = options.privateKey ?? this._keyPair?.privateKey;
     if (!privateKey) {
       throw new Error(
-        'No private key available. Call client.generateKeyPair() first, or pass { privateKey } in the options.',
+        "SteleClient.createCovenant(): No private key available. Either call client.generateKeyPair() first, or pass { privateKey } in the options.",
       );
     }
 
@@ -596,7 +597,7 @@ export class SteleClient {
     const kp = signerKeyPair ?? this._keyPair;
     if (!kp) {
       throw new Error(
-        'No key pair available. Call client.generateKeyPair() first, or pass a KeyPair in the method options.',
+        "SteleClient.countersign(): No key pair available. Either call client.generateKeyPair() first, or pass a KeyPair as the third argument.",
       );
     }
 
@@ -639,12 +640,12 @@ export class SteleClient {
   ): Promise<EvaluationResult> {
     if (!action || action.trim().length === 0) {
       throw new Error(
-        'action must be a non-empty string (e.g., "read", "write", "api.call")',
+        "SteleClient.evaluateAction(): action must be a non-empty string (e.g., 'read', 'write', 'api.call').",
       );
     }
     if (!resource || resource.trim().length === 0) {
       throw new Error(
-        'resource must be a non-empty string (e.g., "/data/**", "/api/endpoint")',
+        "SteleClient.evaluateAction(): resource must be a non-empty string (e.g., '/data/**', '/api/endpoint').",
       );
     }
 
@@ -695,7 +696,7 @@ export class SteleClient {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
       throw new Error(
-        'No key pair available. Call client.generateKeyPair() first, or pass a KeyPair in the method options.',
+        "SteleClient.createIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
 
@@ -744,7 +745,7 @@ export class SteleClient {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
       throw new Error(
-        'No key pair available. Call client.generateKeyPair() first, or pass a KeyPair in the method options.',
+        "SteleClient.evolveIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
 
@@ -1093,3 +1094,159 @@ export class QuickCovenant {
 
 // Re-export adapters
 export * from './adapters/index.js';
+
+// ─── Store ────────────────────────────────────────────────────────────────────
+export { MemoryStore, FileStore, SqliteStore, QueryBuilder, createQuery, StoreIndex, IndexedStore, createTransaction } from '@stele/store';
+export type {
+  CovenantStore,
+  StoreFilter,
+  StoreEvent,
+  StoreEventType,
+  StoreEventCallback,
+  SQLiteDriver,
+  PaginationOptions,
+  PaginatedResult,
+  SortField,
+  SortOrder,
+  IndexField,
+  Transaction,
+} from '@stele/store';
+
+// ─── Breach Detection ─────────────────────────────────────────────────────────
+export { createBreachAttestation, verifyBreachAttestation, TrustGraph } from '@stele/breach';
+export type {
+  BreachAttestation,
+  TrustStatus,
+  TrustNode,
+  BreachEvent,
+} from '@stele/breach';
+
+// ─── Reputation ───────────────────────────────────────────────────────────────
+export {
+  computeReputationScore,
+  createReceipt,
+  verifyReceipt,
+  countersignReceipt,
+  verifyReceiptChain,
+  computeReceiptsMerkleRoot,
+  DEFAULT_SCORING_CONFIG,
+  createStake,
+  releaseStake,
+  burnStake,
+  createDelegation,
+  burnDelegation,
+  coBurnDelegation,
+  createEndorsement,
+  verifyEndorsement,
+} from '@stele/reputation';
+export type {
+  ReputationScore,
+  ExecutionReceipt,
+  ReputationStake,
+  ReputationDelegation,
+  Endorsement,
+  ScoringConfig,
+} from '@stele/reputation';
+
+// ─── Proof ────────────────────────────────────────────────────────────────────
+export {
+  generateComplianceProof,
+  verifyComplianceProof,
+  computeAuditCommitment,
+  computeConstraintCommitment,
+  poseidonHash,
+  hashToField,
+  fieldToHex,
+  FIELD_PRIME,
+} from '@stele/proof';
+export type {
+  ComplianceProof,
+  ProofVerificationResult,
+  ProofGenerationOptions,
+  AuditEntryData,
+} from '@stele/proof';
+
+// ─── Attestation ──────────────────────────────────────────────────────────────
+export {
+  createAttestation,
+  verifyAttestation,
+  signAttestation,
+  isSigned,
+  reconcile,
+  getDiscrepancies,
+  attestationChainVerify,
+  computeAttestationCoverage,
+} from '@stele/attestation';
+export type {
+  ExternalAttestation,
+  AttestationReconciliation,
+  Discrepancy,
+  ReceiptSummary,
+  AttestationChainLink,
+  ChainVerificationResult,
+  AgentAction,
+  AttestationCoverageResult,
+} from '@stele/attestation';
+
+// ─── Verifier ─────────────────────────────────────────────────────────────────
+export { Verifier, verifyBatch } from '@stele/verifier';
+export type {
+  VerifierOptions,
+  VerificationReport,
+  ChainVerificationReport,
+  ChainDocumentResult,
+  ChainIntegrityCheck,
+  NarrowingCheckResult,
+  ActionVerificationReport,
+  BatchVerificationReport,
+  BatchSummary,
+  VerificationRecord,
+  VerificationKind,
+} from '@stele/verifier';
+
+// ─── Discovery ─────────────────────────────────────────────────────────────────
+export {
+  DiscoveryClient,
+  DiscoveryServer,
+  buildDiscoveryDocument,
+  validateDiscoveryDocument,
+  buildKeyEntry,
+  buildKeySet,
+  WELL_KNOWN_PATH,
+  CONFIGURATION_PATH,
+  STELE_MEDIA_TYPE,
+  MAX_DOCUMENT_AGE_MS,
+} from '@stele/discovery';
+export type {
+  DiscoveryDocument,
+  AgentKeyEntry,
+  AgentKeySet,
+  CovenantRegistryEntry,
+  CovenantRegistryResponse,
+  NegotiationRequest,
+  NegotiationResponse,
+  CrossPlatformVerificationRequest,
+  CrossPlatformVerificationResponse,
+  FetchOptions,
+  BuildDiscoveryDocumentOptions,
+  DiscoveryValidationResult,
+  DiscoveryClientOptions,
+  DiscoveryServerOptions,
+  RouteHandler,
+} from '@stele/discovery';
+
+// ─── Schema ────────────────────────────────────────────────────────────────────
+export {
+  COVENANT_SCHEMA,
+  DISCOVERY_DOCUMENT_SCHEMA,
+  AGENT_KEY_SCHEMA,
+  CCL_EVALUATION_CONTEXT_SCHEMA,
+  validateCovenantSchema,
+  validateDiscoverySchema,
+  validateAgentKeySchema,
+  getAllSchemas,
+} from '@stele/schema';
+export type {
+  SchemaValidationError,
+  SchemaValidationResult,
+} from '@stele/schema';

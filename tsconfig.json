@@ -14,19 +14,27 @@
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": ["node"]
   },
   "references": [
+    { "path": "packages/types" },
     { "path": "packages/crypto" },
     { "path": "packages/ccl" },
     { "path": "packages/core" },
+    { "path": "packages/store" },
+    { "path": "packages/verifier" },
     { "path": "packages/identity" },
     { "path": "packages/enforcement" },
     { "path": "packages/proof" },
     { "path": "packages/reputation" },
     { "path": "packages/breach" },
+    { "path": "packages/sdk" },
     { "path": "packages/mcp" },
     { "path": "packages/cli" },
+    { "path": "packages/evm" },
+    { "path": "packages/react" },
+    { "path": "packages/mcp-server" },
     { "path": "packages/attestation" },
     { "path": "packages/canary" },
     { "path": "packages/gametheory" },
@@ -41,7 +49,9 @@
     { "path": "packages/norms" },
     { "path": "packages/substrate" },
     { "path": "packages/derivatives" },
-    { "path": "packages/legal" }
+    { "path": "packages/legal" },
+    { "path": "packages/discovery" },
+    { "path": "packages/schema" }
   ]
 }
 

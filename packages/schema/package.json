@@ -1,0 +1,39 @@
+{
+  "name": "@stele/schema",
+  "version": "0.1.0",
+  "description": "Formal JSON Schema definitions for Stele protocol documents",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.mjs",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "bundle": "tsup src/index.ts --format cjs,esm",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run"
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "dependencies": {
+    "@stele/types": "0.1.0"
+  },
+  "license": "MIT",
+  "author": "Stele Labs, Inc.",
+  "homepage": "https://stele.dev",
+  "bugs": "https://github.com/agbusiness195/stele/issues",
+  "engines": { "node": ">=18" },
+  "publishConfig": { "access": "public" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agbusiness195/Stele.git",
+    "directory": "packages/schema"
+  },
+  "keywords": ["stele", "schema", "json-schema", "covenant", "validation"]
+}

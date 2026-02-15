@@ -3,12 +3,16 @@
   "version": "0.1.0",
   "description": "Reputation scoring and trust management for the Stele covenant framework",
   "license": "MIT",
+  "author": "Stele Labs, Inc.",
+  "homepage": "https://stele.dev",
+  "bugs": "https://github.com/agbusiness195/stele/issues",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "module": "./dist/index.mjs",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
+      "import": "./dist/index.mjs",
       "default": "./dist/index.js"
     }
   },
@@ -41,7 +45,8 @@
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "bundle": "tsup src/index.ts --format cjs,esm",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "vitest run"
   },
   "dependencies": {
     "@stele/crypto": "0.1.0",

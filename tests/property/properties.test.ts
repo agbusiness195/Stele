@@ -241,7 +241,7 @@ describe('Crypto Properties', () => {
         const sig = await sign(message, kp.privateKey);
         // Corrupt the signature
         const badSig = new Uint8Array(sig);
-        badSig[randomInt(0, badSig.length - 1)] ^= 0xff;
+        badSig[randomInt(0, badSig.length - 1)]! ^= 0xff;
         const valid = await verify(message, badSig, kp.publicKey);
         expect(valid).toBe(false);
       }
@@ -254,7 +254,7 @@ describe('Crypto Properties', () => {
         const sig = await sign(message, kp.privateKey);
         // Corrupt the message
         const badMsg = new Uint8Array(message);
-        badMsg[randomInt(0, badMsg.length - 1)] ^= 0xff;
+        badMsg[randomInt(0, badMsg.length - 1)]! ^= 0xff;
         const valid = await verify(badMsg, sig, kp.publicKey);
         expect(valid).toBe(false);
       }
@@ -506,7 +506,7 @@ describe('Crypto Properties', () => {
         const len = randomInt(1, 64);
         const a = randomBytes(len);
         const b = new Uint8Array(a);
-        b[randomInt(0, len - 1)] ^= 0xff; // flip one byte
+        b[randomInt(0, len - 1)]! ^= 0xff; // flip one byte
         expect(constantTimeEqual(a, b)).toBe(false);
       }
     });

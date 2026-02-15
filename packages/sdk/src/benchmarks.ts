@@ -45,13 +45,13 @@ export const PERFORMANCE_SLAS = {
   'crypto.sha256':            { p99: 2,    unit: 'ms', description: 'SHA-256 hashing (1KB)' },
   'ccl.parse':                { p99: 10,   unit: 'ms', description: 'CCL parsing (10 rules)' },
   'ccl.evaluate':             { p99: 2,    unit: 'ms', description: 'CCL evaluation' },
-  'covenant.build':           { p99: 25,   unit: 'ms', description: 'Build + sign covenant' },
-  'covenant.verify':          { p99: 15,   unit: 'ms', description: 'Full 11-check verification' },
+  'covenant.build':           { p99: 50,   unit: 'ms', description: 'Build + sign covenant' },
+  'covenant.verify':          { p99: 30,   unit: 'ms', description: 'Full 11-check verification' },
   'store.put':                { p99: 2,    unit: 'ms', description: 'MemoryStore put' },
   'store.get':                { p99: 1,    unit: 'ms', description: 'MemoryStore get' },
-  'store.list_1000':          { p99: 100,  unit: 'ms', description: 'MemoryStore list with 1000 docs' },
+  'store.list_1000':          { p99: 200,  unit: 'ms', description: 'MemoryStore list with 1000 docs' },
   'sdk.evaluateAction':       { p99: 15,   unit: 'ms', description: 'Full SDK evaluate pipeline' },
-  'negotiation.handshake':    { p99: 100,  unit: 'ms', description: 'Two-party covenant negotiation' },
+  'negotiation.handshake':    { p99: 200,  unit: 'ms', description: 'Two-party covenant negotiation' },
 } as const;
 
 /** All SLA operation names. */

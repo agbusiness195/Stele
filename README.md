@@ -2,9 +2,9 @@
 
 **The accountability primitive for AI agents.**
 
-![Tests](https://img.shields.io/badge/tests-4%2C709%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-74%20suites-blue)
-![Packages](https://img.shields.io/badge/packages-25-orange)
+![Tests](https://img.shields.io/badge/tests-5%2C163%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-85%20suites-blue)
+![Packages](https://img.shields.io/badge/packages-34-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
 ![Node](https://img.shields.io/badge/node-18%20%7C%2020%20%7C%2022-green)
@@ -112,6 +112,13 @@ Stele works in three steps:
 | `@stele/derivatives` | Trust futures, insurance & derivative instruments |
 | `@stele/legal` | Legal compliance mapping and audit trails |
 
+### Interop
+
+| Package | Description |
+|---------|-------------|
+| `@stele/discovery` | `.well-known/stele/` discovery protocol, key registry & negotiation |
+| `@stele/schema` | JSON Schema (Draft 2020-12) validation for all document types |
+
 ### Platform
 
 | Package | Description |
@@ -151,13 +158,16 @@ limit api.call 500 per 3600 seconds
 
 ## Architecture
 
-The monorepo is organized into five layers. Each layer depends only on the
+The monorepo is organized into six layers. Each layer depends only on the
 layers below it:
 
 ```
 +-----------------------------------------------------+
 |                      Platform                        |
 |        react  .  evm  .  mcp-server  .  cli          |
++-----------------------------------------------------+
+|                       Interop                        |
+|              discovery  .  schema                     |
 +-----------------------------------------------------+
 |                        SDK                           |
 |           sdk (SteleClient, QuickCovenant)            |
@@ -209,7 +219,7 @@ npm install
 # Build all packages (declarations + bundles)
 npm run build
 
-# Run the full test suite -- 4,327 tests across 66 suites
+# Run the full test suite -- 5,158 tests across 85 suites
 npx vitest run
 
 # Type-check the entire project

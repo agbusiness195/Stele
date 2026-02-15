@@ -127,7 +127,7 @@ describe('QueryBuilder - forBeneficiary()', () => {
   it('filters documents by beneficiary', async () => {
     const results = await createQuery(store).forBeneficiary('ben-a').execute();
     expect(results).toHaveLength(1);
-    expect(results[0].beneficiary.id).toBe('ben-a');
+    expect(results[0]!.beneficiary.id).toBe('ben-a');
   });
 });
 
@@ -159,7 +159,7 @@ describe('QueryBuilder - createdAfter() and createdBefore()', () => {
       .createdBefore('2025-09-01T00:00:00.000Z')
       .execute();
     expect(results).toHaveLength(1);
-    expect(results[0].id).toBe('d2');
+    expect(results[0]!.id).toBe('d2');
   });
 });
 
@@ -178,7 +178,7 @@ describe('QueryBuilder - withChain() and withoutChain()', () => {
   it('withChain() returns only documents with chain references', async () => {
     const results = await createQuery(store).withChain().execute();
     expect(results).toHaveLength(1);
-    expect(results[0].id).toBe('chained-1');
+    expect(results[0]!.id).toBe('chained-1');
   });
 
   it('withoutChain() returns only root documents', async () => {
@@ -209,7 +209,7 @@ describe('QueryBuilder - withTags()', () => {
   it('filters by multiple tags (AND semantics)', async () => {
     const results = await createQuery(store).withTags('alpha', 'beta').execute();
     expect(results).toHaveLength(1);
-    expect(results[0].id).toBe('t1');
+    expect(results[0]!.id).toBe('t1');
   });
 
   it('returns empty when no documents have the tag', async () => {
@@ -243,7 +243,7 @@ describe('QueryBuilder - where()', () => {
       .createdAfter('2025-06-01T00:00:00.000Z')
       .execute();
     expect(results).toHaveLength(1);
-    expect(results[0].id).toBe('w2');
+    expect(results[0]!.id).toBe('w2');
   });
 
   it('where() with tags merges tags arrays', async () => {
@@ -302,7 +302,7 @@ describe('QueryBuilder - combined filters', () => {
       .withTags('important')
       .execute();
     expect(results).toHaveLength(1);
-    expect(results[0].id).toBe('combo-1');
+    expect(results[0]!.id).toBe('combo-1');
   });
 
   it('returns empty when combined filters are too restrictive', async () => {
@@ -381,7 +381,7 @@ describe('QueryBuilder - limit() and offset()', () => {
       .offset(7)
       .execute();
     expect(results).toHaveLength(3);
-    expect(results[0].id).toBe('doc-008');
+    expect(results[0]!.id).toBe('doc-008');
   });
 
   it('limit() + offset() returns a window', async () => {
@@ -764,8 +764,8 @@ describe('QueryBuilder - large dataset (100 docs)', () => {
       .paginate({ limit: 10, offset: 90 });
     expect(page.items).toHaveLength(10);
     expect(page.hasMore).toBe(false);
-    expect(page.items[0].id).toBe('large-090');
-    expect(page.items[9].id).toBe('large-099');
+    expect(page.items[0]!.id).toBe('large-090');
+    expect(page.items[9]!.id).toBe('large-099');
   });
 
   it('count returns 100', async () => {

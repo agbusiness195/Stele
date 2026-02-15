@@ -16,6 +16,7 @@
  */
 
 import type { CovenantDocument } from '@stele/core';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 import type {
   CovenantStore,
@@ -170,10 +171,18 @@ export class SqliteStore implements CovenantStore {
 
   async put(doc: CovenantDocument): Promise<void> {
     if (doc == null) {
-      throw new Error('put(): document is required');
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_DOC,
+        'put(): document is required',
+        { hint: 'Pass a valid CovenantDocument object to store.' }
+      );
     }
     if (!doc.id || (typeof doc.id === 'string' && doc.id.trim().length === 0)) {
-      throw new Error('put(): document.id is required and must be a non-empty string');
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_ID,
+        'put(): document.id is required and must be a non-empty string',
+        { hint: 'Ensure the document has a non-empty id field. Use buildCovenant() to generate properly identified documents.' }
+      );
     }
     await this.driver.run(UPSERT_SQL, this.toParams(doc));
     this.emit('put', doc.id, doc);

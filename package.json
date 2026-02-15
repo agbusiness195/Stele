@@ -28,7 +28,9 @@
     "packages/norms",
     "packages/substrate",
     "packages/derivatives",
-    "packages/legal"
+    "packages/legal",
+    "packages/discovery",
+    "packages/schema"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
@@ -52,6 +54,7 @@
   "author": "Stele Labs, Inc.",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^25.2.3",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
