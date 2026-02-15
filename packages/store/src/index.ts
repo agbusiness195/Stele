@@ -115,7 +115,11 @@ export class MemoryStore implements CovenantStore {
       timestamp: new Date().toISOString(),
     };
     for (const cb of this.listeners) {
-      cb(event);
+      try {
+        cb(event);
+      } catch {
+        // Listener errors must not prevent other listeners from being notified
+      }
     }
   }
 
@@ -164,12 +168,14 @@ export class MemoryStore implements CovenantStore {
         { hint: 'Ensure the document has issuer, beneficiary, and constraints fields. Use buildCovenant() to generate complete documents.' }
       );
     }
-    this.data.set(doc.id, doc);
+    this.data.set(doc.id, structuredClone(doc));
     this.emit('put', doc.id, doc);
   }
 
   /**
    * Retrieve a covenant document by its ID.
+   *
+   * Returns a defensive copy so callers cannot mutate the stored data.
    *
    * @param id - The document ID to look up.
    * @returns The document, or `undefined` if not found.
@@ -188,7 +194,8 @@ export class MemoryStore implements CovenantStore {
         { hint: 'Pass the document ID (a hex-encoded hash) to retrieve.' }
       );
     }
-    return this.data.get(id);
+    const doc = this.data.get(id);
+    return doc ? structuredClone(doc) : undefined;
   }
 
   /**
@@ -235,13 +242,13 @@ export class MemoryStore implements CovenantStore {
    */
   async list(filter?: StoreFilter): Promise<CovenantDocument[]> {
     if (!filter || !hasFilterCriteria(filter)) {
-      return Array.from(this.data.values());
+      return Array.from(this.data.values()).map(doc => structuredClone(doc));
     }
     // Iterate the Map directly to avoid allocating a full intermediate array.
     const results: CovenantDocument[] = [];
     for (const doc of this.data.values()) {
       if (matchesFilter(doc, filter)) {
-        results.push(doc);
+        results.push(structuredClone(doc));
       }
     }
     return results;
@@ -276,9 +283,15 @@ export class MemoryStore implements CovenantStore {
    * @param docs - The documents to store.
    */
   async putBatch(docs: CovenantDocument[]): Promise<void> {
+    if (!Array.isArray(docs)) {
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_DOC,
+        'putBatch(): docs must be an array',
+        { hint: 'Pass an array of CovenantDocument objects.' }
+      );
+    }
     for (const doc of docs) {
-      this.data.set(doc.id, doc);
-      this.emit('put', doc.id, doc);
+      await this.put(doc);
     }
   }
 
@@ -289,7 +302,10 @@ export class MemoryStore implements CovenantStore {
    * @returns An array where each element is the document or `undefined` if not found.
    */
   async getBatch(ids: string[]): Promise<(CovenantDocument | undefined)[]> {
-    return ids.map((id) => this.data.get(id));
+    return ids.map((id) => {
+      const doc = this.data.get(id);
+      return doc ? structuredClone(doc) : undefined;
+    });
   }
 
   /**
