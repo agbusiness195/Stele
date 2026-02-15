@@ -51,3 +51,64 @@ export interface CompositionComplexityResult {
   /** Complexity score: weighted combination of factors (0 = trivial, higher = more complex) */
   score: number;
 }
+
+// ---------------------------------------------------------------------------
+// Trust Algebra types
+// ---------------------------------------------------------------------------
+
+export interface TrustValue {
+  /** Trust dimensions with numeric values, e.g. { integrity: 0.9, competence: 0.8 } */
+  dimensions: Record<string, number>;
+  /** Confidence level from 0 to 1 */
+  confidence: number;
+}
+
+export interface AlgebraicProof {
+  /** Name of the algebraic property being tested */
+  property: string;
+  /** Whether the property holds for the tested samples */
+  holds: boolean;
+  /** A counterexample if the property does not hold */
+  counterexample?: { a: TrustValue; b: TrustValue; c?: TrustValue };
+}
+
+// ---------------------------------------------------------------------------
+// Bounded Self-Improvement types
+// ---------------------------------------------------------------------------
+
+export interface SafetyEnvelope {
+  /** Properties that must always hold */
+  invariants: string[];
+  /** Parameter ranges with current values */
+  parameterRanges: Record<string, { min: number; max: number; current: number }>;
+  /** Kernel functions that cannot change */
+  immutableKernel: string[];
+}
+
+export interface ImprovementProposal {
+  /** Unique identifier for this proposal */
+  id: string;
+  /** Parameter being modified */
+  parameter: string;
+  /** Current value of the parameter */
+  currentValue: number;
+  /** Proposed new value */
+  proposedValue: number;
+  /** Expected improvement (positive = better) */
+  expectedImprovement: number;
+  /** Whether the proposal has been verified safe */
+  safetyVerified: boolean;
+  /** Rollback plan to restore previous value */
+  rollbackPlan: { parameter: string; restoreValue: number };
+}
+
+export interface ImprovementResult {
+  /** The proposal that was evaluated */
+  proposal: ImprovementProposal;
+  /** Whether the improvement was applied */
+  applied: boolean;
+  /** Reason for applying or rejecting */
+  reason: string;
+  /** The new envelope state after evaluation */
+  newEnvelope: SafetyEnvelope;
+}

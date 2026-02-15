@@ -9,12 +9,24 @@ import {
   repeatedGameEquilibrium,
   coalitionStability,
   mechanismDesign,
+  modelPrincipalAgent,
+  analyzeTier,
+  defineConjecture,
+  getStandardConjectures,
+  analyzeImpossibilityBounds,
 } from './index';
 import type { HonestyParameters } from './types';
 import type {
   RepeatedGameParams,
   CoalitionValue,
   MechanismDesignParams,
+  OperatorPrincipal,
+  PrincipalAgentModel,
+  AdoptionTier,
+  TierAnalysis,
+  Conjecture,
+  ConjectureStatus,
+  ImpossibilityBound,
 } from './index';
 
 // ---------------------------------------------------------------------------
@@ -934,5 +946,957 @@ describe('mechanismDesign', () => {
       detectionProbability: 1.0,
     });
     expect(result.minimumPenalty).toBeCloseTo(100, 10);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// modelPrincipalAgent (Principal-Agent Model)
+// ---------------------------------------------------------------------------
+describe('modelPrincipalAgent', () => {
+  const defaultOperator: OperatorPrincipal = {
+    operatorId: 'op-1',
+    agentIds: ['agent-a', 'agent-b'],
+    totalStake: 10000,
+    monitoringBudget: 500,
+    liabilityExposure: 5000,
+  };
+
+  it('computes agentBreachProbability correctly', () => {
+    const result = modelPrincipalAgent({
+      operator: defaultOperator,
+      agentBreachRate: 0.1,
+      detectionRate: 0.8,
+      breachCost: 10000,
+      monitoringCostPerUnit: 100,
+    });
+    // 0.1 * (1 - 0.8) = 0.02
+    expect(result.agentBreachProbability).toBeCloseTo(0.02, 10);
+  });
+
+  it('computes operatorExpectedCost correctly', () => {
+    const result = modelPrincipalAgent({
+      operator: defaultOperator,
+      agentBreachRate: 0.1,
+      detectionRate: 0.8,
+      breachCost: 10000,
+      monitoringCostPerUnit: 100,
+    });
+    // breachProb * breachCost + monitoringBudget = 0.02 * 10000 + 500 = 700
+    expect(result.operatorExpectedCost).toBeCloseTo(700, 10);
+  });
+
+  it('sets monitoringEffectiveness to detectionRate', () => {
+    const result = modelPrincipalAgent({
+      operator: defaultOperator,
+      agentBreachRate: 0.1,
+      detectionRate: 0.65,
+      breachCost: 5000,
+      monitoringCostPerUnit: 50,
+    });
+    expect(result.monitoringEffectiveness).toBe(0.65);
+  });
+
+  it('returns incentiveCompatible=true when expectedCost < liabilityExposure', () => {
+    const result = modelPrincipalAgent({
+      operator: defaultOperator, // liabilityExposure: 5000
+      agentBreachRate: 0.1,
+      detectionRate: 0.8,
+      breachCost: 10000,
+      monitoringCostPerUnit: 100,
+    });
+    // expectedCost = 700 < 5000
+    expect(result.incentiveCompatible).toBe(true);
+  });
+
+  it('returns incentiveCompatible=false when expectedCost >= liabilityExposure', () => {
+    const lowLiabilityOperator: OperatorPrincipal = {
+      ...defaultOperator,
+      liabilityExposure: 100,
+      monitoringBudget: 500,
+    };
+    const result = modelPrincipalAgent({
+      operator: lowLiabilityOperator,
+      agentBreachRate: 0.5,
+      detectionRate: 0.1,
+      breachCost: 10000,
+      monitoringCostPerUnit: 100,
+    });
+    // breachProb = 0.5 * 0.9 = 0.45, expectedCost = 0.45 * 10000 + 500 = 5000
+    expect(result.operatorExpectedCost).toBeCloseTo(5000, 10);
+    expect(result.incentiveCompatible).toBe(false);
+  });
+
+  it('computes optimalMonitoringSpend with diminishing returns', () => {
+    const result = modelPrincipalAgent({
+      operator: defaultOperator,
+      agentBreachRate: 0.2,
+      detectionRate: 0.5,
+      breachCost: 10000,
+      monitoringCostPerUnit: 100,
+    });
+    // sqrt(0.2 * 10000 * 100) - 100 = sqrt(200000) - 100 ≈ 447.21 - 100 = 347.21
+    expect(result.optimalMonitoringSpend).toBeCloseTo(
+      Math.sqrt(0.2 * 10000 * 100) - 100,
+      4,
+    );
+  });
+
+  it('clamps optimalMonitoringSpend to 0 when formula yields negative', () => {
+    const result = modelPrincipalAgent({
+      operator: defaultOperator,
+      agentBreachRate: 0.001,
+      detectionRate: 0.5,
+      breachCost: 10,
+      monitoringCostPerUnit: 1000,
+    });
+    // sqrt(0.001 * 10 * 1000) - 1000 = sqrt(10) - 1000 ≈ 3.16 - 1000 < 0, clamped to 0
+    expect(result.optimalMonitoringSpend).toBe(0);
+  });
+
+  it('returns zero breach probability when detection is perfect', () => {
+    const result = modelPrincipalAgent({
+      operator: defaultOperator,
+      agentBreachRate: 0.5,
+      detectionRate: 1.0,
+      breachCost: 10000,
+      monitoringCostPerUnit: 100,
+    });
+    // 0.5 * (1 - 1.0) = 0
+    expect(result.agentBreachProbability).toBe(0);
+  });
+
+  it('returns full breach probability when detection is zero', () => {
+    const result = modelPrincipalAgent({
+      operator: defaultOperator,
+      agentBreachRate: 0.3,
+      detectionRate: 0,
+      breachCost: 10000,
+      monitoringCostPerUnit: 100,
+    });
+    // 0.3 * (1 - 0) = 0.3
+    expect(result.agentBreachProbability).toBeCloseTo(0.3, 10);
+  });
+
+  it('preserves the operator reference in the result', () => {
+    const result = modelPrincipalAgent({
+      operator: defaultOperator,
+      agentBreachRate: 0.1,
+      detectionRate: 0.5,
+      breachCost: 1000,
+      monitoringCostPerUnit: 50,
+    });
+    expect(result.operator).toBe(defaultOperator);
+    expect(result.operator.operatorId).toBe('op-1');
+    expect(result.operator.agentIds).toEqual(['agent-a', 'agent-b']);
+  });
+
+  it('throws on agentBreachRate out of range', () => {
+    expect(() =>
+      modelPrincipalAgent({
+        operator: defaultOperator,
+        agentBreachRate: -0.1,
+        detectionRate: 0.5,
+        breachCost: 1000,
+        monitoringCostPerUnit: 50,
+      }),
+    ).toThrow('agentBreachRate must be in [0, 1]');
+    expect(() =>
+      modelPrincipalAgent({
+        operator: defaultOperator,
+        agentBreachRate: 1.5,
+        detectionRate: 0.5,
+        breachCost: 1000,
+        monitoringCostPerUnit: 50,
+      }),
+    ).toThrow('agentBreachRate must be in [0, 1]');
+  });
+
+  it('throws on detectionRate out of range', () => {
+    expect(() =>
+      modelPrincipalAgent({
+        operator: defaultOperator,
+        agentBreachRate: 0.1,
+        detectionRate: -0.1,
+        breachCost: 1000,
+        monitoringCostPerUnit: 50,
+      }),
+    ).toThrow('detectionRate must be in [0, 1]');
+    expect(() =>
+      modelPrincipalAgent({
+        operator: defaultOperator,
+        agentBreachRate: 0.1,
+        detectionRate: 1.5,
+        breachCost: 1000,
+        monitoringCostPerUnit: 50,
+      }),
+    ).toThrow('detectionRate must be in [0, 1]');
+  });
+
+  it('throws on negative breachCost', () => {
+    expect(() =>
+      modelPrincipalAgent({
+        operator: defaultOperator,
+        agentBreachRate: 0.1,
+        detectionRate: 0.5,
+        breachCost: -100,
+        monitoringCostPerUnit: 50,
+      }),
+    ).toThrow('breachCost must be >= 0');
+  });
+
+  it('throws on negative monitoringCostPerUnit', () => {
+    expect(() =>
+      modelPrincipalAgent({
+        operator: defaultOperator,
+        agentBreachRate: 0.1,
+        detectionRate: 0.5,
+        breachCost: 1000,
+        monitoringCostPerUnit: -10,
+      }),
+    ).toThrow('monitoringCostPerUnit must be >= 0');
+  });
+
+  it('handles zero breach rate (no breaches)', () => {
+    const result = modelPrincipalAgent({
+      operator: defaultOperator,
+      agentBreachRate: 0,
+      detectionRate: 0.5,
+      breachCost: 10000,
+      monitoringCostPerUnit: 100,
+    });
+    expect(result.agentBreachProbability).toBe(0);
+    expect(result.operatorExpectedCost).toBe(defaultOperator.monitoringBudget);
+    expect(result.optimalMonitoringSpend).toBe(0);
+  });
+
+  it('handles zero breach cost', () => {
+    const result = modelPrincipalAgent({
+      operator: defaultOperator,
+      agentBreachRate: 0.5,
+      detectionRate: 0.3,
+      breachCost: 0,
+      monitoringCostPerUnit: 100,
+    });
+    expect(result.operatorExpectedCost).toBe(defaultOperator.monitoringBudget);
+    expect(result.optimalMonitoringSpend).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// analyzeTier (Three Adoption Tiers)
+// ---------------------------------------------------------------------------
+describe('analyzeTier', () => {
+  // --- Solo tier ---
+  it('solo tier: clamps detection to [0.60, 0.70]', () => {
+    const low = analyzeTier({
+      tier: 'solo',
+      baseDetectionRate: 0.3,
+      participantCount: 1,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(low.effectiveDetection).toBe(0.60);
+    expect(low.detectionFloor).toBe(0.60);
+    expect(low.detectionCeiling).toBe(0.70);
+
+    const high = analyzeTier({
+      tier: 'solo',
+      baseDetectionRate: 0.99,
+      participantCount: 1,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(high.effectiveDetection).toBe(0.70);
+
+    const mid = analyzeTier({
+      tier: 'solo',
+      baseDetectionRate: 0.65,
+      participantCount: 1,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(mid.effectiveDetection).toBeCloseTo(0.65, 10);
+  });
+
+  it('solo tier: adjustedStake = stake * 1.0', () => {
+    const result = analyzeTier({
+      tier: 'solo',
+      baseDetectionRate: 0.65,
+      participantCount: 1,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(result.adjustedStake).toBe(1000);
+  });
+
+  it('solo tier: gameTheoryApplicable is false', () => {
+    const result = analyzeTier({
+      tier: 'solo',
+      baseDetectionRate: 0.65,
+      participantCount: 1,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(result.gameTheoryApplicable).toBe(false);
+  });
+
+  // --- Bilateral tier ---
+  it('bilateral tier: clamps detection to [0.85, 0.95]', () => {
+    const low = analyzeTier({
+      tier: 'bilateral',
+      baseDetectionRate: 0.5,
+      participantCount: 2,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(low.effectiveDetection).toBe(0.85);
+
+    const high = analyzeTier({
+      tier: 'bilateral',
+      baseDetectionRate: 0.99,
+      participantCount: 2,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(high.effectiveDetection).toBe(0.95);
+
+    const mid = analyzeTier({
+      tier: 'bilateral',
+      baseDetectionRate: 0.90,
+      participantCount: 2,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(mid.effectiveDetection).toBeCloseTo(0.90, 10);
+  });
+
+  it('bilateral tier: adjustedStake = stake * 1.5', () => {
+    const result = analyzeTier({
+      tier: 'bilateral',
+      baseDetectionRate: 0.90,
+      participantCount: 2,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(result.adjustedStake).toBe(1500);
+  });
+
+  it('bilateral tier: gameTheoryApplicable is true', () => {
+    const result = analyzeTier({
+      tier: 'bilateral',
+      baseDetectionRate: 0.90,
+      participantCount: 2,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(result.gameTheoryApplicable).toBe(true);
+  });
+
+  // --- Network tier ---
+  it('network tier: clamps detection to [0.99, 0.999]', () => {
+    const low = analyzeTier({
+      tier: 'network',
+      baseDetectionRate: 0.5,
+      participantCount: 100,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(low.effectiveDetection).toBe(0.99);
+
+    const high = analyzeTier({
+      tier: 'network',
+      baseDetectionRate: 1.0,
+      participantCount: 100,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(high.effectiveDetection).toBe(0.999);
+
+    const mid = analyzeTier({
+      tier: 'network',
+      baseDetectionRate: 0.995,
+      participantCount: 100,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(mid.effectiveDetection).toBeCloseTo(0.995, 10);
+  });
+
+  it('network tier: adjustedStake = stake * sqrt(participantCount)', () => {
+    const result = analyzeTier({
+      tier: 'network',
+      baseDetectionRate: 0.995,
+      participantCount: 100,
+      stake: 1000,
+      breachGain: 500,
+    });
+    // 1000 * sqrt(100) = 1000 * 10 = 10000
+    expect(result.adjustedStake).toBe(10000);
+  });
+
+  it('network tier: gameTheoryApplicable is true', () => {
+    const result = analyzeTier({
+      tier: 'network',
+      baseDetectionRate: 0.995,
+      participantCount: 100,
+      stake: 1000,
+      breachGain: 500,
+    });
+    expect(result.gameTheoryApplicable).toBe(true);
+  });
+
+  // --- Honest equilibrium ---
+  it('honestEquilibrium=true when adjustedStake * detection > breachGain', () => {
+    const result = analyzeTier({
+      tier: 'bilateral',
+      baseDetectionRate: 0.90,
+      participantCount: 2,
+      stake: 1000,
+      breachGain: 500,
+    });
+    // 1500 * 0.90 = 1350 > 500
+    expect(result.honestEquilibrium).toBe(true);
+  });
+
+  it('honestEquilibrium=false when adjustedStake * detection <= breachGain', () => {
+    const result = analyzeTier({
+      tier: 'solo',
+      baseDetectionRate: 0.65,
+      participantCount: 1,
+      stake: 100,
+      breachGain: 1000,
+    });
+    // 100 * 0.65 = 65 < 1000
+    expect(result.honestEquilibrium).toBe(false);
+  });
+
+  it('honestEquilibrium=false at exact boundary (stake * detection = breachGain)', () => {
+    // solo: effective detection clamped to 0.60 (for rate=0.50)
+    // adjustedStake = 1000 * 1.0 = 1000
+    // 1000 * 0.60 = 600 = breachGain
+    const result = analyzeTier({
+      tier: 'solo',
+      baseDetectionRate: 0.50,
+      participantCount: 1,
+      stake: 1000,
+      breachGain: 600,
+    });
+    expect(result.honestEquilibrium).toBe(false);
+  });
+
+  it('network effect scales stake with participant count', () => {
+    const small = analyzeTier({
+      tier: 'network',
+      baseDetectionRate: 0.995,
+      participantCount: 4,
+      stake: 1000,
+      breachGain: 5000,
+    });
+    const large = analyzeTier({
+      tier: 'network',
+      baseDetectionRate: 0.995,
+      participantCount: 100,
+      stake: 1000,
+      breachGain: 5000,
+    });
+    // sqrt(4) = 2, sqrt(100) = 10
+    expect(small.adjustedStake).toBe(2000);
+    expect(large.adjustedStake).toBe(10000);
+    expect(large.adjustedStake).toBeGreaterThan(small.adjustedStake);
+  });
+
+  // --- Validation ---
+  it('throws on baseDetectionRate out of range', () => {
+    expect(() =>
+      analyzeTier({
+        tier: 'solo',
+        baseDetectionRate: -0.1,
+        participantCount: 1,
+        stake: 100,
+        breachGain: 50,
+      }),
+    ).toThrow('baseDetectionRate must be in [0, 1]');
+    expect(() =>
+      analyzeTier({
+        tier: 'solo',
+        baseDetectionRate: 1.5,
+        participantCount: 1,
+        stake: 100,
+        breachGain: 50,
+      }),
+    ).toThrow('baseDetectionRate must be in [0, 1]');
+  });
+
+  it('throws on participantCount < 1', () => {
+    expect(() =>
+      analyzeTier({
+        tier: 'bilateral',
+        baseDetectionRate: 0.9,
+        participantCount: 0,
+        stake: 100,
+        breachGain: 50,
+      }),
+    ).toThrow('participantCount must be >= 1');
+  });
+
+  it('throws on negative stake', () => {
+    expect(() =>
+      analyzeTier({
+        tier: 'solo',
+        baseDetectionRate: 0.65,
+        participantCount: 1,
+        stake: -100,
+        breachGain: 50,
+      }),
+    ).toThrow('stake must be >= 0');
+  });
+
+  it('throws on negative breachGain', () => {
+    expect(() =>
+      analyzeTier({
+        tier: 'solo',
+        baseDetectionRate: 0.65,
+        participantCount: 1,
+        stake: 100,
+        breachGain: -50,
+      }),
+    ).toThrow('breachGain must be >= 0');
+  });
+
+  it('returns correct tier metadata', () => {
+    const result = analyzeTier({
+      tier: 'network',
+      baseDetectionRate: 0.995,
+      participantCount: 50,
+      stake: 500,
+      breachGain: 200,
+    });
+    expect(result.tier).toBe('network');
+    expect(result.participantCount).toBe(50);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// defineConjecture & getStandardConjectures (Impossibility Conjectures)
+// ---------------------------------------------------------------------------
+describe('defineConjecture', () => {
+  it('creates a conjecture with required fields', () => {
+    const c = defineConjecture({
+      id: 'test_conjecture',
+      name: 'Test Conjecture',
+      statement: 'This is a test statement',
+      informalArgument: 'Because reasons',
+    });
+    expect(c.id).toBe('test_conjecture');
+    expect(c.name).toBe('Test Conjecture');
+    expect(c.statement).toBe('This is a test statement');
+    expect(c.informalArgument).toBe('Because reasons');
+    expect(c.status).toBe('conjecture');
+    expect(c.confidence).toBe(0.5);
+    expect(c.implications).toEqual([]);
+    expect(c.counterexampleSpace).toBe('');
+  });
+
+  it('accepts optional confidence', () => {
+    const c = defineConjecture({
+      id: 'high_confidence',
+      name: 'High Confidence',
+      statement: 'Very likely true',
+      informalArgument: 'Strong evidence',
+      confidence: 0.95,
+    });
+    expect(c.confidence).toBe(0.95);
+  });
+
+  it('accepts optional implications', () => {
+    const c = defineConjecture({
+      id: 'with_implications',
+      name: 'With Implications',
+      statement: 'Has implications',
+      informalArgument: 'Because',
+      implications: ['implication 1', 'implication 2'],
+    });
+    expect(c.implications).toEqual(['implication 1', 'implication 2']);
+  });
+
+  it('accepts optional counterexampleSpace', () => {
+    const c = defineConjecture({
+      id: 'with_counter',
+      name: 'With Counter',
+      statement: 'Has counterexample space',
+      informalArgument: 'Because',
+      counterexampleSpace: 'Look for counterexamples here',
+    });
+    expect(c.counterexampleSpace).toBe('Look for counterexamples here');
+  });
+
+  it('throws on confidence out of range', () => {
+    expect(() =>
+      defineConjecture({
+        id: 'bad',
+        name: 'Bad',
+        statement: 'Bad',
+        informalArgument: 'Bad',
+        confidence: -0.1,
+      }),
+    ).toThrow('confidence must be in [0, 1]');
+    expect(() =>
+      defineConjecture({
+        id: 'bad',
+        name: 'Bad',
+        statement: 'Bad',
+        informalArgument: 'Bad',
+        confidence: 1.5,
+      }),
+    ).toThrow('confidence must be in [0, 1]');
+  });
+
+  it('throws on empty id', () => {
+    expect(() =>
+      defineConjecture({
+        id: '',
+        name: 'Name',
+        statement: 'Statement',
+        informalArgument: 'Argument',
+      }),
+    ).toThrow('id must be a non-empty string');
+  });
+
+  it('throws on empty name', () => {
+    expect(() =>
+      defineConjecture({
+        id: 'id',
+        name: '',
+        statement: 'Statement',
+        informalArgument: 'Argument',
+      }),
+    ).toThrow('name must be a non-empty string');
+  });
+
+  it('throws on empty statement', () => {
+    expect(() =>
+      defineConjecture({
+        id: 'id',
+        name: 'Name',
+        statement: '',
+        informalArgument: 'Argument',
+      }),
+    ).toThrow('statement must be a non-empty string');
+  });
+
+  it('throws on empty informalArgument', () => {
+    expect(() =>
+      defineConjecture({
+        id: 'id',
+        name: 'Name',
+        statement: 'Statement',
+        informalArgument: '',
+      }),
+    ).toThrow('informalArgument must be a non-empty string');
+  });
+
+  it('accepts boundary confidence values (0 and 1)', () => {
+    const zero = defineConjecture({
+      id: 'zero',
+      name: 'Zero',
+      statement: 'Zero confidence',
+      informalArgument: 'Wild guess',
+      confidence: 0,
+    });
+    expect(zero.confidence).toBe(0);
+
+    const one = defineConjecture({
+      id: 'one',
+      name: 'One',
+      statement: 'Full confidence',
+      informalArgument: 'Certain',
+      confidence: 1,
+    });
+    expect(one.confidence).toBe(1);
+  });
+});
+
+describe('getStandardConjectures', () => {
+  it('returns exactly 4 conjectures', () => {
+    const conjectures = getStandardConjectures();
+    expect(conjectures).toHaveLength(4);
+  });
+
+  it('returns observation_bound conjecture with correct properties', () => {
+    const conjectures = getStandardConjectures();
+    const ob = conjectures.find(c => c.id === 'observation_bound');
+    expect(ob).toBeDefined();
+    expect(ob!.name).toBe('Observation Bound');
+    expect(ob!.confidence).toBe(0.85);
+    expect(ob!.status).toBe('conjecture');
+    expect(ob!.statement).toContain('observation proportional to action space');
+    expect(ob!.implications.length).toBeGreaterThan(0);
+    expect(ob!.counterexampleSpace.length).toBeGreaterThan(0);
+    expect(ob!.informalArgument.length).toBeGreaterThan(0);
+  });
+
+  it('returns trust_privacy_tradeoff conjecture with correct properties', () => {
+    const conjectures = getStandardConjectures();
+    const tp = conjectures.find(c => c.id === 'trust_privacy_tradeoff');
+    expect(tp).toBeDefined();
+    expect(tp!.name).toBe('Trust-Privacy Tradeoff');
+    expect(tp!.confidence).toBe(0.90);
+    expect(tp!.status).toBe('informal_argument');
+    expect(tp!.statement).toContain('privacy');
+    expect(tp!.implications.length).toBeGreaterThan(0);
+  });
+
+  it('returns composition_limit conjecture with correct properties', () => {
+    const conjectures = getStandardConjectures();
+    const cl = conjectures.find(c => c.id === 'composition_limit');
+    expect(cl).toBeDefined();
+    expect(cl!.name).toBe('Composition Limit');
+    expect(cl!.confidence).toBe(0.75);
+    expect(cl!.status).toBe('conjecture');
+    expect(cl!.statement).toContain('chain length');
+    expect(cl!.implications.length).toBeGreaterThan(0);
+  });
+
+  it('returns collateralization_theorem conjecture with correct properties', () => {
+    const conjectures = getStandardConjectures();
+    const ct = conjectures.find(c => c.id === 'collateralization_theorem');
+    expect(ct).toBeDefined();
+    expect(ct!.name).toBe('Collateralization Theorem');
+    expect(ct!.confidence).toBe(0.95);
+    expect(ct!.status).toBe('informal_argument');
+    expect(ct!.statement).toContain('economic value');
+    expect(ct!.implications.length).toBeGreaterThan(0);
+  });
+
+  it('all conjectures have unique ids', () => {
+    const conjectures = getStandardConjectures();
+    const ids = conjectures.map(c => c.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('all conjectures have confidence in [0, 1]', () => {
+    const conjectures = getStandardConjectures();
+    for (const c of conjectures) {
+      expect(c.confidence).toBeGreaterThanOrEqual(0);
+      expect(c.confidence).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('returns a new array on each call (no shared state)', () => {
+    const a = getStandardConjectures();
+    const b = getStandardConjectures();
+    expect(a).not.toBe(b);
+    expect(a).toEqual(b);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// analyzeImpossibilityBounds (Protocol Level Impossibility Bounds)
+// ---------------------------------------------------------------------------
+describe('analyzeImpossibilityBounds', () => {
+  const defaultParams = {
+    actionSpaceSize: 1000,
+    observationBudget: 100,
+    privacyRequirement: 0.3,
+    chainLength: 5,
+    collateral: 10000,
+  };
+
+  it('returns exactly 4 bounds (one per standard conjecture)', () => {
+    const bounds = analyzeImpossibilityBounds(defaultParams);
+    expect(bounds).toHaveLength(4);
+  });
+
+  it('observation_bound: lowerBound = actionSpaceSize / observationBudget', () => {
+    const bounds = analyzeImpossibilityBounds(defaultParams);
+    const ob = bounds.find(b => b.conjecture.id === 'observation_bound')!;
+    expect(ob.lowerBound).toBeCloseTo(1000 / 100, 10);
+    expect(ob.upperBound).toBeUndefined();
+  });
+
+  it('trust_privacy_tradeoff: upperBound = 1 - privacyRequirement', () => {
+    const bounds = analyzeImpossibilityBounds(defaultParams);
+    const tp = bounds.find(b => b.conjecture.id === 'trust_privacy_tradeoff')!;
+    expect(tp.upperBound).toBeCloseTo(1 - 0.3, 10);
+    expect(tp.lowerBound).toBeUndefined();
+  });
+
+  it('composition_limit: upperBound = 1 / chainLength', () => {
+    const bounds = analyzeImpossibilityBounds(defaultParams);
+    const cl = bounds.find(b => b.conjecture.id === 'composition_limit')!;
+    expect(cl.upperBound).toBeCloseTo(1 / 5, 10);
+    expect(cl.lowerBound).toBeUndefined();
+  });
+
+  it('collateralization_theorem: upperBound = collateral', () => {
+    const bounds = analyzeImpossibilityBounds(defaultParams);
+    const ct = bounds.find(b => b.conjecture.id === 'collateralization_theorem')!;
+    expect(ct.upperBound).toBe(10000);
+    expect(ct.lowerBound).toBeUndefined();
+  });
+
+  it('observation bound is achievable when budget >= action space', () => {
+    const bounds = analyzeImpossibilityBounds({
+      ...defaultParams,
+      actionSpaceSize: 50,
+      observationBudget: 100,
+    });
+    const ob = bounds.find(b => b.conjecture.id === 'observation_bound')!;
+    expect(ob.knownAchievable).toBe(true);
+    expect(ob.lowerBound!).toBeLessThanOrEqual(1);
+  });
+
+  it('observation bound is not achievable when budget < action space', () => {
+    const bounds = analyzeImpossibilityBounds({
+      ...defaultParams,
+      actionSpaceSize: 1000,
+      observationBudget: 100,
+    });
+    const ob = bounds.find(b => b.conjecture.id === 'observation_bound')!;
+    expect(ob.knownAchievable).toBe(false);
+    expect(ob.lowerBound!).toBeGreaterThan(1);
+  });
+
+  it('trust-privacy: knownAchievable true when privacyRequirement < 1', () => {
+    const bounds = analyzeImpossibilityBounds({
+      ...defaultParams,
+      privacyRequirement: 0.5,
+    });
+    const tp = bounds.find(b => b.conjecture.id === 'trust_privacy_tradeoff')!;
+    expect(tp.knownAchievable).toBe(true);
+    expect(tp.upperBound).toBeCloseTo(0.5, 10);
+  });
+
+  it('trust-privacy: knownAchievable false when privacyRequirement = 1', () => {
+    const bounds = analyzeImpossibilityBounds({
+      ...defaultParams,
+      privacyRequirement: 1.0,
+    });
+    const tp = bounds.find(b => b.conjecture.id === 'trust_privacy_tradeoff')!;
+    expect(tp.knownAchievable).toBe(false);
+    expect(tp.upperBound).toBe(0);
+  });
+
+  it('composition: knownAchievable true only for chainLength=1', () => {
+    const single = analyzeImpossibilityBounds({
+      ...defaultParams,
+      chainLength: 1,
+    });
+    const cl1 = single.find(b => b.conjecture.id === 'composition_limit')!;
+    expect(cl1.knownAchievable).toBe(true);
+    expect(cl1.upperBound).toBe(1);
+
+    const multi = analyzeImpossibilityBounds({
+      ...defaultParams,
+      chainLength: 3,
+    });
+    const cl3 = multi.find(b => b.conjecture.id === 'composition_limit')!;
+    expect(cl3.knownAchievable).toBe(false);
+    expect(cl3.upperBound).toBeCloseTo(1 / 3, 10);
+  });
+
+  it('collateralization: knownAchievable true when collateral > 0', () => {
+    const bounds = analyzeImpossibilityBounds(defaultParams);
+    const ct = bounds.find(b => b.conjecture.id === 'collateralization_theorem')!;
+    expect(ct.knownAchievable).toBe(true);
+  });
+
+  it('collateralization: knownAchievable false when collateral = 0', () => {
+    const bounds = analyzeImpossibilityBounds({
+      ...defaultParams,
+      collateral: 0,
+    });
+    const ct = bounds.find(b => b.conjecture.id === 'collateralization_theorem')!;
+    expect(ct.knownAchievable).toBe(false);
+    expect(ct.upperBound).toBe(0);
+  });
+
+  it('tightness estimates are in [0, 1]', () => {
+    const bounds = analyzeImpossibilityBounds(defaultParams);
+    for (const b of bounds) {
+      expect(b.tightnessEstimate).toBeGreaterThanOrEqual(0);
+      expect(b.tightnessEstimate).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('each bound has a valid conjecture reference', () => {
+    const bounds = analyzeImpossibilityBounds(defaultParams);
+    const standardIds = getStandardConjectures().map(c => c.id);
+    for (const b of bounds) {
+      expect(standardIds).toContain(b.conjecture.id);
+      expect(b.conjecture.name.length).toBeGreaterThan(0);
+      expect(b.conjecture.statement.length).toBeGreaterThan(0);
+    }
+  });
+
+  // --- Validation ---
+  it('throws on negative actionSpaceSize', () => {
+    expect(() =>
+      analyzeImpossibilityBounds({ ...defaultParams, actionSpaceSize: -1 }),
+    ).toThrow('actionSpaceSize must be >= 0');
+  });
+
+  it('throws on observationBudget <= 0', () => {
+    expect(() =>
+      analyzeImpossibilityBounds({ ...defaultParams, observationBudget: 0 }),
+    ).toThrow('observationBudget must be > 0');
+    expect(() =>
+      analyzeImpossibilityBounds({ ...defaultParams, observationBudget: -10 }),
+    ).toThrow('observationBudget must be > 0');
+  });
+
+  it('throws on privacyRequirement out of range', () => {
+    expect(() =>
+      analyzeImpossibilityBounds({ ...defaultParams, privacyRequirement: -0.1 }),
+    ).toThrow('privacyRequirement must be in [0, 1]');
+    expect(() =>
+      analyzeImpossibilityBounds({ ...defaultParams, privacyRequirement: 1.5 }),
+    ).toThrow('privacyRequirement must be in [0, 1]');
+  });
+
+  it('throws on chainLength < 1', () => {
+    expect(() =>
+      analyzeImpossibilityBounds({ ...defaultParams, chainLength: 0 }),
+    ).toThrow('chainLength must be >= 1');
+  });
+
+  it('throws on negative collateral', () => {
+    expect(() =>
+      analyzeImpossibilityBounds({ ...defaultParams, collateral: -100 }),
+    ).toThrow('collateral must be >= 0');
+  });
+
+  it('handles large action space relative to budget', () => {
+    const bounds = analyzeImpossibilityBounds({
+      actionSpaceSize: 1_000_000,
+      observationBudget: 10,
+      privacyRequirement: 0.5,
+      chainLength: 1,
+      collateral: 100,
+    });
+    const ob = bounds.find(b => b.conjecture.id === 'observation_bound')!;
+    expect(ob.lowerBound).toBe(100000);
+    expect(ob.knownAchievable).toBe(false);
+    expect(ob.tightnessEstimate).toBeCloseTo(0.00001, 8);
+  });
+
+  it('handles zero privacy requirement', () => {
+    const bounds = analyzeImpossibilityBounds({
+      ...defaultParams,
+      privacyRequirement: 0,
+    });
+    const tp = bounds.find(b => b.conjecture.id === 'trust_privacy_tradeoff')!;
+    expect(tp.upperBound).toBe(1);
+    expect(tp.knownAchievable).toBe(true);
+  });
+
+  it('handles long chain length', () => {
+    const bounds = analyzeImpossibilityBounds({
+      ...defaultParams,
+      chainLength: 100,
+    });
+    const cl = bounds.find(b => b.conjecture.id === 'composition_limit')!;
+    expect(cl.upperBound).toBeCloseTo(0.01, 10);
+    expect(cl.knownAchievable).toBe(false);
   });
 });

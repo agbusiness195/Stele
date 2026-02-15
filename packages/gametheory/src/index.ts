@@ -503,3 +503,490 @@ export function mechanismDesign(params: MechanismDesignParams): MechanismDesignR
     formula,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Principal-Agent Model (Game Theory Applies to Operators, Not Agents)
+// ---------------------------------------------------------------------------
+
+/**
+ * Represents the human/organization operating one or more AI agents.
+ * Game theory targets the principal (operator), not the stochastic LLM.
+ * If an agent breaches due to hallucination, the principal still bears cost.
+ */
+export interface OperatorPrincipal {
+  operatorId: string;
+  agentIds: string[];
+  totalStake: number;
+  monitoringBudget: number;
+  liabilityExposure: number;
+}
+
+/**
+ * Result of principal-agent modeling.
+ */
+export interface PrincipalAgentModel {
+  operator: OperatorPrincipal;
+  agentBreachProbability: number;
+  monitoringEffectiveness: number;
+  operatorExpectedCost: number;
+  incentiveCompatible: boolean;
+  optimalMonitoringSpend: number;
+}
+
+/**
+ * Model the principal-agent relationship between an operator and their AI agents.
+ *
+ * LLMs are stochastic, not rational actors. Game theory should target the
+ * principal (human/org operating the agent). If an agent breaches due to
+ * hallucination, the principal still bears the cost.
+ *
+ * The model computes:
+ * - agentBreachProbability = agentBreachRate * (1 - monitoringEffectiveness)
+ * - operatorExpectedCost = agentBreachProbability * breachCost + monitoringBudget
+ * - optimalMonitoringSpend = the spend where marginal monitoring cost equals
+ *   marginal reduction in expected breach cost (using diminishing returns model:
+ *   effectiveness(spend) = spend / (spend + monitoringCostPerUnit))
+ * - incentiveCompatible = true when operatorExpectedCost < liabilityExposure
+ */
+export function modelPrincipalAgent(params: {
+  operator: OperatorPrincipal;
+  agentBreachRate: number;
+  detectionRate: number;
+  breachCost: number;
+  monitoringCostPerUnit: number;
+}): PrincipalAgentModel {
+  const { operator, agentBreachRate, detectionRate, breachCost, monitoringCostPerUnit } = params;
+
+  if (agentBreachRate < 0 || agentBreachRate > 1) {
+    throw new Error(`agentBreachRate must be in [0, 1], got ${agentBreachRate}`);
+  }
+  if (detectionRate < 0 || detectionRate > 1) {
+    throw new Error(`detectionRate must be in [0, 1], got ${detectionRate}`);
+  }
+  if (breachCost < 0) {
+    throw new Error(`breachCost must be >= 0, got ${breachCost}`);
+  }
+  if (monitoringCostPerUnit < 0) {
+    throw new Error(`monitoringCostPerUnit must be >= 0, got ${monitoringCostPerUnit}`);
+  }
+
+  const monitoringEffectiveness = detectionRate;
+
+  // Effective breach probability: base rate reduced by monitoring
+  const agentBreachProbability = agentBreachRate * (1 - monitoringEffectiveness);
+
+  // Expected cost to operator: expected breach losses + monitoring budget
+  const operatorExpectedCost = agentBreachProbability * breachCost + operator.monitoringBudget;
+
+  // Optimal monitoring spend using diminishing returns model:
+  //   effectiveness(spend) = spend / (spend + monitoringCostPerUnit)
+  //   Total cost = agentBreachRate * (1 - effectiveness(spend)) * breachCost + spend
+  //   d(totalCost)/d(spend) = 0 =>
+  //   spend = sqrt(agentBreachRate * breachCost * monitoringCostPerUnit) - monitoringCostPerUnit
+  const optimalMonitoringSpend = Math.max(
+    0,
+    Math.sqrt(agentBreachRate * breachCost * monitoringCostPerUnit) - monitoringCostPerUnit,
+  );
+
+  // Operator is incentivized to use the system when expected cost < liability exposure
+  const incentiveCompatible = operatorExpectedCost < operator.liabilityExposure;
+
+  return {
+    operator,
+    agentBreachProbability,
+    monitoringEffectiveness,
+    operatorExpectedCost,
+    incentiveCompatible,
+    optimalMonitoringSpend,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Adoption Tier Analysis (Three Tiers with Honest Detection)
+// ---------------------------------------------------------------------------
+
+/**
+ * Three adoption tiers with different detection characteristics:
+ * - solo: ~60-70% detection (single-party self-verification)
+ * - bilateral: ~85-95% detection (cross-verification between two parties)
+ * - network: >99% detection (multi-party network verification)
+ */
+export type AdoptionTier = 'solo' | 'bilateral' | 'network';
+
+/**
+ * Result of adoption tier analysis.
+ */
+export interface TierAnalysis {
+  tier: AdoptionTier;
+  detectionFloor: number;
+  detectionCeiling: number;
+  effectiveDetection: number;
+  participantCount: number;
+  gameTheoryApplicable: boolean;
+  adjustedStake: number;
+  honestEquilibrium: boolean;
+}
+
+/** Floor/ceiling parameters for each adoption tier */
+const TIER_PARAMS: Record<AdoptionTier, { floor: number; ceiling: number }> = {
+  solo: { floor: 0.60, ceiling: 0.70 },
+  bilateral: { floor: 0.85, ceiling: 0.95 },
+  network: { floor: 0.99, ceiling: 0.999 },
+};
+
+/**
+ * Analyze a specific adoption tier to determine detection effectiveness,
+ * adjusted stake, and whether an honest equilibrium exists.
+ *
+ * Rules:
+ * - solo: floor=0.60, ceiling=0.70, adjustedStake = stake * 1.0
+ * - bilateral: floor=0.85, ceiling=0.95, adjustedStake = stake * 1.5
+ * - network: floor=0.99, ceiling=0.999, adjustedStake = stake * sqrt(participantCount)
+ * - effectiveDetection = clamp(baseDetectionRate, floor, ceiling)
+ * - honestEquilibrium = adjustedStake * effectiveDetection > breachGain
+ *
+ * Game theory is applicable for bilateral and network tiers (strategic
+ * interaction between multiple participants), but not for solo tier
+ * (single-party, no strategic interaction).
+ */
+export function analyzeTier(params: {
+  tier: AdoptionTier;
+  baseDetectionRate: number;
+  participantCount: number;
+  stake: number;
+  breachGain: number;
+}): TierAnalysis {
+  const { tier, baseDetectionRate, participantCount, stake, breachGain } = params;
+
+  if (baseDetectionRate < 0 || baseDetectionRate > 1) {
+    throw new Error(`baseDetectionRate must be in [0, 1], got ${baseDetectionRate}`);
+  }
+  if (participantCount < 1) {
+    throw new Error(`participantCount must be >= 1, got ${participantCount}`);
+  }
+  if (stake < 0) {
+    throw new Error(`stake must be >= 0, got ${stake}`);
+  }
+  if (breachGain < 0) {
+    throw new Error(`breachGain must be >= 0, got ${breachGain}`);
+  }
+
+  const { floor, ceiling } = TIER_PARAMS[tier];
+
+  // Clamp detection rate to tier bounds
+  const effectiveDetection = Math.max(floor, Math.min(ceiling, baseDetectionRate));
+
+  // Compute adjusted stake based on tier
+  let adjustedStake: number;
+  switch (tier) {
+    case 'solo':
+      adjustedStake = stake * 1.0;
+      break;
+    case 'bilateral':
+      adjustedStake = stake * 1.5;
+      break;
+    case 'network':
+      adjustedStake = stake * Math.sqrt(participantCount);
+      break;
+  }
+
+  // Game theory requires strategic interaction (multiple participants)
+  const gameTheoryApplicable = tier !== 'solo';
+
+  // Honest equilibrium: expected cost of breach exceeds gain
+  const honestEquilibrium = adjustedStake * effectiveDetection > breachGain;
+
+  return {
+    tier,
+    detectionFloor: floor,
+    detectionCeiling: ceiling,
+    effectiveDetection,
+    participantCount,
+    gameTheoryApplicable,
+    adjustedStake,
+    honestEquilibrium,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Impossibility Conjectures (Formal Bounds as Conjectures)
+// ---------------------------------------------------------------------------
+
+/**
+ * Status of a formal conjecture:
+ * - conjecture: Unproven formal statement
+ * - informal_argument: Supported by informal reasoning but not rigorous proof
+ * - formally_proven: Rigorously proven (rare in this domain)
+ */
+export type ConjectureStatus = 'conjecture' | 'informal_argument' | 'formally_proven';
+
+/**
+ * A formal conjecture about impossibility bounds in trust protocols.
+ * Stated as conjectures with informal arguments, not proven theorems,
+ * to be intellectually honest about what we know vs. what we believe.
+ */
+export interface Conjecture {
+  id: string;
+  name: string;
+  statement: string;
+  status: ConjectureStatus;
+  confidence: number;
+  informalArgument: string;
+  implications: string[];
+  counterexampleSpace: string;
+}
+
+/**
+ * Define a new conjecture with the given parameters.
+ * Defaults: confidence=0.5, status='conjecture', implications=[], counterexampleSpace=''.
+ */
+export function defineConjecture(params: {
+  id: string;
+  name: string;
+  statement: string;
+  informalArgument: string;
+  confidence?: number;
+  implications?: string[];
+  counterexampleSpace?: string;
+}): Conjecture {
+  const confidence = params.confidence ?? 0.5;
+
+  if (confidence < 0 || confidence > 1) {
+    throw new Error(`confidence must be in [0, 1], got ${confidence}`);
+  }
+  if (!params.id) {
+    throw new Error('id must be a non-empty string');
+  }
+  if (!params.name) {
+    throw new Error('name must be a non-empty string');
+  }
+  if (!params.statement) {
+    throw new Error('statement must be a non-empty string');
+  }
+  if (!params.informalArgument) {
+    throw new Error('informalArgument must be a non-empty string');
+  }
+
+  return {
+    id: params.id,
+    name: params.name,
+    statement: params.statement,
+    status: 'conjecture',
+    confidence,
+    informalArgument: params.informalArgument,
+    implications: params.implications ?? [],
+    counterexampleSpace: params.counterexampleSpace ?? '',
+  };
+}
+
+/**
+ * Return the four standard conjectures of the Stele/Kova protocol:
+ *
+ * 1. Observation Bound — verification cost proportional to action space
+ * 2. Trust-Privacy Tradeoff — trust and privacy cannot both be maximized
+ * 3. Composition Limit — trust degrades at most linearly with chain length
+ * 4. Collateralization Theorem — trust cannot exceed economic value at risk
+ */
+export function getStandardConjectures(): Conjecture[] {
+  return [
+    {
+      id: 'observation_bound',
+      name: 'Observation Bound',
+      statement: 'Complete behavioral verification requires observation proportional to action space',
+      status: 'conjecture',
+      confidence: 0.85,
+      informalArgument:
+        'To verify that an agent has not taken any forbidden action, one must observe a ' +
+        'fraction of the action space proportional to its size. Sampling-based approaches ' +
+        'can reduce the constant factor but not the asymptotic relationship. This follows ' +
+        'from information-theoretic lower bounds on hypothesis testing.',
+      implications: [
+        'Monitoring cost scales with agent capability',
+        'Full verification of unbounded agents is infeasible',
+        'Practical systems must accept probabilistic guarantees',
+      ],
+      counterexampleSpace:
+        'A verification scheme that achieves complete coverage with sub-linear observation ' +
+        'would disprove this conjecture. Potential avenues: structured action spaces with ' +
+        'exploitable symmetries, or cryptographic commitments that compress verification.',
+    },
+    {
+      id: 'trust_privacy_tradeoff',
+      name: 'Trust-Privacy Tradeoff',
+      statement: 'Trust verification and privacy preservation cannot both be maximized simultaneously',
+      status: 'informal_argument',
+      confidence: 0.90,
+      informalArgument:
+        'Verifying trustworthy behavior requires observing actions, but privacy requires ' +
+        'concealing them. Zero-knowledge proofs can partially bridge this gap, but there ' +
+        'exist classes of behavioral properties (e.g., intent, context-dependent decisions) ' +
+        'that resist zero-knowledge verification. The tradeoff is fundamental to any system ' +
+        'that must balance accountability with confidentiality.',
+      implications: [
+        'Privacy-preserving trust requires accepting lower trust guarantees',
+        'High-trust systems necessarily leak some behavioral information',
+        'Zero-knowledge techniques can shift but not eliminate the tradeoff curve',
+      ],
+      counterexampleSpace:
+        'A system achieving both perfect privacy and perfect trust verification would ' +
+        'disprove this. Most likely requires a breakthrough in zero-knowledge proofs for ' +
+        'behavioral properties or a fundamentally new model of trust that does not require observation.',
+    },
+    {
+      id: 'composition_limit',
+      name: 'Composition Limit',
+      statement: 'Composed trust guarantees degrade at most linearly with chain length',
+      status: 'conjecture',
+      confidence: 0.75,
+      informalArgument:
+        'When trust is composed across a chain of agents (A trusts B trusts C ...), each ' +
+        'link introduces potential failure. Under reasonable independence assumptions, the ' +
+        'trust guarantee at the end of a chain of length n is at most 1/n of the single-link ' +
+        'guarantee. This is an upper bound; actual degradation may be worse (exponential) ' +
+        'without careful protocol design.',
+      implications: [
+        'Long delegation chains require stronger per-link guarantees',
+        'Trust transitivity is fundamentally lossy',
+        'Protocol design should minimize chain depth',
+      ],
+      counterexampleSpace:
+        'A composition scheme where trust degrades sub-linearly (e.g., logarithmically) ' +
+        'would tighten this bound. Potential avenues: redundant verification paths, ' +
+        'reputation aggregation across multiple chains.',
+    },
+    {
+      id: 'collateralization_theorem',
+      name: 'Collateralization Theorem',
+      statement: 'Trust cannot exceed economic value risked to back it',
+      status: 'informal_argument',
+      confidence: 0.95,
+      informalArgument:
+        'A rational operator will breach any covenant where the gain from breaching exceeds ' +
+        'the collateral at risk. Therefore, the maximum trust one can place in a covenanted ' +
+        'agent is bounded by the economic value the operator has staked. This follows directly ' +
+        'from the assumption of rational self-interest and is the foundation of stake-based ' +
+        'trust systems.',
+      implications: [
+        'Stake must be proportional to the value of the interaction',
+        'Under-collateralized covenants are not credible',
+        'Trust in high-value interactions requires high-value collateral',
+      ],
+      counterexampleSpace:
+        'A mechanism where rational operators maintain trust beyond their staked collateral. ' +
+        'Reputation systems and repeated games can effectively increase the "virtual collateral" ' +
+        'but this conjecture claims they cannot exceed the total economic value at risk ' +
+        '(including future reputation value).',
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Impossibility Bounds Analysis (Protocol Level)
+// ---------------------------------------------------------------------------
+
+/**
+ * A concrete bound derived from analyzing parameters against a conjecture.
+ */
+export interface ImpossibilityBound {
+  conjecture: Conjecture;
+  lowerBound?: number;
+  upperBound?: number;
+  tightnessEstimate: number;
+  knownAchievable: boolean;
+}
+
+/**
+ * Analyze concrete parameter values against the four standard conjectures
+ * to produce impossibility bounds for a specific protocol configuration.
+ *
+ * Returns bounds for each conjecture:
+ * - observation_bound: lowerBound = actionSpaceSize / observationBudget
+ * - trust_privacy_tradeoff: upperBound = 1 - privacyRequirement
+ * - composition_limit: upperBound = 1 / chainLength
+ * - collateralization_theorem: upperBound = collateral
+ *
+ * @param params.actionSpaceSize Size of the agent's action space
+ * @param params.observationBudget Budget (in observation units) available for monitoring
+ * @param params.privacyRequirement Privacy requirement level, in [0, 1]
+ * @param params.chainLength Length of the trust delegation chain (>= 1)
+ * @param params.collateral Economic value staked as collateral
+ */
+export function analyzeImpossibilityBounds(params: {
+  actionSpaceSize: number;
+  observationBudget: number;
+  privacyRequirement: number;
+  chainLength: number;
+  collateral: number;
+}): ImpossibilityBound[] {
+  const { actionSpaceSize, observationBudget, privacyRequirement, chainLength, collateral } = params;
+
+  if (actionSpaceSize < 0) {
+    throw new Error(`actionSpaceSize must be >= 0, got ${actionSpaceSize}`);
+  }
+  if (observationBudget <= 0) {
+    throw new Error(`observationBudget must be > 0, got ${observationBudget}`);
+  }
+  if (privacyRequirement < 0 || privacyRequirement > 1) {
+    throw new Error(`privacyRequirement must be in [0, 1], got ${privacyRequirement}`);
+  }
+  if (chainLength < 1) {
+    throw new Error(`chainLength must be >= 1, got ${chainLength}`);
+  }
+  if (collateral < 0) {
+    throw new Error(`collateral must be >= 0, got ${collateral}`);
+  }
+
+  const conjectures = getStandardConjectures();
+
+  const observationBound = conjectures.find(c => c.id === 'observation_bound')!;
+  const trustPrivacy = conjectures.find(c => c.id === 'trust_privacy_tradeoff')!;
+  const compositionLimit = conjectures.find(c => c.id === 'composition_limit')!;
+  const collateralization = conjectures.find(c => c.id === 'collateralization_theorem')!;
+
+  // Observation bound: ratio of action space to observation budget
+  // Higher ratio means worse coverage; tightness increases with ratio
+  const observationRatio = actionSpaceSize / observationBudget;
+  const observationTightness = Math.min(1, observationBudget / actionSpaceSize);
+
+  // Trust-privacy: max achievable trust given privacy constraint
+  const maxTrust = 1 - privacyRequirement;
+  const privacyTightness = privacyRequirement > 0 ? Math.min(1, maxTrust) : 0;
+
+  // Composition: trust per hop in chain
+  const compositionUpperBound = 1 / chainLength;
+  const compositionTightness = Math.min(1, 1 / chainLength);
+
+  // Collateralization: max trust backed by collateral
+  const collateralTightness = collateral > 0 ? Math.min(1, 1 / collateral) : 0;
+
+  return [
+    {
+      conjecture: observationBound,
+      lowerBound: observationRatio,
+      upperBound: undefined,
+      tightnessEstimate: observationTightness,
+      knownAchievable: observationRatio <= 1,
+    },
+    {
+      conjecture: trustPrivacy,
+      lowerBound: undefined,
+      upperBound: maxTrust,
+      tightnessEstimate: privacyTightness,
+      knownAchievable: maxTrust > 0,
+    },
+    {
+      conjecture: compositionLimit,
+      lowerBound: undefined,
+      upperBound: compositionUpperBound,
+      tightnessEstimate: compositionTightness,
+      knownAchievable: chainLength === 1,
+    },
+    {
+      conjecture: collateralization,
+      lowerBound: undefined,
+      upperBound: collateral,
+      tightnessEstimate: collateralTightness,
+      knownAchievable: collateral > 0,
+    },
+  ];
+}
