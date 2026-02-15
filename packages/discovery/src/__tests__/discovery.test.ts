@@ -22,11 +22,28 @@ import {
   MAX_DOCUMENT_AGE_MS,
   DiscoveryClient,
   DiscoveryServer,
+  // Federated discovery
+  createFederationConfig,
+  addResolver,
+  removeResolver,
+  resolveAgent,
+  selectOptimalResolvers,
+  // Trust-gated marketplace
+  createMarketplace,
+  listAgent,
+  searchMarketplace,
+  createTransaction,
+  completeTransaction,
+  disputeTransaction,
 } from '../index.js';
 import type {
   DiscoveryDocument,
   AgentKeyEntry,
   CrossPlatformVerificationRequest,
+  FederatedResolver,
+  FederationConfig,
+  MarketplaceListing,
+  MarketplaceConfig,
 } from '../index.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1323,5 +1340,792 @@ describe('Server + Client integration', () => {
     expect(discovered.issuer).toBe(TEST_ISSUER);
     expect(discovered.platform_name).toBe('Integration Test Platform');
     expect(discovered.signing_key).toBe(kp.publicKeyHex);
+  });
+});
+
+// ─── Federated Discovery Protocol ────────────────────────────────────────────
+
+describe('createFederationConfig', () => {
+  it('creates a config with default quorum and latency', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+        { resolverId: 'r2', endpoint: 'https://r2.example', publicKey: 'pk2' },
+        { resolverId: 'r3', endpoint: 'https://r3.example', publicKey: 'pk3' },
+      ],
+    });
+
+    expect(config.resolvers).toHaveLength(3);
+    // Default quorum: ceil(3/2) + 1 = 3
+    expect(config.quorum).toBe(3);
+    expect(config.maxLatencyMs).toBe(5000);
+    expect(config.trustSignatures).toBe(true);
+  });
+
+  it('uses custom quorum and latency when provided', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+        { resolverId: 'r2', endpoint: 'https://r2.example', publicKey: 'pk2' },
+      ],
+      quorum: 1,
+      maxLatencyMs: 2000,
+    });
+
+    expect(config.quorum).toBe(1);
+    expect(config.maxLatencyMs).toBe(2000);
+  });
+
+  it('initializes resolvers with default reliability of 1.0', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+      ],
+    });
+
+    expect(config.resolvers[0]!.reliability).toBe(1.0);
+    expect(config.resolvers[0]!.lastSeen).toBeGreaterThan(0);
+  });
+
+  it('preserves region information', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1', region: 'us-east' },
+        { resolverId: 'r2', endpoint: 'https://r2.example', publicKey: 'pk2', region: 'eu-west' },
+      ],
+    });
+
+    expect(config.resolvers[0]!.region).toBe('us-east');
+    expect(config.resolvers[1]!.region).toBe('eu-west');
+  });
+
+  it('handles empty resolver list', () => {
+    const config = createFederationConfig({ resolvers: [] });
+    expect(config.resolvers).toHaveLength(0);
+    // quorum: ceil(0/2) + 1 = 1
+    expect(config.quorum).toBe(1);
+  });
+});
+
+describe('addResolver', () => {
+  it('adds a new resolver to the config', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+      ],
+    });
+
+    const newResolver: FederatedResolver = {
+      resolverId: 'r2',
+      endpoint: 'https://r2.example',
+      publicKey: 'pk2',
+      lastSeen: Date.now(),
+      reliability: 0.95,
+    };
+
+    const updated = addResolver(config, newResolver);
+    expect(updated.resolvers).toHaveLength(2);
+    expect(updated.resolvers[1]!.resolverId).toBe('r2');
+  });
+
+  it('replaces an existing resolver with the same ID', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+      ],
+    });
+
+    const updatedResolver: FederatedResolver = {
+      resolverId: 'r1',
+      endpoint: 'https://r1-new.example',
+      publicKey: 'pk1-new',
+      lastSeen: Date.now(),
+      reliability: 0.8,
+    };
+
+    const updated = addResolver(config, updatedResolver);
+    expect(updated.resolvers).toHaveLength(1);
+    expect(updated.resolvers[0]!.endpoint).toBe('https://r1-new.example');
+    expect(updated.resolvers[0]!.reliability).toBe(0.8);
+  });
+
+  it('returns a new config object (immutable)', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+      ],
+    });
+
+    const newResolver: FederatedResolver = {
+      resolverId: 'r2',
+      endpoint: 'https://r2.example',
+      publicKey: 'pk2',
+      lastSeen: Date.now(),
+      reliability: 1.0,
+    };
+
+    const updated = addResolver(config, newResolver);
+    expect(updated).not.toBe(config);
+    expect(config.resolvers).toHaveLength(1); // original unchanged
+  });
+});
+
+describe('removeResolver', () => {
+  it('removes a resolver by ID', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+        { resolverId: 'r2', endpoint: 'https://r2.example', publicKey: 'pk2' },
+      ],
+    });
+
+    const updated = removeResolver(config, 'r1');
+    expect(updated.resolvers).toHaveLength(1);
+    expect(updated.resolvers[0]!.resolverId).toBe('r2');
+  });
+
+  it('returns unchanged config when resolver ID does not exist', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+      ],
+    });
+
+    const updated = removeResolver(config, 'nonexistent');
+    expect(updated.resolvers).toHaveLength(1);
+  });
+
+  it('returns a new config object (immutable)', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+        { resolverId: 'r2', endpoint: 'https://r2.example', publicKey: 'pk2' },
+      ],
+    });
+
+    const updated = removeResolver(config, 'r1');
+    expect(updated).not.toBe(config);
+    expect(config.resolvers).toHaveLength(2); // original unchanged
+  });
+});
+
+describe('resolveAgent', () => {
+  let config: FederationConfig;
+
+  beforeEach(() => {
+    config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1', region: 'us-east' },
+        { resolverId: 'r2', endpoint: 'https://r2.example', publicKey: 'pk2', region: 'eu-west' },
+        { resolverId: 'r3', endpoint: 'https://r3.example', publicKey: 'pk3', region: 'ap-south' },
+      ],
+      quorum: 2,
+    });
+  });
+
+  it('resolves when quorum is met (all resolvers agree)', () => {
+    const result = resolveAgent(config, 'agent-1', [
+      { resolverId: 'r1', found: true, signatureValid: true, latencyMs: 50, data: { name: 'Agent 1' } },
+      { resolverId: 'r2', found: true, signatureValid: true, latencyMs: 100, data: { name: 'Agent 1' } },
+      { resolverId: 'r3', found: true, signatureValid: true, latencyMs: 75, data: { name: 'Agent 1' } },
+    ]);
+
+    expect(result.resolved).toBe(true);
+    expect(result.quorumMet).toBe(true);
+    expect(result.agentId).toBe('agent-1');
+    expect(result.consensusData).toEqual({ name: 'Agent 1' });
+    expect(result.resolverResponses).toHaveLength(3);
+  });
+
+  it('resolves when quorum is met (minimum number agree)', () => {
+    const result = resolveAgent(config, 'agent-1', [
+      { resolverId: 'r1', found: true, signatureValid: true, latencyMs: 50, data: { name: 'Agent 1' } },
+      { resolverId: 'r2', found: false, signatureValid: false, latencyMs: 100 },
+      { resolverId: 'r3', found: true, signatureValid: true, latencyMs: 75, data: { name: 'Agent 1' } },
+    ]);
+
+    expect(result.resolved).toBe(true);
+    expect(result.quorumMet).toBe(true);
+  });
+
+  it('fails to resolve when quorum is not met', () => {
+    const result = resolveAgent(config, 'agent-1', [
+      { resolverId: 'r1', found: true, signatureValid: true, latencyMs: 50 },
+      { resolverId: 'r2', found: false, signatureValid: false, latencyMs: 100 },
+      { resolverId: 'r3', found: false, signatureValid: false, latencyMs: 75 },
+    ]);
+
+    expect(result.resolved).toBe(false);
+    expect(result.quorumMet).toBe(false);
+    expect(result.consensusData).toBeNull();
+  });
+
+  it('rejects responses with invalid signatures when trustSignatures is true', () => {
+    const result = resolveAgent(config, 'agent-1', [
+      { resolverId: 'r1', found: true, signatureValid: false, latencyMs: 50, data: { fake: true } },
+      { resolverId: 'r2', found: true, signatureValid: false, latencyMs: 100, data: { fake: true } },
+      { resolverId: 'r3', found: true, signatureValid: true, latencyMs: 75, data: { real: true } },
+    ]);
+
+    // Only 1 valid response, quorum is 2
+    expect(result.resolved).toBe(false);
+    expect(result.quorumMet).toBe(false);
+  });
+
+  it('returns consensusData from the first valid resolver', () => {
+    const result = resolveAgent(config, 'agent-1', [
+      { resolverId: 'r1', found: true, signatureValid: false, latencyMs: 50, data: { source: 'r1' } },
+      { resolverId: 'r2', found: true, signatureValid: true, latencyMs: 100, data: { source: 'r2' } },
+      { resolverId: 'r3', found: true, signatureValid: true, latencyMs: 75, data: { source: 'r3' } },
+    ]);
+
+    expect(result.resolved).toBe(true);
+    // First valid is r2 (r1 has invalid signature)
+    expect(result.consensusData).toEqual({ source: 'r2' });
+  });
+
+  it('returns null consensusData when quorum met but no data provided', () => {
+    const result = resolveAgent(config, 'agent-1', [
+      { resolverId: 'r1', found: true, signatureValid: true, latencyMs: 50 },
+      { resolverId: 'r2', found: true, signatureValid: true, latencyMs: 100 },
+    ]);
+
+    expect(result.resolved).toBe(true);
+    expect(result.consensusData).toBeNull();
+  });
+
+  it('handles empty resolver results', () => {
+    const result = resolveAgent(config, 'agent-1', []);
+
+    expect(result.resolved).toBe(false);
+    expect(result.quorumMet).toBe(false);
+    expect(result.resolverResponses).toHaveLength(0);
+  });
+});
+
+describe('selectOptimalResolvers', () => {
+  it('selects resolvers by reliability', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+        { resolverId: 'r2', endpoint: 'https://r2.example', publicKey: 'pk2' },
+        { resolverId: 'r3', endpoint: 'https://r3.example', publicKey: 'pk3' },
+      ],
+    });
+    // Manually set reliabilities
+    config.resolvers[0]!.reliability = 0.5;
+    config.resolvers[1]!.reliability = 0.9;
+    config.resolvers[2]!.reliability = 0.7;
+
+    const selected = selectOptimalResolvers(config, 2);
+    expect(selected).toHaveLength(2);
+    expect(selected[0]!.resolverId).toBe('r2'); // highest reliability
+  });
+
+  it('prefers diverse regions', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1', region: 'us-east' },
+        { resolverId: 'r2', endpoint: 'https://r2.example', publicKey: 'pk2', region: 'us-east' },
+        { resolverId: 'r3', endpoint: 'https://r3.example', publicKey: 'pk3', region: 'eu-west' },
+      ],
+    });
+    config.resolvers[0]!.reliability = 0.9;
+    config.resolvers[1]!.reliability = 0.95;
+    config.resolvers[2]!.reliability = 0.8;
+
+    const selected = selectOptimalResolvers(config, 2);
+    expect(selected).toHaveLength(2);
+    // Should pick r1 (us-east, 0.9) and r3 (eu-west, 0.8) for diversity,
+    // even though r2 (us-east, 0.95) has higher reliability than r3
+    const regions = selected.map((r) => r.region);
+    expect(regions).toContain('us-east');
+    expect(regions).toContain('eu-west');
+  });
+
+  it('returns all resolvers when count >= total', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+        { resolverId: 'r2', endpoint: 'https://r2.example', publicKey: 'pk2' },
+      ],
+    });
+
+    const selected = selectOptimalResolvers(config, 5);
+    expect(selected).toHaveLength(2);
+  });
+
+  it('returns empty array when count is 0', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+      ],
+    });
+
+    const selected = selectOptimalResolvers(config, 0);
+    expect(selected).toHaveLength(0);
+  });
+
+  it('handles resolvers without regions', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+        { resolverId: 'r2', endpoint: 'https://r2.example', publicKey: 'pk2' },
+        { resolverId: 'r3', endpoint: 'https://r3.example', publicKey: 'pk3' },
+      ],
+    });
+    config.resolvers[0]!.reliability = 0.9;
+    config.resolvers[1]!.reliability = 0.8;
+    config.resolvers[2]!.reliability = 0.7;
+
+    const selected = selectOptimalResolvers(config, 2);
+    expect(selected).toHaveLength(2);
+    // All same "region" (undefined), so it picks by reliability
+    expect(selected[0]!.resolverId).toBe('r1');
+  });
+
+  it('fills remaining slots after region diversity with highest reliability', () => {
+    const config = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1', region: 'us' },
+        { resolverId: 'r2', endpoint: 'https://r2.example', publicKey: 'pk2', region: 'eu' },
+        { resolverId: 'r3', endpoint: 'https://r3.example', publicKey: 'pk3', region: 'us' },
+        { resolverId: 'r4', endpoint: 'https://r4.example', publicKey: 'pk4', region: 'eu' },
+      ],
+    });
+    config.resolvers[0]!.reliability = 0.9;
+    config.resolvers[1]!.reliability = 0.8;
+    config.resolvers[2]!.reliability = 0.95; // same region as r1 but higher
+    config.resolvers[3]!.reliability = 0.7;
+
+    const selected = selectOptimalResolvers(config, 3);
+    expect(selected).toHaveLength(3);
+    // First pass: r3 (us, 0.95) and r1 (eu... no, r1 is us)
+    // Actually sorted by reliability: r3(0.95), r1(0.9), r2(0.8), r4(0.7)
+    // First pass picks: r3 (us), r2 (eu) = 2 unique regions
+    // Second pass fills: r1 (next highest)
+    const selectedIds = selected.map((r) => r.resolverId);
+    expect(selectedIds).toContain('r3'); // highest reliability
+    expect(selectedIds).toContain('r2'); // different region
+  });
+});
+
+// ─── Trust-Gated Marketplace ─────────────────────────────────────────────────
+
+describe('createMarketplace', () => {
+  it('creates a marketplace with default config', () => {
+    const config = createMarketplace();
+
+    expect(config.minimumTrustScore).toBe(0.3);
+    expect(config.premiumThreshold).toBe(0.9);
+    expect(config.verifiedThreshold).toBe(0.7);
+    expect(config.escrowRequired).toBe(true);
+    expect(config.transactionFeeRate).toBe(0.001);
+  });
+
+  it('overrides specific config values', () => {
+    const config = createMarketplace({
+      minimumTrustScore: 0.5,
+      escrowRequired: false,
+      transactionFeeRate: 0.01,
+    });
+
+    expect(config.minimumTrustScore).toBe(0.5);
+    expect(config.escrowRequired).toBe(false);
+    expect(config.transactionFeeRate).toBe(0.01);
+    // Defaults preserved for unspecified
+    expect(config.premiumThreshold).toBe(0.9);
+    expect(config.verifiedThreshold).toBe(0.7);
+  });
+});
+
+describe('listAgent', () => {
+  let config: MarketplaceConfig;
+
+  beforeEach(() => {
+    config = createMarketplace();
+  });
+
+  it('lists an agent with standard tier when trust score is below verified threshold', () => {
+    const result = listAgent(config, {
+      agentId: 'agent-1',
+      capabilities: ['search', 'translate'],
+      trustScore: 0.5,
+      pricing: { perQuery: 0.01, perTransaction: 0.1 },
+    });
+
+    expect('error' in result).toBe(false);
+    const listing = result as MarketplaceListing;
+    expect(listing.agentId).toBe('agent-1');
+    expect(listing.tier).toBe('standard');
+    expect(listing.listed).toBe(true);
+    expect(listing.capabilities).toEqual(['search', 'translate']);
+  });
+
+  it('lists an agent with verified tier', () => {
+    const result = listAgent(config, {
+      agentId: 'agent-2',
+      capabilities: ['analyze'],
+      trustScore: 0.75,
+      pricing: { perQuery: 0.02, perTransaction: 0.2 },
+    });
+
+    expect('error' in result).toBe(false);
+    expect((result as MarketplaceListing).tier).toBe('verified');
+  });
+
+  it('lists an agent with premium tier', () => {
+    const result = listAgent(config, {
+      agentId: 'agent-3',
+      capabilities: ['analyze', 'generate'],
+      trustScore: 0.95,
+      pricing: { perQuery: 0.05, perTransaction: 0.5 },
+    });
+
+    expect('error' in result).toBe(false);
+    expect((result as MarketplaceListing).tier).toBe('premium');
+  });
+
+  it('rejects an agent with trust score below minimum', () => {
+    const result = listAgent(config, {
+      agentId: 'agent-untrusted',
+      capabilities: ['search'],
+      trustScore: 0.1,
+      pricing: { perQuery: 0.01, perTransaction: 0.1 },
+    });
+
+    expect('error' in result).toBe(true);
+    expect((result as { error: string }).error).toContain('below minimum threshold');
+  });
+
+  it('accepts an agent at exactly the minimum trust score', () => {
+    const result = listAgent(config, {
+      agentId: 'agent-exact',
+      capabilities: ['search'],
+      trustScore: 0.3,
+      pricing: { perQuery: 0.01, perTransaction: 0.1 },
+    });
+
+    expect('error' in result).toBe(false);
+    expect((result as MarketplaceListing).tier).toBe('standard');
+  });
+
+  it('assigns premium tier at exactly the premium threshold', () => {
+    const result = listAgent(config, {
+      agentId: 'agent-exact-premium',
+      capabilities: ['search'],
+      trustScore: 0.9,
+      pricing: { perQuery: 0.01, perTransaction: 0.1 },
+    });
+
+    expect('error' in result).toBe(false);
+    expect((result as MarketplaceListing).tier).toBe('premium');
+  });
+
+  it('sets listedAt to current time', () => {
+    const before = Date.now();
+    const result = listAgent(config, {
+      agentId: 'agent-time',
+      capabilities: ['search'],
+      trustScore: 0.5,
+      pricing: { perQuery: 0.01, perTransaction: 0.1 },
+    });
+    const after = Date.now();
+
+    expect('error' in result).toBe(false);
+    const listing = result as MarketplaceListing;
+    expect(listing.listedAt).toBeGreaterThanOrEqual(before);
+    expect(listing.listedAt).toBeLessThanOrEqual(after);
+  });
+});
+
+describe('searchMarketplace', () => {
+  let listings: MarketplaceListing[];
+
+  beforeEach(() => {
+    listings = [
+      {
+        agentId: 'agent-premium',
+        capabilities: ['search', 'translate'],
+        trustScore: 0.95,
+        tier: 'premium',
+        pricing: { perQuery: 0.05, perTransaction: 0.5 },
+        listed: true,
+        listedAt: 1000,
+      },
+      {
+        agentId: 'agent-verified',
+        capabilities: ['analyze', 'search'],
+        trustScore: 0.8,
+        tier: 'verified',
+        pricing: { perQuery: 0.02, perTransaction: 0.2 },
+        listed: true,
+        listedAt: 2000,
+      },
+      {
+        agentId: 'agent-standard',
+        capabilities: ['search'],
+        trustScore: 0.5,
+        tier: 'standard',
+        pricing: { perQuery: 0.01, perTransaction: 0.1 },
+        listed: true,
+        listedAt: 3000,
+      },
+      {
+        agentId: 'agent-unlisted',
+        capabilities: ['search'],
+        trustScore: 0.6,
+        tier: 'standard',
+        pricing: { perQuery: 0.01, perTransaction: 0.1 },
+        listed: false,
+        listedAt: 4000,
+      },
+    ];
+  });
+
+  it('returns all listed agents when no filters are provided', () => {
+    const results = searchMarketplace(listings, {});
+    expect(results).toHaveLength(3); // excludes unlisted
+  });
+
+  it('filters out unlisted agents', () => {
+    const results = searchMarketplace(listings, {});
+    const ids = results.map((l) => l.agentId);
+    expect(ids).not.toContain('agent-unlisted');
+  });
+
+  it('filters by capability', () => {
+    const results = searchMarketplace(listings, { capabilities: ['translate'] });
+    expect(results).toHaveLength(1);
+    expect(results[0]!.agentId).toBe('agent-premium');
+  });
+
+  it('matches any capability (not all)', () => {
+    const results = searchMarketplace(listings, { capabilities: ['analyze'] });
+    expect(results).toHaveLength(1);
+    expect(results[0]!.agentId).toBe('agent-verified');
+  });
+
+  it('filters by minimum trust score', () => {
+    const results = searchMarketplace(listings, { minimumTrust: 0.7 });
+    expect(results).toHaveLength(2);
+    const ids = results.map((l) => l.agentId);
+    expect(ids).toContain('agent-premium');
+    expect(ids).toContain('agent-verified');
+  });
+
+  it('filters by tier', () => {
+    const results = searchMarketplace(listings, { tier: 'verified' });
+    expect(results).toHaveLength(1);
+    expect(results[0]!.agentId).toBe('agent-verified');
+  });
+
+  it('sorts by tier priority (premium first) then trust score', () => {
+    const results = searchMarketplace(listings, {});
+    expect(results[0]!.tier).toBe('premium');
+    expect(results[1]!.tier).toBe('verified');
+    expect(results[2]!.tier).toBe('standard');
+  });
+
+  it('limits results by maxResults', () => {
+    const results = searchMarketplace(listings, { maxResults: 1 });
+    expect(results).toHaveLength(1);
+  });
+
+  it('defaults maxResults to 50', () => {
+    // Create many listings
+    const manyListings: MarketplaceListing[] = Array.from({ length: 60 }, (_, i) => ({
+      agentId: `agent-${i}`,
+      capabilities: ['search'],
+      trustScore: 0.5,
+      tier: 'standard' as const,
+      pricing: { perQuery: 0.01, perTransaction: 0.1 },
+      listed: true,
+      listedAt: i,
+    }));
+
+    const results = searchMarketplace(manyListings, {});
+    expect(results).toHaveLength(50);
+  });
+
+  it('returns empty array when no listings match', () => {
+    const results = searchMarketplace(listings, { capabilities: ['nonexistent'] });
+    expect(results).toHaveLength(0);
+  });
+
+  it('combines multiple filters', () => {
+    const results = searchMarketplace(listings, {
+      capabilities: ['search'],
+      minimumTrust: 0.7,
+      tier: 'premium',
+    });
+    expect(results).toHaveLength(1);
+    expect(results[0]!.agentId).toBe('agent-premium');
+  });
+});
+
+describe('createTransaction', () => {
+  it('creates a pending transaction with correct fee', () => {
+    const config = createMarketplace({ transactionFeeRate: 0.01 });
+    const tx = createTransaction(config, {
+      buyerAgentId: 'buyer-1',
+      sellerAgentId: 'seller-1',
+      amount: 100,
+    });
+
+    expect(tx.status).toBe('pending');
+    expect(tx.amount).toBe(100);
+    expect(tx.fee).toBeCloseTo(1.0); // 100 * 0.01
+    expect(tx.buyerAgentId).toBe('buyer-1');
+    expect(tx.sellerAgentId).toBe('seller-1');
+    expect(tx.escrowHeld).toBe(true); // default
+  });
+
+  it('sets escrowHeld based on config', () => {
+    const config = createMarketplace({ escrowRequired: false });
+    const tx = createTransaction(config, {
+      buyerAgentId: 'buyer-1',
+      sellerAgentId: 'seller-1',
+      amount: 50,
+    });
+
+    expect(tx.escrowHeld).toBe(false);
+  });
+
+  it('generates a unique transaction ID', () => {
+    const config = createMarketplace();
+    const tx1 = createTransaction(config, {
+      buyerAgentId: 'buyer-1',
+      sellerAgentId: 'seller-1',
+      amount: 10,
+    });
+    const tx2 = createTransaction(config, {
+      buyerAgentId: 'buyer-2',
+      sellerAgentId: 'seller-2',
+      amount: 20,
+    });
+
+    expect(tx1.id).toBeDefined();
+    expect(tx2.id).toBeDefined();
+    // IDs include buyer/seller so they're different
+    expect(tx1.id).not.toBe(tx2.id);
+  });
+
+  it('computes fee with default rate', () => {
+    const config = createMarketplace(); // 0.001 default
+    const tx = createTransaction(config, {
+      buyerAgentId: 'buyer-1',
+      sellerAgentId: 'seller-1',
+      amount: 1000,
+    });
+
+    expect(tx.fee).toBeCloseTo(1.0); // 1000 * 0.001
+  });
+});
+
+describe('completeTransaction', () => {
+  it('sets status to completed and releases escrow', () => {
+    const config = createMarketplace();
+    const tx = createTransaction(config, {
+      buyerAgentId: 'buyer-1',
+      sellerAgentId: 'seller-1',
+      amount: 100,
+    });
+
+    expect(tx.status).toBe('pending');
+    expect(tx.escrowHeld).toBe(true);
+
+    const completed = completeTransaction(tx);
+    expect(completed.status).toBe('completed');
+    expect(completed.escrowHeld).toBe(false);
+    expect(completed.amount).toBe(100); // preserved
+  });
+
+  it('returns a new object (immutable)', () => {
+    const config = createMarketplace();
+    const tx = createTransaction(config, {
+      buyerAgentId: 'buyer-1',
+      sellerAgentId: 'seller-1',
+      amount: 100,
+    });
+
+    const completed = completeTransaction(tx);
+    expect(completed).not.toBe(tx);
+    expect(tx.status).toBe('pending'); // original unchanged
+  });
+});
+
+describe('disputeTransaction', () => {
+  it('sets status to disputed', () => {
+    const config = createMarketplace();
+    const tx = createTransaction(config, {
+      buyerAgentId: 'buyer-1',
+      sellerAgentId: 'seller-1',
+      amount: 100,
+    });
+
+    const disputed = disputeTransaction(tx);
+    expect(disputed.status).toBe('disputed');
+    expect(disputed.escrowHeld).toBe(true); // escrow stays held during dispute
+  });
+
+  it('returns a new object (immutable)', () => {
+    const config = createMarketplace();
+    const tx = createTransaction(config, {
+      buyerAgentId: 'buyer-1',
+      sellerAgentId: 'seller-1',
+      amount: 100,
+    });
+
+    const disputed = disputeTransaction(tx);
+    expect(disputed).not.toBe(tx);
+    expect(tx.status).toBe('pending'); // original unchanged
+  });
+
+  it('can dispute an already completed transaction', () => {
+    const config = createMarketplace();
+    const tx = createTransaction(config, {
+      buyerAgentId: 'buyer-1',
+      sellerAgentId: 'seller-1',
+      amount: 100,
+    });
+
+    const completed = completeTransaction(tx);
+    const disputed = disputeTransaction(completed);
+    expect(disputed.status).toBe('disputed');
+  });
+});
+
+// ─── Marketplace + Federation Integration ────────────────────────────────────
+
+describe('Marketplace + Federation integration', () => {
+  it('marketplace agents can be resolved through federation', () => {
+    // Create marketplace
+    const marketConfig = createMarketplace();
+    const listing = listAgent(marketConfig, {
+      agentId: 'agent-marketplace',
+      capabilities: ['search'],
+      trustScore: 0.8,
+      pricing: { perQuery: 0.01, perTransaction: 0.1 },
+    });
+    expect('error' in listing).toBe(false);
+
+    // Create federation
+    const fedConfig = createFederationConfig({
+      resolvers: [
+        { resolverId: 'r1', endpoint: 'https://r1.example', publicKey: 'pk1' },
+        { resolverId: 'r2', endpoint: 'https://r2.example', publicKey: 'pk2' },
+      ],
+      quorum: 2,
+    });
+
+    // Resolve the marketplace agent
+    const result = resolveAgent(fedConfig, 'agent-marketplace', [
+      { resolverId: 'r1', found: true, signatureValid: true, latencyMs: 50, data: { tier: 'verified' } },
+      { resolverId: 'r2', found: true, signatureValid: true, latencyMs: 75, data: { tier: 'verified' } },
+    ]);
+
+    expect(result.resolved).toBe(true);
+    expect(result.consensusData).toEqual({ tier: 'verified' });
   });
 });

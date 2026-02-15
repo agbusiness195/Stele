@@ -9,6 +9,14 @@ import {
   verifyAttestation,
   attestationChainVerify,
   computeAttestationCoverage,
+  createEntanglement,
+  buildEntanglementNetwork,
+  verifyEntangled,
+  assessConditionalRisk,
+} from './index';
+import type {
+  EntanglementLink,
+  EntanglementNetwork,
 } from './index';
 import type {
   ExternalAttestation,
@@ -685,5 +693,521 @@ describe('computeAttestationCoverage', () => {
     const result = computeAttestationCoverage(actions, attestations, 0);
     expect(result.coveredActions).toBe(1);
     expect(result.uncoveredActionIds).toEqual(['a2']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createEntanglement
+// ---------------------------------------------------------------------------
+describe('createEntanglement', () => {
+  it('creates a valid EntanglementLink', () => {
+    const link = createEntanglement({
+      sourceAgentId: 'agent-a',
+      targetAgentId: 'agent-b',
+      strength: 0.8,
+      mutualObligations: ['data-privacy'],
+      conditionalDependencies: ['service-availability'],
+    });
+
+    expect(link.sourceAgentId).toBe('agent-a');
+    expect(link.targetAgentId).toBe('agent-b');
+    expect(link.entanglementStrength).toBe(0.8);
+    expect(link.mutualObligations).toEqual(['data-privacy']);
+    expect(link.conditionalDependencies).toEqual(['service-availability']);
+    expect(typeof link.createdAt).toBe('number');
+    expect(link.linkHash).toBeTruthy();
+    expect(link.linkHash.length).toBe(64);
+  });
+
+  it('produces deterministic linkHash for same inputs (regardless of agent order)', () => {
+    const link1 = createEntanglement({
+      sourceAgentId: 'agent-a',
+      targetAgentId: 'agent-b',
+      strength: 0.5,
+      mutualObligations: ['obligation-1'],
+    });
+    const link2 = createEntanglement({
+      sourceAgentId: 'agent-b',
+      targetAgentId: 'agent-a',
+      strength: 0.5,
+      mutualObligations: ['obligation-1'],
+    });
+
+    // linkHash is based on sorted agents, so it should be identical
+    expect(link1.linkHash).toBe(link2.linkHash);
+  });
+
+  it('produces different linkHash for different strengths', () => {
+    const link1 = createEntanglement({
+      sourceAgentId: 'agent-a',
+      targetAgentId: 'agent-b',
+      strength: 0.5,
+    });
+    const link2 = createEntanglement({
+      sourceAgentId: 'agent-a',
+      targetAgentId: 'agent-b',
+      strength: 0.9,
+    });
+
+    expect(link1.linkHash).not.toBe(link2.linkHash);
+  });
+
+  it('defaults mutualObligations and conditionalDependencies to empty arrays', () => {
+    const link = createEntanglement({
+      sourceAgentId: 'agent-a',
+      targetAgentId: 'agent-b',
+      strength: 0.5,
+    });
+
+    expect(link.mutualObligations).toEqual([]);
+    expect(link.conditionalDependencies).toEqual([]);
+  });
+
+  it('throws on empty sourceAgentId', () => {
+    expect(() => createEntanglement({
+      sourceAgentId: '',
+      targetAgentId: 'agent-b',
+      strength: 0.5,
+    })).toThrow('sourceAgentId must be a non-empty string');
+  });
+
+  it('throws on empty targetAgentId', () => {
+    expect(() => createEntanglement({
+      sourceAgentId: 'agent-a',
+      targetAgentId: '',
+      strength: 0.5,
+    })).toThrow('targetAgentId must be a non-empty string');
+  });
+
+  it('throws on strength below 0', () => {
+    expect(() => createEntanglement({
+      sourceAgentId: 'agent-a',
+      targetAgentId: 'agent-b',
+      strength: -0.1,
+    })).toThrow('strength must be a number between 0 and 1');
+  });
+
+  it('throws on strength above 1', () => {
+    expect(() => createEntanglement({
+      sourceAgentId: 'agent-a',
+      targetAgentId: 'agent-b',
+      strength: 1.1,
+    })).toThrow('strength must be a number between 0 and 1');
+  });
+
+  it('accepts boundary strength values 0 and 1', () => {
+    const link0 = createEntanglement({
+      sourceAgentId: 'agent-a',
+      targetAgentId: 'agent-b',
+      strength: 0,
+    });
+    expect(link0.entanglementStrength).toBe(0);
+
+    const link1 = createEntanglement({
+      sourceAgentId: 'agent-a',
+      targetAgentId: 'agent-b',
+      strength: 1,
+    });
+    expect(link1.entanglementStrength).toBe(1);
+  });
+
+  it('linkHash is a valid 64-character hex string', () => {
+    const link = createEntanglement({
+      sourceAgentId: 'x',
+      targetAgentId: 'y',
+      strength: 0.5,
+    });
+    expect(/^[0-9a-f]{64}$/.test(link.linkHash)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildEntanglementNetwork
+// ---------------------------------------------------------------------------
+describe('buildEntanglementNetwork', () => {
+  it('builds network from empty links array', () => {
+    const network = buildEntanglementNetwork([]);
+    expect(network.links).toHaveLength(0);
+    expect(network.agents.size).toBe(0);
+    expect(network.verificationCoverage).toBe(0);
+    expect(network.sublinearCostRatio).toBe(1);
+  });
+
+  it('collects all unique agents from links', () => {
+    const link1 = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.5 });
+    const link2 = createEntanglement({ sourceAgentId: 'b', targetAgentId: 'c', strength: 0.5 });
+    const link3 = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'c', strength: 0.5 });
+
+    const network = buildEntanglementNetwork([link1, link2, link3]);
+    expect(network.agents.size).toBe(3);
+    expect(network.agents.has('a')).toBe(true);
+    expect(network.agents.has('b')).toBe(true);
+    expect(network.agents.has('c')).toBe(true);
+  });
+
+  it('computes verificationCoverage based on network effect formula', () => {
+    const link = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.8 });
+    const network = buildEntanglementNetwork([link]);
+
+    // avgStrength = 0.8, agents = 2, avgLinksPerAgent = 2/2 = 1
+    // coverage = 1 - (1 - 0.8)^1 = 0.8
+    expect(network.verificationCoverage).toBeCloseTo(0.8, 5);
+  });
+
+  it('computes sublinearCostRatio as sqrt(n)/n', () => {
+    const links = [
+      createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.5 }),
+      createEntanglement({ sourceAgentId: 'c', targetAgentId: 'd', strength: 0.5 }),
+    ];
+    const network = buildEntanglementNetwork(links);
+
+    // 4 agents: sqrt(4)/4 = 2/4 = 0.5
+    expect(network.sublinearCostRatio).toBeCloseTo(0.5, 5);
+  });
+
+  it('higher strength produces higher verificationCoverage', () => {
+    const weakLink = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.2 });
+    const strongLink = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.9 });
+
+    const weakNet = buildEntanglementNetwork([weakLink]);
+    const strongNet = buildEntanglementNetwork([strongLink]);
+
+    expect(strongNet.verificationCoverage).toBeGreaterThan(weakNet.verificationCoverage);
+  });
+
+  it('more links produce higher verificationCoverage', () => {
+    const singleLink = [
+      createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.5 }),
+    ];
+    const multipleLinks = [
+      createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.5 }),
+      createEntanglement({ sourceAgentId: 'b', targetAgentId: 'a', strength: 0.5 }),
+      createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.5 }),
+    ];
+
+    const singleNet = buildEntanglementNetwork(singleLink);
+    const multiNet = buildEntanglementNetwork(multipleLinks);
+
+    expect(multiNet.verificationCoverage).toBeGreaterThanOrEqual(singleNet.verificationCoverage);
+  });
+
+  it('preserves all links in the network', () => {
+    const links = [
+      createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.3 }),
+      createEntanglement({ sourceAgentId: 'b', targetAgentId: 'c', strength: 0.7 }),
+    ];
+    const network = buildEntanglementNetwork(links);
+    expect(network.links).toHaveLength(2);
+    expect(network.links[0]!.entanglementStrength).toBe(0.3);
+    expect(network.links[1]!.entanglementStrength).toBe(0.7);
+  });
+
+  it('network with single agent pair has sublinearCostRatio = 1/sqrt(2)', () => {
+    const link = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.5 });
+    const network = buildEntanglementNetwork([link]);
+    // sqrt(2)/2 ≈ 0.7071
+    expect(network.sublinearCostRatio).toBeCloseTo(Math.sqrt(2) / 2, 4);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// verifyEntangled
+// ---------------------------------------------------------------------------
+describe('verifyEntangled', () => {
+  it('returns the verified agent as directlyVerified', () => {
+    const link = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.8 });
+    const network = buildEntanglementNetwork([link]);
+
+    const result = verifyEntangled(network, 'a');
+    expect(result.directlyVerified).toBe('a');
+  });
+
+  it('finds transitively verified agents through direct links', () => {
+    const link = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.8 });
+    const network = buildEntanglementNetwork([link]);
+
+    const result = verifyEntangled(network, 'a');
+    expect(result.transitivelyVerified).toContain('b');
+    expect(result.transitiveConfidence['b']).toBeCloseTo(0.8, 5);
+  });
+
+  it('follows multi-hop entanglement paths with decaying confidence', () => {
+    const link1 = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.8 });
+    const link2 = createEntanglement({ sourceAgentId: 'b', targetAgentId: 'c', strength: 0.5 });
+    const network = buildEntanglementNetwork([link1, link2]);
+
+    const result = verifyEntangled(network, 'a');
+    expect(result.transitivelyVerified).toContain('b');
+    expect(result.transitivelyVerified).toContain('c');
+    // c's confidence = 0.8 * 0.5 = 0.4
+    expect(result.transitiveConfidence['b']).toBeCloseTo(0.8, 5);
+    expect(result.transitiveConfidence['c']).toBeCloseTo(0.4, 5);
+  });
+
+  it('excludes agents with confidence <= 0.1', () => {
+    const link1 = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.3 });
+    const link2 = createEntanglement({ sourceAgentId: 'b', targetAgentId: 'c', strength: 0.3 });
+    const network = buildEntanglementNetwork([link1, link2]);
+
+    const result = verifyEntangled(network, 'a');
+    expect(result.transitivelyVerified).toContain('b');
+    // c's confidence = 0.3 * 0.3 = 0.09 <= 0.1, so c is NOT transitively verified
+    expect(result.transitivelyVerified).not.toContain('c');
+  });
+
+  it('computes costSavings correctly', () => {
+    const links = [
+      createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.8 }),
+      createEntanglement({ sourceAgentId: 'b', targetAgentId: 'c', strength: 0.8 }),
+      createEntanglement({ sourceAgentId: 'c', targetAgentId: 'd', strength: 0.8 }),
+    ];
+    const network = buildEntanglementNetwork(links);
+
+    const result = verifyEntangled(network, 'a');
+    // b, c, d are transitively verified; network has 4 agents
+    // costSavings = 3 / 4 = 0.75
+    expect(result.transitivelyVerified).toHaveLength(3);
+    expect(result.costSavings).toBeCloseTo(0.75, 5);
+  });
+
+  it('handles agent not in network', () => {
+    const link = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.8 });
+    const network = buildEntanglementNetwork([link]);
+
+    const result = verifyEntangled(network, 'unknown');
+    expect(result.directlyVerified).toBe('unknown');
+    expect(result.transitivelyVerified).toHaveLength(0);
+    expect(result.costSavings).toBe(0);
+  });
+
+  it('handles empty network', () => {
+    const network = buildEntanglementNetwork([]);
+    const result = verifyEntangled(network, 'agent-a');
+
+    expect(result.directlyVerified).toBe('agent-a');
+    expect(result.transitivelyVerified).toHaveLength(0);
+    expect(result.costSavings).toBe(0);
+  });
+
+  it('handles bidirectional links', () => {
+    const link1 = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.9 });
+    const link2 = createEntanglement({ sourceAgentId: 'b', targetAgentId: 'a', strength: 0.9 });
+    const network = buildEntanglementNetwork([link1, link2]);
+
+    const result = verifyEntangled(network, 'a');
+    expect(result.transitivelyVerified).toContain('b');
+  });
+
+  it('does not revisit already visited agents (no infinite loops)', () => {
+    // Create a cycle: a -> b -> c -> a
+    const links = [
+      createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0.9 }),
+      createEntanglement({ sourceAgentId: 'b', targetAgentId: 'c', strength: 0.9 }),
+      createEntanglement({ sourceAgentId: 'c', targetAgentId: 'a', strength: 0.9 }),
+    ];
+    const network = buildEntanglementNetwork(links);
+
+    // Should not hang or throw
+    const result = verifyEntangled(network, 'a');
+    expect(result.transitivelyVerified).toContain('b');
+    expect(result.transitivelyVerified).toContain('c');
+  });
+
+  it('confidence from a direct link with strength 0 excludes the neighbor', () => {
+    const link = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 0 });
+    const network = buildEntanglementNetwork([link]);
+
+    const result = verifyEntangled(network, 'a');
+    // strength 0 => confidence 0, which is <= 0.1
+    expect(result.transitivelyVerified).not.toContain('b');
+  });
+
+  it('confidence from a direct link with strength 1 fully verifies the neighbor', () => {
+    const link = createEntanglement({ sourceAgentId: 'a', targetAgentId: 'b', strength: 1 });
+    const network = buildEntanglementNetwork([link]);
+
+    const result = verifyEntangled(network, 'a');
+    expect(result.transitivelyVerified).toContain('b');
+    expect(result.transitiveConfidence['b']).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// assessConditionalRisk
+// ---------------------------------------------------------------------------
+describe('assessConditionalRisk', () => {
+  it('returns empty affected agents when no conditional dependencies exist', () => {
+    const link = createEntanglement({
+      sourceAgentId: 'a',
+      targetAgentId: 'b',
+      strength: 0.8,
+      mutualObligations: ['data-privacy'],
+      // No conditional dependencies
+    });
+    const network = buildEntanglementNetwork([link]);
+
+    const risk = assessConditionalRisk(network, 'a');
+    expect(risk.affectedAgents).toHaveLength(0);
+    expect(risk.cascadeRisk).toBe(0);
+    expect(risk.recommendations).toHaveLength(1);
+    expect(risk.recommendations[0]).toContain('minimal');
+  });
+
+  it('identifies affected agents with conditional dependencies', () => {
+    const link = createEntanglement({
+      sourceAgentId: 'a',
+      targetAgentId: 'b',
+      strength: 0.8,
+      conditionalDependencies: ['service-availability'],
+    });
+    const network = buildEntanglementNetwork([link]);
+
+    const risk = assessConditionalRisk(network, 'a');
+    expect(risk.affectedAgents).toContain('b');
+    expect(risk.cascadeRisk).toBeCloseTo(1.0, 5); // only link in network
+  });
+
+  it('computes cascadeRisk as affected strength / total strength', () => {
+    const links = [
+      createEntanglement({
+        sourceAgentId: 'a',
+        targetAgentId: 'b',
+        strength: 0.4,
+        conditionalDependencies: ['dep-1'],
+      }),
+      createEntanglement({
+        sourceAgentId: 'c',
+        targetAgentId: 'd',
+        strength: 0.6,
+      }),
+    ];
+    const network = buildEntanglementNetwork(links);
+
+    const risk = assessConditionalRisk(network, 'a');
+    // affected strength = 0.4, total = 0.4 + 0.6 = 1.0
+    expect(risk.cascadeRisk).toBeCloseTo(0.4, 5);
+    expect(risk.affectedAgents).toEqual(['b']);
+  });
+
+  it('recommends re-verification for each affected agent', () => {
+    const links = [
+      createEntanglement({
+        sourceAgentId: 'a',
+        targetAgentId: 'b',
+        strength: 0.5,
+        conditionalDependencies: ['service-availability'],
+      }),
+      createEntanglement({
+        sourceAgentId: 'a',
+        targetAgentId: 'c',
+        strength: 0.5,
+        conditionalDependencies: ['data-integrity'],
+      }),
+    ];
+    const network = buildEntanglementNetwork(links);
+
+    const risk = assessConditionalRisk(network, 'a');
+    expect(risk.affectedAgents).toContain('b');
+    expect(risk.affectedAgents).toContain('c');
+    // Should have a recommendation per affected agent, plus high cascade risk warning
+    const reVerifyRecs = risk.recommendations.filter(r => r.includes('Re-verify'));
+    expect(reVerifyRecs).toHaveLength(2);
+  });
+
+  it('adds high cascade risk warning when cascadeRisk > 0.5', () => {
+    const link = createEntanglement({
+      sourceAgentId: 'a',
+      targetAgentId: 'b',
+      strength: 0.9,
+      conditionalDependencies: ['critical-service'],
+    });
+    const network = buildEntanglementNetwork([link]);
+
+    const risk = assessConditionalRisk(network, 'a');
+    expect(risk.cascadeRisk).toBeGreaterThan(0.5);
+    const highRiskRec = risk.recommendations.find(r => r.includes('High cascade risk'));
+    expect(highRiskRec).toBeDefined();
+  });
+
+  it('does not add high cascade risk warning when cascadeRisk <= 0.5', () => {
+    const links = [
+      createEntanglement({
+        sourceAgentId: 'a',
+        targetAgentId: 'b',
+        strength: 0.2,
+        conditionalDependencies: ['dep'],
+      }),
+      createEntanglement({
+        sourceAgentId: 'c',
+        targetAgentId: 'd',
+        strength: 0.8,
+      }),
+    ];
+    const network = buildEntanglementNetwork(links);
+
+    const risk = assessConditionalRisk(network, 'a');
+    expect(risk.cascadeRisk).toBeLessThanOrEqual(0.5);
+    const highRiskRec = risk.recommendations.find(r => r.includes('High cascade risk'));
+    expect(highRiskRec).toBeUndefined();
+  });
+
+  it('handles failed agent not in network', () => {
+    const link = createEntanglement({
+      sourceAgentId: 'a',
+      targetAgentId: 'b',
+      strength: 0.5,
+      conditionalDependencies: ['dep'],
+    });
+    const network = buildEntanglementNetwork([link]);
+
+    const risk = assessConditionalRisk(network, 'unknown');
+    expect(risk.affectedAgents).toHaveLength(0);
+    expect(risk.cascadeRisk).toBe(0);
+  });
+
+  it('handles empty network', () => {
+    const network = buildEntanglementNetwork([]);
+    const risk = assessConditionalRisk(network, 'a');
+
+    expect(risk.affectedAgents).toHaveLength(0);
+    expect(risk.cascadeRisk).toBe(0);
+    expect(risk.recommendations).toHaveLength(1);
+  });
+
+  it('does not double-count affected agents with multiple links', () => {
+    const links = [
+      createEntanglement({
+        sourceAgentId: 'a',
+        targetAgentId: 'b',
+        strength: 0.3,
+        conditionalDependencies: ['dep-1'],
+      }),
+      createEntanglement({
+        sourceAgentId: 'a',
+        targetAgentId: 'b',
+        strength: 0.4,
+        conditionalDependencies: ['dep-2'],
+      }),
+    ];
+    const network = buildEntanglementNetwork(links);
+
+    const risk = assessConditionalRisk(network, 'a');
+    // b appears in both links but should only be listed once
+    expect(risk.affectedAgents).toEqual(['b']);
+  });
+
+  it('considers target-side failure correctly', () => {
+    const link = createEntanglement({
+      sourceAgentId: 'a',
+      targetAgentId: 'b',
+      strength: 0.6,
+      conditionalDependencies: ['bidirectional-dep'],
+    });
+    const network = buildEntanglementNetwork([link]);
+
+    // Fail agent 'b' (target side)
+    const risk = assessConditionalRisk(network, 'b');
+    expect(risk.affectedAgents).toContain('a');
+    expect(risk.cascadeRisk).toBeCloseTo(0.6 / 0.6, 5);
   });
 });

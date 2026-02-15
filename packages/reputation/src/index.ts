@@ -18,6 +18,13 @@ export type {
   ReputationDelegation,
   Endorsement,
   ScoringConfig,
+  ResourcePool,
+  SlashingEvent,
+  TrustDimension,
+  MultidimensionalProfile,
+  StakeTier,
+  StakeTierConfig,
+  StakedAgent,
 } from './types.js';
 
 import type {
@@ -27,6 +34,13 @@ import type {
   ReputationDelegation,
   Endorsement,
   ScoringConfig,
+  ResourcePool,
+  SlashingEvent,
+  TrustDimension,
+  MultidimensionalProfile,
+  StakeTier,
+  StakeTierConfig,
+  StakedAgent,
 } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -1628,4 +1642,453 @@ export class ReputationAggregator {
 
     return sorted[sorted.length - 1]!.score;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Item 30: Trust as Bounded Resource
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a new resource pool backed by collateral.
+ *
+ * Trust cannot exceed the economic value risked to back it.
+ * The collateralization bound prevents trust inflation and ensures
+ * trust has real scarcity.
+ *
+ * @param totalCollateral - The total collateral backing the pool.
+ * @returns A fresh ResourcePool with all trust available.
+ */
+export function createResourcePool(totalCollateral: number): ResourcePool {
+  return {
+    totalCollateral,
+    allocatedTrust: 0,
+    availableTrust: totalCollateral,
+    utilizationRatio: 0,
+    participants: new Map<string, number>(),
+  };
+}
+
+/**
+ * Allocate trust from the pool to an agent.
+ *
+ * Only succeeds if the requested amount does not exceed the available
+ * trust in the pool. This enforces the collateralization bound: total
+ * allocated trust can never exceed total collateral.
+ *
+ * @param pool - The resource pool to allocate from.
+ * @param agentId - The agent to allocate trust to.
+ * @param amount - The amount of trust to allocate.
+ * @returns The updated pool and whether the allocation succeeded.
+ */
+export function allocateTrust(
+  pool: ResourcePool,
+  agentId: string,
+  amount: number,
+): { pool: ResourcePool; allocated: boolean; reason: string } {
+  if (amount <= 0) {
+    return { pool, allocated: false, reason: 'Amount must be positive' };
+  }
+  if (amount > pool.availableTrust) {
+    return {
+      pool,
+      allocated: false,
+      reason: `Requested ${amount} exceeds available trust ${pool.availableTrust}`,
+    };
+  }
+
+  const newParticipants = new Map(pool.participants);
+  const existing = newParticipants.get(agentId) ?? 0;
+  newParticipants.set(agentId, existing + amount);
+
+  const newAllocated = pool.allocatedTrust + amount;
+  const newAvailable = pool.availableTrust - amount;
+  const newUtilization = pool.totalCollateral > 0 ? newAllocated / pool.totalCollateral : 0;
+
+  return {
+    pool: {
+      totalCollateral: pool.totalCollateral,
+      allocatedTrust: newAllocated,
+      availableTrust: newAvailable,
+      utilizationRatio: newUtilization,
+      participants: newParticipants,
+    },
+    allocated: true,
+    reason: 'Allocation successful',
+  };
+}
+
+/**
+ * Release trust back to the pool from an agent.
+ *
+ * Decreases allocated trust and increases available trust.
+ *
+ * @param pool - The resource pool.
+ * @param agentId - The agent releasing trust.
+ * @param amount - The amount of trust to release.
+ * @returns The updated pool.
+ */
+export function releaseTrust(
+  pool: ResourcePool,
+  agentId: string,
+  amount: number,
+): ResourcePool {
+  const existing = pool.participants.get(agentId) ?? 0;
+  const releaseAmount = Math.min(amount, existing);
+
+  const newParticipants = new Map(pool.participants);
+  const remaining = existing - releaseAmount;
+  if (remaining <= 0) {
+    newParticipants.delete(agentId);
+  } else {
+    newParticipants.set(agentId, remaining);
+  }
+
+  const newAllocated = pool.allocatedTrust - releaseAmount;
+  const newAvailable = pool.availableTrust + releaseAmount;
+  const newUtilization = pool.totalCollateral > 0 ? newAllocated / pool.totalCollateral : 0;
+
+  return {
+    totalCollateral: pool.totalCollateral,
+    allocatedTrust: newAllocated,
+    availableTrust: newAvailable,
+    utilizationRatio: newUtilization,
+    participants: newParticipants,
+  };
+}
+
+/**
+ * Slash an agent's stake from the pool.
+ *
+ * Removes the slashed amount from the pool entirely (reduces totalCollateral
+ * and allocatedTrust). If the slashing event is marked as redistributed,
+ * the amount is added back to availableTrust instead of being destroyed.
+ *
+ * @param pool - The resource pool.
+ * @param event - The slashing event details.
+ * @returns The updated pool.
+ */
+export function slashStake(pool: ResourcePool, event: SlashingEvent): ResourcePool {
+  const existing = pool.participants.get(event.agentId) ?? 0;
+  const slashAmount = Math.min(event.amount, existing);
+
+  const newParticipants = new Map(pool.participants);
+  const remaining = existing - slashAmount;
+  if (remaining <= 0) {
+    newParticipants.delete(event.agentId);
+  } else {
+    newParticipants.set(event.agentId, remaining);
+  }
+
+  const newAllocated = pool.allocatedTrust - slashAmount;
+  let newCollateral: number;
+  let newAvailable: number;
+
+  if (event.redistributed) {
+    // Redistributed: collateral stays, slashed amount goes back to available
+    newCollateral = pool.totalCollateral;
+    newAvailable = pool.availableTrust + slashAmount;
+  } else {
+    // Destroyed: collateral is reduced
+    newCollateral = pool.totalCollateral - slashAmount;
+    newAvailable = pool.availableTrust;
+  }
+
+  const newUtilization = newCollateral > 0 ? newAllocated / newCollateral : 0;
+
+  return {
+    totalCollateral: newCollateral,
+    allocatedTrust: newAllocated,
+    availableTrust: newAvailable,
+    utilizationRatio: newUtilization,
+    participants: newParticipants,
+  };
+}
+
+/**
+ * Compute the collateralization ratio of a resource pool.
+ *
+ * Returns allocatedTrust / totalCollateral. Must never exceed 1.0.
+ *
+ * @param pool - The resource pool.
+ * @returns The collateralization ratio in [0, 1].
+ */
+export function collateralizationRatio(pool: ResourcePool): number {
+  if (pool.totalCollateral <= 0) return 0;
+  return Math.min(1, pool.allocatedTrust / pool.totalCollateral);
+}
+
+// ---------------------------------------------------------------------------
+// Item 46: Multidimensional Trust Profile (Anti-Gaming)
+// ---------------------------------------------------------------------------
+
+/** Default dimension weights (equal weighting). */
+const DEFAULT_DIMENSION_WEIGHTS = {
+  hardEnforcement: 0.2,
+  attestationCoverage: 0.2,
+  covenantBreadth: 0.2,
+  historyDepth: 0.2,
+  stakeRatio: 0.2,
+};
+
+/**
+ * Compute a multidimensional trust profile for an agent.
+ *
+ * Five dimensions trade off against each other. The composite score
+ * is a weighted geometric mean, which prevents gaming by optimising
+ * only one dimension. The gaming resistance metric measures how
+ * balanced the dimensions are.
+ *
+ * @param params - The agent's scores across each dimension.
+ * @returns A complete MultidimensionalProfile.
+ */
+export function computeProfile(params: {
+  agentId: string;
+  hardEnforcement: number;
+  attestationCoverage: number;
+  covenantBreadth: number;
+  historyDepth: number;
+  stakeRatio: number;
+  weights?: {
+    hardEnforcement?: number;
+    attestationCoverage?: number;
+    covenantBreadth?: number;
+    historyDepth?: number;
+    stakeRatio?: number;
+  };
+}): MultidimensionalProfile {
+  const weights = {
+    hardEnforcement: params.weights?.hardEnforcement ?? DEFAULT_DIMENSION_WEIGHTS.hardEnforcement,
+    attestationCoverage: params.weights?.attestationCoverage ?? DEFAULT_DIMENSION_WEIGHTS.attestationCoverage,
+    covenantBreadth: params.weights?.covenantBreadth ?? DEFAULT_DIMENSION_WEIGHTS.covenantBreadth,
+    historyDepth: params.weights?.historyDepth ?? DEFAULT_DIMENSION_WEIGHTS.historyDepth,
+    stakeRatio: params.weights?.stakeRatio ?? DEFAULT_DIMENSION_WEIGHTS.stakeRatio,
+  };
+
+  const dimensions = {
+    hardEnforcement: {
+      name: 'hardEnforcement',
+      score: Math.max(0, Math.min(1, params.hardEnforcement)),
+      weight: weights.hardEnforcement,
+      evidence: 1,
+    },
+    attestationCoverage: {
+      name: 'attestationCoverage',
+      score: Math.max(0, Math.min(1, params.attestationCoverage)),
+      weight: weights.attestationCoverage,
+      evidence: 1,
+    },
+    covenantBreadth: {
+      name: 'covenantBreadth',
+      score: Math.max(0, Math.min(1, params.covenantBreadth)),
+      weight: weights.covenantBreadth,
+      evidence: 1,
+    },
+    historyDepth: {
+      name: 'historyDepth',
+      score: Math.max(0, Math.min(1, params.historyDepth)),
+      weight: weights.historyDepth,
+      evidence: 1,
+    },
+    stakeRatio: {
+      name: 'stakeRatio',
+      score: Math.max(0, Math.min(1, params.stakeRatio)),
+      weight: weights.stakeRatio,
+      evidence: 1,
+    },
+  };
+
+  // Compute weighted geometric mean: product(score_i ^ weight_i)
+  const dimEntries = Object.values(dimensions) as TrustDimension[];
+  let logSum = 0;
+  for (const dim of dimEntries) {
+    // Use a small epsilon to avoid log(0)
+    const safeScore = Math.max(dim.score, 1e-10);
+    logSum += dim.weight * Math.log(safeScore);
+  }
+  const compositeScore = Math.max(0, Math.min(1, Math.exp(logSum)));
+
+  // Gaming resistance: 1 - (max(scores) - min(scores))
+  const scores = dimEntries.map((d) => d.score);
+  const maxScore = Math.max(...scores);
+  const minScore = Math.min(...scores);
+  const gamingResistance = Math.max(0, Math.min(1, 1 - maxScore + minScore));
+
+  return {
+    agentId: params.agentId,
+    dimensions,
+    compositeScore,
+    gamingResistance,
+  };
+}
+
+/**
+ * Compare two multidimensional trust profiles.
+ *
+ * Profile a dominates profile b if a >= b in ALL dimensions.
+ * Otherwise, neither dominates. Also reports which dimensions
+ * each profile is stronger in.
+ *
+ * @param a - First profile.
+ * @param b - Second profile.
+ * @returns Domination result and per-dimension comparison.
+ */
+export function compareProfiles(
+  a: MultidimensionalProfile,
+  b: MultidimensionalProfile,
+): {
+  dominates: 'a' | 'b' | 'neither';
+  strongerDimensions: Record<string, 'a' | 'b' | 'tie'>;
+} {
+  const dimNames = [
+    'hardEnforcement',
+    'attestationCoverage',
+    'covenantBreadth',
+    'historyDepth',
+    'stakeRatio',
+  ] as const;
+
+  const strongerDimensions: Record<string, 'a' | 'b' | 'tie'> = {};
+  let aWins = 0;
+  let bWins = 0;
+  let ties = 0;
+
+  for (const name of dimNames) {
+    const scoreA = a.dimensions[name].score;
+    const scoreB = b.dimensions[name].score;
+    if (scoreA > scoreB) {
+      strongerDimensions[name] = 'a';
+      aWins++;
+    } else if (scoreB > scoreA) {
+      strongerDimensions[name] = 'b';
+      bWins++;
+    } else {
+      strongerDimensions[name] = 'tie';
+      ties++;
+    }
+  }
+
+  let dominates: 'a' | 'b' | 'neither';
+  if (bWins === 0 && aWins > 0) {
+    dominates = 'a';
+  } else if (aWins === 0 && bWins > 0) {
+    dominates = 'b';
+  } else {
+    dominates = 'neither';
+  }
+
+  return { dominates, strongerDimensions };
+}
+
+// ---------------------------------------------------------------------------
+// Item 75: Productive Staking Tiers
+// ---------------------------------------------------------------------------
+
+/**
+ * Configuration for each staking tier.
+ *
+ * Higher stake = verification income + marketplace ranking + governance weight.
+ * - Basic ($1): entry level
+ * - Verified ($10): moderate benefits
+ * - Certified ($100): significant benefits
+ * - Institutional ($1,000+): maximum benefits
+ */
+export const STAKE_TIERS: Record<StakeTier, StakeTierConfig> = {
+  basic: {
+    tier: 'basic',
+    minimumStake: 1,
+    verificationIncomeRate: 0.0001,
+    marketplaceRankBoost: 1.0,
+    governanceWeight: 1,
+    maxDelegations: 5,
+  },
+  verified: {
+    tier: 'verified',
+    minimumStake: 10,
+    verificationIncomeRate: 0.0002,
+    marketplaceRankBoost: 1.5,
+    governanceWeight: 2,
+    maxDelegations: 20,
+  },
+  certified: {
+    tier: 'certified',
+    minimumStake: 100,
+    verificationIncomeRate: 0.0005,
+    marketplaceRankBoost: 3.0,
+    governanceWeight: 5,
+    maxDelegations: 100,
+  },
+  institutional: {
+    tier: 'institutional',
+    minimumStake: 1000,
+    verificationIncomeRate: 0.001,
+    marketplaceRankBoost: 10.0,
+    governanceWeight: 20,
+    maxDelegations: 1000,
+  },
+};
+
+/**
+ * Assign a staking tier based on the staked amount.
+ *
+ * Returns the highest tier where the staked amount meets or exceeds
+ * the minimum stake requirement.
+ *
+ * @param stakedAmount - The amount staked by the agent.
+ * @returns The assigned tier.
+ */
+export function assignTier(stakedAmount: number): StakeTier {
+  if (stakedAmount >= STAKE_TIERS.institutional.minimumStake) return 'institutional';
+  if (stakedAmount >= STAKE_TIERS.certified.minimumStake) return 'certified';
+  if (stakedAmount >= STAKE_TIERS.verified.minimumStake) return 'verified';
+  return 'basic';
+}
+
+/**
+ * Create a staked agent with the correct tier and configuration.
+ *
+ * @param agentId - The agent identifier.
+ * @param stakedAmount - The amount staked.
+ * @returns A StakedAgent with tier, config, and initial counters.
+ */
+export function createStakedAgent(agentId: string, stakedAmount: number): StakedAgent {
+  const tier = assignTier(stakedAmount);
+  return {
+    agentId,
+    tier,
+    stakedAmount,
+    earnedIncome: 0,
+    queriesServed: 0,
+    config: { ...STAKE_TIERS[tier] },
+  };
+}
+
+/**
+ * Record a query served by a staked agent.
+ *
+ * Increments queriesServed and adds the verification income rate
+ * to the agent's earned income. Returns a new agent object; the
+ * original is not mutated.
+ *
+ * @param agent - The staked agent.
+ * @returns The updated agent with incremented counters.
+ */
+export function recordQuery(agent: StakedAgent): StakedAgent {
+  return {
+    ...agent,
+    queriesServed: agent.queriesServed + 1,
+    earnedIncome: agent.earnedIncome + agent.config.verificationIncomeRate,
+  };
+}
+
+/**
+ * Compute the governance vote for a staked agent.
+ *
+ * Returns the base vote multiplied by the agent's governance weight.
+ *
+ * @param agent - The staked agent.
+ * @param baseVote - The base vote value.
+ * @returns The weighted vote.
+ */
+export function computeGovernanceVote(agent: StakedAgent, baseVote: number): number {
+  return baseVote * agent.config.governanceWeight;
 }

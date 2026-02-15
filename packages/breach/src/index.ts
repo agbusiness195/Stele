@@ -1226,3 +1226,326 @@ function severityWeight(severity: Severity): number {
       return 1;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Crisis Playbook
+// ---------------------------------------------------------------------------
+
+/** Severity level for incidents in the crisis playbook. */
+export type IncidentSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+/** Escalation levels for incident response. */
+export type EscalationLevel = 'team' | 'management' | 'executive' | 'regulator' | 'public';
+
+/** Pre-built incident analysis template. */
+export interface IncidentTemplate {
+  id: string;
+  name: string;
+  severity: IncidentSeverity;
+  category: string;
+  description: string;
+  immediateActions: string[];
+  investigationSteps: string[];
+  escalationPath: EscalationLevel[];
+  communicationTemplate: string;
+  estimatedResolutionHours: number;
+}
+
+/** Crisis playbook containing templates, escalation matrix, and SLAs. */
+export interface CrisisPlaybook {
+  templates: IncidentTemplate[];
+  escalationMatrix: Record<IncidentSeverity, EscalationLevel[]>;
+  responseTimeSLA: Record<IncidentSeverity, number>; // minutes
+}
+
+/** Report tracking the lifecycle of an incident. */
+export interface IncidentReport {
+  id: string;
+  template: IncidentTemplate;
+  agentId: string;
+  timestamp: number;
+  status: 'detected' | 'investigating' | 'contained' | 'resolved' | 'post_mortem';
+  timeline: Array<{ action: string; timestamp: number; actor: string }>;
+  rootCause?: string;
+  lessonsLearned?: string[];
+}
+
+/**
+ * Create a crisis playbook with 5 standard incident templates and
+ * pre-configured escalation matrix and response time SLAs.
+ */
+export function createPlaybook(): CrisisPlaybook {
+  const templates: IncidentTemplate[] = [
+    {
+      id: 'data_breach',
+      name: 'Data Breach',
+      severity: 'critical',
+      category: 'data_breach',
+      description: 'Unauthorized data access detected',
+      immediateActions: [
+        'Isolate affected systems',
+        'Revoke compromised credentials',
+        'Preserve forensic evidence',
+        'Notify security team',
+      ],
+      investigationSteps: [
+        'Identify scope of data exposure',
+        'Determine attack vector',
+        'Assess data sensitivity',
+        'Review access logs',
+        'Identify affected parties',
+      ],
+      escalationPath: ['team', 'management', 'executive', 'regulator'],
+      communicationTemplate: 'A data breach has been detected involving unauthorized access to sensitive data. Immediate containment measures are in progress. Affected parties will be notified within the regulatory timeline.',
+      estimatedResolutionHours: 24,
+    },
+    {
+      id: 'covenant_violation',
+      name: 'Covenant Violation',
+      severity: 'high',
+      category: 'covenant_violation',
+      description: 'Agent exceeded covenant bounds',
+      immediateActions: [
+        'Restrict agent permissions',
+        'Log violation details',
+        'Notify covenant stakeholders',
+      ],
+      investigationSteps: [
+        'Review agent action logs',
+        'Compare actions against covenant constraints',
+        'Assess impact of violation',
+        'Determine if intentional or accidental',
+      ],
+      escalationPath: ['team', 'management', 'executive'],
+      communicationTemplate: 'A covenant violation has been detected. The agent has been restricted while the violation is being investigated. Stakeholders will be updated with findings.',
+      estimatedResolutionHours: 8,
+    },
+    {
+      id: 'key_compromise',
+      name: 'Key Compromise',
+      severity: 'critical',
+      category: 'key_compromise',
+      description: 'Signing key potentially compromised',
+      immediateActions: [
+        'Rotate all affected keys immediately',
+        'Revoke compromised key attestations',
+        'Audit all actions signed with compromised key',
+        'Enable enhanced monitoring',
+      ],
+      investigationSteps: [
+        'Determine how the key was compromised',
+        'Identify all documents signed with compromised key',
+        'Verify integrity of affected covenants',
+        'Assess downstream impact',
+      ],
+      escalationPath: ['team', 'management', 'executive', 'regulator'],
+      communicationTemplate: 'A signing key compromise has been detected. All affected keys have been rotated and compromised attestations revoked. A full audit of signed documents is underway.',
+      estimatedResolutionHours: 12,
+    },
+    {
+      id: 'cascade_failure',
+      name: 'Cascade Failure',
+      severity: 'high',
+      category: 'cascade_failure',
+      description: 'Multiple agents failing simultaneously',
+      immediateActions: [
+        'Activate circuit breakers',
+        'Isolate failing agents',
+        'Enable fallback procedures',
+      ],
+      investigationSteps: [
+        'Identify root cause of cascade',
+        'Map failure propagation path',
+        'Assess system-wide impact',
+        'Review dependency graph',
+      ],
+      escalationPath: ['team', 'management', 'executive'],
+      communicationTemplate: 'A cascade failure has been detected affecting multiple agents. Circuit breakers have been activated and failing agents isolated. Root cause analysis is in progress.',
+      estimatedResolutionHours: 6,
+    },
+    {
+      id: 'compliance_gap',
+      name: 'Compliance Gap',
+      severity: 'medium',
+      category: 'compliance_gap',
+      description: 'Regulatory requirement not met',
+      immediateActions: [
+        'Document the compliance gap',
+        'Assess regulatory exposure',
+        'Begin remediation planning',
+      ],
+      investigationSteps: [
+        'Identify specific regulatory requirements not met',
+        'Determine timeline for compliance',
+        'Evaluate remediation options',
+        'Estimate cost and effort',
+      ],
+      escalationPath: ['team', 'management'],
+      communicationTemplate: 'A compliance gap has been identified. A remediation plan is being developed to address the regulatory requirement. Timeline and impact assessment will follow.',
+      estimatedResolutionHours: 48,
+    },
+  ];
+
+  const escalationMatrix: Record<IncidentSeverity, EscalationLevel[]> = {
+    low: ['team'],
+    medium: ['team', 'management'],
+    high: ['team', 'management', 'executive'],
+    critical: ['team', 'management', 'executive', 'regulator'],
+  };
+
+  const responseTimeSLA: Record<IncidentSeverity, number> = {
+    low: 480,
+    medium: 120,
+    high: 60,
+    critical: 15,
+  };
+
+  return { templates, escalationMatrix, responseTimeSLA };
+}
+
+/**
+ * Find the best matching incident template by category first, then severity.
+ *
+ * @param playbook - The crisis playbook to search.
+ * @param params - Matching criteria (category, severity, description).
+ * @returns The best matching template, or null if no match is found.
+ */
+export function matchIncident(
+  playbook: CrisisPlaybook,
+  params: {
+    category?: string;
+    severity?: IncidentSeverity;
+    description?: string;
+  },
+): IncidentTemplate | null {
+  let candidates = playbook.templates;
+
+  // Filter by category first (exact match)
+  if (params.category) {
+    const categoryMatches = candidates.filter(t => t.category === params.category);
+    if (categoryMatches.length > 0) {
+      candidates = categoryMatches;
+    }
+  }
+
+  // Filter by severity
+  if (params.severity) {
+    const severityMatches = candidates.filter(t => t.severity === params.severity);
+    if (severityMatches.length > 0) {
+      candidates = severityMatches;
+    }
+  }
+
+  // Filter by description (substring match)
+  if (params.description) {
+    const descLower = params.description.toLowerCase();
+    const descMatches = candidates.filter(
+      t => t.description.toLowerCase().includes(descLower) ||
+           t.name.toLowerCase().includes(descLower),
+    );
+    if (descMatches.length > 0) {
+      candidates = descMatches;
+    }
+  }
+
+  return candidates.length > 0 ? candidates[0]! : null;
+}
+
+/**
+ * Create an incident report from a template.
+ *
+ * @param template - The incident template to base the report on.
+ * @param agentId - The ID of the agent involved.
+ * @returns A new incident report with status 'detected' and initial timeline entry.
+ */
+export function createIncidentReport(
+  template: IncidentTemplate,
+  agentId: string,
+): IncidentReport {
+  const now = Date.now();
+  return {
+    id: `incident-${now}-${agentId}`,
+    template,
+    agentId,
+    timestamp: now,
+    status: 'detected',
+    timeline: [
+      {
+        action: `Incident detected: ${template.name}`,
+        timestamp: now,
+        actor: 'system',
+      },
+    ],
+  };
+}
+
+/**
+ * Escalate an incident by looking up the escalation path and response deadline.
+ *
+ * @param report - The incident report to escalate.
+ * @param playbook - The crisis playbook for escalation rules.
+ * @returns The updated report, notification levels, and deadline.
+ */
+export function escalateIncident(
+  report: IncidentReport,
+  playbook: CrisisPlaybook,
+): {
+  report: IncidentReport;
+  notifyLevels: EscalationLevel[];
+  deadlineMinutes: number;
+} {
+  const severity = report.template.severity;
+  const notifyLevels = playbook.escalationMatrix[severity] ?? ['team'];
+  const deadlineMinutes = playbook.responseTimeSLA[severity] ?? 480;
+
+  const now = Date.now();
+  const updatedReport: IncidentReport = {
+    ...report,
+    status: 'investigating',
+    timeline: [
+      ...report.timeline,
+      {
+        action: `Incident escalated to: ${notifyLevels.join(', ')}`,
+        timestamp: now,
+        actor: 'system',
+      },
+    ],
+  };
+
+  return {
+    report: updatedReport,
+    notifyLevels,
+    deadlineMinutes,
+  };
+}
+
+/**
+ * Resolve an incident by setting root cause and lessons learned.
+ *
+ * @param report - The incident report to resolve.
+ * @param params - Resolution details including root cause and lessons learned.
+ * @returns The resolved incident report.
+ */
+export function resolveIncident(
+  report: IncidentReport,
+  params: {
+    rootCause: string;
+    lessonsLearned: string[];
+  },
+): IncidentReport {
+  const now = Date.now();
+  return {
+    ...report,
+    status: 'resolved',
+    rootCause: params.rootCause,
+    lessonsLearned: params.lessonsLearned,
+    timeline: [
+      ...report.timeline,
+      {
+        action: `Incident resolved. Root cause: ${params.rootCause}`,
+        timestamp: now,
+        actor: 'system',
+      },
+    ],
+  };
+}

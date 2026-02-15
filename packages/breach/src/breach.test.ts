@@ -1487,3 +1487,399 @@ describe('TrustGraph.processBreach - diamond propagation', () => {
     expect(bottomEvents).toHaveLength(1);
   });
 });
+
+// ===========================================================================
+// CRISIS PLAYBOOK TESTS
+// ===========================================================================
+
+import {
+  createPlaybook,
+  matchIncident,
+  createIncidentReport,
+  escalateIncident,
+  resolveIncident,
+} from './index.js';
+import type {
+  CrisisPlaybook,
+  IncidentTemplate,
+  IncidentReport,
+  IncidentSeverity,
+  EscalationLevel,
+} from './index.js';
+
+// ---------------------------------------------------------------------------
+// createPlaybook
+// ---------------------------------------------------------------------------
+
+describe('createPlaybook', () => {
+  it('creates a playbook with 5 standard templates', () => {
+    const playbook = createPlaybook();
+    expect(playbook.templates).toHaveLength(5);
+  });
+
+  it('includes the data_breach template with critical severity', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates.find(t => t.id === 'data_breach');
+    expect(template).toBeDefined();
+    expect(template!.severity).toBe('critical');
+    expect(template!.category).toBe('data_breach');
+    expect(template!.name).toBe('Data Breach');
+  });
+
+  it('includes the covenant_violation template with high severity', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates.find(t => t.id === 'covenant_violation');
+    expect(template).toBeDefined();
+    expect(template!.severity).toBe('high');
+    expect(template!.category).toBe('covenant_violation');
+  });
+
+  it('includes the key_compromise template with critical severity', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates.find(t => t.id === 'key_compromise');
+    expect(template).toBeDefined();
+    expect(template!.severity).toBe('critical');
+    expect(template!.category).toBe('key_compromise');
+  });
+
+  it('includes the cascade_failure template with high severity', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates.find(t => t.id === 'cascade_failure');
+    expect(template).toBeDefined();
+    expect(template!.severity).toBe('high');
+    expect(template!.category).toBe('cascade_failure');
+  });
+
+  it('includes the compliance_gap template with medium severity', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates.find(t => t.id === 'compliance_gap');
+    expect(template).toBeDefined();
+    expect(template!.severity).toBe('medium');
+    expect(template!.category).toBe('compliance_gap');
+  });
+
+  it('has correct escalation matrix', () => {
+    const playbook = createPlaybook();
+    expect(playbook.escalationMatrix.low).toEqual(['team']);
+    expect(playbook.escalationMatrix.medium).toEqual(['team', 'management']);
+    expect(playbook.escalationMatrix.high).toEqual(['team', 'management', 'executive']);
+    expect(playbook.escalationMatrix.critical).toEqual(['team', 'management', 'executive', 'regulator']);
+  });
+
+  it('has correct response time SLAs', () => {
+    const playbook = createPlaybook();
+    expect(playbook.responseTimeSLA.low).toBe(480);
+    expect(playbook.responseTimeSLA.medium).toBe(120);
+    expect(playbook.responseTimeSLA.high).toBe(60);
+    expect(playbook.responseTimeSLA.critical).toBe(15);
+  });
+
+  it('all templates have non-empty immediateActions', () => {
+    const playbook = createPlaybook();
+    for (const template of playbook.templates) {
+      expect(template.immediateActions.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('all templates have non-empty investigationSteps', () => {
+    const playbook = createPlaybook();
+    for (const template of playbook.templates) {
+      expect(template.investigationSteps.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('all templates have non-empty escalationPath', () => {
+    const playbook = createPlaybook();
+    for (const template of playbook.templates) {
+      expect(template.escalationPath.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('all templates have a positive estimatedResolutionHours', () => {
+    const playbook = createPlaybook();
+    for (const template of playbook.templates) {
+      expect(template.estimatedResolutionHours).toBeGreaterThan(0);
+    }
+  });
+
+  it('all templates have non-empty communicationTemplate', () => {
+    const playbook = createPlaybook();
+    for (const template of playbook.templates) {
+      expect(template.communicationTemplate.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// matchIncident
+// ---------------------------------------------------------------------------
+
+describe('matchIncident', () => {
+  it('matches by category', () => {
+    const playbook = createPlaybook();
+    const result = matchIncident(playbook, { category: 'data_breach' });
+    expect(result).not.toBeNull();
+    expect(result!.id).toBe('data_breach');
+  });
+
+  it('matches by severity', () => {
+    const playbook = createPlaybook();
+    const result = matchIncident(playbook, { severity: 'medium' });
+    expect(result).not.toBeNull();
+    expect(result!.severity).toBe('medium');
+  });
+
+  it('matches by category and severity combined', () => {
+    const playbook = createPlaybook();
+    const result = matchIncident(playbook, { category: 'data_breach', severity: 'critical' });
+    expect(result).not.toBeNull();
+    expect(result!.id).toBe('data_breach');
+    expect(result!.severity).toBe('critical');
+  });
+
+  it('matches by description substring', () => {
+    const playbook = createPlaybook();
+    const result = matchIncident(playbook, { description: 'unauthorized' });
+    expect(result).not.toBeNull();
+    expect(result!.id).toBe('data_breach');
+  });
+
+  it('returns null when no templates match at all', () => {
+    const playbook = createPlaybook();
+    // Remove all templates
+    const emptyPlaybook: CrisisPlaybook = { ...playbook, templates: [] };
+    const result = matchIncident(emptyPlaybook, { category: 'data_breach' });
+    expect(result).toBeNull();
+  });
+
+  it('falls back to full list when category does not match', () => {
+    const playbook = createPlaybook();
+    const result = matchIncident(playbook, { category: 'nonexistent', severity: 'critical' });
+    expect(result).not.toBeNull();
+    // Should fall back to all templates, then filter by severity
+    expect(result!.severity).toBe('critical');
+  });
+
+  it('matches by name in description field', () => {
+    const playbook = createPlaybook();
+    const result = matchIncident(playbook, { description: 'Key Compromise' });
+    expect(result).not.toBeNull();
+    expect(result!.id).toBe('key_compromise');
+  });
+
+  it('handles empty params (returns first template)', () => {
+    const playbook = createPlaybook();
+    const result = matchIncident(playbook, {});
+    expect(result).not.toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createIncidentReport
+// ---------------------------------------------------------------------------
+
+describe('createIncidentReport', () => {
+  it('creates a report with detected status', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates[0]!;
+    const report = createIncidentReport(template, 'agent-123');
+    expect(report.status).toBe('detected');
+    expect(report.agentId).toBe('agent-123');
+    expect(report.template).toBe(template);
+  });
+
+  it('has initial timeline entry', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates[0]!;
+    const report = createIncidentReport(template, 'agent-123');
+    expect(report.timeline).toHaveLength(1);
+    expect(report.timeline[0]!.actor).toBe('system');
+    expect(report.timeline[0]!.action).toContain('detected');
+  });
+
+  it('generates a unique id', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates[0]!;
+    const report1 = createIncidentReport(template, 'agent-1');
+    const report2 = createIncidentReport(template, 'agent-2');
+    expect(report1.id).not.toBe(report2.id);
+  });
+
+  it('timestamp is recent', () => {
+    const before = Date.now();
+    const playbook = createPlaybook();
+    const template = playbook.templates[0]!;
+    const report = createIncidentReport(template, 'agent-123');
+    const after = Date.now();
+    expect(report.timestamp).toBeGreaterThanOrEqual(before);
+    expect(report.timestamp).toBeLessThanOrEqual(after);
+  });
+
+  it('rootCause and lessonsLearned are undefined initially', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates[0]!;
+    const report = createIncidentReport(template, 'agent-123');
+    expect(report.rootCause).toBeUndefined();
+    expect(report.lessonsLearned).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// escalateIncident
+// ---------------------------------------------------------------------------
+
+describe('escalateIncident', () => {
+  it('escalates critical incident to all levels including regulator', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates.find(t => t.severity === 'critical')!;
+    const report = createIncidentReport(template, 'agent-1');
+    const result = escalateIncident(report, playbook);
+
+    expect(result.notifyLevels).toEqual(['team', 'management', 'executive', 'regulator']);
+    expect(result.deadlineMinutes).toBe(15);
+    expect(result.report.status).toBe('investigating');
+  });
+
+  it('escalates high incident to team, management, executive', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates.find(t => t.severity === 'high')!;
+    const report = createIncidentReport(template, 'agent-1');
+    const result = escalateIncident(report, playbook);
+
+    expect(result.notifyLevels).toEqual(['team', 'management', 'executive']);
+    expect(result.deadlineMinutes).toBe(60);
+  });
+
+  it('escalates medium incident to team and management', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates.find(t => t.severity === 'medium')!;
+    const report = createIncidentReport(template, 'agent-1');
+    const result = escalateIncident(report, playbook);
+
+    expect(result.notifyLevels).toEqual(['team', 'management']);
+    expect(result.deadlineMinutes).toBe(120);
+  });
+
+  it('adds escalation to timeline', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates[0]!;
+    const report = createIncidentReport(template, 'agent-1');
+    const result = escalateIncident(report, playbook);
+
+    expect(result.report.timeline).toHaveLength(2);
+    expect(result.report.timeline[1]!.action).toContain('escalated');
+  });
+
+  it('changes status to investigating', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates[0]!;
+    const report = createIncidentReport(template, 'agent-1');
+    const result = escalateIncident(report, playbook);
+
+    expect(result.report.status).toBe('investigating');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// resolveIncident
+// ---------------------------------------------------------------------------
+
+describe('resolveIncident', () => {
+  it('resolves an incident with root cause and lessons', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates[0]!;
+    const report = createIncidentReport(template, 'agent-1');
+    const resolved = resolveIncident(report, {
+      rootCause: 'Misconfigured access control',
+      lessonsLearned: ['Add access control checks', 'Improve monitoring'],
+    });
+
+    expect(resolved.status).toBe('resolved');
+    expect(resolved.rootCause).toBe('Misconfigured access control');
+    expect(resolved.lessonsLearned).toEqual(['Add access control checks', 'Improve monitoring']);
+  });
+
+  it('adds resolution to timeline', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates[0]!;
+    const report = createIncidentReport(template, 'agent-1');
+    const resolved = resolveIncident(report, {
+      rootCause: 'Bug in constraint parser',
+      lessonsLearned: ['Add unit tests'],
+    });
+
+    const lastEntry = resolved.timeline[resolved.timeline.length - 1]!;
+    expect(lastEntry.action).toContain('resolved');
+    expect(lastEntry.action).toContain('Bug in constraint parser');
+  });
+
+  it('preserves original timeline entries', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates[0]!;
+    const report = createIncidentReport(template, 'agent-1');
+    const escalated = escalateIncident(report, playbook);
+    const resolved = resolveIncident(escalated.report, {
+      rootCause: 'Root cause',
+      lessonsLearned: [],
+    });
+
+    expect(resolved.timeline).toHaveLength(3); // detected + escalated + resolved
+    expect(resolved.timeline[0]!.action).toContain('detected');
+    expect(resolved.timeline[1]!.action).toContain('escalated');
+    expect(resolved.timeline[2]!.action).toContain('resolved');
+  });
+
+  it('preserves agent id and template', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates[0]!;
+    const report = createIncidentReport(template, 'agent-xyz');
+    const resolved = resolveIncident(report, {
+      rootCause: 'Test root cause',
+      lessonsLearned: ['Lesson 1'],
+    });
+
+    expect(resolved.agentId).toBe('agent-xyz');
+    expect(resolved.template).toBe(template);
+  });
+
+  it('handles empty lessons learned', () => {
+    const playbook = createPlaybook();
+    const template = playbook.templates[0]!;
+    const report = createIncidentReport(template, 'agent-1');
+    const resolved = resolveIncident(report, {
+      rootCause: 'Unknown',
+      lessonsLearned: [],
+    });
+
+    expect(resolved.lessonsLearned).toEqual([]);
+    expect(resolved.status).toBe('resolved');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Full incident lifecycle
+// ---------------------------------------------------------------------------
+
+describe('Full incident lifecycle', () => {
+  it('detect -> escalate -> resolve', () => {
+    const playbook = createPlaybook();
+    const matched = matchIncident(playbook, { category: 'data_breach' })!;
+    expect(matched).not.toBeNull();
+
+    const report = createIncidentReport(matched, 'agent-compromised');
+    expect(report.status).toBe('detected');
+
+    const escalated = escalateIncident(report, playbook);
+    expect(escalated.report.status).toBe('investigating');
+    expect(escalated.notifyLevels).toContain('regulator');
+    expect(escalated.deadlineMinutes).toBe(15);
+
+    const resolved = resolveIncident(escalated.report, {
+      rootCause: 'SQL injection vulnerability',
+      lessonsLearned: ['Parameterize queries', 'Add WAF rules', 'Conduct security review'],
+    });
+    expect(resolved.status).toBe('resolved');
+    expect(resolved.timeline).toHaveLength(3);
+    expect(resolved.lessonsLearned).toHaveLength(3);
+  });
+});

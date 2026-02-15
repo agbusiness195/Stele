@@ -46,6 +46,9 @@ import {
 } from './completions';
 import { runDoctor } from './doctor';
 import type { DoctorCheck } from './doctor';
+import { runAudit, generateAuditSummary, suggestFixes } from './audit';
+export { runAudit, generateAuditSummary, suggestFixes } from './audit';
+export type { AuditFinding, AuditReport } from './audit';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -127,6 +130,7 @@ function buildMainHelp(): string {
         ['parse <ccl>', 'Parse CCL and output AST as JSON'],
         ['completions <shell>', 'Generate shell completion script (bash|zsh|fish)'],
         ['doctor', 'Check Stele installation health'],
+        ['audit', 'Run compliance audit and generate report'],
         ['diff <doc1> <doc2>', 'Show differences between two covenant documents'],
         ['version', 'Print version information'],
         ['help', 'Show this help message'],
@@ -220,6 +224,27 @@ Runs diagnostic checks on the Stele installation:
   - CCL parsing works
   - Config file readable (if exists)
   - No stale dist files detected`;
+
+const AUDIT_HELP = `stele audit - Run compliance audit and generate report.
+
+Usage: stele audit [options] [--json]
+
+Options:
+  --covenants <n>          Number of configured covenants (default: 0)
+  --enforcement <mode>     Enforcement mode (default: none)
+  --attestation <coverage> Attestation coverage 0.0-1.0 (default: 0)
+  --identity-verified      Flag indicating identity is verified
+  --frameworks <list>      Comma-separated compliance frameworks
+  --json                   Output raw JSON
+
+Runs a compliance audit that checks:
+  - Covenant coverage
+  - Enforcement configuration
+  - Attestation coverage
+  - Identity verification status
+  - Compliance framework alignment
+
+Reports findings with severity levels, a 0-100 score, and a letter grade.`;
 
 const DIFF_HELP = `stele diff - Show differences between two covenant documents.
 
@@ -894,6 +919,98 @@ async function cmdDiff(
   return { stdout: lines.join('\n'), stderr: '', exitCode: 0 };
 }
 
+// ─── Command: audit ───────────────────────────────────────────────────────
+
+async function cmdAudit(
+  flags: Record<string, string | boolean>,
+): Promise<RunResult> {
+  if (hasFlag(flags, 'help')) {
+    return { stdout: AUDIT_HELP, stderr: '', exitCode: 0 };
+  }
+
+  const covenantCount = getFlag(flags, 'covenants')
+    ? parseInt(getFlag(flags, 'covenants')!, 10)
+    : 0;
+  const enforcementMode = getFlag(flags, 'enforcement') ?? 'none';
+  const attestationCoverage = getFlag(flags, 'attestation')
+    ? parseFloat(getFlag(flags, 'attestation')!)
+    : 0;
+  const identityVerified = hasFlag(flags, 'identity-verified');
+  const frameworksStr = getFlag(flags, 'frameworks');
+  const complianceFrameworks = frameworksStr
+    ? frameworksStr.split(',').map(f => f.trim())
+    : [];
+
+  const report = runAudit({
+    covenantCount,
+    enforcementMode,
+    attestationCoverage,
+    identityVerified,
+    complianceFrameworks,
+  });
+
+  if (hasFlag(flags, 'json')) {
+    const fixes = suggestFixes(report);
+    const out = JSON.stringify({ report, fixes }, null, 2);
+    return {
+      stdout: out,
+      stderr: '',
+      exitCode: report.grade === 'F' ? 1 : 0,
+    };
+  }
+
+  const summaryText = generateAuditSummary(report);
+  const fixes = suggestFixes(report);
+
+  const lines: string[] = [''];
+  lines.push(header('Compliance Audit'));
+  lines.push('');
+
+  // Show findings by severity
+  for (const finding of report.findings) {
+    switch (finding.severity) {
+      case 'critical':
+        lines.push(fmtError(`[CRITICAL] ${finding.title} - ${finding.description}`));
+        break;
+      case 'error':
+        lines.push(fmtError(`[ERROR] ${finding.title} - ${finding.description}`));
+        break;
+      case 'warning':
+        lines.push(fmtWarning(`[WARNING] ${finding.title} - ${finding.description}`));
+        break;
+      case 'info':
+        lines.push(dim(`[INFO] ${finding.title} - ${finding.description}`));
+        break;
+    }
+  }
+  lines.push('');
+
+  // Score and grade
+  const gradeColor = report.grade === 'A' || report.grade === 'B'
+    ? green
+    : report.grade === 'C'
+      ? yellow
+      : red;
+  lines.push(box('Score', `${gradeColor(`${report.score}/100 (Grade: ${report.grade})`)}`));
+  lines.push('');
+
+  // Top fixes
+  if (fixes.length > 0) {
+    lines.push(bold('Recommended Fixes:'));
+    const topFixes = fixes.slice(0, 5);
+    for (const fix of topFixes) {
+      lines.push(`  ${fix.priority}. ${fix.fix}`);
+    }
+    lines.push('');
+  }
+
+  return {
+    stdout: lines.join('\n'),
+    stderr: '',
+    exitCode: report.grade === 'F' ? 1 : 0,
+  };
+}
+
 // ─── Command: version ─────────────────────────────────────────────────────────
 
 function cmdVersion(flags: Record<string, string | boolean>): RunResult {
@@ -967,6 +1084,8 @@ export async function run(args: string[], configDir?: string): Promise<RunResult
         return cmdCompletions(parsed.positional, parsed.flags);
       case 'doctor':
         return await cmdDoctor(parsed.flags, configDir);
+      case 'audit':
+        return await cmdAudit(parsed.flags);
       case 'diff':
         return await cmdDiff(parsed.positional, parsed.flags);
       case 'version':

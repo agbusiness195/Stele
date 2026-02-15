@@ -1511,3 +1511,243 @@ export class IdentitySimilarity {
     return Math.max(0, Math.min(1, dotProduct / denominator));
   }
 }
+
+// ---------------------------------------------------------------------------
+// Model Updates Trigger Re-verification
+// ---------------------------------------------------------------------------
+
+/**
+ * Describes a model update event that requires trust re-evaluation.
+ * Any model change is a trust-relevant event that triggers mandatory
+ * re-verification, canary re-runs, and lineage carry-forward.
+ */
+export interface ModelUpdateEvent {
+  agentId: string;
+  previousModelHash: string;
+  newModelHash: string;
+  updateType: 'minor_patch' | 'major_update' | 'architecture_change' | 'provider_switch';
+  timestamp: number;
+  operatorAcknowledged: boolean;
+}
+
+/**
+ * Requirements for re-verifying an agent after a model update.
+ * Includes a grace period with reduced trust, required actions,
+ * and auto-decay rate if re-verification is not completed in time.
+ */
+export interface ReverificationRequirement {
+  event: ModelUpdateEvent;
+  gracePeriodMs: number;       // time allowed before auto-decay
+  trustReductionFactor: number; // multiplier during grace period (e.g., 0.5 = half trust)
+  requiredActions: string[];    // what must happen to restore full trust
+  autoDecayRate: number;        // trust decay per hour if not re-verified
+  deadline: number;             // timestamp when grace period ends
+}
+
+/**
+ * Result of completing a re-verification process.
+ */
+export interface ReverificationResult {
+  agentId: string;
+  passed: boolean;
+  newTrustLevel: number; // 0-1
+  canaryResults?: { total: number; passed: number; failed: number };
+  lineagePreserved: boolean;
+  recommendation: string;
+}
+
+/** Grace period in milliseconds per update type. */
+const GRACE_PERIOD_MS: Record<ModelUpdateEvent['updateType'], number> = {
+  minor_patch: 72 * 60 * 60 * 1000,       // 72 hours
+  major_update: 48 * 60 * 60 * 1000,      // 48 hours
+  architecture_change: 24 * 60 * 60 * 1000, // 24 hours
+  provider_switch: 24 * 60 * 60 * 1000,    // 24 hours
+};
+
+/** Trust reduction factor during grace period per update type. */
+const TRUST_REDUCTION: Record<ModelUpdateEvent['updateType'], number> = {
+  minor_patch: 0.9,
+  major_update: 0.7,
+  architecture_change: 0.5,
+  provider_switch: 0.3,
+};
+
+/** Auto-decay rate (trust loss per hour past deadline) per update type. */
+const AUTO_DECAY_RATE: Record<ModelUpdateEvent['updateType'], number> = {
+  minor_patch: 0.01,
+  major_update: 0.05,
+  architecture_change: 0.1,
+  provider_switch: 0.1,
+};
+
+/**
+ * Trigger a re-verification requirement based on a model update event.
+ *
+ * Determines the grace period, trust reduction factor, required actions,
+ * and auto-decay rate based on the type of model update. More severe
+ * changes (architecture change, provider switch) result in shorter grace
+ * periods, greater trust reduction, and faster auto-decay.
+ *
+ * @param event - The model update event that triggered re-verification.
+ * @returns A ReverificationRequirement detailing what must be done.
+ *
+ * @example
+ * ```typescript
+ * const req = triggerReverification({
+ *   agentId: 'agent-1',
+ *   previousModelHash: 'abc...',
+ *   newModelHash: 'def...',
+ *   updateType: 'major_update',
+ *   timestamp: Date.now(),
+ *   operatorAcknowledged: true,
+ * });
+ * console.log(req.gracePeriodMs);        // 172800000 (48 hours)
+ * console.log(req.trustReductionFactor); // 0.7
+ * ```
+ */
+export function triggerReverification(event: ModelUpdateEvent): ReverificationRequirement {
+  if (!event.agentId || typeof event.agentId !== 'string') {
+    throw new SteleError(
+      SteleErrorCode.IDENTITY_INVALID,
+      'triggerReverification() requires a valid agentId',
+      { hint: 'Provide a non-empty string as the agentId in the ModelUpdateEvent.' },
+    );
+  }
+
+  const gracePeriodMs = GRACE_PERIOD_MS[event.updateType];
+  const trustReductionFactor = TRUST_REDUCTION[event.updateType];
+  const autoDecayRate = AUTO_DECAY_RATE[event.updateType];
+
+  // Required actions: always include canary rerun and lineage verification
+  const requiredActions: string[] = ['canary_rerun', 'lineage_verification'];
+
+  // Architecture change and provider switch also require full behavioral audit
+  if (event.updateType === 'architecture_change' || event.updateType === 'provider_switch') {
+    requiredActions.push('full_behavioral_audit');
+  }
+
+  const deadline = event.timestamp + gracePeriodMs;
+
+  return {
+    event,
+    gracePeriodMs,
+    trustReductionFactor,
+    requiredActions,
+    autoDecayRate,
+    deadline,
+  };
+}
+
+/**
+ * Compute the current trust level for an agent undergoing re-verification,
+ * accounting for time-based decay if the grace period has been exceeded.
+ *
+ * During the grace period, the trust level is the trust reduction factor.
+ * After the deadline, trust decays at the auto-decay rate per hour.
+ * Trust never drops below 0.
+ *
+ * @param requirement - The re-verification requirement with decay parameters.
+ * @param currentTime - The current timestamp (ms since epoch).
+ * @returns The decayed trust level, between 0 and the trust reduction factor.
+ *
+ * @example
+ * ```typescript
+ * const trust = computeDecayedTrust(requirement, Date.now());
+ * console.log(trust); // e.g. 0.65 if slightly past deadline
+ * ```
+ */
+export function computeDecayedTrust(requirement: ReverificationRequirement, currentTime: number): number {
+  if (currentTime <= requirement.deadline) {
+    return requirement.trustReductionFactor;
+  }
+
+  // Compute hours past deadline
+  const msOverDeadline = currentTime - requirement.deadline;
+  const hoursOverDeadline = msOverDeadline / (60 * 60 * 1000);
+
+  const decayedTrust = requirement.trustReductionFactor - requirement.autoDecayRate * hoursOverDeadline;
+  return Math.max(0, decayedTrust);
+}
+
+/**
+ * Complete the re-verification process for an agent after a model update.
+ *
+ * Evaluates whether the agent passes re-verification based on canary test
+ * results, lineage verification, and (if required) a behavioral audit.
+ * The agent passes if >= 95% of canary tests pass, lineage is verified,
+ * and any required behavioral audit passes.
+ *
+ * On success, trust is fully restored to 1.0. On failure, a partial trust
+ * level is computed based on canary pass rate and lineage status.
+ *
+ * @param params - Re-verification completion parameters.
+ * @returns A ReverificationResult with the new trust level and recommendation.
+ *
+ * @example
+ * ```typescript
+ * const result = completeReverification({
+ *   requirement,
+ *   canaryTotal: 100,
+ *   canaryPassed: 98,
+ *   lineageVerified: true,
+ * });
+ * console.log(result.passed);        // true
+ * console.log(result.newTrustLevel); // 1.0
+ * ```
+ */
+export function completeReverification(params: {
+  requirement: ReverificationRequirement;
+  canaryTotal: number;
+  canaryPassed: number;
+  lineageVerified: boolean;
+  behavioralAuditPassed?: boolean;
+}): ReverificationResult {
+  const { requirement, canaryTotal, canaryPassed, lineageVerified, behavioralAuditPassed } = params;
+
+  const canaryPassRate = canaryTotal > 0 ? canaryPassed / canaryTotal : 0;
+  const canaryPasses = canaryPassRate >= 0.95;
+
+  // Check if behavioral audit is required and passed
+  const behavioralAuditRequired = requirement.requiredActions.includes('full_behavioral_audit');
+  const behavioralAuditOk = !behavioralAuditRequired || (behavioralAuditPassed === true);
+
+  const passed = canaryPasses && lineageVerified && behavioralAuditOk;
+
+  let newTrustLevel: number;
+  if (passed) {
+    newTrustLevel = 1.0;
+  } else {
+    // Partial trust based on canary pass rate and lineage
+    newTrustLevel = canaryPassRate * (lineageVerified ? 0.8 : 0.5);
+  }
+
+  const canaryResults = {
+    total: canaryTotal,
+    passed: canaryPassed,
+    failed: canaryTotal - canaryPassed,
+  };
+
+  let recommendation: string;
+  if (passed) {
+    recommendation = `Re-verification passed. Agent ${requirement.event.agentId} has been restored to full trust.`;
+  } else if (!canaryPasses && !lineageVerified) {
+    recommendation = `Re-verification failed. Canary pass rate (${(canaryPassRate * 100).toFixed(1)}%) is below 95% threshold and lineage could not be verified. Manual review recommended.`;
+  } else if (!canaryPasses) {
+    recommendation = `Re-verification failed. Canary pass rate (${(canaryPassRate * 100).toFixed(1)}%) is below 95% threshold. Investigate behavioral regressions.`;
+  } else if (!lineageVerified) {
+    recommendation = `Re-verification failed. Lineage could not be verified. Check identity chain integrity.`;
+  } else if (!behavioralAuditOk) {
+    recommendation = `Re-verification failed. Full behavioral audit did not pass. Perform detailed behavioral analysis before restoring trust.`;
+  } else {
+    recommendation = `Re-verification incomplete. Review all required actions.`;
+  }
+
+  return {
+    agentId: requirement.event.agentId,
+    passed,
+    newTrustLevel,
+    canaryResults,
+    lineagePreserved: lineageVerified,
+    recommendation,
+  };
+}

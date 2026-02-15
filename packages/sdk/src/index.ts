@@ -286,6 +286,9 @@ export {
   serializeIdentity,
   deserializeIdentity,
   DEFAULT_EVOLUTION_POLICY,
+  triggerReverification,
+  computeDecayedTrust,
+  completeReverification,
 } from '@stele/identity';
 
 // ─── SteleClient ────────────────────────────────────────────────────────────
@@ -1113,7 +1116,20 @@ export type {
 } from '@stele/store';
 
 // ─── Breach Detection ─────────────────────────────────────────────────────────
-export { createBreachAttestation, verifyBreachAttestation, TrustGraph } from '@stele/breach';
+export {
+  createBreachAttestation,
+  verifyBreachAttestation,
+  TrustGraph,
+  ExponentialDegradation,
+  BreachStateMachine,
+  RecoveryModel,
+  RepeatOffenderDetector,
+  createPlaybook,
+  matchIncident,
+  createIncidentReport,
+  escalateIncident,
+  resolveIncident,
+} from '@stele/breach';
 export type {
   BreachAttestation,
   TrustStatus,
@@ -1138,6 +1154,22 @@ export {
   coBurnDelegation,
   createEndorsement,
   verifyEndorsement,
+  ReceiptDAG,
+  ReputationDecayModel,
+  GraduatedBurner,
+  ReputationAggregator,
+  createResourcePool,
+  allocateTrust,
+  releaseTrust,
+  slashStake,
+  collateralizationRatio,
+  computeProfile,
+  compareProfiles,
+  STAKE_TIERS,
+  assignTier,
+  createStakedAgent,
+  recordQuery,
+  computeGovernanceVote,
 } from '@stele/reputation';
 export type {
   ReputationScore,
@@ -1146,6 +1178,13 @@ export type {
   ReputationDelegation,
   Endorsement,
   ScoringConfig,
+  ResourcePool,
+  SlashingEvent,
+  TrustDimension,
+  MultidimensionalProfile,
+  StakeTier,
+  StakeTierConfig,
+  StakedAgent,
 } from '@stele/reputation';
 
 // ─── Proof ────────────────────────────────────────────────────────────────────
@@ -1176,6 +1215,10 @@ export {
   getDiscrepancies,
   attestationChainVerify,
   computeAttestationCoverage,
+  createEntanglement,
+  buildEntanglementNetwork,
+  verifyEntangled,
+  assessConditionalRisk,
 } from '@stele/attestation';
 export type {
   ExternalAttestation,
@@ -1216,6 +1259,17 @@ export {
   CONFIGURATION_PATH,
   STELE_MEDIA_TYPE,
   MAX_DOCUMENT_AGE_MS,
+  createFederationConfig,
+  addResolver,
+  removeResolver,
+  resolveAgent,
+  selectOptimalResolvers,
+  createMarketplace,
+  listAgent,
+  searchMarketplace,
+  createTransaction as createMarketplaceTransaction,
+  completeTransaction,
+  disputeTransaction,
 } from '@stele/discovery';
 export type {
   DiscoveryDocument,
@@ -1233,6 +1287,13 @@ export type {
   DiscoveryClientOptions,
   DiscoveryServerOptions,
   RouteHandler,
+  FederatedResolver,
+  FederationConfig,
+  ResolutionResult,
+  MarketplaceListing,
+  MarketplaceConfig,
+  MarketplaceQuery,
+  MarketplaceTransaction,
 } from '@stele/discovery';
 
 // ─── Schema ────────────────────────────────────────────────────────────────────
@@ -1250,3 +1311,137 @@ export type {
   SchemaValidationError,
   SchemaValidationResult,
 } from '@stele/schema';
+
+// ─── Temporal ─────────────────────────────────────────────────────────────────
+export {
+  defineEvolution,
+  evaluateTriggers,
+  canEvolve,
+  evolve,
+  evolutionHistory,
+  computeDecaySchedule,
+  expirationForecast,
+  DecayModel,
+  ContinuousTrigger,
+  ViolationForecaster,
+  TemporalConstraintAlgebra,
+  DEFAULT_GOVERNANCE_BOOTSTRAP,
+  initializeGovernance,
+  evaluatePhaseTransition,
+  transitionPhase,
+  computeVotingPower,
+} from '@stele/temporal';
+export type {
+  TriggerType,
+  TriggerAction,
+  EvolutionPolicy as TemporalEvolutionPolicy,
+  EvolutionTrigger,
+  TransitionFunction,
+  EvolutionEvent,
+  AgentState,
+  CovenantState,
+  DecayPoint,
+  ViolationRecord,
+  ExpirationForecastResult,
+  DecayModelType,
+  DecayModelConfig,
+  ContinuousTriggerConfig,
+  ContinuousTriggerResult,
+  ForecastConfig,
+  ForecastPoint,
+  ForecastResult,
+  TemporalConstraint,
+  TemporalAlgebraResult,
+  GovernancePhase,
+  GovernanceState,
+  GovernanceBootstrapConfig,
+} from '@stele/temporal';
+
+// ─── Trust Gate ───────────────────────────────────────────────────────────────
+export { createTrustGate, evaluateAccess, calculateRevenueLift } from './trust-gate.js';
+export type { TrustGateConfig, AccessLevel, GateDecision } from './trust-gate.js';
+
+// ─── Certification ────────────────────────────────────────────────────────────
+export {
+  CERTIFICATION_REQUIREMENTS,
+  createAuthority,
+  issueCertificate,
+  revokeCertificate,
+  verifyCertificate,
+} from './certification.js';
+export type { Certificate, CertificationAuthority, CertificationRequirements } from './certification.js';
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+export {
+  STANDARD_METRICS,
+  createDashboard,
+  addMetric,
+  createStandardDashboard,
+  aggregateMetric,
+  pruneOldData,
+} from './dashboard.js';
+export type { DashboardConfig, MetricPoint, MetricSeries, DashboardPanel, Dashboard } from './dashboard.js';
+
+// ─── Analytics ────────────────────────────────────────────────────────────────
+export { aggregateData, anonymizeDataset, computeTrends } from './analytics.js';
+export type { TrustDataPoint, AggregatedInsight, AnonymizedDataset } from './analytics.js';
+
+// ─── Gateway ──────────────────────────────────────────────────────────────────
+export {
+  createGateway,
+  isResourceAllowed,
+  processRequest,
+  aggregateMetrics as aggregateGatewayMetrics,
+} from './gateway.js';
+export type { GatewayConfig, GatewayRequest, GatewayResponse, GatewayMetrics } from './gateway.js';
+
+// ─── Governance ───────────────────────────────────────────────────────────────
+export {
+  createGovernancePolicy,
+  registerAgent as registerGovernanceAgent,
+  updateAgentStatus,
+  quarantineAgent,
+  unquarantineAgent,
+  buildDashboard as buildGovernanceDashboard,
+} from './governance.js';
+export type { GovernancePolicy, AgentStatus, GovernanceDashboard } from './governance.js';
+
+// ─── i18n ─────────────────────────────────────────────────────────────────────
+export {
+  TRANSLATION_KEYS,
+  CATALOGS,
+  t,
+  setDefaultLocale,
+  getDefaultLocale,
+  addTranslation,
+  getSupportedLocales,
+} from './i18n.js';
+
+// ─── Payments ─────────────────────────────────────────────────────────────────
+export {
+  createLedger,
+  createAccount,
+  recordQueryIncome,
+  processPayment,
+  getAccountSummary,
+} from './payments.js';
+export type { PaymentAccount, PaymentTransaction, PaymentLedger } from './payments.js';
+
+// ─── Rail ─────────────────────────────────────────────────────────────────────
+export {
+  createRail,
+  initiateRailTransaction,
+  executeRailTransaction,
+  rollbackRailTransaction,
+  computeRailVolume,
+} from './rail.js';
+export type { RailTransaction, RailConfig } from './rail.js';
+
+// ─── Fees ─────────────────────────────────────────────────────────────────────
+export {
+  createFeeSchedule,
+  calculateFee,
+  aggregateFees,
+  projectRevenue,
+} from './fees.js';
+export type { FeeSchedule, FeeCalculation, FeeAggregate } from './fees.js';

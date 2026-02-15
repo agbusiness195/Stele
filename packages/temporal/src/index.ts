@@ -1373,3 +1373,202 @@ export class TemporalConstraintAlgebra {
     };
   }
 }
+
+// ---------------------------------------------------------------------------
+// Governance Bootstrap Sequence
+// ---------------------------------------------------------------------------
+
+/**
+ * Governance phase identifiers for the bootstrap sequence.
+ *
+ * - Phase 0 (centralized): 0-99 agents, founder decision, labeled temporary
+ * - Phase 1 (advisory_council): 100-999 agents, council vote
+ * - Phase 2 (participation_weighted): 1000-9999 agents, weighted voting
+ * - Phase 3 (fully_decentralized): 10000+ agents, full token governance
+ */
+export type GovernancePhase = 'centralized' | 'advisory_council' | 'participation_weighted' | 'fully_decentralized';
+
+export interface GovernanceState {
+  currentPhase: GovernancePhase;
+  agentCount: number;
+  phaseTransitions: Array<{ from: GovernancePhase; to: GovernancePhase; agentCount: number; timestamp: number }>;
+  isTemporary: boolean; // true for phase 0
+  decisionMechanism: string;
+  votingWeights: 'equal' | 'stake_weighted' | 'participation_weighted' | 'reputation_weighted';
+}
+
+export interface GovernanceBootstrapConfig {
+  phases: Array<{
+    phase: GovernancePhase;
+    minAgents: number;
+    maxAgents: number;
+    mechanism: string;
+    votingWeights: GovernanceState['votingWeights'];
+  }>;
+}
+
+/**
+ * Default governance bootstrap configuration.
+ *
+ * Phase 0: centralized, 0-99, "founder_decision", equal, isTemporary=true
+ * Phase 1: advisory_council, 100-999, "council_vote", stake_weighted
+ * Phase 2: participation_weighted, 1000-9999, "weighted_vote", participation_weighted
+ * Phase 3: fully_decentralized, 10000+, "token_governance", reputation_weighted
+ */
+export const DEFAULT_GOVERNANCE_BOOTSTRAP: GovernanceBootstrapConfig = {
+  phases: [
+    { phase: 'centralized', minAgents: 0, maxAgents: 99, mechanism: 'founder_decision', votingWeights: 'equal' },
+    { phase: 'advisory_council', minAgents: 100, maxAgents: 999, mechanism: 'council_vote', votingWeights: 'stake_weighted' },
+    { phase: 'participation_weighted', minAgents: 1000, maxAgents: 9999, mechanism: 'weighted_vote', votingWeights: 'participation_weighted' },
+    { phase: 'fully_decentralized', minAgents: 10000, maxAgents: Infinity, mechanism: 'token_governance', votingWeights: 'reputation_weighted' },
+  ],
+};
+
+/**
+ * Determine the appropriate phase for a given agent count.
+ */
+function getPhaseForAgentCount(
+  agentCount: number,
+  config: GovernanceBootstrapConfig = DEFAULT_GOVERNANCE_BOOTSTRAP,
+): GovernanceBootstrapConfig['phases'][number] {
+  for (const phase of config.phases) {
+    if (agentCount >= phase.minAgents && agentCount <= phase.maxAgents) {
+      return phase;
+    }
+  }
+  // Fallback to the last phase
+  return config.phases[config.phases.length - 1]!;
+}
+
+/**
+ * Initialize a governance state at the appropriate phase based on agentCount.
+ *
+ * @param agentCount - Current number of agents (default 0).
+ * @returns A new GovernanceState.
+ */
+export function initializeGovernance(agentCount: number = 0): GovernanceState {
+  const phaseConfig = getPhaseForAgentCount(agentCount);
+
+  return {
+    currentPhase: phaseConfig.phase,
+    agentCount,
+    phaseTransitions: [],
+    isTemporary: phaseConfig.phase === 'centralized',
+    decisionMechanism: phaseConfig.mechanism,
+    votingWeights: phaseConfig.votingWeights,
+  };
+}
+
+/**
+ * Evaluate whether a phase transition should occur given a new agent count.
+ *
+ * @param state - The current governance state.
+ * @param newAgentCount - The updated agent count.
+ * @returns An evaluation result indicating whether transition is needed.
+ */
+export function evaluatePhaseTransition(
+  state: GovernanceState,
+  newAgentCount: number,
+): {
+  shouldTransition: boolean;
+  currentPhase: GovernancePhase;
+  nextPhase: GovernancePhase | null;
+  agentsUntilTransition: number;
+} {
+  const currentPhaseConfig = getPhaseForAgentCount(state.agentCount);
+  const newPhaseConfig = getPhaseForAgentCount(newAgentCount);
+
+  if (newPhaseConfig.phase !== currentPhaseConfig.phase) {
+    return {
+      shouldTransition: true,
+      currentPhase: state.currentPhase,
+      nextPhase: newPhaseConfig.phase,
+      agentsUntilTransition: 0,
+    };
+  }
+
+  // No transition needed — compute how many agents until the next phase
+  const agentsUntilTransition = currentPhaseConfig.maxAgents === Infinity
+    ? Infinity
+    : currentPhaseConfig.maxAgents - newAgentCount + 1;
+
+  return {
+    shouldTransition: false,
+    currentPhase: state.currentPhase,
+    nextPhase: null,
+    agentsUntilTransition: Math.max(0, agentsUntilTransition),
+  };
+}
+
+/**
+ * Transition the governance state to the phase appropriate for the new agent count.
+ *
+ * If newAgentCount crosses a threshold, transitions to the next phase.
+ * Records the transition in phaseTransitions. Updates decisionMechanism and votingWeights.
+ *
+ * @param state - The current governance state.
+ * @param newAgentCount - The updated agent count.
+ * @returns The updated GovernanceState.
+ */
+export function transitionPhase(state: GovernanceState, newAgentCount: number): GovernanceState {
+  const newPhaseConfig = getPhaseForAgentCount(newAgentCount);
+
+  if (newPhaseConfig.phase === state.currentPhase) {
+    // No phase change, just update the agent count
+    return {
+      ...state,
+      agentCount: newAgentCount,
+    };
+  }
+
+  const transition = {
+    from: state.currentPhase,
+    to: newPhaseConfig.phase,
+    agentCount: newAgentCount,
+    timestamp: Date.now(),
+  };
+
+  return {
+    currentPhase: newPhaseConfig.phase,
+    agentCount: newAgentCount,
+    phaseTransitions: [...state.phaseTransitions, transition],
+    isTemporary: newPhaseConfig.phase === 'centralized',
+    decisionMechanism: newPhaseConfig.mechanism,
+    votingWeights: newPhaseConfig.votingWeights,
+  };
+}
+
+/**
+ * Compute the voting power for an agent in the current governance phase.
+ *
+ * Based on the current phase's votingWeights:
+ * - equal: always 1
+ * - stake_weighted: stake || 1
+ * - participation_weighted: (participationRate || 0.5) * 10
+ * - reputation_weighted: (reputationScore || 0.5) * 20
+ *
+ * @param state - The current governance state.
+ * @param params - Agent-specific voting parameters.
+ * @returns The computed voting power.
+ */
+export function computeVotingPower(
+  state: GovernanceState,
+  params: {
+    stake?: number;
+    participationRate?: number;
+    reputationScore?: number;
+  },
+): number {
+  switch (state.votingWeights) {
+    case 'equal':
+      return 1;
+    case 'stake_weighted':
+      return params.stake ?? 1;
+    case 'participation_weighted':
+      return (params.participationRate ?? 0.5) * 10;
+    case 'reputation_weighted':
+      return (params.reputationScore ?? 0.5) * 20;
+    default:
+      return 1;
+  }
+}

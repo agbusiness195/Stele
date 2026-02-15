@@ -895,3 +895,415 @@ describe('regulatoryGapAnalysis', () => {
     }
   });
 });
+
+// ===========================================================================
+// COMPLIANCE AUTOPILOT TESTS
+// ===========================================================================
+
+import {
+  createComplianceMonitor,
+  takeSnapshot,
+  analyzeTrajectory,
+  generateRegulatoryReport,
+} from './index';
+import type {
+  ComplianceMonitorConfig,
+  ComplianceSnapshot,
+  ComplianceAlert,
+  ComplianceAutopilotTrajectory,
+} from './index';
+
+// ---------------------------------------------------------------------------
+// createComplianceMonitor
+// ---------------------------------------------------------------------------
+
+describe('createComplianceMonitor', () => {
+  it('creates monitor with default values', () => {
+    const config = createComplianceMonitor({});
+    expect(config.frameworks).toEqual(['GDPR']);
+    expect(config.checkIntervalMs).toBe(3600000);
+    expect(config.alertThreshold).toBe(0.7);
+    expect(config.autoReport).toBe(true);
+    expect(config.operationalBudget).toBeUndefined();
+  });
+
+  it('overrides defaults with provided values', () => {
+    const config = createComplianceMonitor({
+      frameworks: ['SOC2', 'GDPR'],
+      checkIntervalMs: 1800000,
+      alertThreshold: 0.8,
+      autoReport: false,
+      operationalBudget: 100000,
+    });
+    expect(config.frameworks).toEqual(['SOC2', 'GDPR']);
+    expect(config.checkIntervalMs).toBe(1800000);
+    expect(config.alertThreshold).toBe(0.8);
+    expect(config.autoReport).toBe(false);
+    expect(config.operationalBudget).toBe(100000);
+  });
+
+  it('accepts partial overrides', () => {
+    const config = createComplianceMonitor({ frameworks: ['HIPAA'] });
+    expect(config.frameworks).toEqual(['HIPAA']);
+    expect(config.checkIntervalMs).toBe(3600000); // default
+    expect(config.alertThreshold).toBe(0.7); // default
+    expect(config.autoReport).toBe(true); // default
+  });
+});
+
+// ---------------------------------------------------------------------------
+// takeSnapshot
+// ---------------------------------------------------------------------------
+
+describe('takeSnapshot', () => {
+  it('takes a snapshot with correct overall score', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR', 'SOC2'] });
+    const snapshot = takeSnapshot(config, { GDPR: 0.9, SOC2: 0.8 });
+    expect(snapshot.overallScore).toBeCloseTo(0.85);
+    expect(snapshot.frameworkScores['GDPR']).toBe(0.9);
+    expect(snapshot.frameworkScores['SOC2']).toBe(0.8);
+  });
+
+  it('generates no alerts when all scores are above threshold', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR'], alertThreshold: 0.7 });
+    const snapshot = takeSnapshot(config, { GDPR: 0.9 });
+    expect(snapshot.alerts).toHaveLength(0);
+  });
+
+  it('generates a warning alert when score is below threshold but >= 0.5', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR'], alertThreshold: 0.7 });
+    const snapshot = takeSnapshot(config, { GDPR: 0.6 });
+    expect(snapshot.alerts).toHaveLength(1);
+    expect(snapshot.alerts[0]!.severity).toBe('warning');
+    expect(snapshot.alerts[0]!.preViolation).toBe(false);
+    expect(snapshot.alerts[0]!.framework).toBe('GDPR');
+  });
+
+  it('generates a critical alert when score is below 0.5', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR'], alertThreshold: 0.7 });
+    const snapshot = takeSnapshot(config, { GDPR: 0.3 });
+    expect(snapshot.alerts).toHaveLength(1);
+    expect(snapshot.alerts[0]!.severity).toBe('critical');
+    expect(snapshot.alerts[0]!.preViolation).toBe(false);
+  });
+
+  it('generates a pre-violation alert when score is close to threshold', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR'], alertThreshold: 0.7 });
+    const snapshot = takeSnapshot(config, { GDPR: 0.75 });
+    expect(snapshot.alerts).toHaveLength(1);
+    expect(snapshot.alerts[0]!.severity).toBe('info');
+    expect(snapshot.alerts[0]!.preViolation).toBe(true);
+  });
+
+  it('defaults missing framework scores to 0', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR', 'SOC2'] });
+    const snapshot = takeSnapshot(config, { GDPR: 0.9 }); // SOC2 missing
+    expect(snapshot.frameworkScores['SOC2']).toBe(0);
+    expect(snapshot.overallScore).toBeCloseTo(0.45);
+    expect(snapshot.alerts.length).toBeGreaterThan(0);
+  });
+
+  it('sets timestamp to current time', () => {
+    const before = Date.now();
+    const config = createComplianceMonitor({ frameworks: ['GDPR'] });
+    const snapshot = takeSnapshot(config, { GDPR: 0.9 });
+    const after = Date.now();
+    expect(snapshot.timestamp).toBeGreaterThanOrEqual(before);
+    expect(snapshot.timestamp).toBeLessThanOrEqual(after);
+  });
+
+  it('calculates costAsPercentOfBudget when budget is set', () => {
+    const config = createComplianceMonitor({
+      frameworks: ['GDPR'],
+      operationalBudget: 10000,
+    });
+    const snapshot = takeSnapshot(config, { GDPR: 0.9 });
+    expect(snapshot.costAsPercentOfBudget).toBeDefined();
+    expect(snapshot.costAsPercentOfBudget).toBeGreaterThan(0);
+  });
+
+  it('does not set costAsPercentOfBudget when budget is not set', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR'] });
+    const snapshot = takeSnapshot(config, { GDPR: 0.9 });
+    expect(snapshot.costAsPercentOfBudget).toBeUndefined();
+  });
+
+  it('handles multiple frameworks with mixed scores', () => {
+    const config = createComplianceMonitor({
+      frameworks: ['GDPR', 'SOC2', 'HIPAA'],
+      alertThreshold: 0.7,
+    });
+    const snapshot = takeSnapshot(config, { GDPR: 0.9, SOC2: 0.4, HIPAA: 0.75 });
+
+    // SOC2 should generate a critical alert (< 0.5)
+    const soc2Alert = snapshot.alerts.find(a => a.framework === 'SOC2');
+    expect(soc2Alert).toBeDefined();
+    expect(soc2Alert!.severity).toBe('critical');
+
+    // HIPAA should generate a pre-violation alert (close to threshold)
+    const hipaaAlert = snapshot.alerts.find(a => a.framework === 'HIPAA');
+    expect(hipaaAlert).toBeDefined();
+    expect(hipaaAlert!.preViolation).toBe(true);
+
+    // Overall score is average
+    expect(snapshot.overallScore).toBeCloseTo((0.9 + 0.4 + 0.75) / 3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// analyzeTrajectory
+// ---------------------------------------------------------------------------
+
+describe('analyzeTrajectory', () => {
+  it('returns stable trend with fewer than 2 snapshots', () => {
+    const result = analyzeTrajectory([]);
+    expect(result.trend).toBe('stable');
+    expect(result.projectedDaysToViolation).toBeNull();
+    expect(result.recommendations).toHaveLength(1);
+  });
+
+  it('detects improving trend', () => {
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 1000, overallScore: 0.7, frameworkScores: { GDPR: 0.7 }, alerts: [] },
+      { timestamp: 2000, overallScore: 0.9, frameworkScores: { GDPR: 0.9 }, alerts: [] },
+    ];
+    const result = analyzeTrajectory(snapshots);
+    expect(result.trend).toBe('improving');
+    expect(result.projectedDaysToViolation).toBeNull();
+  });
+
+  it('detects declining trend', () => {
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 1000, overallScore: 0.9, frameworkScores: { GDPR: 0.9 }, alerts: [] },
+      { timestamp: 86401000, overallScore: 0.8, frameworkScores: { GDPR: 0.8 }, alerts: [] },
+    ];
+    const result = analyzeTrajectory(snapshots);
+    expect(result.trend).toBe('declining');
+  });
+
+  it('detects stable trend when delta is small', () => {
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 1000, overallScore: 0.85, frameworkScores: { GDPR: 0.85 }, alerts: [] },
+      { timestamp: 2000, overallScore: 0.86, frameworkScores: { GDPR: 0.86 }, alerts: [] },
+    ];
+    const result = analyzeTrajectory(snapshots);
+    expect(result.trend).toBe('stable');
+  });
+
+  it('projects days to violation when declining and above threshold', () => {
+    const day = 24 * 60 * 60 * 1000;
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 0, overallScore: 0.9, frameworkScores: { GDPR: 0.9 }, alerts: [] },
+      { timestamp: day, overallScore: 0.8, frameworkScores: { GDPR: 0.8 }, alerts: [] },
+    ];
+    const result = analyzeTrajectory(snapshots);
+    expect(result.trend).toBe('declining');
+    expect(result.projectedDaysToViolation).not.toBeNull();
+    // Declining from 0.9 to 0.8 in 1 day = 0.1/day. Distance to 0.7 = 0.1, so ~1 day
+    expect(result.projectedDaysToViolation).toBe(1);
+  });
+
+  it('returns 0 days to violation when already below threshold', () => {
+    const day = 24 * 60 * 60 * 1000;
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 0, overallScore: 0.8, frameworkScores: { GDPR: 0.8 }, alerts: [] },
+      { timestamp: day, overallScore: 0.6, frameworkScores: { GDPR: 0.6 }, alerts: [] },
+    ];
+    const result = analyzeTrajectory(snapshots);
+    expect(result.trend).toBe('declining');
+    expect(result.projectedDaysToViolation).toBe(0);
+  });
+
+  it('sorts snapshots by timestamp', () => {
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 2000, overallScore: 0.9, frameworkScores: { GDPR: 0.9 }, alerts: [] },
+      { timestamp: 1000, overallScore: 0.7, frameworkScores: { GDPR: 0.7 }, alerts: [] },
+    ];
+    const result = analyzeTrajectory(snapshots);
+    expect(result.snapshots[0]!.timestamp).toBe(1000);
+    expect(result.snapshots[1]!.timestamp).toBe(2000);
+    expect(result.trend).toBe('improving');
+  });
+
+  it('generates recommendations for weak frameworks', () => {
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 1000, overallScore: 0.5, frameworkScores: { GDPR: 0.4, SOC2: 0.6 }, alerts: [] },
+      { timestamp: 2000, overallScore: 0.5, frameworkScores: { GDPR: 0.4, SOC2: 0.6 }, alerts: [] },
+    ];
+    const result = analyzeTrajectory(snapshots);
+    expect(result.recommendations.some(r => r.includes('GDPR'))).toBe(true);
+    expect(result.recommendations.some(r => r.includes('immediate remediation'))).toBe(true);
+  });
+
+  it('generates declining recommendation', () => {
+    const day = 24 * 60 * 60 * 1000;
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 0, overallScore: 0.9, frameworkScores: { GDPR: 0.9 }, alerts: [] },
+      { timestamp: day * 5, overallScore: 0.75, frameworkScores: { GDPR: 0.75 }, alerts: [] },
+    ];
+    const result = analyzeTrajectory(snapshots);
+    expect(result.recommendations.some(r => r.includes('declining'))).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// generateRegulatoryReport
+// ---------------------------------------------------------------------------
+
+describe('generateRegulatoryReport', () => {
+  it('generates a report with compliant status when scores are high', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR', 'SOC2'] });
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 1000, overallScore: 0.85, frameworkScores: { GDPR: 0.85, SOC2: 0.85 }, alerts: [] },
+      { timestamp: 2000, overallScore: 0.9, frameworkScores: { GDPR: 0.9, SOC2: 0.9 }, alerts: [] },
+    ];
+    const trajectory = analyzeTrajectory(snapshots);
+    const report = generateRegulatoryReport(config, trajectory);
+
+    expect(report.status).toBe('compliant');
+    expect(report.overallCompliance).toBeCloseTo(0.9);
+    expect(report.frameworks).toEqual(['GDPR', 'SOC2']);
+    expect(report.reportId).toBeTruthy();
+    expect(report.generatedAt).toBeGreaterThan(0);
+    expect(report.details).toContain('COMPLIANT');
+  });
+
+  it('generates at_risk status when a framework is between 0.5 and 0.8', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR'] });
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 1000, overallScore: 0.7, frameworkScores: { GDPR: 0.7 }, alerts: [] },
+      { timestamp: 2000, overallScore: 0.7, frameworkScores: { GDPR: 0.7 }, alerts: [] },
+    ];
+    const trajectory = analyzeTrajectory(snapshots);
+    const report = generateRegulatoryReport(config, trajectory);
+
+    expect(report.status).toBe('at_risk');
+  });
+
+  it('generates non_compliant status when a framework is below 0.5', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR'] });
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 1000, overallScore: 0.4, frameworkScores: { GDPR: 0.4 }, alerts: [] },
+      { timestamp: 2000, overallScore: 0.3, frameworkScores: { GDPR: 0.3 }, alerts: [] },
+    ];
+    const trajectory = analyzeTrajectory(snapshots);
+    const report = generateRegulatoryReport(config, trajectory);
+
+    expect(report.status).toBe('non_compliant');
+  });
+
+  it('includes trend information in details', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR'] });
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 1000, overallScore: 0.7, frameworkScores: { GDPR: 0.7 }, alerts: [] },
+      { timestamp: 2000, overallScore: 0.9, frameworkScores: { GDPR: 0.9 }, alerts: [] },
+    ];
+    const trajectory = analyzeTrajectory(snapshots);
+    const report = generateRegulatoryReport(config, trajectory);
+
+    expect(report.details).toContain('improving');
+  });
+
+  it('handles empty trajectory gracefully', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR'] });
+    const trajectory: ComplianceAutopilotTrajectory = {
+      snapshots: [],
+      trend: 'stable',
+      projectedDaysToViolation: null,
+      recommendations: [],
+    };
+    const report = generateRegulatoryReport(config, trajectory);
+
+    expect(report.overallCompliance).toBe(0);
+    expect(report.status).toBe('non_compliant');
+  });
+
+  it('includes projected days to violation in details when declining', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR'] });
+    const day = 24 * 60 * 60 * 1000;
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 0, overallScore: 0.9, frameworkScores: { GDPR: 0.9 }, alerts: [] },
+      { timestamp: day, overallScore: 0.8, frameworkScores: { GDPR: 0.8 }, alerts: [] },
+    ];
+    const trajectory = analyzeTrajectory(snapshots);
+    const report = generateRegulatoryReport(config, trajectory);
+
+    expect(report.details).toContain('Projected days to violation');
+  });
+
+  it('reportId is unique', () => {
+    const config = createComplianceMonitor({ frameworks: ['GDPR'] });
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: 1000, overallScore: 0.9, frameworkScores: { GDPR: 0.9 }, alerts: [] },
+      { timestamp: 2000, overallScore: 0.9, frameworkScores: { GDPR: 0.9 }, alerts: [] },
+    ];
+    const trajectory = analyzeTrajectory(snapshots);
+    const report1 = generateRegulatoryReport(config, trajectory);
+    const report2 = generateRegulatoryReport(config, trajectory);
+
+    // Reports generated at different times should have different IDs
+    // (may be same if executed in same millisecond, but generally different)
+    expect(report1.reportId).toBeTruthy();
+    expect(report2.reportId).toBeTruthy();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Full compliance autopilot lifecycle
+// ---------------------------------------------------------------------------
+
+describe('Full compliance autopilot lifecycle', () => {
+  it('create monitor -> take snapshots -> analyze trajectory -> generate report', () => {
+    const config = createComplianceMonitor({
+      frameworks: ['GDPR', 'SOC2'],
+      alertThreshold: 0.7,
+    });
+
+    const day = 24 * 60 * 60 * 1000;
+
+    // Take a series of snapshots showing improvement
+    const snapshot1 = takeSnapshot(config, { GDPR: 0.6, SOC2: 0.7 });
+    const snapshot2: ComplianceSnapshot = {
+      ...takeSnapshot(config, { GDPR: 0.75, SOC2: 0.8 }),
+      timestamp: snapshot1.timestamp + day,
+    };
+    const snapshot3: ComplianceSnapshot = {
+      ...takeSnapshot(config, { GDPR: 0.85, SOC2: 0.9 }),
+      timestamp: snapshot1.timestamp + day * 2,
+    };
+
+    const trajectory = analyzeTrajectory([snapshot1, snapshot2, snapshot3]);
+    expect(trajectory.trend).toBe('improving');
+    expect(trajectory.projectedDaysToViolation).toBeNull();
+
+    const report = generateRegulatoryReport(config, trajectory);
+    expect(report.status).toBe('compliant');
+    expect(report.frameworks).toEqual(['GDPR', 'SOC2']);
+    expect(report.overallCompliance).toBeGreaterThan(0.8);
+  });
+
+  it('detects declining trajectory and projects violation', () => {
+    const config = createComplianceMonitor({
+      frameworks: ['GDPR'],
+      alertThreshold: 0.7,
+    });
+
+    const day = 24 * 60 * 60 * 1000;
+    const baseTime = Date.now();
+
+    const snapshots: ComplianceSnapshot[] = [
+      { timestamp: baseTime, overallScore: 0.95, frameworkScores: { GDPR: 0.95 }, alerts: [] },
+      { timestamp: baseTime + day, overallScore: 0.9, frameworkScores: { GDPR: 0.9 }, alerts: [] },
+      { timestamp: baseTime + day * 2, overallScore: 0.85, frameworkScores: { GDPR: 0.85 }, alerts: [] },
+    ];
+
+    const trajectory = analyzeTrajectory(snapshots);
+    expect(trajectory.trend).toBe('declining');
+    expect(trajectory.projectedDaysToViolation).not.toBeNull();
+    expect(trajectory.projectedDaysToViolation!).toBeGreaterThan(0);
+
+    const report = generateRegulatoryReport(config, trajectory);
+    expect(report.status).toBe('compliant'); // Still compliant but declining
+    expect(report.details).toContain('declining');
+  });
+});

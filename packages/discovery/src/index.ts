@@ -42,3 +42,33 @@ export type { DiscoveryClientOptions } from './client.js';
 // Discovery server
 export { DiscoveryServer } from './server.js';
 export type { DiscoveryServerOptions, RouteHandler } from './server.js';
+
+// Federated discovery protocol
+export {
+  createFederationConfig,
+  addResolver,
+  removeResolver,
+  resolveAgent,
+  selectOptimalResolvers,
+} from './federation.js';
+export type {
+  FederatedResolver,
+  FederationConfig,
+  ResolutionResult,
+} from './federation.js';
+
+// Trust-gated marketplace
+export {
+  createMarketplace,
+  listAgent,
+  searchMarketplace,
+  createTransaction,
+  completeTransaction,
+  disputeTransaction,
+} from './marketplace.js';
+export type {
+  MarketplaceListing,
+  MarketplaceConfig,
+  MarketplaceQuery,
+  MarketplaceTransaction,
+} from './marketplace.js';

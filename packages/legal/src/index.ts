@@ -1807,3 +1807,311 @@ export class RegulatoryImpactAnalyzer {
     };
   }
 }
+
+// ---------------------------------------------------------------------------
+// Compliance Autopilot
+// ---------------------------------------------------------------------------
+
+/** Configuration for continuous compliance monitoring. */
+export interface ComplianceMonitorConfig {
+  frameworks: string[]; // e.g., ['GDPR', 'SOC2', 'EU_AI_ACT']
+  checkIntervalMs: number; // default 3600000 (1 hour)
+  alertThreshold: number; // score below which alerts fire (default 0.7)
+  autoReport: boolean; // generate reports automatically
+  operationalBudget?: number; // total operational budget for cost calculation
+}
+
+/** A point-in-time compliance snapshot. */
+export interface ComplianceSnapshot {
+  timestamp: number;
+  overallScore: number; // 0-1
+  frameworkScores: Record<string, number>;
+  alerts: ComplianceAlert[];
+  costAsPercentOfBudget?: number;
+}
+
+/** An alert raised when compliance scores are below threshold or trending down. */
+export interface ComplianceAlert {
+  framework: string;
+  severity: 'info' | 'warning' | 'critical';
+  message: string;
+  preViolation: boolean; // true if detecting trend toward violation
+  currentScore: number;
+  projectedScore: number; // where score is heading
+}
+
+/** Trajectory analysis across multiple compliance snapshots. */
+export interface ComplianceAutopilotTrajectory {
+  snapshots: ComplianceSnapshot[];
+  trend: 'improving' | 'stable' | 'declining';
+  projectedDaysToViolation: number | null; // null if not declining
+  recommendations: string[];
+}
+
+/**
+ * Create a compliance monitor configuration with sensible defaults.
+ *
+ * @param config - Partial configuration to override defaults.
+ * @returns A full ComplianceMonitorConfig with defaults applied.
+ */
+export function createComplianceMonitor(
+  config: Partial<ComplianceMonitorConfig>,
+): ComplianceMonitorConfig {
+  return {
+    frameworks: config.frameworks ?? ['GDPR'],
+    checkIntervalMs: config.checkIntervalMs ?? 3600000,
+    alertThreshold: config.alertThreshold ?? 0.7,
+    autoReport: config.autoReport ?? true,
+    operationalBudget: config.operationalBudget,
+  };
+}
+
+/**
+ * Take a compliance snapshot given current framework scores.
+ *
+ * Generates alerts for any framework below the alert threshold.
+ * Pre-violation alerts are generated when a score is above the threshold
+ * but close to it (within 0.1).
+ *
+ * @param config - The compliance monitor configuration.
+ * @param currentScores - Current compliance scores per framework.
+ * @returns A compliance snapshot with alerts.
+ */
+export function takeSnapshot(
+  config: ComplianceMonitorConfig,
+  currentScores: Record<string, number>,
+): ComplianceSnapshot {
+  const timestamp = Date.now();
+  const frameworkScores: Record<string, number> = {};
+  const alerts: ComplianceAlert[] = [];
+
+  let scoreSum = 0;
+  let scoreCount = 0;
+
+  for (const framework of config.frameworks) {
+    const score = currentScores[framework] ?? 0;
+    frameworkScores[framework] = score;
+    scoreSum += score;
+    scoreCount++;
+
+    if (score < config.alertThreshold) {
+      // Below threshold: actual violation alert
+      const severity: ComplianceAlert['severity'] = score < 0.5 ? 'critical' : 'warning';
+      alerts.push({
+        framework,
+        severity,
+        message: `${framework} compliance score ${score.toFixed(2)} is below threshold ${config.alertThreshold}`,
+        preViolation: false,
+        currentScore: score,
+        projectedScore: score,
+      });
+    } else if (score < config.alertThreshold + 0.1) {
+      // Above threshold but close: pre-violation alert
+      alerts.push({
+        framework,
+        severity: 'info',
+        message: `${framework} compliance score ${score.toFixed(2)} is approaching threshold ${config.alertThreshold}`,
+        preViolation: true,
+        currentScore: score,
+        projectedScore: score - 0.05, // projected slight decline
+      });
+    }
+  }
+
+  const overallScore = scoreCount > 0 ? scoreSum / scoreCount : 0;
+
+  const snapshot: ComplianceSnapshot = {
+    timestamp,
+    overallScore,
+    frameworkScores,
+    alerts,
+  };
+
+  if (config.operationalBudget !== undefined && config.operationalBudget > 0) {
+    // Estimate compliance cost as a function of the number of frameworks
+    // and the alert count (more alerts = more remediation cost)
+    const baseCost = config.frameworks.length * 1000;
+    const alertCost = alerts.length * 500;
+    const totalCost = baseCost + alertCost;
+    snapshot.costAsPercentOfBudget = (totalCost / config.operationalBudget) * 100;
+  }
+
+  return snapshot;
+}
+
+/**
+ * Analyze trajectory across multiple compliance snapshots.
+ *
+ * Requires at least 2 snapshots. Determines trend by comparing
+ * the last overall score to the first. Projects days to violation
+ * if the trend is declining.
+ *
+ * @param snapshots - Array of compliance snapshots (must have at least 2).
+ * @returns Trajectory analysis with trend, projection, and recommendations.
+ */
+export function analyzeTrajectory(
+  snapshots: ComplianceSnapshot[],
+): ComplianceAutopilotTrajectory {
+  if (snapshots.length < 2) {
+    return {
+      snapshots,
+      trend: 'stable',
+      projectedDaysToViolation: null,
+      recommendations: ['Collect more compliance snapshots for meaningful trajectory analysis'],
+    };
+  }
+
+  // Sort by timestamp ascending
+  const sorted = [...snapshots].sort((a, b) => a.timestamp - b.timestamp);
+  const first = sorted[0]!;
+  const last = sorted[sorted.length - 1]!;
+
+  const scoreDelta = last.overallScore - first.overallScore;
+
+  let trend: ComplianceAutopilotTrajectory['trend'];
+  if (scoreDelta > 0.05) {
+    trend = 'improving';
+  } else if (scoreDelta < -0.05) {
+    trend = 'declining';
+  } else {
+    trend = 'stable';
+  }
+
+  let projectedDaysToViolation: number | null = null;
+
+  if (trend === 'declining') {
+    // Linear extrapolation: how many days until score reaches 0.7 (default threshold)
+    const timeSpanMs = last.timestamp - first.timestamp;
+    const timeSpanDays = timeSpanMs / (1000 * 60 * 60 * 24);
+
+    if (timeSpanDays > 0 && scoreDelta < 0) {
+      const dailyDecline = Math.abs(scoreDelta) / timeSpanDays;
+      // Assume threshold is 0.7
+      const threshold = 0.7;
+      if (last.overallScore > threshold) {
+        const remainingBuffer = last.overallScore - threshold;
+        projectedDaysToViolation = Math.round(remainingBuffer / dailyDecline);
+      } else {
+        // Already below threshold
+        projectedDaysToViolation = 0;
+      }
+    }
+  }
+
+  // Generate recommendations based on weakest frameworks
+  const recommendations: string[] = [];
+
+  // Collect all framework scores from the latest snapshot
+  const latestScores = last.frameworkScores;
+  const sortedFrameworks = Object.entries(latestScores)
+    .sort(([, a], [, b]) => a - b);
+
+  if (sortedFrameworks.length > 0) {
+    const [weakest, weakestScore] = sortedFrameworks[0]!;
+    if (weakestScore < 0.7) {
+      recommendations.push(`Prioritize ${weakest} compliance improvement (current score: ${weakestScore.toFixed(2)})`);
+    }
+    if (weakestScore < 0.5) {
+      recommendations.push(`Critical: ${weakest} requires immediate remediation`);
+    }
+  }
+
+  if (trend === 'declining') {
+    recommendations.push('Compliance trend is declining. Review recent changes and remediate gaps.');
+    if (projectedDaysToViolation !== null && projectedDaysToViolation < 30) {
+      recommendations.push(`Warning: projected violation within ${projectedDaysToViolation} days`);
+    }
+  }
+
+  if (trend === 'stable' && recommendations.length === 0) {
+    recommendations.push('Compliance is stable. Continue monitoring for changes.');
+  }
+
+  if (trend === 'improving' && recommendations.length === 0) {
+    recommendations.push('Compliance is improving. Maintain current practices.');
+  }
+
+  return {
+    snapshots: sorted,
+    trend,
+    projectedDaysToViolation,
+    recommendations,
+  };
+}
+
+/**
+ * Generate a regulatory report from compliance trajectory data.
+ *
+ * @param config - The compliance monitor configuration.
+ * @param trajectory - The trajectory analysis to report on.
+ * @returns A regulatory report with compliance status and details.
+ */
+export function generateRegulatoryReport(
+  config: ComplianceMonitorConfig,
+  trajectory: ComplianceAutopilotTrajectory,
+): {
+  reportId: string;
+  generatedAt: number;
+  frameworks: string[];
+  overallCompliance: number;
+  status: 'compliant' | 'at_risk' | 'non_compliant';
+  details: string;
+} {
+  const now = Date.now();
+
+  // Use the latest snapshot for current state
+  const latestSnapshot = trajectory.snapshots.length > 0
+    ? trajectory.snapshots[trajectory.snapshots.length - 1]!
+    : null;
+
+  const overallCompliance = latestSnapshot?.overallScore ?? 0;
+  const frameworkScores = latestSnapshot?.frameworkScores ?? {};
+
+  // Determine status based on individual framework scores
+  let status: 'compliant' | 'at_risk' | 'non_compliant' = 'compliant';
+
+  for (const framework of config.frameworks) {
+    const score = frameworkScores[framework] ?? 0;
+    if (score < 0.5) {
+      status = 'non_compliant';
+      break;
+    }
+    if (score < 0.8) {
+      status = 'at_risk';
+    }
+  }
+
+  // Build details string
+  const detailLines: string[] = [];
+  detailLines.push(`Regulatory Compliance Report`);
+  detailLines.push(`Generated: ${new Date(now).toISOString()}`);
+  detailLines.push(`Frameworks: ${config.frameworks.join(', ')}`);
+  detailLines.push(`Overall Compliance: ${(overallCompliance * 100).toFixed(1)}%`);
+  detailLines.push(`Status: ${status.toUpperCase()}`);
+  detailLines.push(`Trend: ${trajectory.trend}`);
+
+  if (trajectory.projectedDaysToViolation !== null) {
+    detailLines.push(`Projected days to violation: ${trajectory.projectedDaysToViolation}`);
+  }
+
+  for (const framework of config.frameworks) {
+    const score = frameworkScores[framework] ?? 0;
+    detailLines.push(`  ${framework}: ${(score * 100).toFixed(1)}%`);
+  }
+
+  if (trajectory.recommendations.length > 0) {
+    detailLines.push(`Recommendations:`);
+    for (const rec of trajectory.recommendations) {
+      detailLines.push(`  - ${rec}`);
+    }
+  }
+
+  return {
+    reportId: `report-${now}`,
+    generatedAt: now,
+    frameworks: config.frameworks,
+    overallCompliance,
+    status,
+    details: detailLines.join('\n'),
+  };
+}

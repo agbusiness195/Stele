@@ -17,11 +17,28 @@ import {
   createEndorsement,
   verifyEndorsement,
   DEFAULT_SCORING_CONFIG,
+  createResourcePool,
+  allocateTrust,
+  releaseTrust,
+  slashStake,
+  collateralizationRatio,
+  computeProfile,
+  compareProfiles,
+  STAKE_TIERS,
+  assignTier,
+  createStakedAgent,
+  recordQuery,
+  computeGovernanceVote,
 } from './index.js';
 import type {
   ExecutionReceipt,
   ReputationScore,
   Endorsement,
+  ResourcePool,
+  SlashingEvent,
+  MultidimensionalProfile,
+  StakeTier,
+  StakedAgent,
 } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -1794,5 +1811,822 @@ describe('createEndorsement / verifyEndorsement - extended', () => {
     );
     expect(e.scopes).toEqual(['compute', 'storage', 'network', 'data']);
     expect(await verifyEndorsement(e)).toBe(true);
+  });
+});
+
+// ===========================================================================
+// Item 30: Trust as Bounded Resource
+// ===========================================================================
+
+describe('createResourcePool', () => {
+  it('creates a pool with full available trust', () => {
+    const pool = createResourcePool(1000);
+    expect(pool.totalCollateral).toBe(1000);
+    expect(pool.allocatedTrust).toBe(0);
+    expect(pool.availableTrust).toBe(1000);
+    expect(pool.utilizationRatio).toBe(0);
+    expect(pool.participants.size).toBe(0);
+  });
+
+  it('creates a pool with zero collateral', () => {
+    const pool = createResourcePool(0);
+    expect(pool.totalCollateral).toBe(0);
+    expect(pool.availableTrust).toBe(0);
+    expect(pool.utilizationRatio).toBe(0);
+  });
+});
+
+describe('allocateTrust', () => {
+  it('allocates trust when amount is within available', () => {
+    const pool = createResourcePool(1000);
+    const result = allocateTrust(pool, 'agent-1', 200);
+    expect(result.allocated).toBe(true);
+    expect(result.reason).toBe('Allocation successful');
+    expect(result.pool.allocatedTrust).toBe(200);
+    expect(result.pool.availableTrust).toBe(800);
+    expect(result.pool.utilizationRatio).toBeCloseTo(0.2);
+    expect(result.pool.participants.get('agent-1')).toBe(200);
+  });
+
+  it('rejects allocation when amount exceeds available trust', () => {
+    const pool = createResourcePool(100);
+    const result = allocateTrust(pool, 'agent-1', 150);
+    expect(result.allocated).toBe(false);
+    expect(result.reason).toContain('exceeds available trust');
+    expect(result.pool.allocatedTrust).toBe(0);
+    expect(result.pool.availableTrust).toBe(100);
+  });
+
+  it('rejects zero and negative amounts', () => {
+    const pool = createResourcePool(1000);
+    const r1 = allocateTrust(pool, 'agent-1', 0);
+    expect(r1.allocated).toBe(false);
+    const r2 = allocateTrust(pool, 'agent-1', -10);
+    expect(r2.allocated).toBe(false);
+  });
+
+  it('allocates to multiple agents', () => {
+    let pool = createResourcePool(1000);
+    const r1 = allocateTrust(pool, 'agent-1', 300);
+    expect(r1.allocated).toBe(true);
+    pool = r1.pool;
+
+    const r2 = allocateTrust(pool, 'agent-2', 400);
+    expect(r2.allocated).toBe(true);
+    pool = r2.pool;
+
+    expect(pool.allocatedTrust).toBe(700);
+    expect(pool.availableTrust).toBe(300);
+    expect(pool.participants.get('agent-1')).toBe(300);
+    expect(pool.participants.get('agent-2')).toBe(400);
+    expect(pool.utilizationRatio).toBeCloseTo(0.7);
+  });
+
+  it('allocates exact remaining amount (fully utilized pool)', () => {
+    let pool = createResourcePool(500);
+    const r1 = allocateTrust(pool, 'agent-1', 500);
+    expect(r1.allocated).toBe(true);
+    pool = r1.pool;
+
+    expect(pool.availableTrust).toBe(0);
+    expect(pool.utilizationRatio).toBeCloseTo(1.0);
+
+    // No more room
+    const r2 = allocateTrust(pool, 'agent-2', 1);
+    expect(r2.allocated).toBe(false);
+  });
+
+  it('accumulates trust for the same agent across multiple allocations', () => {
+    let pool = createResourcePool(1000);
+    const r1 = allocateTrust(pool, 'agent-1', 100);
+    pool = r1.pool;
+    const r2 = allocateTrust(pool, 'agent-1', 200);
+    pool = r2.pool;
+
+    expect(pool.participants.get('agent-1')).toBe(300);
+    expect(pool.allocatedTrust).toBe(300);
+  });
+});
+
+describe('releaseTrust', () => {
+  it('releases trust back to the pool', () => {
+    let pool = createResourcePool(1000);
+    const { pool: p1 } = allocateTrust(pool, 'agent-1', 400);
+    pool = p1;
+
+    pool = releaseTrust(pool, 'agent-1', 150);
+    expect(pool.allocatedTrust).toBe(250);
+    expect(pool.availableTrust).toBe(750);
+    expect(pool.participants.get('agent-1')).toBe(250);
+  });
+
+  it('removes participant when fully released', () => {
+    let pool = createResourcePool(1000);
+    const { pool: p1 } = allocateTrust(pool, 'agent-1', 300);
+    pool = p1;
+
+    pool = releaseTrust(pool, 'agent-1', 300);
+    expect(pool.participants.has('agent-1')).toBe(false);
+    expect(pool.allocatedTrust).toBe(0);
+    expect(pool.availableTrust).toBe(1000);
+  });
+
+  it('caps release at existing allocation', () => {
+    let pool = createResourcePool(1000);
+    const { pool: p1 } = allocateTrust(pool, 'agent-1', 200);
+    pool = p1;
+
+    pool = releaseTrust(pool, 'agent-1', 500); // More than allocated
+    expect(pool.participants.has('agent-1')).toBe(false);
+    expect(pool.allocatedTrust).toBe(0);
+    expect(pool.availableTrust).toBe(1000);
+  });
+
+  it('handles releasing from nonexistent agent gracefully', () => {
+    const pool = createResourcePool(1000);
+    const result = releaseTrust(pool, 'nonexistent', 100);
+    expect(result.allocatedTrust).toBe(0);
+    expect(result.availableTrust).toBe(1000);
+  });
+});
+
+describe('slashStake', () => {
+  it('destroys collateral on non-redistributed slash', () => {
+    let pool = createResourcePool(1000);
+    const { pool: p1 } = allocateTrust(pool, 'agent-1', 500);
+    pool = p1;
+
+    const event: SlashingEvent = {
+      agentId: 'agent-1',
+      amount: 200,
+      reason: 'breach',
+      timestamp: Date.now(),
+      redistributed: false,
+    };
+
+    pool = slashStake(pool, event);
+    expect(pool.totalCollateral).toBe(800); // 1000 - 200
+    expect(pool.allocatedTrust).toBe(300); // 500 - 200
+    expect(pool.availableTrust).toBe(500); // unchanged
+    expect(pool.participants.get('agent-1')).toBe(300);
+  });
+
+  it('redistributes slashed amount when redistributed is true', () => {
+    let pool = createResourcePool(1000);
+    const { pool: p1 } = allocateTrust(pool, 'agent-1', 500);
+    pool = p1;
+
+    const event: SlashingEvent = {
+      agentId: 'agent-1',
+      amount: 200,
+      reason: 'minor violation',
+      timestamp: Date.now(),
+      redistributed: true,
+    };
+
+    pool = slashStake(pool, event);
+    expect(pool.totalCollateral).toBe(1000); // unchanged
+    expect(pool.allocatedTrust).toBe(300); // 500 - 200
+    expect(pool.availableTrust).toBe(700); // 500 + 200
+    expect(pool.participants.get('agent-1')).toBe(300);
+  });
+
+  it('caps slash amount at agent allocation', () => {
+    let pool = createResourcePool(1000);
+    const { pool: p1 } = allocateTrust(pool, 'agent-1', 100);
+    pool = p1;
+
+    const event: SlashingEvent = {
+      agentId: 'agent-1',
+      amount: 500, // More than allocated
+      reason: 'severe breach',
+      timestamp: Date.now(),
+      redistributed: false,
+    };
+
+    pool = slashStake(pool, event);
+    expect(pool.totalCollateral).toBe(900); // 1000 - 100 (capped)
+    expect(pool.allocatedTrust).toBe(0);
+    expect(pool.participants.has('agent-1')).toBe(false);
+  });
+
+  it('removes agent when fully slashed', () => {
+    let pool = createResourcePool(1000);
+    const { pool: p1 } = allocateTrust(pool, 'agent-1', 300);
+    pool = p1;
+
+    const event: SlashingEvent = {
+      agentId: 'agent-1',
+      amount: 300,
+      reason: 'full slash',
+      timestamp: Date.now(),
+      redistributed: false,
+    };
+
+    pool = slashStake(pool, event);
+    expect(pool.participants.has('agent-1')).toBe(false);
+  });
+});
+
+describe('collateralizationRatio', () => {
+  it('returns 0 for empty pool', () => {
+    const pool = createResourcePool(1000);
+    expect(collateralizationRatio(pool)).toBe(0);
+  });
+
+  it('returns correct ratio after allocation', () => {
+    const pool = createResourcePool(1000);
+    const { pool: p1 } = allocateTrust(pool, 'agent-1', 250);
+    expect(collateralizationRatio(p1)).toBeCloseTo(0.25);
+  });
+
+  it('returns 1.0 for fully allocated pool', () => {
+    const pool = createResourcePool(500);
+    const { pool: p1 } = allocateTrust(pool, 'agent-1', 500);
+    expect(collateralizationRatio(p1)).toBeCloseTo(1.0);
+  });
+
+  it('never exceeds 1.0', () => {
+    const pool = createResourcePool(100);
+    const { pool: p1 } = allocateTrust(pool, 'agent-1', 100);
+    expect(collateralizationRatio(p1)).toBeLessThanOrEqual(1.0);
+  });
+
+  it('returns 0 for zero collateral pool', () => {
+    const pool = createResourcePool(0);
+    expect(collateralizationRatio(pool)).toBe(0);
+  });
+});
+
+describe('resource pool - integrated flow', () => {
+  it('allocate, partially release, slash, verify invariants', () => {
+    let pool = createResourcePool(1000);
+
+    // Allocate to two agents
+    const r1 = allocateTrust(pool, 'agent-1', 300);
+    pool = r1.pool;
+    const r2 = allocateTrust(pool, 'agent-2', 400);
+    pool = r2.pool;
+
+    expect(pool.allocatedTrust).toBe(700);
+    expect(pool.availableTrust).toBe(300);
+
+    // Release some from agent-1
+    pool = releaseTrust(pool, 'agent-1', 100);
+    expect(pool.allocatedTrust).toBe(600);
+    expect(pool.availableTrust).toBe(400);
+
+    // Slash agent-2 (destroyed)
+    pool = slashStake(pool, {
+      agentId: 'agent-2',
+      amount: 150,
+      reason: 'breach',
+      timestamp: Date.now(),
+      redistributed: false,
+    });
+
+    expect(pool.totalCollateral).toBe(850);
+    expect(pool.allocatedTrust).toBe(450);
+    expect(pool.availableTrust).toBe(400);
+    expect(collateralizationRatio(pool)).toBeCloseTo(450 / 850);
+
+    // Collateralization ratio must not exceed 1
+    expect(collateralizationRatio(pool)).toBeLessThanOrEqual(1.0);
+  });
+});
+
+// ===========================================================================
+// Item 46: Multidimensional Trust Profile (Anti-Gaming)
+// ===========================================================================
+
+describe('computeProfile', () => {
+  it('computes a profile with default equal weights', () => {
+    const profile = computeProfile({
+      agentId: 'agent-1',
+      hardEnforcement: 0.8,
+      attestationCoverage: 0.7,
+      covenantBreadth: 0.6,
+      historyDepth: 0.9,
+      stakeRatio: 0.5,
+    });
+
+    expect(profile.agentId).toBe('agent-1');
+    expect(profile.dimensions.hardEnforcement.score).toBe(0.8);
+    expect(profile.dimensions.attestationCoverage.score).toBe(0.7);
+    expect(profile.dimensions.covenantBreadth.score).toBe(0.6);
+    expect(profile.dimensions.historyDepth.score).toBe(0.9);
+    expect(profile.dimensions.stakeRatio.score).toBe(0.5);
+
+    // All default weights should be 0.2
+    expect(profile.dimensions.hardEnforcement.weight).toBe(0.2);
+    expect(profile.dimensions.attestationCoverage.weight).toBe(0.2);
+
+    // Evidence defaults to 1
+    expect(profile.dimensions.hardEnforcement.evidence).toBe(1);
+
+    // Composite score should be the geometric mean
+    expect(profile.compositeScore).toBeGreaterThan(0);
+    expect(profile.compositeScore).toBeLessThanOrEqual(1);
+
+    // Gaming resistance
+    expect(profile.gamingResistance).toBeGreaterThanOrEqual(0);
+    expect(profile.gamingResistance).toBeLessThanOrEqual(1);
+  });
+
+  it('perfectly balanced profile has maximum gaming resistance', () => {
+    const profile = computeProfile({
+      agentId: 'agent-1',
+      hardEnforcement: 0.7,
+      attestationCoverage: 0.7,
+      covenantBreadth: 0.7,
+      historyDepth: 0.7,
+      stakeRatio: 0.7,
+    });
+
+    // gamingResistance = 1 - max + min = 1 - 0.7 + 0.7 = 1.0
+    expect(profile.gamingResistance).toBeCloseTo(1.0);
+  });
+
+  it('maximally unbalanced profile has low gaming resistance', () => {
+    const profile = computeProfile({
+      agentId: 'agent-1',
+      hardEnforcement: 1.0,
+      attestationCoverage: 0.0,
+      covenantBreadth: 0.0,
+      historyDepth: 0.0,
+      stakeRatio: 0.0,
+    });
+
+    // gamingResistance = 1 - 1.0 + 0.0 = 0.0
+    expect(profile.gamingResistance).toBeCloseTo(0.0);
+  });
+
+  it('composite score uses geometric mean (penalises zero dimensions)', () => {
+    const balanced = computeProfile({
+      agentId: 'agent-1',
+      hardEnforcement: 0.5,
+      attestationCoverage: 0.5,
+      covenantBreadth: 0.5,
+      historyDepth: 0.5,
+      stakeRatio: 0.5,
+    });
+
+    const oneZero = computeProfile({
+      agentId: 'agent-2',
+      hardEnforcement: 1.0,
+      attestationCoverage: 1.0,
+      covenantBreadth: 1.0,
+      historyDepth: 1.0,
+      stakeRatio: 0.0,
+    });
+
+    // Even though oneZero has higher average, the geometric mean punishes the zero
+    expect(oneZero.compositeScore).toBeLessThan(balanced.compositeScore);
+  });
+
+  it('all-ones profile has composite score of 1.0', () => {
+    const profile = computeProfile({
+      agentId: 'agent-1',
+      hardEnforcement: 1.0,
+      attestationCoverage: 1.0,
+      covenantBreadth: 1.0,
+      historyDepth: 1.0,
+      stakeRatio: 1.0,
+    });
+
+    expect(profile.compositeScore).toBeCloseTo(1.0);
+  });
+
+  it('clamps input scores to [0, 1]', () => {
+    const profile = computeProfile({
+      agentId: 'agent-1',
+      hardEnforcement: 1.5,
+      attestationCoverage: -0.2,
+      covenantBreadth: 0.5,
+      historyDepth: 0.5,
+      stakeRatio: 0.5,
+    });
+
+    expect(profile.dimensions.hardEnforcement.score).toBe(1.0);
+    expect(profile.dimensions.attestationCoverage.score).toBe(0.0);
+  });
+
+  it('accepts custom weights', () => {
+    const profile = computeProfile({
+      agentId: 'agent-1',
+      hardEnforcement: 0.9,
+      attestationCoverage: 0.1,
+      covenantBreadth: 0.5,
+      historyDepth: 0.5,
+      stakeRatio: 0.5,
+      weights: {
+        hardEnforcement: 0.5,
+        attestationCoverage: 0.1,
+      },
+    });
+
+    expect(profile.dimensions.hardEnforcement.weight).toBe(0.5);
+    expect(profile.dimensions.attestationCoverage.weight).toBe(0.1);
+    // Others keep defaults
+    expect(profile.dimensions.covenantBreadth.weight).toBe(0.2);
+  });
+
+  it('dimension names are set correctly', () => {
+    const profile = computeProfile({
+      agentId: 'agent-1',
+      hardEnforcement: 0.5,
+      attestationCoverage: 0.5,
+      covenantBreadth: 0.5,
+      historyDepth: 0.5,
+      stakeRatio: 0.5,
+    });
+
+    expect(profile.dimensions.hardEnforcement.name).toBe('hardEnforcement');
+    expect(profile.dimensions.attestationCoverage.name).toBe('attestationCoverage');
+    expect(profile.dimensions.covenantBreadth.name).toBe('covenantBreadth');
+    expect(profile.dimensions.historyDepth.name).toBe('historyDepth');
+    expect(profile.dimensions.stakeRatio.name).toBe('stakeRatio');
+  });
+});
+
+describe('compareProfiles', () => {
+  it('detects domination by profile a', () => {
+    const a = computeProfile({
+      agentId: 'a',
+      hardEnforcement: 0.9,
+      attestationCoverage: 0.8,
+      covenantBreadth: 0.7,
+      historyDepth: 0.9,
+      stakeRatio: 0.6,
+    });
+    const b = computeProfile({
+      agentId: 'b',
+      hardEnforcement: 0.5,
+      attestationCoverage: 0.4,
+      covenantBreadth: 0.3,
+      historyDepth: 0.5,
+      stakeRatio: 0.2,
+    });
+
+    const result = compareProfiles(a, b);
+    expect(result.dominates).toBe('a');
+    expect(result.strongerDimensions.hardEnforcement).toBe('a');
+    expect(result.strongerDimensions.stakeRatio).toBe('a');
+  });
+
+  it('detects domination by profile b', () => {
+    const a = computeProfile({
+      agentId: 'a',
+      hardEnforcement: 0.2,
+      attestationCoverage: 0.3,
+      covenantBreadth: 0.1,
+      historyDepth: 0.2,
+      stakeRatio: 0.1,
+    });
+    const b = computeProfile({
+      agentId: 'b',
+      hardEnforcement: 0.8,
+      attestationCoverage: 0.9,
+      covenantBreadth: 0.7,
+      historyDepth: 0.8,
+      stakeRatio: 0.6,
+    });
+
+    const result = compareProfiles(a, b);
+    expect(result.dominates).toBe('b');
+  });
+
+  it('returns neither when profiles trade off', () => {
+    const a = computeProfile({
+      agentId: 'a',
+      hardEnforcement: 0.9,
+      attestationCoverage: 0.2,
+      covenantBreadth: 0.5,
+      historyDepth: 0.5,
+      stakeRatio: 0.5,
+    });
+    const b = computeProfile({
+      agentId: 'b',
+      hardEnforcement: 0.3,
+      attestationCoverage: 0.8,
+      covenantBreadth: 0.5,
+      historyDepth: 0.5,
+      stakeRatio: 0.5,
+    });
+
+    const result = compareProfiles(a, b);
+    expect(result.dominates).toBe('neither');
+    expect(result.strongerDimensions.hardEnforcement).toBe('a');
+    expect(result.strongerDimensions.attestationCoverage).toBe('b');
+    expect(result.strongerDimensions.covenantBreadth).toBe('tie');
+  });
+
+  it('returns neither when profiles are identical', () => {
+    const a = computeProfile({
+      agentId: 'a',
+      hardEnforcement: 0.5,
+      attestationCoverage: 0.5,
+      covenantBreadth: 0.5,
+      historyDepth: 0.5,
+      stakeRatio: 0.5,
+    });
+    const b = computeProfile({
+      agentId: 'b',
+      hardEnforcement: 0.5,
+      attestationCoverage: 0.5,
+      covenantBreadth: 0.5,
+      historyDepth: 0.5,
+      stakeRatio: 0.5,
+    });
+
+    const result = compareProfiles(a, b);
+    expect(result.dominates).toBe('neither');
+    expect(result.strongerDimensions.hardEnforcement).toBe('tie');
+  });
+
+  it('correctly identifies per-dimension strengths', () => {
+    const a = computeProfile({
+      agentId: 'a',
+      hardEnforcement: 0.9,
+      attestationCoverage: 0.3,
+      covenantBreadth: 0.5,
+      historyDepth: 0.7,
+      stakeRatio: 0.1,
+    });
+    const b = computeProfile({
+      agentId: 'b',
+      hardEnforcement: 0.3,
+      attestationCoverage: 0.9,
+      covenantBreadth: 0.5,
+      historyDepth: 0.2,
+      stakeRatio: 0.8,
+    });
+
+    const result = compareProfiles(a, b);
+    expect(result.strongerDimensions.hardEnforcement).toBe('a');
+    expect(result.strongerDimensions.attestationCoverage).toBe('b');
+    expect(result.strongerDimensions.covenantBreadth).toBe('tie');
+    expect(result.strongerDimensions.historyDepth).toBe('a');
+    expect(result.strongerDimensions.stakeRatio).toBe('b');
+  });
+});
+
+describe('multidimensional profile - gaming resistance scenarios', () => {
+  it('specialist agent has lower gaming resistance than generalist', () => {
+    const specialist = computeProfile({
+      agentId: 'specialist',
+      hardEnforcement: 1.0,
+      attestationCoverage: 0.1,
+      covenantBreadth: 0.1,
+      historyDepth: 0.1,
+      stakeRatio: 0.1,
+    });
+
+    const generalist = computeProfile({
+      agentId: 'generalist',
+      hardEnforcement: 0.5,
+      attestationCoverage: 0.5,
+      covenantBreadth: 0.5,
+      historyDepth: 0.5,
+      stakeRatio: 0.5,
+    });
+
+    expect(specialist.gamingResistance).toBeLessThan(generalist.gamingResistance);
+  });
+
+  it('partially balanced agent has moderate gaming resistance', () => {
+    const partial = computeProfile({
+      agentId: 'partial',
+      hardEnforcement: 0.8,
+      attestationCoverage: 0.6,
+      covenantBreadth: 0.7,
+      historyDepth: 0.5,
+      stakeRatio: 0.6,
+    });
+
+    // gamingResistance = 1 - 0.8 + 0.5 = 0.7
+    expect(partial.gamingResistance).toBeCloseTo(0.7);
+    expect(partial.gamingResistance).toBeGreaterThan(0);
+    expect(partial.gamingResistance).toBeLessThan(1);
+  });
+});
+
+// ===========================================================================
+// Item 75: Productive Staking Tiers
+// ===========================================================================
+
+describe('STAKE_TIERS', () => {
+  it('has correct configuration for each tier', () => {
+    expect(STAKE_TIERS.basic.minimumStake).toBe(1);
+    expect(STAKE_TIERS.basic.verificationIncomeRate).toBe(0.0001);
+    expect(STAKE_TIERS.basic.marketplaceRankBoost).toBe(1.0);
+    expect(STAKE_TIERS.basic.governanceWeight).toBe(1);
+    expect(STAKE_TIERS.basic.maxDelegations).toBe(5);
+
+    expect(STAKE_TIERS.verified.minimumStake).toBe(10);
+    expect(STAKE_TIERS.verified.verificationIncomeRate).toBe(0.0002);
+    expect(STAKE_TIERS.verified.marketplaceRankBoost).toBe(1.5);
+    expect(STAKE_TIERS.verified.governanceWeight).toBe(2);
+    expect(STAKE_TIERS.verified.maxDelegations).toBe(20);
+
+    expect(STAKE_TIERS.certified.minimumStake).toBe(100);
+    expect(STAKE_TIERS.certified.verificationIncomeRate).toBe(0.0005);
+    expect(STAKE_TIERS.certified.marketplaceRankBoost).toBe(3.0);
+    expect(STAKE_TIERS.certified.governanceWeight).toBe(5);
+    expect(STAKE_TIERS.certified.maxDelegations).toBe(100);
+
+    expect(STAKE_TIERS.institutional.minimumStake).toBe(1000);
+    expect(STAKE_TIERS.institutional.verificationIncomeRate).toBe(0.001);
+    expect(STAKE_TIERS.institutional.marketplaceRankBoost).toBe(10.0);
+    expect(STAKE_TIERS.institutional.governanceWeight).toBe(20);
+    expect(STAKE_TIERS.institutional.maxDelegations).toBe(1000);
+  });
+
+  it('tiers are ordered by minimum stake', () => {
+    expect(STAKE_TIERS.basic.minimumStake).toBeLessThan(STAKE_TIERS.verified.minimumStake);
+    expect(STAKE_TIERS.verified.minimumStake).toBeLessThan(STAKE_TIERS.certified.minimumStake);
+    expect(STAKE_TIERS.certified.minimumStake).toBeLessThan(STAKE_TIERS.institutional.minimumStake);
+  });
+
+  it('higher tiers have better income rates', () => {
+    expect(STAKE_TIERS.basic.verificationIncomeRate).toBeLessThan(STAKE_TIERS.verified.verificationIncomeRate);
+    expect(STAKE_TIERS.verified.verificationIncomeRate).toBeLessThan(STAKE_TIERS.certified.verificationIncomeRate);
+    expect(STAKE_TIERS.certified.verificationIncomeRate).toBeLessThan(STAKE_TIERS.institutional.verificationIncomeRate);
+  });
+
+  it('higher tiers have higher governance weights', () => {
+    expect(STAKE_TIERS.basic.governanceWeight).toBeLessThan(STAKE_TIERS.verified.governanceWeight);
+    expect(STAKE_TIERS.verified.governanceWeight).toBeLessThan(STAKE_TIERS.certified.governanceWeight);
+    expect(STAKE_TIERS.certified.governanceWeight).toBeLessThan(STAKE_TIERS.institutional.governanceWeight);
+  });
+});
+
+describe('assignTier', () => {
+  it('assigns basic tier for amounts below 10', () => {
+    expect(assignTier(1)).toBe('basic');
+    expect(assignTier(5)).toBe('basic');
+    expect(assignTier(9.99)).toBe('basic');
+  });
+
+  it('assigns verified tier for amounts >= 10 and < 100', () => {
+    expect(assignTier(10)).toBe('verified');
+    expect(assignTier(50)).toBe('verified');
+    expect(assignTier(99)).toBe('verified');
+  });
+
+  it('assigns certified tier for amounts >= 100 and < 1000', () => {
+    expect(assignTier(100)).toBe('certified');
+    expect(assignTier(500)).toBe('certified');
+    expect(assignTier(999)).toBe('certified');
+  });
+
+  it('assigns institutional tier for amounts >= 1000', () => {
+    expect(assignTier(1000)).toBe('institutional');
+    expect(assignTier(5000)).toBe('institutional');
+    expect(assignTier(1000000)).toBe('institutional');
+  });
+
+  it('assigns basic for amounts below minimum basic stake', () => {
+    expect(assignTier(0)).toBe('basic');
+    expect(assignTier(0.5)).toBe('basic');
+  });
+});
+
+describe('createStakedAgent', () => {
+  it('creates a basic agent', () => {
+    const agent = createStakedAgent('agent-1', 5);
+    expect(agent.agentId).toBe('agent-1');
+    expect(agent.tier).toBe('basic');
+    expect(agent.stakedAmount).toBe(5);
+    expect(agent.earnedIncome).toBe(0);
+    expect(agent.queriesServed).toBe(0);
+    expect(agent.config.tier).toBe('basic');
+    expect(agent.config.verificationIncomeRate).toBe(0.0001);
+  });
+
+  it('creates a verified agent', () => {
+    const agent = createStakedAgent('agent-2', 50);
+    expect(agent.tier).toBe('verified');
+    expect(agent.config.governanceWeight).toBe(2);
+    expect(agent.config.maxDelegations).toBe(20);
+  });
+
+  it('creates a certified agent', () => {
+    const agent = createStakedAgent('agent-3', 200);
+    expect(agent.tier).toBe('certified');
+    expect(agent.config.marketplaceRankBoost).toBe(3.0);
+  });
+
+  it('creates an institutional agent', () => {
+    const agent = createStakedAgent('agent-4', 5000);
+    expect(agent.tier).toBe('institutional');
+    expect(agent.config.governanceWeight).toBe(20);
+    expect(agent.config.maxDelegations).toBe(1000);
+  });
+
+  it('creates agent at exact tier boundaries', () => {
+    expect(createStakedAgent('a', 1).tier).toBe('basic');
+    expect(createStakedAgent('b', 10).tier).toBe('verified');
+    expect(createStakedAgent('c', 100).tier).toBe('certified');
+    expect(createStakedAgent('d', 1000).tier).toBe('institutional');
+  });
+});
+
+describe('recordQuery', () => {
+  it('increments queriesServed and adds income', () => {
+    const agent = createStakedAgent('agent-1', 5);
+    const updated = recordQuery(agent);
+    expect(updated.queriesServed).toBe(1);
+    expect(updated.earnedIncome).toBeCloseTo(0.0001);
+  });
+
+  it('accumulates income over multiple queries', () => {
+    let agent = createStakedAgent('agent-1', 50); // verified tier
+    for (let i = 0; i < 10; i++) {
+      agent = recordQuery(agent);
+    }
+    expect(agent.queriesServed).toBe(10);
+    expect(agent.earnedIncome).toBeCloseTo(10 * 0.0002);
+  });
+
+  it('does not mutate the original agent', () => {
+    const agent = createStakedAgent('agent-1', 5);
+    recordQuery(agent);
+    expect(agent.queriesServed).toBe(0);
+    expect(agent.earnedIncome).toBe(0);
+  });
+
+  it('higher tier earns more per query', () => {
+    let basic = createStakedAgent('basic', 5);
+    let institutional = createStakedAgent('inst', 5000);
+
+    basic = recordQuery(basic);
+    institutional = recordQuery(institutional);
+
+    expect(institutional.earnedIncome).toBeGreaterThan(basic.earnedIncome);
+  });
+
+  it('preserves other agent fields', () => {
+    const agent = createStakedAgent('agent-1', 200);
+    const updated = recordQuery(agent);
+    expect(updated.agentId).toBe('agent-1');
+    expect(updated.tier).toBe('certified');
+    expect(updated.stakedAmount).toBe(200);
+    expect(updated.config).toEqual(agent.config);
+  });
+});
+
+describe('computeGovernanceVote', () => {
+  it('multiplies base vote by governance weight', () => {
+    const basicAgent = createStakedAgent('basic', 5);
+    expect(computeGovernanceVote(basicAgent, 1)).toBe(1); // weight 1
+
+    const verifiedAgent = createStakedAgent('verified', 50);
+    expect(computeGovernanceVote(verifiedAgent, 1)).toBe(2); // weight 2
+
+    const certifiedAgent = createStakedAgent('certified', 200);
+    expect(computeGovernanceVote(certifiedAgent, 1)).toBe(5); // weight 5
+
+    const instAgent = createStakedAgent('inst', 5000);
+    expect(computeGovernanceVote(instAgent, 1)).toBe(20); // weight 20
+  });
+
+  it('scales with base vote', () => {
+    const agent = createStakedAgent('agent-1', 200); // certified, weight 5
+    expect(computeGovernanceVote(agent, 10)).toBe(50);
+    expect(computeGovernanceVote(agent, 0)).toBe(0);
+    expect(computeGovernanceVote(agent, 0.5)).toBeCloseTo(2.5);
+  });
+
+  it('institutional agents have 20x voting power over basic', () => {
+    const basic = createStakedAgent('basic', 5);
+    const inst = createStakedAgent('inst', 5000);
+    const baseVote = 1;
+    expect(computeGovernanceVote(inst, baseVote)).toBe(
+      20 * computeGovernanceVote(basic, baseVote),
+    );
+  });
+});
+
+describe('staking tiers - integrated flow', () => {
+  it('agent lifecycle: create, serve queries, earn income, governance', () => {
+    // Create an agent at the verified tier
+    let agent = createStakedAgent('agent-1', 25);
+    expect(agent.tier).toBe('verified');
+    expect(agent.config.marketplaceRankBoost).toBe(1.5);
+
+    // Serve 100 queries
+    for (let i = 0; i < 100; i++) {
+      agent = recordQuery(agent);
+    }
+    expect(agent.queriesServed).toBe(100);
+    expect(agent.earnedIncome).toBeCloseTo(100 * 0.0002);
+
+    // Vote in governance
+    const vote = computeGovernanceVote(agent, 1);
+    expect(vote).toBe(2);
+
+    // The agent's tier is consistent with the config
+    expect(agent.config.maxDelegations).toBe(20);
   });
 });

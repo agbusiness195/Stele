@@ -7,8 +7,25 @@ import {
   CapabilityError,
   CapabilityGate,
   verifyMerkleProof,
+  createProvenanceRecord,
+  buildProvenanceChain,
+  verifyProvenance,
+  queryProvenance,
+  createDefenseConfig,
+  analyzeDefense,
+  addDefenseLayer,
+  disableLayer,
 } from './index';
-import type { AuditEntry, RateLimitState, CapabilityManifest } from './index';
+import type {
+  AuditEntry,
+  RateLimitState,
+  CapabilityManifest,
+  ProvenanceRecord,
+  ProvenanceChain,
+  DefenseLayer,
+  DefenseInDepthConfig,
+  DefenseAnalysis,
+} from './index';
 
 // ─── Shared fixtures ───────────────────────────────────────────────────────────
 
@@ -1191,6 +1208,832 @@ describe('CapabilityGate - extended', () => {
       expect(log).toHaveLength(2);
       expect(log[0]!.outcome).toBe('EXECUTED');
       expect(log[1]!.outcome).toBe('IMPOSSIBLE');
+    });
+  });
+});
+
+// ─── Behavioral Provenance ────────────────────────────────────────────────────
+
+describe('Behavioral Provenance', () => {
+  const TEST_COVENANT_ID = 'b'.repeat(64);
+
+  describe('createProvenanceRecord', () => {
+    it('creates a record with all required fields', () => {
+      const record = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/users',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'permit-file-read',
+      });
+
+      expect(record.actionId).toBeTruthy();
+      expect(record.action).toBe('file.read');
+      expect(record.resource).toBe('/data/users');
+      expect(record.timestamp).toBeGreaterThan(0);
+      expect(record.covenantId).toBe(TEST_COVENANT_ID);
+      expect(record.ruleReference).toBe('permit-file-read');
+      expect(record.authorizationHash).toBeTruthy();
+      expect(record.previousRecordHash).toBe('genesis');
+      expect(record.recordHash).toBeTruthy();
+    });
+
+    it('uses "genesis" as previousRecordHash when not provided', () => {
+      const record = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/test',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      expect(record.previousRecordHash).toBe('genesis');
+    });
+
+    it('uses provided previousRecordHash when given', () => {
+      const first = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      const second = createProvenanceRecord({
+        action: 'file.write',
+        resource: '/data/b',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-2',
+        previousRecordHash: first.recordHash,
+      });
+
+      expect(second.previousRecordHash).toBe(first.recordHash);
+    });
+
+    it('generates unique actionIds for each record', () => {
+      const r1 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      const r2 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      expect(r1.actionId).not.toBe(r2.actionId);
+      expect(r1.recordHash).not.toBe(r2.recordHash);
+    });
+
+    it('produces deterministic authorizationHash for same covenant and rule', () => {
+      const r1 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      const r2 = createProvenanceRecord({
+        action: 'file.write',
+        resource: '/data/b',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      // Same covenantId + ruleReference should produce the same authorizationHash
+      expect(r1.authorizationHash).toBe(r2.authorizationHash);
+    });
+
+    it('produces different authorizationHash for different rules', () => {
+      const r1 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      const r2 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-2',
+      });
+
+      expect(r1.authorizationHash).not.toBe(r2.authorizationHash);
+    });
+  });
+
+  describe('buildProvenanceChain', () => {
+    it('builds an empty chain', () => {
+      const chain = buildProvenanceChain('agent-1', []);
+
+      expect(chain.agentId).toBe('agent-1');
+      expect(chain.records).toHaveLength(0);
+      expect(chain.chainHead).toBe('genesis');
+      expect(chain.chainLength).toBe(0);
+      expect(chain.integrityVerified).toBe(true);
+    });
+
+    it('builds a valid chain from properly linked records', () => {
+      const r1 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      const r2 = createProvenanceRecord({
+        action: 'file.write',
+        resource: '/data/b',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-2',
+        previousRecordHash: r1.recordHash,
+      });
+
+      const r3 = createProvenanceRecord({
+        action: 'api.call',
+        resource: '/v1/users',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-3',
+        previousRecordHash: r2.recordHash,
+      });
+
+      const chain = buildProvenanceChain('agent-1', [r1, r2, r3]);
+
+      expect(chain.agentId).toBe('agent-1');
+      expect(chain.records).toHaveLength(3);
+      expect(chain.chainHead).toBe(r3.recordHash);
+      expect(chain.chainLength).toBe(3);
+      expect(chain.integrityVerified).toBe(true);
+    });
+
+    it('detects broken chain linkage', () => {
+      const r1 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      const r2 = createProvenanceRecord({
+        action: 'file.write',
+        resource: '/data/b',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-2',
+        // Intentionally NOT linking to r1
+      });
+
+      const chain = buildProvenanceChain('agent-1', [r1, r2]);
+
+      expect(chain.integrityVerified).toBe(false);
+    });
+
+    it('returns a copy of records, not a reference', () => {
+      const r1 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      const records = [r1];
+      const chain = buildProvenanceChain('agent-1', records);
+
+      // Modifying original array should not affect chain
+      records.push(createProvenanceRecord({
+        action: 'file.write',
+        resource: '/data/b',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-2',
+      }));
+
+      expect(chain.records).toHaveLength(1);
+    });
+
+    it('builds a single-record chain', () => {
+      const r1 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      const chain = buildProvenanceChain('agent-1', [r1]);
+
+      expect(chain.chainHead).toBe(r1.recordHash);
+      expect(chain.chainLength).toBe(1);
+      expect(chain.integrityVerified).toBe(true);
+    });
+  });
+
+  describe('verifyProvenance', () => {
+    it('returns valid for a correct chain', () => {
+      const r1 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      const r2 = createProvenanceRecord({
+        action: 'file.write',
+        resource: '/data/b',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-2',
+        previousRecordHash: r1.recordHash,
+      });
+
+      const chain = buildProvenanceChain('agent-1', [r1, r2]);
+      const result = verifyProvenance(chain);
+
+      expect(result.valid).toBe(true);
+      expect(result.brokenLinks).toHaveLength(0);
+      expect(result.orphanedRecords).toHaveLength(0);
+    });
+
+    it('returns valid for an empty chain', () => {
+      const chain = buildProvenanceChain('agent-1', []);
+      const result = verifyProvenance(chain);
+
+      expect(result.valid).toBe(true);
+      expect(result.brokenLinks).toHaveLength(0);
+      expect(result.orphanedRecords).toHaveLength(0);
+    });
+
+    it('detects broken links in the chain', () => {
+      const r1 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      // r2 does not link to r1 (uses a fake previous hash)
+      const r2: ProvenanceRecord = {
+        ...createProvenanceRecord({
+          action: 'file.write',
+          resource: '/data/b',
+          covenantId: TEST_COVENANT_ID,
+          ruleReference: 'rule-2',
+          previousRecordHash: 'fake-hash-value',
+        }),
+      };
+
+      const chain = buildProvenanceChain('agent-1', [r1, r2]);
+      const result = verifyProvenance(chain);
+
+      expect(result.valid).toBe(false);
+      expect(result.brokenLinks).toContain(1);
+    });
+
+    it('detects orphaned records that reference non-existent hashes', () => {
+      const r1 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      // Create r2 with a previousRecordHash that does not exist in the chain
+      const r2: ProvenanceRecord = {
+        ...createProvenanceRecord({
+          action: 'file.write',
+          resource: '/data/b',
+          covenantId: TEST_COVENANT_ID,
+          ruleReference: 'rule-2',
+          previousRecordHash: 'nonexistent-hash-abc123',
+        }),
+      };
+
+      const chain = buildProvenanceChain('agent-1', [r1, r2]);
+      const result = verifyProvenance(chain);
+
+      expect(result.valid).toBe(false);
+      expect(result.orphanedRecords).toContain(1);
+    });
+
+    it('reports both broken links and orphaned records', () => {
+      const r1 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/a',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+
+      const r2 = createProvenanceRecord({
+        action: 'file.write',
+        resource: '/data/b',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-2',
+        previousRecordHash: r1.recordHash,
+      });
+
+      // r3 references a non-existent hash, breaking the link AND being orphaned
+      const r3: ProvenanceRecord = {
+        ...createProvenanceRecord({
+          action: 'api.call',
+          resource: '/v1/test',
+          covenantId: TEST_COVENANT_ID,
+          ruleReference: 'rule-3',
+          previousRecordHash: 'completely-invalid-hash',
+        }),
+      };
+
+      const chain = buildProvenanceChain('agent-1', [r1, r2, r3]);
+      const result = verifyProvenance(chain);
+
+      expect(result.valid).toBe(false);
+      expect(result.brokenLinks).toContain(2);
+      expect(result.orphanedRecords).toContain(2);
+    });
+  });
+
+  describe('queryProvenance', () => {
+    function buildTestChain(): ProvenanceChain {
+      const r1 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/users',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+      });
+      // Override timestamp for predictable testing
+      (r1 as any).timestamp = 1000;
+
+      const r2 = createProvenanceRecord({
+        action: 'file.write',
+        resource: '/data/logs',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-2',
+        previousRecordHash: r1.recordHash,
+      });
+      (r2 as any).timestamp = 2000;
+
+      const r3 = createProvenanceRecord({
+        action: 'api.call',
+        resource: '/v1/users',
+        covenantId: 'c'.repeat(64),
+        ruleReference: 'rule-3',
+        previousRecordHash: r2.recordHash,
+      });
+      (r3 as any).timestamp = 3000;
+
+      const r4 = createProvenanceRecord({
+        action: 'file.read',
+        resource: '/data/config',
+        covenantId: TEST_COVENANT_ID,
+        ruleReference: 'rule-1',
+        previousRecordHash: r3.recordHash,
+      });
+      (r4 as any).timestamp = 4000;
+
+      return buildProvenanceChain('agent-1', [r1, r2, r3, r4]);
+    }
+
+    it('queries by action', () => {
+      const chain = buildTestChain();
+      const results = queryProvenance(chain, { action: 'file.read' });
+
+      expect(results).toHaveLength(2);
+      expect(results.every((r) => r.action === 'file.read')).toBe(true);
+    });
+
+    it('queries by resource', () => {
+      const chain = buildTestChain();
+      const results = queryProvenance(chain, { resource: '/data/users' });
+
+      expect(results).toHaveLength(1);
+      expect(results[0]!.resource).toBe('/data/users');
+    });
+
+    it('queries by covenantId', () => {
+      const chain = buildTestChain();
+      const results = queryProvenance(chain, { covenantId: TEST_COVENANT_ID });
+
+      expect(results).toHaveLength(3);
+      expect(results.every((r) => r.covenantId === TEST_COVENANT_ID)).toBe(true);
+    });
+
+    it('queries by time range', () => {
+      const chain = buildTestChain();
+      const results = queryProvenance(chain, {
+        timeRange: { start: 1500, end: 3500 },
+      });
+
+      expect(results).toHaveLength(2);
+      expect(results.every((r) => r.timestamp >= 1500 && r.timestamp <= 3500)).toBe(true);
+    });
+
+    it('queries with multiple filters combined (AND logic)', () => {
+      const chain = buildTestChain();
+      const results = queryProvenance(chain, {
+        action: 'file.read',
+        covenantId: TEST_COVENANT_ID,
+      });
+
+      expect(results).toHaveLength(2);
+      expect(results.every((r) => r.action === 'file.read' && r.covenantId === TEST_COVENANT_ID)).toBe(true);
+    });
+
+    it('returns empty array when no records match', () => {
+      const chain = buildTestChain();
+      const results = queryProvenance(chain, { action: 'network.send' });
+
+      expect(results).toHaveLength(0);
+    });
+
+    it('returns all records when no filters are specified', () => {
+      const chain = buildTestChain();
+      const results = queryProvenance(chain, {});
+
+      expect(results).toHaveLength(4);
+    });
+  });
+});
+
+// ─── Defense in Depth ─────────────────────────────────────────────────────────
+
+describe('Defense in Depth', () => {
+  describe('createDefenseConfig', () => {
+    it('creates a config with default values', () => {
+      const config = createDefenseConfig();
+
+      expect(config.layers).toHaveLength(3);
+      expect(config.minimumLayers).toBe(2);
+      expect(config.maxAcceptableBreachProbability).toBe(0.001);
+
+      // Check default layers
+      const runtime = config.layers.find((l) => l.type === 'runtime');
+      const attestation = config.layers.find((l) => l.type === 'attestation');
+      const proof = config.layers.find((l) => l.type === 'proof');
+
+      expect(runtime).toBeDefined();
+      expect(runtime!.bypassProbability).toBe(0.1);
+      expect(runtime!.active).toBe(true);
+
+      expect(attestation).toBeDefined();
+      expect(attestation!.bypassProbability).toBe(0.05);
+      expect(attestation!.active).toBe(true);
+
+      expect(proof).toBeDefined();
+      expect(proof!.bypassProbability).toBe(0.01);
+      expect(proof!.active).toBe(true);
+    });
+
+    it('accepts custom bypass probabilities', () => {
+      const config = createDefenseConfig({
+        runtimeBypass: 0.2,
+        attestationBypass: 0.1,
+        proofBypass: 0.05,
+      });
+
+      const runtime = config.layers.find((l) => l.type === 'runtime')!;
+      const attestation = config.layers.find((l) => l.type === 'attestation')!;
+      const proof = config.layers.find((l) => l.type === 'proof')!;
+
+      expect(runtime.bypassProbability).toBe(0.2);
+      expect(attestation.bypassProbability).toBe(0.1);
+      expect(proof.bypassProbability).toBe(0.05);
+    });
+
+    it('accepts custom minimum layers and threshold', () => {
+      const config = createDefenseConfig({
+        minimumLayers: 3,
+        maxBreachProb: 0.0001,
+      });
+
+      expect(config.minimumLayers).toBe(3);
+      expect(config.maxAcceptableBreachProbability).toBe(0.0001);
+    });
+
+    it('all layers have lastVerified timestamps', () => {
+      const before = Date.now();
+      const config = createDefenseConfig();
+      const after = Date.now();
+
+      for (const layer of config.layers) {
+        expect(layer.lastVerified).toBeGreaterThanOrEqual(before);
+        expect(layer.lastVerified).toBeLessThanOrEqual(after);
+      }
+    });
+  });
+
+  describe('analyzeDefense', () => {
+    it('computes breach probability as product of active layer bypass probabilities', () => {
+      const config = createDefenseConfig({
+        runtimeBypass: 0.1,
+        attestationBypass: 0.05,
+        proofBypass: 0.01,
+      });
+
+      const analysis = analyzeDefense(config);
+
+      // 0.1 * 0.05 * 0.01 = 0.00005
+      expect(analysis.independentBreachProbability).toBeCloseTo(0.00005, 10);
+      expect(analysis.activeLayers).toBe(3);
+    });
+
+    it('reports meetsThreshold correctly when below threshold', () => {
+      const config = createDefenseConfig({
+        runtimeBypass: 0.1,
+        attestationBypass: 0.05,
+        proofBypass: 0.01,
+        maxBreachProb: 0.001,
+      });
+
+      const analysis = analyzeDefense(config);
+
+      // 0.00005 <= 0.001 → meets threshold
+      expect(analysis.meetsThreshold).toBe(true);
+    });
+
+    it('reports meetsThreshold correctly when above threshold', () => {
+      const config = createDefenseConfig({
+        runtimeBypass: 0.5,
+        attestationBypass: 0.5,
+        proofBypass: 0.5,
+        maxBreachProb: 0.001,
+      });
+
+      const analysis = analyzeDefense(config);
+
+      // 0.5 * 0.5 * 0.5 = 0.125 > 0.001 → does not meet threshold
+      expect(analysis.meetsThreshold).toBe(false);
+    });
+
+    it('identifies the weakest layer (highest bypass probability)', () => {
+      const config = createDefenseConfig({
+        runtimeBypass: 0.1,
+        attestationBypass: 0.05,
+        proofBypass: 0.01,
+      });
+
+      const analysis = analyzeDefense(config);
+
+      expect(analysis.weakestLayer).toBeDefined();
+      expect(analysis.weakestLayer!.name).toBe('runtime');
+      expect(analysis.weakestLayer!.bypassProbability).toBe(0.1);
+    });
+
+    it('handles disabled layers by excluding them from probability calculation', () => {
+      const config = createDefenseConfig({
+        runtimeBypass: 0.1,
+        attestationBypass: 0.05,
+        proofBypass: 0.01,
+      });
+
+      const withDisabled = disableLayer(config, 'proof');
+      const analysis = analyzeDefense(withDisabled);
+
+      // Only runtime (0.1) and attestation (0.05) are active
+      // 0.1 * 0.05 = 0.005
+      expect(analysis.independentBreachProbability).toBeCloseTo(0.005, 10);
+      expect(analysis.activeLayers).toBe(2);
+    });
+
+    it('returns breach probability of 1 when no layers are active', () => {
+      let config = createDefenseConfig();
+      config = disableLayer(config, 'runtime');
+      config = disableLayer(config, 'attestation');
+      config = disableLayer(config, 'proof');
+
+      const analysis = analyzeDefense(config);
+
+      expect(analysis.independentBreachProbability).toBe(1);
+      expect(analysis.activeLayers).toBe(0);
+      expect(analysis.meetsThreshold).toBe(false);
+      expect(analysis.weakestLayer).toBeNull();
+    });
+
+    it('provides recommendation when below minimum layers', () => {
+      let config = createDefenseConfig({ minimumLayers: 3 });
+      config = disableLayer(config, 'proof');
+
+      const analysis = analyzeDefense(config);
+
+      expect(analysis.activeLayers).toBe(2);
+      expect(analysis.recommendation).toContain('2');
+      expect(analysis.recommendation).toContain('3');
+      expect(analysis.recommendation).toContain('required');
+    });
+
+    it('provides recommendation to strengthen weakest layer when threshold not met', () => {
+      const config = createDefenseConfig({
+        runtimeBypass: 0.5,
+        attestationBypass: 0.5,
+        proofBypass: 0.5,
+        maxBreachProb: 0.001,
+      });
+
+      const analysis = analyzeDefense(config);
+
+      expect(analysis.meetsThreshold).toBe(false);
+      expect(analysis.recommendation).toContain('Strengthen');
+    });
+
+    it('provides positive recommendation when threshold is met', () => {
+      const config = createDefenseConfig({
+        runtimeBypass: 0.1,
+        attestationBypass: 0.05,
+        proofBypass: 0.01,
+        maxBreachProb: 0.001,
+      });
+
+      const analysis = analyzeDefense(config);
+
+      expect(analysis.meetsThreshold).toBe(true);
+      expect(analysis.recommendation).toContain('meets threshold');
+    });
+
+    it('returns the analyzed config in the result', () => {
+      const config = createDefenseConfig();
+      const analysis = analyzeDefense(config);
+
+      expect(analysis.config).toBe(config);
+    });
+  });
+
+  describe('addDefenseLayer', () => {
+    it('adds a custom layer to the configuration', () => {
+      const config = createDefenseConfig();
+      const customLayer: DefenseLayer = {
+        name: 'network-isolation',
+        type: 'runtime',
+        bypassProbability: 0.02,
+        active: true,
+        lastVerified: Date.now(),
+      };
+
+      const updated = addDefenseLayer(config, customLayer);
+
+      expect(updated.layers).toHaveLength(4);
+      expect(updated.layers[3]!.name).toBe('network-isolation');
+      expect(updated.layers[3]!.bypassProbability).toBe(0.02);
+    });
+
+    it('does not modify the original config', () => {
+      const config = createDefenseConfig();
+      const originalLength = config.layers.length;
+
+      addDefenseLayer(config, {
+        name: 'extra',
+        type: 'proof',
+        bypassProbability: 0.03,
+        active: true,
+        lastVerified: Date.now(),
+      });
+
+      expect(config.layers).toHaveLength(originalLength);
+    });
+
+    it('added layer affects breach probability analysis', () => {
+      const config = createDefenseConfig({
+        runtimeBypass: 0.1,
+        attestationBypass: 0.05,
+        proofBypass: 0.01,
+      });
+
+      const beforeAnalysis = analyzeDefense(config);
+      const beforeProb = beforeAnalysis.independentBreachProbability;
+
+      const updated = addDefenseLayer(config, {
+        name: 'extra-proof',
+        type: 'proof',
+        bypassProbability: 0.02,
+        active: true,
+        lastVerified: Date.now(),
+      });
+
+      const afterAnalysis = analyzeDefense(updated);
+      const afterProb = afterAnalysis.independentBreachProbability;
+
+      // Adding a layer should reduce breach probability
+      expect(afterProb).toBeLessThan(beforeProb);
+      // 0.00005 * 0.02 = 0.000001
+      expect(afterProb).toBeCloseTo(0.000001, 10);
+    });
+
+    it('can add inactive layers without affecting breach probability', () => {
+      const config = createDefenseConfig();
+      const beforeAnalysis = analyzeDefense(config);
+
+      const updated = addDefenseLayer(config, {
+        name: 'inactive-layer',
+        type: 'attestation',
+        bypassProbability: 0.5,
+        active: false,
+        lastVerified: Date.now(),
+      });
+
+      const afterAnalysis = analyzeDefense(updated);
+
+      expect(afterAnalysis.independentBreachProbability).toBe(beforeAnalysis.independentBreachProbability);
+      expect(afterAnalysis.activeLayers).toBe(beforeAnalysis.activeLayers);
+    });
+  });
+
+  describe('disableLayer', () => {
+    it('disables a named layer', () => {
+      const config = createDefenseConfig();
+      const updated = disableLayer(config, 'runtime');
+
+      const runtimeLayer = updated.layers.find((l) => l.name === 'runtime')!;
+      expect(runtimeLayer.active).toBe(false);
+    });
+
+    it('does not modify the original config', () => {
+      const config = createDefenseConfig();
+      disableLayer(config, 'runtime');
+
+      const runtimeLayer = config.layers.find((l) => l.name === 'runtime')!;
+      expect(runtimeLayer.active).toBe(true);
+    });
+
+    it('leaves other layers unchanged', () => {
+      const config = createDefenseConfig();
+      const updated = disableLayer(config, 'runtime');
+
+      const attestation = updated.layers.find((l) => l.name === 'attestation')!;
+      const proof = updated.layers.find((l) => l.name === 'proof')!;
+
+      expect(attestation.active).toBe(true);
+      expect(proof.active).toBe(true);
+    });
+
+    it('disabling below minimum triggers warning in analysis', () => {
+      const config = createDefenseConfig({ minimumLayers: 3 });
+      const updated = disableLayer(config, 'proof');
+      const analysis = analyzeDefense(updated);
+
+      expect(analysis.activeLayers).toBe(2);
+      expect(analysis.recommendation).toContain('required');
+    });
+
+    it('disabling a non-existent layer name returns unchanged config', () => {
+      const config = createDefenseConfig();
+      const updated = disableLayer(config, 'nonexistent');
+
+      expect(updated.layers.filter((l) => l.active)).toHaveLength(3);
+    });
+
+    it('multiple disables work correctly', () => {
+      let config = createDefenseConfig();
+      config = disableLayer(config, 'runtime');
+      config = disableLayer(config, 'attestation');
+
+      const activeLayers = config.layers.filter((l) => l.active);
+      expect(activeLayers).toHaveLength(1);
+      expect(activeLayers[0]!.name).toBe('proof');
+    });
+  });
+
+  describe('threshold checking end-to-end', () => {
+    it('default config meets default threshold', () => {
+      const config = createDefenseConfig();
+      const analysis = analyzeDefense(config);
+
+      // 0.1 * 0.05 * 0.01 = 0.00005 <= 0.001
+      expect(analysis.meetsThreshold).toBe(true);
+    });
+
+    it('high bypass probabilities fail threshold', () => {
+      const config = createDefenseConfig({
+        runtimeBypass: 0.3,
+        attestationBypass: 0.2,
+        proofBypass: 0.1,
+        maxBreachProb: 0.001,
+      });
+
+      const analysis = analyzeDefense(config);
+
+      // 0.3 * 0.2 * 0.1 = 0.006 > 0.001
+      expect(analysis.meetsThreshold).toBe(false);
+    });
+
+    it('adding layers can bring breach probability below threshold', () => {
+      const config = createDefenseConfig({
+        runtimeBypass: 0.3,
+        attestationBypass: 0.2,
+        proofBypass: 0.1,
+        maxBreachProb: 0.001,
+      });
+
+      // Initially does not meet threshold
+      expect(analyzeDefense(config).meetsThreshold).toBe(false);
+
+      // Add a strong additional layer
+      const updated = addDefenseLayer(config, {
+        name: 'hardware-enclave',
+        type: 'proof',
+        bypassProbability: 0.01,
+        active: true,
+        lastVerified: Date.now(),
+      });
+
+      // 0.3 * 0.2 * 0.1 * 0.01 = 0.00006 <= 0.001
+      const analysis = analyzeDefense(updated);
+      expect(analysis.meetsThreshold).toBe(true);
+      expect(analysis.activeLayers).toBe(4);
     });
   });
 });

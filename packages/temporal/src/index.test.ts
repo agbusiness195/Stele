@@ -7,6 +7,12 @@ import {
   canEvolve,
   computeDecaySchedule,
   expirationForecast,
+  // Governance Bootstrap
+  initializeGovernance,
+  evaluatePhaseTransition,
+  transitionPhase,
+  computeVotingPower,
+  DEFAULT_GOVERNANCE_BOOTSTRAP,
 } from './index';
 import type {
   EvolutionTrigger,
@@ -17,6 +23,10 @@ import type {
   DecayPoint,
   ViolationRecord,
 } from './types';
+import type {
+  GovernancePhase,
+  GovernanceState,
+} from './index';
 
 // ---------------------------------------------------------------------------
 // Helper factory functions
@@ -808,5 +818,353 @@ describe('expirationForecast', () => {
     ];
     const result = expirationForecast(1.0, 0, violations, 300, 0.1, 1.0);
     expect(result.remainingWeight).toBeGreaterThanOrEqual(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Governance Bootstrap Sequence
+// ---------------------------------------------------------------------------
+
+describe('DEFAULT_GOVERNANCE_BOOTSTRAP', () => {
+  it('defines exactly 4 phases', () => {
+    expect(DEFAULT_GOVERNANCE_BOOTSTRAP.phases).toHaveLength(4);
+  });
+
+  it('has centralized as the first phase (0-99)', () => {
+    const phase = DEFAULT_GOVERNANCE_BOOTSTRAP.phases[0]!;
+    expect(phase.phase).toBe('centralized');
+    expect(phase.minAgents).toBe(0);
+    expect(phase.maxAgents).toBe(99);
+    expect(phase.mechanism).toBe('founder_decision');
+    expect(phase.votingWeights).toBe('equal');
+  });
+
+  it('has advisory_council as the second phase (100-999)', () => {
+    const phase = DEFAULT_GOVERNANCE_BOOTSTRAP.phases[1]!;
+    expect(phase.phase).toBe('advisory_council');
+    expect(phase.minAgents).toBe(100);
+    expect(phase.maxAgents).toBe(999);
+    expect(phase.mechanism).toBe('council_vote');
+    expect(phase.votingWeights).toBe('stake_weighted');
+  });
+
+  it('has participation_weighted as the third phase (1000-9999)', () => {
+    const phase = DEFAULT_GOVERNANCE_BOOTSTRAP.phases[2]!;
+    expect(phase.phase).toBe('participation_weighted');
+    expect(phase.minAgents).toBe(1000);
+    expect(phase.maxAgents).toBe(9999);
+    expect(phase.mechanism).toBe('weighted_vote');
+    expect(phase.votingWeights).toBe('participation_weighted');
+  });
+
+  it('has fully_decentralized as the final phase (10000+)', () => {
+    const phase = DEFAULT_GOVERNANCE_BOOTSTRAP.phases[3]!;
+    expect(phase.phase).toBe('fully_decentralized');
+    expect(phase.minAgents).toBe(10000);
+    expect(phase.maxAgents).toBe(Infinity);
+    expect(phase.mechanism).toBe('token_governance');
+    expect(phase.votingWeights).toBe('reputation_weighted');
+  });
+});
+
+describe('initializeGovernance', () => {
+  it('defaults to centralized phase with 0 agents', () => {
+    const state = initializeGovernance();
+    expect(state.currentPhase).toBe('centralized');
+    expect(state.agentCount).toBe(0);
+    expect(state.phaseTransitions).toHaveLength(0);
+    expect(state.isTemporary).toBe(true);
+    expect(state.decisionMechanism).toBe('founder_decision');
+    expect(state.votingWeights).toBe('equal');
+  });
+
+  it('starts in centralized phase for 50 agents', () => {
+    const state = initializeGovernance(50);
+    expect(state.currentPhase).toBe('centralized');
+    expect(state.agentCount).toBe(50);
+    expect(state.isTemporary).toBe(true);
+  });
+
+  it('starts in advisory_council phase for 100 agents', () => {
+    const state = initializeGovernance(100);
+    expect(state.currentPhase).toBe('advisory_council');
+    expect(state.agentCount).toBe(100);
+    expect(state.isTemporary).toBe(false);
+    expect(state.decisionMechanism).toBe('council_vote');
+    expect(state.votingWeights).toBe('stake_weighted');
+  });
+
+  it('starts in advisory_council phase for 500 agents', () => {
+    const state = initializeGovernance(500);
+    expect(state.currentPhase).toBe('advisory_council');
+  });
+
+  it('starts in participation_weighted phase for 1000 agents', () => {
+    const state = initializeGovernance(1000);
+    expect(state.currentPhase).toBe('participation_weighted');
+    expect(state.decisionMechanism).toBe('weighted_vote');
+    expect(state.votingWeights).toBe('participation_weighted');
+    expect(state.isTemporary).toBe(false);
+  });
+
+  it('starts in participation_weighted phase for 5000 agents', () => {
+    const state = initializeGovernance(5000);
+    expect(state.currentPhase).toBe('participation_weighted');
+  });
+
+  it('starts in fully_decentralized phase for 10000 agents', () => {
+    const state = initializeGovernance(10000);
+    expect(state.currentPhase).toBe('fully_decentralized');
+    expect(state.decisionMechanism).toBe('token_governance');
+    expect(state.votingWeights).toBe('reputation_weighted');
+    expect(state.isTemporary).toBe(false);
+  });
+
+  it('starts in fully_decentralized phase for 100000 agents', () => {
+    const state = initializeGovernance(100000);
+    expect(state.currentPhase).toBe('fully_decentralized');
+  });
+
+  it('starts with empty phaseTransitions', () => {
+    const state = initializeGovernance(500);
+    expect(state.phaseTransitions).toEqual([]);
+  });
+});
+
+describe('evaluatePhaseTransition', () => {
+  it('returns shouldTransition=false when agent count stays in same phase', () => {
+    const state = initializeGovernance(50);
+    const result = evaluatePhaseTransition(state, 80);
+    expect(result.shouldTransition).toBe(false);
+    expect(result.currentPhase).toBe('centralized');
+    expect(result.nextPhase).toBeNull();
+    expect(result.agentsUntilTransition).toBe(20); // 99 - 80 + 1
+  });
+
+  it('returns shouldTransition=true when crossing to advisory_council', () => {
+    const state = initializeGovernance(90);
+    const result = evaluatePhaseTransition(state, 100);
+    expect(result.shouldTransition).toBe(true);
+    expect(result.currentPhase).toBe('centralized');
+    expect(result.nextPhase).toBe('advisory_council');
+    expect(result.agentsUntilTransition).toBe(0);
+  });
+
+  it('returns shouldTransition=true when crossing to participation_weighted', () => {
+    const state = initializeGovernance(900);
+    const result = evaluatePhaseTransition(state, 1000);
+    expect(result.shouldTransition).toBe(true);
+    expect(result.nextPhase).toBe('participation_weighted');
+  });
+
+  it('returns shouldTransition=true when crossing to fully_decentralized', () => {
+    const state = initializeGovernance(9000);
+    const result = evaluatePhaseTransition(state, 10000);
+    expect(result.shouldTransition).toBe(true);
+    expect(result.nextPhase).toBe('fully_decentralized');
+  });
+
+  it('returns agentsUntilTransition=Infinity for fully_decentralized phase', () => {
+    const state = initializeGovernance(15000);
+    const result = evaluatePhaseTransition(state, 20000);
+    expect(result.shouldTransition).toBe(false);
+    expect(result.agentsUntilTransition).toBe(Infinity);
+  });
+
+  it('computes correct agentsUntilTransition', () => {
+    const state = initializeGovernance(0);
+    const result = evaluatePhaseTransition(state, 95);
+    // maxAgents for centralized is 99, so 99 - 95 + 1 = 5
+    expect(result.agentsUntilTransition).toBe(5);
+  });
+
+  it('returns agentsUntilTransition=0 when at boundary', () => {
+    const state = initializeGovernance(0);
+    const result = evaluatePhaseTransition(state, 99);
+    // 99 - 99 + 1 = 1
+    expect(result.agentsUntilTransition).toBe(1);
+  });
+});
+
+describe('transitionPhase', () => {
+  it('transitions from centralized to advisory_council', () => {
+    const state = initializeGovernance(50);
+    const newState = transitionPhase(state, 100);
+
+    expect(newState.currentPhase).toBe('advisory_council');
+    expect(newState.agentCount).toBe(100);
+    expect(newState.isTemporary).toBe(false);
+    expect(newState.decisionMechanism).toBe('council_vote');
+    expect(newState.votingWeights).toBe('stake_weighted');
+    expect(newState.phaseTransitions).toHaveLength(1);
+    expect(newState.phaseTransitions[0]!.from).toBe('centralized');
+    expect(newState.phaseTransitions[0]!.to).toBe('advisory_council');
+    expect(newState.phaseTransitions[0]!.agentCount).toBe(100);
+    expect(newState.phaseTransitions[0]!.timestamp).toBeGreaterThan(0);
+  });
+
+  it('transitions from advisory_council to participation_weighted', () => {
+    const state = initializeGovernance(500);
+    const newState = transitionPhase(state, 1500);
+
+    expect(newState.currentPhase).toBe('participation_weighted');
+    expect(newState.decisionMechanism).toBe('weighted_vote');
+    expect(newState.votingWeights).toBe('participation_weighted');
+  });
+
+  it('transitions from participation_weighted to fully_decentralized', () => {
+    const state = initializeGovernance(5000);
+    const newState = transitionPhase(state, 15000);
+
+    expect(newState.currentPhase).toBe('fully_decentralized');
+    expect(newState.decisionMechanism).toBe('token_governance');
+    expect(newState.votingWeights).toBe('reputation_weighted');
+  });
+
+  it('does not transition when agent count stays in same phase', () => {
+    const state = initializeGovernance(50);
+    const newState = transitionPhase(state, 80);
+
+    expect(newState.currentPhase).toBe('centralized');
+    expect(newState.agentCount).toBe(80);
+    expect(newState.phaseTransitions).toHaveLength(0);
+  });
+
+  it('records multiple transitions', () => {
+    let state = initializeGovernance(50);
+    state = transitionPhase(state, 150); // -> advisory_council
+    state = transitionPhase(state, 2000); // -> participation_weighted
+    state = transitionPhase(state, 20000); // -> fully_decentralized
+
+    expect(state.currentPhase).toBe('fully_decentralized');
+    expect(state.phaseTransitions).toHaveLength(3);
+    expect(state.phaseTransitions[0]!.from).toBe('centralized');
+    expect(state.phaseTransitions[0]!.to).toBe('advisory_council');
+    expect(state.phaseTransitions[1]!.from).toBe('advisory_council');
+    expect(state.phaseTransitions[1]!.to).toBe('participation_weighted');
+    expect(state.phaseTransitions[2]!.from).toBe('participation_weighted');
+    expect(state.phaseTransitions[2]!.to).toBe('fully_decentralized');
+  });
+
+  it('preserves transition history across multiple transitions', () => {
+    let state = initializeGovernance(50);
+    state = transitionPhase(state, 150);
+    const firstTransition = state.phaseTransitions[0]!;
+
+    state = transitionPhase(state, 2000);
+    expect(state.phaseTransitions).toHaveLength(2);
+    expect(state.phaseTransitions[0]).toEqual(firstTransition);
+  });
+
+  it('marks centralized phase as temporary', () => {
+    const state = initializeGovernance(50);
+    expect(state.isTemporary).toBe(true);
+
+    const newState = transitionPhase(state, 100);
+    expect(newState.isTemporary).toBe(false);
+  });
+
+  it('can transition backward if agent count decreases', () => {
+    const state = initializeGovernance(500);
+    expect(state.currentPhase).toBe('advisory_council');
+
+    const newState = transitionPhase(state, 50);
+    expect(newState.currentPhase).toBe('centralized');
+    expect(newState.isTemporary).toBe(true);
+    expect(newState.phaseTransitions).toHaveLength(1);
+    expect(newState.phaseTransitions[0]!.from).toBe('advisory_council');
+    expect(newState.phaseTransitions[0]!.to).toBe('centralized');
+  });
+});
+
+describe('computeVotingPower', () => {
+  it('returns 1 for equal voting weights (centralized phase)', () => {
+    const state = initializeGovernance(50);
+    expect(state.votingWeights).toBe('equal');
+
+    const power = computeVotingPower(state, {
+      stake: 1000,
+      participationRate: 0.9,
+      reputationScore: 0.95,
+    });
+    expect(power).toBe(1);
+  });
+
+  it('returns stake value for stake_weighted (advisory_council phase)', () => {
+    const state = initializeGovernance(500);
+    expect(state.votingWeights).toBe('stake_weighted');
+
+    const power = computeVotingPower(state, { stake: 500 });
+    expect(power).toBe(500);
+  });
+
+  it('defaults stake to 1 when not provided', () => {
+    const state = initializeGovernance(500);
+    const power = computeVotingPower(state, {});
+    expect(power).toBe(1);
+  });
+
+  it('returns participationRate * 10 for participation_weighted', () => {
+    const state = initializeGovernance(5000);
+    expect(state.votingWeights).toBe('participation_weighted');
+
+    const power = computeVotingPower(state, { participationRate: 0.8 });
+    expect(power).toBeCloseTo(8.0);
+  });
+
+  it('defaults participationRate to 0.5 when not provided', () => {
+    const state = initializeGovernance(5000);
+    const power = computeVotingPower(state, {});
+    expect(power).toBeCloseTo(5.0); // 0.5 * 10
+  });
+
+  it('returns reputationScore * 20 for reputation_weighted', () => {
+    const state = initializeGovernance(20000);
+    expect(state.votingWeights).toBe('reputation_weighted');
+
+    const power = computeVotingPower(state, { reputationScore: 0.9 });
+    expect(power).toBeCloseTo(18.0);
+  });
+
+  it('defaults reputationScore to 0.5 when not provided', () => {
+    const state = initializeGovernance(20000);
+    const power = computeVotingPower(state, {});
+    expect(power).toBeCloseTo(10.0); // 0.5 * 20
+  });
+
+  it('handles zero stake', () => {
+    const state = initializeGovernance(500);
+    const power = computeVotingPower(state, { stake: 0 });
+    expect(power).toBe(0);
+  });
+
+  it('handles zero participation rate', () => {
+    const state = initializeGovernance(5000);
+    const power = computeVotingPower(state, { participationRate: 0 });
+    expect(power).toBe(0);
+  });
+
+  it('handles zero reputation score', () => {
+    const state = initializeGovernance(20000);
+    const power = computeVotingPower(state, { reputationScore: 0 });
+    expect(power).toBe(0);
+  });
+
+  it('voting power changes appropriately as governance phases transition', () => {
+    let state = initializeGovernance(50);
+    // Phase 0: equal
+    expect(computeVotingPower(state, { stake: 100, participationRate: 0.9, reputationScore: 0.9 })).toBe(1);
+
+    state = transitionPhase(state, 200);
+    // Phase 1: stake_weighted
+    expect(computeVotingPower(state, { stake: 100 })).toBe(100);
+
+    state = transitionPhase(state, 2000);
+    // Phase 2: participation_weighted
+    expect(computeVotingPower(state, { participationRate: 0.8 })).toBeCloseTo(8.0);
+
+    state = transitionPhase(state, 20000);
+    // Phase 3: reputation_weighted
+    expect(computeVotingPower(state, { reputationScore: 0.9 })).toBeCloseTo(18.0);
   });
 });

@@ -76,3 +76,78 @@ export interface ScoringConfig {
   minimumExecutions: number;
   endorsementWeight: number;
 }
+
+// ---------------------------------------------------------------------------
+// Item 30: Trust as Bounded Resource
+// ---------------------------------------------------------------------------
+
+/** A pool of trust backed by collateral. Trust cannot exceed economic value risked. */
+export interface ResourcePool {
+  totalCollateral: number;
+  allocatedTrust: number;
+  availableTrust: number;
+  utilizationRatio: number;
+  participants: Map<string, number>; // agentId -> allocated trust
+}
+
+/** An event where an agent's stake is slashed for misbehaviour. */
+export interface SlashingEvent {
+  agentId: string;
+  amount: number;
+  reason: string;
+  timestamp: number;
+  redistributed: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Item 46: Multidimensional Trust Profile (Anti-Gaming)
+// ---------------------------------------------------------------------------
+
+/** A single dimension of a trust profile. */
+export interface TrustDimension {
+  name: string;
+  score: number; // 0-1
+  weight: number;
+  evidence: number; // number of data points backing this score
+}
+
+/** A multidimensional trust profile with five dimensions that trade off against each other. */
+export interface MultidimensionalProfile {
+  agentId: string;
+  dimensions: {
+    hardEnforcement: TrustDimension;    // coverage of hard-enforced constraints
+    attestationCoverage: TrustDimension; // % of actions with external attestation
+    covenantBreadth: TrustDimension;     // scope of covenant commitments
+    historyDepth: TrustDimension;        // length of verifiable track record
+    stakeRatio: TrustDimension;          // economic value at risk relative to operations
+  };
+  compositeScore: number; // weighted geometric mean (prevents gaming one dimension)
+  gamingResistance: number; // 0-1, how resistant to single-dimension gaming
+}
+
+// ---------------------------------------------------------------------------
+// Item 75: Productive Staking Tiers
+// ---------------------------------------------------------------------------
+
+/** Staking tier levels. */
+export type StakeTier = 'basic' | 'verified' | 'certified' | 'institutional';
+
+/** Configuration for a staking tier. */
+export interface StakeTierConfig {
+  tier: StakeTier;
+  minimumStake: number;
+  verificationIncomeRate: number; // per-query income rate
+  marketplaceRankBoost: number;   // multiplier for marketplace ranking
+  governanceWeight: number;        // voting weight multiplier
+  maxDelegations: number;          // how many agents can delegate to this one
+}
+
+/** An agent that has staked to a tier. */
+export interface StakedAgent {
+  agentId: string;
+  tier: StakeTier;
+  stakedAmount: number;
+  earnedIncome: number;
+  queriesServed: number;
+  config: StakeTierConfig;
+}
