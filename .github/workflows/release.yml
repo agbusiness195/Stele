@@ -129,11 +129,20 @@ jobs:
       max-parallel: 5
       matrix:
         package:
+          - ccl
           - sdk
           - cli
+          - enforcement
+          - identity
+          - reputation
+          - breach
+          - proof
+          - mcp
           - mcp-server
           - react
           - evm
+          - discovery
+          - schema
           - attestation
           - canary
           - gametheory
@@ -191,7 +200,8 @@ jobs:
       - name: Verify all packages on npm
         run: |
           packages=(
-            types crypto core store verifier sdk cli mcp-server react evm
+            types crypto ccl core store verifier sdk cli enforcement identity
+            reputation breach proof mcp mcp-server react evm discovery schema
             attestation canary gametheory composition antifragile negotiation
             consensus robustness temporal recursive alignment norms substrate
             derivatives legal

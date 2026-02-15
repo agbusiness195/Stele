@@ -79,7 +79,7 @@ export class SteleEventEmitter {
    */
   private readonly _listeners = new Map<
     keyof SteleLifecycleEventMap,
-    ListenerEntry<any>[]
+    ListenerEntry<SteleLifecycleEventMap[keyof SteleLifecycleEventMap]>[]
   >();
 
   // ── on ──────────────────────────────────────────────────────────────────
