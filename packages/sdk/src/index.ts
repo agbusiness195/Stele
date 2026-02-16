@@ -465,6 +465,27 @@ export class SteleClient {
     return STELE_VERSION;
   }
 
+  /**
+   * Create a SteleClient pre-configured with an existing key pair.
+   *
+   * This is a convenience factory that avoids the two-step pattern of
+   * constructing a client and then calling `generateKeyPair()`.
+   *
+   * @param keyPair - An Ed25519 key pair.
+   * @param options - Optional additional client options.
+   * @returns A ready-to-use SteleClient.
+   *
+   * @example
+   * ```typescript
+   * const kp = await generateKeyPair();
+   * const client = SteleClient.fromKeyPair(kp);
+   * const doc = await client.createCovenant({ ... });
+   * ```
+   */
+  static fromKeyPair(keyPair: KeyPair, options: Omit<SteleClientOptions, 'keyPair'> = {}): SteleClient {
+    return new SteleClient({ ...options, keyPair });
+  }
+
   // ── Accessors ───────────────────────────────────────────────────────────
 
   /** Whether this client instance has been disposed. */

@@ -409,4 +409,104 @@ describe('API Surface Tests', () => {
       expect(ccl.parse).toBe(sdk.parseCCL);
     });
   });
+
+  // ─── @stele/enterprise ──────────────────────────────────────────────────
+
+  it('@stele/enterprise exports', async () => {
+    const mod = await import('@stele/enterprise');
+    const exports = Object.keys(mod).sort();
+    expect(exports).toEqual([
+      'CATALOGS',
+      'CERTIFICATION_REQUIREMENTS',
+      'STANDARD_METRICS',
+      'TRANSLATION_KEYS',
+      'addMetric',
+      'addTranslation',
+      'aggregateData',
+      'aggregateFees',
+      'aggregateMetric',
+      'aggregateMetrics',
+      'anonymizeDataset',
+      'buildDashboard',
+      'calculateFee',
+      'calculateRevenueLift',
+      'computeRailVolume',
+      'computeTrends',
+      'createAccount',
+      'createAuthority',
+      'createDashboard',
+      'createFeeSchedule',
+      'createGateway',
+      'createGovernancePolicy',
+      'createLedger',
+      'createRail',
+      'createStandardDashboard',
+      'createTrustGate',
+      'evaluateAccess',
+      'executeRailTransaction',
+      'getAccountSummary',
+      'getDefaultLocale',
+      'getSupportedLocales',
+      'initiateRailTransaction',
+      'isResourceAllowed',
+      'issueCertificate',
+      'processPayment',
+      'processRequest',
+      'projectRevenue',
+      'pruneOldData',
+      'quarantineAgent',
+      'recordQueryIncome',
+      'registerAgent',
+      'revokeCertificate',
+      'rollbackRailTransaction',
+      'setDefaultLocale',
+      't',
+      'unquarantineAgent',
+      'updateAgentStatus',
+      'verifyCertificate',
+    ].sort());
+  });
+
+  // ─── @stele/protocols smoke check ───────────────────────────────────────
+
+  it('@stele/protocols exports at least 250 symbols', async () => {
+    const mod = await import('@stele/protocols');
+    const exports = Object.keys(mod);
+    expect(exports.length).toBeGreaterThanOrEqual(250);
+  });
+
+  it('@stele/protocols re-exports key functions from each protocol', async () => {
+    const mod = await import('@stele/protocols');
+    // Spot-check one function from each major protocol category
+    expect(typeof mod.createBreachAttestation).toBe('function');
+    expect(typeof mod.computeReputationScore).toBe('function');
+    expect(typeof mod.generateComplianceProof).toBe('function');
+    expect(typeof mod.createAttestation).toBe('function');
+    expect(typeof mod.generateCanary).toBe('function');
+    expect(typeof mod.proveHonesty).toBe('function');
+    expect(typeof mod.compose).toBe('function');
+    expect(typeof mod.stressTest).toBe('function');
+    expect(typeof mod.byzantineFaultTolerance).toBe('function');
+    expect(typeof mod.fuzz).toBe('function');
+    expect(typeof mod.createMetaCovenant).toBe('function');
+    expect(typeof mod.defineAlignment).toBe('function');
+    expect(typeof mod.analyzeNorms).toBe('function');
+    expect(typeof mod.createAdapter).toBe('function');
+    expect(typeof mod.assessRisk).toBe('function');
+    expect(typeof mod.exportLegalPackage).toBe('function');
+    expect(typeof mod.initiateNegotiation).toBe('function');
+    expect(typeof mod.defineEvolution).toBe('function');
+    expect(typeof mod.validateCovenantSchema).toBe('function');
+    expect(typeof mod.buildDiscoveryDocument).toBe('function');
+  });
+
+  // ─── SteleClient convenience factories ──────────────────────────────────
+
+  it('SteleClient.fromKeyPair creates a ready-to-use client', async () => {
+    const sdk = await import('@stele/sdk');
+    const kp = await sdk.generateKeyPair();
+    const client = sdk.SteleClient.fromKeyPair(kp);
+    expect(client.keyPair).toBe(kp);
+    expect(client.disposed).toBe(false);
+  });
 });
