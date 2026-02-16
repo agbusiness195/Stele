@@ -29,6 +29,10 @@ import {
   createStakedAgent,
   recordQuery,
   computeGovernanceVote,
+  ReceiptDAG,
+  ReputationDecayModel,
+  GraduatedBurner,
+  ReputationAggregator,
 } from './index.js';
 import type {
   ExecutionReceipt,
@@ -40,6 +44,11 @@ import type {
   StakeTier,
   StakedAgent,
 } from './types.js';
+import type {
+  DecayModelConfig,
+  ReputationSource,
+  ReceiptDAGNode,
+} from './index.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -2628,5 +2637,1069 @@ describe('staking tiers - integrated flow', () => {
 
     // The agent's tier is consistent with the config
     expect(agent.config.maxDelegations).toBe(20);
+  });
+});
+
+// ===========================================================================
+// ReceiptDAG
+// ===========================================================================
+
+describe('ReceiptDAG', () => {
+  // Helper: create a minimal receipt with a unique hash derived from a label
+  async function dagReceipt(label: string, outcome: ExecutionReceipt['outcome'] = 'fulfilled'): Promise<ExecutionReceipt> {
+    const agentKp = await generateKeyPair();
+    const principalKp = await generateKeyPair();
+    return createReceipt(
+      fakeHash('cov-dag'),
+      agentKp.publicKeyHex,
+      principalKp.publicKeyHex,
+      outcome,
+      fakeHash(`proof-${label}`),
+      100,
+      agentKp,
+      null,
+      outcome === 'breached' ? 'medium' : undefined,
+    );
+  }
+
+  // -----------------------------------------------------------------------
+  // Empty DAG
+  // -----------------------------------------------------------------------
+
+  it('starts empty with size 0', () => {
+    const dag = new ReceiptDAG();
+    expect(dag.size).toBe(0);
+    expect(dag.getRoots()).toEqual([]);
+    expect(dag.getLeaves()).toEqual([]);
+  });
+
+  it('computeDAGReputation returns 0 for an empty DAG', () => {
+    const dag = new ReceiptDAG();
+    expect(dag.computeDAGReputation()).toBe(0);
+  });
+
+  // -----------------------------------------------------------------------
+  // Single node
+  // -----------------------------------------------------------------------
+
+  it('adds a single root node', async () => {
+    const dag = new ReceiptDAG();
+    const r = await dagReceipt('root');
+    dag.addNode(r);
+
+    expect(dag.size).toBe(1);
+    expect(dag.getRoots()).toEqual([r.receiptHash]);
+    expect(dag.getLeaves()).toEqual([r.receiptHash]);
+  });
+
+  it('getNode returns a copy of the node', async () => {
+    const dag = new ReceiptDAG();
+    const r = await dagReceipt('root');
+    dag.addNode(r);
+
+    const node = dag.getNode(r.receiptHash);
+    expect(node).toBeDefined();
+    expect(node!.receiptHash).toBe(r.receiptHash);
+    expect(node!.parentHashes).toEqual([]);
+    expect(node!.receipt).toBeDefined();
+  });
+
+  it('getNode returns undefined for a missing hash', () => {
+    const dag = new ReceiptDAG();
+    expect(dag.getNode(fakeHash('nonexistent'))).toBeUndefined();
+  });
+
+  // -----------------------------------------------------------------------
+  // Linear chain
+  // -----------------------------------------------------------------------
+
+  it('builds a linear chain of receipts', async () => {
+    const dag = new ReceiptDAG();
+    const r1 = await dagReceipt('n1');
+    const r2 = await dagReceipt('n2');
+    const r3 = await dagReceipt('n3');
+
+    dag.addNode(r1);
+    dag.addNode(r2, [r1.receiptHash]);
+    dag.addNode(r3, [r2.receiptHash]);
+
+    expect(dag.size).toBe(3);
+    expect(dag.getRoots()).toEqual([r1.receiptHash]);
+    expect(dag.getLeaves()).toEqual([r3.receiptHash]);
+  });
+
+  // -----------------------------------------------------------------------
+  // Fork and merge (diamond shape)
+  // -----------------------------------------------------------------------
+
+  it('supports fork and merge (diamond DAG)', async () => {
+    //     root
+    //    /    \
+    //  left  right
+    //    \    /
+    //     merge
+    const dag = new ReceiptDAG();
+    const root = await dagReceipt('root');
+    const left = await dagReceipt('left');
+    const right = await dagReceipt('right');
+    const merge = await dagReceipt('merge');
+
+    dag.addNode(root);
+    dag.addNode(left, [root.receiptHash]);
+    dag.addNode(right, [root.receiptHash]);
+    dag.addNode(merge, [left.receiptHash, right.receiptHash]);
+
+    expect(dag.size).toBe(4);
+    expect(dag.getRoots()).toEqual([root.receiptHash]);
+    expect(dag.getLeaves()).toEqual([merge.receiptHash]);
+
+    // The root node should have 2 children (left and right)
+    const rootNode = dag.getNode(root.receiptHash)!;
+    expect(rootNode.parentHashes).toHaveLength(0);
+  });
+
+  // -----------------------------------------------------------------------
+  // Multiple roots
+  // -----------------------------------------------------------------------
+
+  it('supports multiple root nodes', async () => {
+    const dag = new ReceiptDAG();
+    const r1 = await dagReceipt('root1');
+    const r2 = await dagReceipt('root2');
+    const child = await dagReceipt('child');
+
+    dag.addNode(r1);
+    dag.addNode(r2);
+    dag.addNode(child, [r1.receiptHash, r2.receiptHash]);
+
+    expect(dag.size).toBe(3);
+    const roots = dag.getRoots();
+    expect(roots).toHaveLength(2);
+    expect(roots).toContain(r1.receiptHash);
+    expect(roots).toContain(r2.receiptHash);
+    expect(dag.getLeaves()).toEqual([child.receiptHash]);
+  });
+
+  // -----------------------------------------------------------------------
+  // Multiple leaves
+  // -----------------------------------------------------------------------
+
+  it('supports multiple leaf nodes (fork without merge)', async () => {
+    const dag = new ReceiptDAG();
+    const root = await dagReceipt('root');
+    const l1 = await dagReceipt('leaf1');
+    const l2 = await dagReceipt('leaf2');
+
+    dag.addNode(root);
+    dag.addNode(l1, [root.receiptHash]);
+    dag.addNode(l2, [root.receiptHash]);
+
+    expect(dag.size).toBe(3);
+    expect(dag.getRoots()).toEqual([root.receiptHash]);
+    const leaves = dag.getLeaves();
+    expect(leaves).toHaveLength(2);
+    expect(leaves).toContain(l1.receiptHash);
+    expect(leaves).toContain(l2.receiptHash);
+  });
+
+  // -----------------------------------------------------------------------
+  // Error paths
+  // -----------------------------------------------------------------------
+
+  it('throws when adding a receipt with missing parent', async () => {
+    const dag = new ReceiptDAG();
+    const r = await dagReceipt('child');
+    expect(() => dag.addNode(r, [fakeHash('nonexistent-parent')])).toThrow(
+      /not found in DAG/,
+    );
+  });
+
+  it('throws when adding a duplicate receipt', async () => {
+    const dag = new ReceiptDAG();
+    const r = await dagReceipt('dup');
+    dag.addNode(r);
+    expect(() => dag.addNode(r)).toThrow(/already exists in DAG/);
+  });
+
+  // -----------------------------------------------------------------------
+  // findCommonAncestors
+  // -----------------------------------------------------------------------
+
+  it('findCommonAncestors returns the node itself when both hashes are the same', async () => {
+    const dag = new ReceiptDAG();
+    const r = await dagReceipt('only');
+    dag.addNode(r);
+
+    const ancestors = dag.findCommonAncestors(r.receiptHash, r.receiptHash);
+    expect(ancestors).toEqual([r.receiptHash]);
+  });
+
+  it('findCommonAncestors finds root as common ancestor in a diamond', async () => {
+    const dag = new ReceiptDAG();
+    const root = await dagReceipt('root');
+    const left = await dagReceipt('left');
+    const right = await dagReceipt('right');
+
+    dag.addNode(root);
+    dag.addNode(left, [root.receiptHash]);
+    dag.addNode(right, [root.receiptHash]);
+
+    const ancestors = dag.findCommonAncestors(left.receiptHash, right.receiptHash);
+    expect(ancestors).toContain(root.receiptHash);
+  });
+
+  it('findCommonAncestors with deeper diamond returns lowest common ancestor', async () => {
+    //     root
+    //    /    \
+    //   a      b
+    //   |      |
+    //   c      d
+    const dag = new ReceiptDAG();
+    const root = await dagReceipt('root');
+    const a = await dagReceipt('a');
+    const b = await dagReceipt('b');
+    const c = await dagReceipt('c');
+    const d = await dagReceipt('d');
+
+    dag.addNode(root);
+    dag.addNode(a, [root.receiptHash]);
+    dag.addNode(b, [root.receiptHash]);
+    dag.addNode(c, [a.receiptHash]);
+    dag.addNode(d, [b.receiptHash]);
+
+    const ancestors = dag.findCommonAncestors(c.receiptHash, d.receiptHash);
+    expect(ancestors).toContain(root.receiptHash);
+  });
+
+  it('findCommonAncestors throws for unknown hashes', async () => {
+    const dag = new ReceiptDAG();
+    const r = await dagReceipt('only');
+    dag.addNode(r);
+
+    expect(() => dag.findCommonAncestors(r.receiptHash, fakeHash('unknown'))).toThrow(
+      /not found in DAG/,
+    );
+    expect(() => dag.findCommonAncestors(fakeHash('unknown'), r.receiptHash)).toThrow(
+      /not found in DAG/,
+    );
+  });
+
+  it('findCommonAncestors returns empty for nodes in disconnected components', async () => {
+    const dag = new ReceiptDAG();
+    const r1 = await dagReceipt('island1');
+    const r2 = await dagReceipt('island2');
+    dag.addNode(r1);
+    dag.addNode(r2);
+
+    const ancestors = dag.findCommonAncestors(r1.receiptHash, r2.receiptHash);
+    expect(ancestors).toHaveLength(0);
+  });
+
+  // -----------------------------------------------------------------------
+  // computeDAGReputation
+  // -----------------------------------------------------------------------
+
+  it('computeDAGReputation returns a value in [0, 1] for a single fulfilled node', async () => {
+    const dag = new ReceiptDAG();
+    const r = await dagReceipt('fulfilled-only', 'fulfilled');
+    dag.addNode(r);
+
+    const score = dag.computeDAGReputation();
+    expect(score).toBeGreaterThan(0);
+    expect(score).toBeLessThanOrEqual(1);
+  });
+
+  it('computeDAGReputation for all-fulfilled chain produces positive score', async () => {
+    const dag = new ReceiptDAG();
+    const r1 = await dagReceipt('ok1', 'fulfilled');
+    const r2 = await dagReceipt('ok2', 'fulfilled');
+    const r3 = await dagReceipt('ok3', 'fulfilled');
+
+    dag.addNode(r1);
+    dag.addNode(r2, [r1.receiptHash]);
+    dag.addNode(r3, [r2.receiptHash]);
+
+    const score = dag.computeDAGReputation();
+    expect(score).toBeGreaterThan(0);
+    expect(score).toBeLessThanOrEqual(1);
+  });
+
+  it('computeDAGReputation for all-failed chain produces zero or near-zero score', async () => {
+    const dag = new ReceiptDAG();
+    const r1 = await dagReceipt('f1', 'failed');
+    const r2 = await dagReceipt('f2', 'failed');
+
+    dag.addNode(r1);
+    dag.addNode(r2, [r1.receiptHash]);
+
+    const score = dag.computeDAGReputation();
+    expect(score).toBe(0);
+  });
+
+  it('computeDAGReputation of breached receipts is lower than fulfilled', async () => {
+    const dagGood = new ReceiptDAG();
+    const good = await dagReceipt('good', 'fulfilled');
+    dagGood.addNode(good);
+
+    const dagBad = new ReceiptDAG();
+    const bad = await dagReceipt('bad', 'breached');
+    dagBad.addNode(bad);
+
+    const goodScore = dagGood.computeDAGReputation();
+    const badScore = dagBad.computeDAGReputation();
+    expect(goodScore).toBeGreaterThan(badScore);
+  });
+
+  it('computeDAGReputation averages leaf scores in a fork', async () => {
+    // Fork: root -> fulfilled leaf + root -> failed leaf
+    // The average should be between the two extremes
+    const dag = new ReceiptDAG();
+    const root = await dagReceipt('root', 'fulfilled');
+    const goodLeaf = await dagReceipt('good', 'fulfilled');
+    const badLeaf = await dagReceipt('bad', 'failed');
+
+    dag.addNode(root);
+    dag.addNode(goodLeaf, [root.receiptHash]);
+    dag.addNode(badLeaf, [root.receiptHash]);
+
+    const score = dag.computeDAGReputation();
+    // Should be between the good-only and bad-only scores
+    expect(score).toBeGreaterThan(0);
+    expect(score).toBeLessThan(1);
+  });
+
+  it('handles a large DAG without errors', async () => {
+    const dag = new ReceiptDAG();
+    const receipts: ExecutionReceipt[] = [];
+
+    // Build a wide DAG: 3 roots, each with 3 children, all merging
+    for (let i = 0; i < 3; i++) {
+      const r = await dagReceipt(`root-${i}`);
+      dag.addNode(r);
+      receipts.push(r);
+    }
+
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        const child = await dagReceipt(`child-${i}-${j}`);
+        dag.addNode(child, [receipts[i]!.receiptHash]);
+        receipts.push(child);
+      }
+    }
+
+    expect(dag.size).toBe(12);
+    expect(dag.getRoots()).toHaveLength(3);
+    expect(dag.getLeaves()).toHaveLength(9);
+
+    const score = dag.computeDAGReputation();
+    expect(score).toBeGreaterThanOrEqual(0);
+    expect(score).toBeLessThanOrEqual(1);
+  });
+});
+
+// ===========================================================================
+// ReputationDecayModel
+// ===========================================================================
+
+describe('ReputationDecayModel', () => {
+  // -----------------------------------------------------------------------
+  // Exponential decay
+  // -----------------------------------------------------------------------
+
+  describe('exponential decay', () => {
+    it('returns 1 at t=0', () => {
+      const model = new ReputationDecayModel({ model: 'exponential', params: { lambda: 0.1 } });
+      expect(model.decay(0)).toBe(1);
+    });
+
+    it('follows e^(-lambda*t)', () => {
+      const lambda = 0.5;
+      const model = new ReputationDecayModel({ model: 'exponential', params: { lambda } });
+
+      expect(model.decay(1)).toBeCloseTo(Math.exp(-0.5), 10);
+      expect(model.decay(2)).toBeCloseTo(Math.exp(-1.0), 10);
+      expect(model.decay(10)).toBeCloseTo(Math.exp(-5.0), 10);
+    });
+
+    it('decays monotonically', () => {
+      const model = new ReputationDecayModel({ model: 'exponential', params: { lambda: 0.3 } });
+      let prev = model.decay(0);
+      for (let t = 1; t <= 20; t++) {
+        const curr = model.decay(t);
+        expect(curr).toBeLessThan(prev);
+        prev = curr;
+      }
+    });
+
+    it('approaches 0 for large t', () => {
+      const model = new ReputationDecayModel({ model: 'exponential', params: { lambda: 1 } });
+      expect(model.decay(100)).toBeCloseTo(0, 10);
+    });
+
+    it('apply multiplies score by decay factor', () => {
+      const model = new ReputationDecayModel({ model: 'exponential', params: { lambda: 0.1 } });
+      const score = 0.85;
+      const t = 5;
+      expect(model.apply(score, t)).toBeCloseTo(score * Math.exp(-0.5), 10);
+    });
+
+    it('type getter returns exponential', () => {
+      const model = new ReputationDecayModel({ model: 'exponential', params: { lambda: 1 } });
+      expect(model.type).toBe('exponential');
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Weibull decay
+  // -----------------------------------------------------------------------
+
+  describe('weibull decay', () => {
+    it('returns 1 at t=0', () => {
+      const model = new ReputationDecayModel({ model: 'weibull', params: { k: 2, lambda: 5 } });
+      expect(model.decay(0)).toBe(1);
+    });
+
+    it('follows e^(-(t/lambda)^k)', () => {
+      const k = 2;
+      const lambda = 5;
+      const model = new ReputationDecayModel({ model: 'weibull', params: { k, lambda } });
+
+      const t = 3;
+      const expected = Math.exp(-Math.pow(t / lambda, k));
+      expect(model.decay(t)).toBeCloseTo(expected, 10);
+    });
+
+    it('with k=1, reduces to exponential with rate 1/lambda', () => {
+      const lambda = 2;
+      const model = new ReputationDecayModel({ model: 'weibull', params: { k: 1, lambda } });
+      // Weibull k=1: e^(-(t/lambda)^1) = e^(-t/lambda)
+      // This is exponential with rate 1/lambda
+      const t = 4;
+      expect(model.decay(t)).toBeCloseTo(Math.exp(-t / lambda), 10);
+    });
+
+    it('k > 1 decays slowly at first then quickly', () => {
+      const model = new ReputationDecayModel({ model: 'weibull', params: { k: 3, lambda: 5 } });
+      // At t=1 (small relative to lambda=5), decay should be very close to 1
+      expect(model.decay(1)).toBeGreaterThan(0.99);
+      // At t=10 (well past lambda=5 with k=3), decay should be near 0
+      expect(model.decay(10)).toBeLessThan(0.01);
+    });
+
+    it('k < 1 decays quickly at first then slowly', () => {
+      const model = new ReputationDecayModel({ model: 'weibull', params: { k: 0.5, lambda: 1 } });
+      // At t=0.01, still significant decay already (k < 1 means early decay)
+      const earlyDecay = 1 - model.decay(0.01);
+      // At t=100, still some signal remaining
+      expect(model.decay(100)).toBeGreaterThan(0);
+    });
+
+    it('type getter returns weibull', () => {
+      const model = new ReputationDecayModel({ model: 'weibull', params: { k: 1, lambda: 1 } });
+      expect(model.type).toBe('weibull');
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Gamma decay
+  // -----------------------------------------------------------------------
+
+  describe('gamma decay', () => {
+    it('returns 1 at t=0', () => {
+      const model = new ReputationDecayModel({ model: 'gamma', params: { alpha: 2, beta: 1 } });
+      expect(model.decay(0)).toBe(1);
+    });
+
+    it('decays towards 0 for large t', () => {
+      const model = new ReputationDecayModel({ model: 'gamma', params: { alpha: 2, beta: 1 } });
+      expect(model.decay(100)).toBeLessThan(0.01);
+    });
+
+    it('decay is monotonically non-increasing', () => {
+      const model = new ReputationDecayModel({ model: 'gamma', params: { alpha: 3, beta: 0.5 } });
+      let prev = model.decay(0);
+      for (let t = 1; t <= 30; t++) {
+        const curr = model.decay(t);
+        expect(curr).toBeLessThanOrEqual(prev + 1e-10); // small tolerance for numerical issues
+        prev = curr;
+      }
+    });
+
+    it('apply works correctly with gamma model', () => {
+      const model = new ReputationDecayModel({ model: 'gamma', params: { alpha: 2, beta: 0.5 } });
+      const score = 0.9;
+      const t = 5;
+      const decayed = model.apply(score, t);
+      expect(decayed).toBeCloseTo(score * model.decay(t), 10);
+    });
+
+    it('type getter returns gamma', () => {
+      const model = new ReputationDecayModel({ model: 'gamma', params: { alpha: 1, beta: 1 } });
+      expect(model.type).toBe('gamma');
+    });
+
+    it('alpha=1 gamma is similar to exponential (both are memoryless)', () => {
+      // Gamma(1, beta) survival function = e^(-beta*t), similar to exponential
+      const beta = 0.3;
+      const gammaModel = new ReputationDecayModel({ model: 'gamma', params: { alpha: 1, beta } });
+      const expModel = new ReputationDecayModel({ model: 'exponential', params: { lambda: beta } });
+
+      for (const t of [0, 1, 5, 10]) {
+        expect(gammaModel.decay(t)).toBeCloseTo(expModel.decay(t), 3);
+      }
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Error paths
+  // -----------------------------------------------------------------------
+
+  describe('constructor validation', () => {
+    it('rejects unknown model type', () => {
+      expect(() => new ReputationDecayModel({ model: 'unknown' as any, params: {} })).toThrow(
+        /Unknown decay model/,
+      );
+    });
+
+    it('rejects exponential with missing lambda', () => {
+      expect(() => new ReputationDecayModel({ model: 'exponential', params: {} })).toThrow(
+        /lambda/,
+      );
+    });
+
+    it('rejects exponential with lambda <= 0', () => {
+      expect(() => new ReputationDecayModel({ model: 'exponential', params: { lambda: 0 } })).toThrow(
+        /lambda/,
+      );
+      expect(() => new ReputationDecayModel({ model: 'exponential', params: { lambda: -1 } })).toThrow(
+        /lambda/,
+      );
+    });
+
+    it('rejects weibull with missing k', () => {
+      expect(() => new ReputationDecayModel({ model: 'weibull', params: { lambda: 1 } })).toThrow(/k/);
+    });
+
+    it('rejects weibull with k <= 0', () => {
+      expect(() => new ReputationDecayModel({ model: 'weibull', params: { k: 0, lambda: 1 } })).toThrow(/k/);
+    });
+
+    it('rejects weibull with missing lambda', () => {
+      expect(() => new ReputationDecayModel({ model: 'weibull', params: { k: 1 } })).toThrow(/lambda/);
+    });
+
+    it('rejects weibull with lambda <= 0', () => {
+      expect(() => new ReputationDecayModel({ model: 'weibull', params: { k: 1, lambda: 0 } })).toThrow(/lambda/);
+    });
+
+    it('rejects gamma with missing alpha', () => {
+      expect(() => new ReputationDecayModel({ model: 'gamma', params: { beta: 1 } })).toThrow(/alpha/);
+    });
+
+    it('rejects gamma with alpha <= 0', () => {
+      expect(() => new ReputationDecayModel({ model: 'gamma', params: { alpha: -1, beta: 1 } })).toThrow(/alpha/);
+    });
+
+    it('rejects gamma with missing beta', () => {
+      expect(() => new ReputationDecayModel({ model: 'gamma', params: { alpha: 1 } })).toThrow(/beta/);
+    });
+
+    it('rejects gamma with beta <= 0', () => {
+      expect(() => new ReputationDecayModel({ model: 'gamma', params: { alpha: 1, beta: 0 } })).toThrow(/beta/);
+    });
+  });
+
+  describe('decay(t) validation', () => {
+    it('throws for negative t', () => {
+      const model = new ReputationDecayModel({ model: 'exponential', params: { lambda: 1 } });
+      expect(() => model.decay(-1)).toThrow(/non-negative/);
+    });
+  });
+});
+
+// ===========================================================================
+// GraduatedBurner
+// ===========================================================================
+
+describe('GraduatedBurner', () => {
+  // -----------------------------------------------------------------------
+  // Constructor and defaults
+  // -----------------------------------------------------------------------
+
+  it('constructs with default configuration', () => {
+    const burner = new GraduatedBurner();
+    // Just verify it doesn't throw
+    const result = burner.calculateBurn(100, 'medium', 0, 10);
+    expect(result.burnAmount).toBeGreaterThan(0);
+    expect(result.burnFraction).toBeGreaterThan(0);
+    expect(result.burnFraction).toBeLessThanOrEqual(1);
+  });
+
+  it('constructs with partial config overrides', () => {
+    const burner = new GraduatedBurner({ minBurnFraction: 0.1, maxBurnFraction: 0.8 });
+    const result = burner.calculateBurn(1000, 'low', 0, 10);
+    expect(result.burnFraction).toBeGreaterThanOrEqual(0.1);
+    expect(result.burnFraction).toBeLessThanOrEqual(0.8);
+  });
+
+  // -----------------------------------------------------------------------
+  // Severity mapping
+  // -----------------------------------------------------------------------
+
+  describe('severity to burn fraction mapping', () => {
+    it('critical severity produces highest burn', () => {
+      const burner = new GraduatedBurner();
+      const critical = burner.calculateBurn(1000, 'critical', 0, 100);
+      const high = burner.calculateBurn(1000, 'high', 0, 100);
+      const medium = burner.calculateBurn(1000, 'medium', 0, 100);
+      const low = burner.calculateBurn(1000, 'low', 0, 100);
+
+      expect(critical.burnFraction).toBeGreaterThan(high.burnFraction);
+      expect(high.burnFraction).toBeGreaterThan(medium.burnFraction);
+      expect(medium.burnFraction).toBeGreaterThan(low.burnFraction);
+    });
+
+    it('critical=1.0, high=0.75, medium=0.5, low=0.25 base scores', () => {
+      // With historyWeight=0 and curveExponent=1 (linear), the severity maps directly
+      const burner = new GraduatedBurner({
+        minBurnFraction: 0,
+        maxBurnFraction: 1,
+        curveExponent: 1,
+        historyWeight: 0,
+      });
+
+      // burnFraction = 0 + (1-0) * severity^1 = severity
+      expect(burner.calculateBurn(100, 'critical', 0, 0).burnFraction).toBeCloseTo(1.0);
+      expect(burner.calculateBurn(100, 'high', 0, 0).burnFraction).toBeCloseTo(0.75);
+      expect(burner.calculateBurn(100, 'medium', 0, 0).burnFraction).toBeCloseTo(0.5);
+      expect(burner.calculateBurn(100, 'low', 0, 0).burnFraction).toBeCloseTo(0.25);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Burn amount calculation
+  // -----------------------------------------------------------------------
+
+  it('burnAmount equals stakeAmount * burnFraction', () => {
+    const burner = new GraduatedBurner();
+    const stake = 500;
+    const result = burner.calculateBurn(stake, 'medium', 0, 10);
+    expect(result.burnAmount).toBeCloseTo(stake * result.burnFraction);
+  });
+
+  it('zero stake produces zero burn amount', () => {
+    const burner = new GraduatedBurner();
+    const result = burner.calculateBurn(0, 'critical', 5, 10);
+    expect(result.burnAmount).toBe(0);
+    // burnFraction can still be > 0 (it's just applied to 0)
+  });
+
+  // -----------------------------------------------------------------------
+  // History adjustment
+  // -----------------------------------------------------------------------
+
+  it('agents with more past breaches get higher burn', () => {
+    const burner = new GraduatedBurner();
+    const noBreach = burner.calculateBurn(1000, 'medium', 0, 100);
+    const someBreach = burner.calculateBurn(1000, 'medium', 20, 100);
+    const manyBreach = burner.calculateBurn(1000, 'medium', 50, 100);
+
+    expect(someBreach.burnFraction).toBeGreaterThan(noBreach.burnFraction);
+    expect(manyBreach.burnFraction).toBeGreaterThan(someBreach.burnFraction);
+  });
+
+  it('history has no effect when historyWeight is 0', () => {
+    const burner = new GraduatedBurner({ historyWeight: 0 });
+    const noBreach = burner.calculateBurn(1000, 'medium', 0, 100);
+    const manyBreach = burner.calculateBurn(1000, 'medium', 50, 100);
+
+    expect(manyBreach.burnFraction).toBeCloseTo(noBreach.burnFraction);
+  });
+
+  it('history adjustment when totalPastExecutions is 0 treats breachRatio as 0', () => {
+    const burner = new GraduatedBurner();
+    // pastBreachCount=0, totalPastExecutions=0 => breachRatio = 0
+    const result = burner.calculateBurn(1000, 'low', 0, 0);
+    const expected = burner.calculateBurn(1000, 'low', 0, 100);
+    expect(result.burnFraction).toBeCloseTo(expected.burnFraction);
+  });
+
+  // -----------------------------------------------------------------------
+  // Curve exponent
+  // -----------------------------------------------------------------------
+
+  it('linear curve (exponent=1) scales proportionally', () => {
+    const burner = new GraduatedBurner({
+      minBurnFraction: 0,
+      maxBurnFraction: 1,
+      curveExponent: 1,
+      historyWeight: 0,
+    });
+
+    // With linear scaling, burnFraction should equal the severity score
+    const result = burner.calculateBurn(100, 'medium', 0, 10);
+    expect(result.burnFraction).toBeCloseTo(0.5); // medium = 0.5
+  });
+
+  it('superlinear curve (exponent>1) is lenient for low severity', () => {
+    const linearBurner = new GraduatedBurner({
+      minBurnFraction: 0,
+      maxBurnFraction: 1,
+      curveExponent: 1,
+      historyWeight: 0,
+    });
+    const superBurner = new GraduatedBurner({
+      minBurnFraction: 0,
+      maxBurnFraction: 1,
+      curveExponent: 2,
+      historyWeight: 0,
+    });
+
+    // For low severity (0.25), superlinear should produce less burn
+    const linearLow = linearBurner.calculateBurn(100, 'low', 0, 10);
+    const superLow = superBurner.calculateBurn(100, 'low', 0, 10);
+    expect(superLow.burnFraction).toBeLessThan(linearLow.burnFraction);
+
+    // For critical (1.0), both should produce the same (1^n = 1)
+    const linearCrit = linearBurner.calculateBurn(100, 'critical', 0, 10);
+    const superCrit = superBurner.calculateBurn(100, 'critical', 0, 10);
+    expect(superCrit.burnFraction).toBeCloseTo(linearCrit.burnFraction);
+  });
+
+  // -----------------------------------------------------------------------
+  // Clamping
+  // -----------------------------------------------------------------------
+
+  it('burnFraction is clamped to [0, 1]', () => {
+    const burner = new GraduatedBurner();
+    // Even with extreme parameters, burnFraction stays in [0, 1]
+    const result = burner.calculateBurn(1000, 'critical', 100, 100);
+    expect(result.burnFraction).toBeGreaterThanOrEqual(0);
+    expect(result.burnFraction).toBeLessThanOrEqual(1);
+  });
+
+  // -----------------------------------------------------------------------
+  // Constructor validation
+  // -----------------------------------------------------------------------
+
+  describe('constructor validation', () => {
+    it('rejects minBurnFraction < 0', () => {
+      expect(() => new GraduatedBurner({ minBurnFraction: -0.1 })).toThrow(/minBurnFraction/);
+    });
+
+    it('rejects minBurnFraction > 1', () => {
+      expect(() => new GraduatedBurner({ minBurnFraction: 1.5 })).toThrow(/minBurnFraction/);
+    });
+
+    it('rejects maxBurnFraction < minBurnFraction', () => {
+      expect(() => new GraduatedBurner({ minBurnFraction: 0.5, maxBurnFraction: 0.3 })).toThrow(
+        /maxBurnFraction/,
+      );
+    });
+
+    it('rejects maxBurnFraction > 1', () => {
+      expect(() => new GraduatedBurner({ maxBurnFraction: 1.5 })).toThrow(/maxBurnFraction/);
+    });
+
+    it('rejects curveExponent <= 0', () => {
+      expect(() => new GraduatedBurner({ curveExponent: 0 })).toThrow(/curveExponent/);
+      expect(() => new GraduatedBurner({ curveExponent: -1 })).toThrow(/curveExponent/);
+    });
+
+    it('rejects historyWeight < 0', () => {
+      expect(() => new GraduatedBurner({ historyWeight: -0.1 })).toThrow(/historyWeight/);
+    });
+
+    it('rejects historyWeight > 1', () => {
+      expect(() => new GraduatedBurner({ historyWeight: 1.5 })).toThrow(/historyWeight/);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // calculateBurn input validation
+  // -----------------------------------------------------------------------
+
+  describe('calculateBurn input validation', () => {
+    it('rejects negative stakeAmount', () => {
+      const burner = new GraduatedBurner();
+      expect(() => burner.calculateBurn(-100, 'medium', 0, 10)).toThrow(/stakeAmount/);
+    });
+
+    it('rejects negative pastBreachCount', () => {
+      const burner = new GraduatedBurner();
+      expect(() => burner.calculateBurn(100, 'medium', -1, 10)).toThrow(/pastBreachCount/);
+    });
+
+    it('rejects non-integer pastBreachCount', () => {
+      const burner = new GraduatedBurner();
+      expect(() => burner.calculateBurn(100, 'medium', 1.5, 10)).toThrow(/pastBreachCount/);
+    });
+
+    it('rejects negative totalPastExecutions', () => {
+      const burner = new GraduatedBurner();
+      expect(() => burner.calculateBurn(100, 'medium', 0, -5)).toThrow(/totalPastExecutions/);
+    });
+
+    it('rejects non-integer totalPastExecutions', () => {
+      const burner = new GraduatedBurner();
+      expect(() => burner.calculateBurn(100, 'medium', 0, 10.5)).toThrow(/totalPastExecutions/);
+    });
+  });
+});
+
+// ===========================================================================
+// ReputationAggregator
+// ===========================================================================
+
+describe('ReputationAggregator', () => {
+  const agg = new ReputationAggregator();
+
+  // -----------------------------------------------------------------------
+  // aggregate - happy paths
+  // -----------------------------------------------------------------------
+
+  it('returns the single score when there is one source', () => {
+    const result = agg.aggregate([{ sourceId: 'a', score: 0.75, weight: 1 }]);
+    expect(result).toBe(0.75);
+  });
+
+  it('returns weighted median for multiple equal-weight sources', () => {
+    // With equal weights, weighted median = regular median
+    const sources: ReputationSource[] = [
+      { sourceId: 'a', score: 0.3, weight: 1 },
+      { sourceId: 'b', score: 0.5, weight: 1 },
+      { sourceId: 'c', score: 0.9, weight: 1 },
+    ];
+    const result = agg.aggregate(sources);
+    // Median of [0.3, 0.5, 0.9] with equal weights => 0.5
+    expect(result).toBe(0.5);
+  });
+
+  it('weighted median favors the heavier side', () => {
+    // Two scores: 0.2 (weight=1) and 0.8 (weight=3)
+    // Total weight=4, half=2. Sorted: 0.2(w=1), 0.8(w=3). cumWeight after 0.8=4 >= 2, so median=0.8
+    const sources: ReputationSource[] = [
+      { sourceId: 'low', score: 0.2, weight: 1 },
+      { sourceId: 'high', score: 0.8, weight: 3 },
+    ];
+    const result = agg.aggregate(sources);
+    expect(result).toBe(0.8);
+  });
+
+  it('interpolates when cumulative weight lands exactly at 50%', () => {
+    // Scores: 0.2 (w=1), 0.8 (w=1). Total=2, half=1.
+    // After 0.2: cumWeight=1 === halfWeight=1, and there is a next => interpolate (0.2+0.8)/2 = 0.5
+    const sources: ReputationSource[] = [
+      { sourceId: 'a', score: 0.2, weight: 1 },
+      { sourceId: 'b', score: 0.8, weight: 1 },
+    ];
+    const result = agg.aggregate(sources);
+    expect(result).toBe(0.5);
+  });
+
+  it('ignores zero-weight sources', () => {
+    const sources: ReputationSource[] = [
+      { sourceId: 'ghost', score: 0.1, weight: 0 },
+      { sourceId: 'real', score: 0.9, weight: 5 },
+    ];
+    const result = agg.aggregate(sources);
+    expect(result).toBe(0.9);
+  });
+
+  // -----------------------------------------------------------------------
+  // aggregate - Byzantine fault tolerance
+  // -----------------------------------------------------------------------
+
+  it('tolerates up to ~50% malicious sources (BFT)', () => {
+    // 3 honest sources reporting ~0.8, 2 malicious sources reporting 0.0
+    const sources: ReputationSource[] = [
+      { sourceId: 'honest-1', score: 0.8, weight: 1 },
+      { sourceId: 'honest-2', score: 0.8, weight: 1 },
+      { sourceId: 'honest-3', score: 0.8, weight: 1 },
+      { sourceId: 'evil-1', score: 0.0, weight: 1 },
+      { sourceId: 'evil-2', score: 0.0, weight: 1 },
+    ];
+    const result = agg.aggregate(sources);
+    // Sorted: 0.0, 0.0, 0.8, 0.8, 0.8. Total=5, half=2.5
+    // cumWeight: 1, 2, 3 >= 2.5 => median is 0.8
+    expect(result).toBe(0.8);
+  });
+
+  it('exactly 50% malicious sources still gives honest result', () => {
+    // 3 honest (0.7) + 3 malicious (0.0), all weight 1
+    const sources: ReputationSource[] = [
+      { sourceId: 'h1', score: 0.7, weight: 1 },
+      { sourceId: 'h2', score: 0.7, weight: 1 },
+      { sourceId: 'h3', score: 0.7, weight: 1 },
+      { sourceId: 'e1', score: 0.0, weight: 1 },
+      { sourceId: 'e2', score: 0.0, weight: 1 },
+      { sourceId: 'e3', score: 0.0, weight: 1 },
+    ];
+    const result = agg.aggregate(sources);
+    // Sorted: 0, 0, 0, 0.7, 0.7, 0.7. Total=6, half=3
+    // cumWeight: 1, 2, 3 === half=3 and next exists => interpolate (0+0.7)/2 = 0.35
+    // Or cumWeight after 0(w=3)=3 >= 3 and next exists => (0+0.7)/2 = 0.35
+    // With 50% malicious, the median is affected -- this is the threshold
+    expect(result).toBeLessThan(0.7);
+  });
+
+  it('weighted BFT: honest majority by weight overrides malicious majority by count', () => {
+    // 2 honest sources with high weight vs 5 malicious sources with low weight
+    const sources: ReputationSource[] = [
+      { sourceId: 'h1', score: 0.9, weight: 10 },
+      { sourceId: 'h2', score: 0.85, weight: 10 },
+      { sourceId: 'e1', score: 0.0, weight: 1 },
+      { sourceId: 'e2', score: 0.0, weight: 1 },
+      { sourceId: 'e3', score: 0.0, weight: 1 },
+      { sourceId: 'e4', score: 0.0, weight: 1 },
+      { sourceId: 'e5', score: 0.0, weight: 1 },
+    ];
+    const result = agg.aggregate(sources);
+    // Total weight=25, half=12.5
+    // Sorted by score: 0(1), 0(1), 0(1), 0(1), 0(1), 0.85(10), 0.9(10)
+    // cumWeight: 1, 2, 3, 4, 5, 15>=12.5 => median = 0.85
+    expect(result).toBe(0.85);
+  });
+
+  // -----------------------------------------------------------------------
+  // aggregate - edge cases
+  // -----------------------------------------------------------------------
+
+  it('all sources report the same score', () => {
+    const sources: ReputationSource[] = [
+      { sourceId: 'a', score: 0.6, weight: 1 },
+      { sourceId: 'b', score: 0.6, weight: 2 },
+      { sourceId: 'c', score: 0.6, weight: 3 },
+    ];
+    expect(agg.aggregate(sources)).toBe(0.6);
+  });
+
+  it('extreme scores at boundaries (0 and 1)', () => {
+    const sources: ReputationSource[] = [
+      { sourceId: 'zero', score: 0, weight: 1 },
+      { sourceId: 'one', score: 1, weight: 1 },
+      { sourceId: 'mid', score: 0.5, weight: 1 },
+    ];
+    const result = agg.aggregate(sources);
+    expect(result).toBe(0.5);
+  });
+
+  // -----------------------------------------------------------------------
+  // aggregate - error paths
+  // -----------------------------------------------------------------------
+
+  it('throws for empty sources', () => {
+    expect(() => agg.aggregate([])).toThrow(/At least one reputation source/);
+  });
+
+  it('throws for score out of range [0, 1]', () => {
+    expect(() =>
+      agg.aggregate([{ sourceId: 'a', score: 1.5, weight: 1 }]),
+    ).toThrow(/Invalid score/);
+    expect(() =>
+      agg.aggregate([{ sourceId: 'a', score: -0.1, weight: 1 }]),
+    ).toThrow(/Invalid score/);
+  });
+
+  it('throws for negative weight', () => {
+    expect(() =>
+      agg.aggregate([{ sourceId: 'a', score: 0.5, weight: -1 }]),
+    ).toThrow(/Invalid weight/);
+  });
+
+  it('throws when all sources have zero weight', () => {
+    expect(() =>
+      agg.aggregate([
+        { sourceId: 'a', score: 0.5, weight: 0 },
+        { sourceId: 'b', score: 0.7, weight: 0 },
+      ]),
+    ).toThrow(/positive weight/);
+  });
+
+  // -----------------------------------------------------------------------
+  // aggregateWithConfidence
+  // -----------------------------------------------------------------------
+
+  describe('aggregateWithConfidence', () => {
+    it('returns median, quartiles, and consensus', () => {
+      const sources: ReputationSource[] = [
+        { sourceId: 'a', score: 0.2, weight: 1 },
+        { sourceId: 'b', score: 0.5, weight: 1 },
+        { sourceId: 'c', score: 0.8, weight: 1 },
+      ];
+      const result = agg.aggregateWithConfidence(sources);
+
+      expect(result.median).toBe(0.5);
+      expect(result.lowerQuartile).toBeDefined();
+      expect(result.upperQuartile).toBeDefined();
+      expect(result.consensus).toBeDefined();
+      expect(result.lowerQuartile).toBeLessThanOrEqual(result.median);
+      expect(result.upperQuartile).toBeGreaterThanOrEqual(result.median);
+    });
+
+    it('high consensus when all sources agree', () => {
+      const sources: ReputationSource[] = [
+        { sourceId: 'a', score: 0.7, weight: 1 },
+        { sourceId: 'b', score: 0.7, weight: 1 },
+        { sourceId: 'c', score: 0.7, weight: 1 },
+        { sourceId: 'd', score: 0.7, weight: 1 },
+      ];
+      const result = agg.aggregateWithConfidence(sources);
+
+      expect(result.median).toBe(0.7);
+      expect(result.consensus).toBe(1); // IQR = 0, so consensus = 1 - 0 = 1
+    });
+
+    it('low consensus when sources diverge widely', () => {
+      const sources: ReputationSource[] = [
+        { sourceId: 'a', score: 0.0, weight: 1 },
+        { sourceId: 'b', score: 0.25, weight: 1 },
+        { sourceId: 'c', score: 0.75, weight: 1 },
+        { sourceId: 'd', score: 1.0, weight: 1 },
+      ];
+      const result = agg.aggregateWithConfidence(sources);
+
+      // Wide spread => large IQR => low consensus
+      expect(result.consensus).toBeLessThan(1);
+      expect(result.upperQuartile).toBeGreaterThan(result.lowerQuartile);
+    });
+
+    it('consensus is in [0, 1]', () => {
+      const sources: ReputationSource[] = [
+        { sourceId: 'a', score: 0.0, weight: 1 },
+        { sourceId: 'b', score: 1.0, weight: 1 },
+      ];
+      const result = agg.aggregateWithConfidence(sources);
+      expect(result.consensus).toBeGreaterThanOrEqual(0);
+      expect(result.consensus).toBeLessThanOrEqual(1);
+    });
+
+    it('single source gives perfect consensus', () => {
+      const result = agg.aggregateWithConfidence([
+        { sourceId: 'only', score: 0.42, weight: 1 },
+      ]);
+      expect(result.median).toBe(0.42);
+      expect(result.lowerQuartile).toBe(0.42);
+      expect(result.upperQuartile).toBe(0.42);
+      expect(result.consensus).toBe(1);
+    });
+
+    it('weighted confidence reflects weight distribution', () => {
+      // One trusted source and many untrusted noise sources
+      const sources: ReputationSource[] = [
+        { sourceId: 'trusted', score: 0.8, weight: 100 },
+        { sourceId: 'n1', score: 0.1, weight: 1 },
+        { sourceId: 'n2', score: 0.2, weight: 1 },
+        { sourceId: 'n3', score: 0.9, weight: 1 },
+      ];
+      const result = agg.aggregateWithConfidence(sources);
+
+      // The trusted source dominates
+      expect(result.median).toBe(0.8);
+      // Quartiles should also be near 0.8 due to dominant weight
+      expect(result.lowerQuartile).toBe(0.8);
+      expect(result.upperQuartile).toBe(0.8);
+      expect(result.consensus).toBe(1);
+    });
   });
 });

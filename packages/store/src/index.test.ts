@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { MemoryStore } from './index';
 import type { CovenantStore, StoreEvent, StoreEventCallback } from './index';
 import type { CovenantDocument } from '@stele/core';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -540,5 +541,442 @@ describe('MemoryStore - edge cases', () => {
     const deleted = await store.deleteBatch(['a', 'a', 'a']);
     // Map.delete returns false for subsequent attempts on the same key
     expect(deleted).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MemoryStore — get() error paths
+// ---------------------------------------------------------------------------
+describe('MemoryStore - get() error paths', () => {
+  let store: MemoryStore;
+
+  beforeEach(() => {
+    store = new MemoryStore();
+  });
+
+  it('throws STORE_MISSING_ID when id is null', async () => {
+    await expect(store.get(null as unknown as string)).rejects.toThrow(SteleError);
+    await expect(store.get(null as unknown as string)).rejects.toThrow(/id must be a non-empty string/);
+    try {
+      await store.get(null as unknown as string);
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_ID);
+    }
+  });
+
+  it('throws STORE_MISSING_ID when id is undefined', async () => {
+    await expect(store.get(undefined as unknown as string)).rejects.toThrow(SteleError);
+    try {
+      await store.get(undefined as unknown as string);
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_ID);
+    }
+  });
+
+  it('throws STORE_MISSING_ID when id is empty string', async () => {
+    await expect(store.get('')).rejects.toThrow(SteleError);
+    try {
+      await store.get('');
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_ID);
+    }
+  });
+
+  it('throws STORE_MISSING_ID when id is whitespace-only string', async () => {
+    await expect(store.get('   ')).rejects.toThrow(SteleError);
+    await expect(store.get('\t')).rejects.toThrow(SteleError);
+    await expect(store.get('\n')).rejects.toThrow(SteleError);
+    try {
+      await store.get('   ');
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_ID);
+    }
+  });
+
+  it('throws STORE_MISSING_ID when id is a number', async () => {
+    await expect(store.get(42 as unknown as string)).rejects.toThrow(SteleError);
+    try {
+      await store.get(42 as unknown as string);
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_ID);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MemoryStore — delete() error paths
+// ---------------------------------------------------------------------------
+describe('MemoryStore - delete() error paths', () => {
+  let store: MemoryStore;
+
+  beforeEach(() => {
+    store = new MemoryStore();
+  });
+
+  it('throws STORE_MISSING_ID when id is null', async () => {
+    await expect(store.delete(null as unknown as string)).rejects.toThrow(SteleError);
+    await expect(store.delete(null as unknown as string)).rejects.toThrow(/id must be a non-empty string/);
+    try {
+      await store.delete(null as unknown as string);
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_ID);
+    }
+  });
+
+  it('throws STORE_MISSING_ID when id is undefined', async () => {
+    await expect(store.delete(undefined as unknown as string)).rejects.toThrow(SteleError);
+    try {
+      await store.delete(undefined as unknown as string);
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_ID);
+    }
+  });
+
+  it('throws STORE_MISSING_ID when id is empty string', async () => {
+    await expect(store.delete('')).rejects.toThrow(SteleError);
+    try {
+      await store.delete('');
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_ID);
+    }
+  });
+
+  it('throws STORE_MISSING_ID when id is whitespace-only string', async () => {
+    await expect(store.delete('   ')).rejects.toThrow(SteleError);
+    await expect(store.delete('\t')).rejects.toThrow(SteleError);
+    await expect(store.delete('\n')).rejects.toThrow(SteleError);
+    try {
+      await store.delete('   ');
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_ID);
+    }
+  });
+
+  it('throws STORE_MISSING_ID when id is a number', async () => {
+    await expect(store.delete(123 as unknown as string)).rejects.toThrow(SteleError);
+    try {
+      await store.delete(123 as unknown as string);
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_ID);
+    }
+  });
+
+  it('does not delete anything when id is invalid', async () => {
+    await store.put(makeDoc({ id: 'keep-me' }));
+    expect(store.size).toBe(1);
+    await expect(store.delete(null as unknown as string)).rejects.toThrow();
+    expect(store.size).toBe(1);
+    expect(await store.has('keep-me')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MemoryStore — putBatch() error paths
+// ---------------------------------------------------------------------------
+describe('MemoryStore - putBatch() error paths', () => {
+  let store: MemoryStore;
+
+  beforeEach(() => {
+    store = new MemoryStore();
+  });
+
+  it('throws STORE_MISSING_DOC when docs is null', async () => {
+    await expect(store.putBatch(null as unknown as CovenantDocument[])).rejects.toThrow(SteleError);
+    try {
+      await store.putBatch(null as unknown as CovenantDocument[]);
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_DOC);
+    }
+  });
+
+  it('throws STORE_MISSING_DOC when docs is undefined', async () => {
+    await expect(store.putBatch(undefined as unknown as CovenantDocument[])).rejects.toThrow(SteleError);
+    try {
+      await store.putBatch(undefined as unknown as CovenantDocument[]);
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_DOC);
+    }
+  });
+
+  it('throws STORE_MISSING_DOC when docs is a string (non-array)', async () => {
+    await expect(store.putBatch('not-an-array' as unknown as CovenantDocument[])).rejects.toThrow(SteleError);
+    try {
+      await store.putBatch('not-an-array' as unknown as CovenantDocument[]);
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_DOC);
+      expect((err as SteleError).message).toMatch(/docs must be an array/);
+    }
+  });
+
+  it('throws STORE_MISSING_DOC when docs is a number (non-array)', async () => {
+    await expect(store.putBatch(42 as unknown as CovenantDocument[])).rejects.toThrow(SteleError);
+    try {
+      await store.putBatch(42 as unknown as CovenantDocument[]);
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_DOC);
+    }
+  });
+
+  it('throws STORE_MISSING_DOC when docs is a plain object (non-array)', async () => {
+    await expect(store.putBatch({} as unknown as CovenantDocument[])).rejects.toThrow(SteleError);
+    try {
+      await store.putBatch({} as unknown as CovenantDocument[]);
+    } catch (err) {
+      expect(err).toBeInstanceOf(SteleError);
+      expect((err as SteleError).code).toBe(SteleErrorCode.STORE_MISSING_DOC);
+    }
+  });
+
+  it('does not store any documents when putBatch receives invalid input', async () => {
+    try {
+      await store.putBatch(null as unknown as CovenantDocument[]);
+    } catch {
+      // expected
+    }
+    expect(store.size).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MemoryStore — event listener errors don't crash
+// ---------------------------------------------------------------------------
+describe('MemoryStore - event listener error isolation', () => {
+  let store: MemoryStore;
+
+  beforeEach(() => {
+    store = new MemoryStore();
+  });
+
+  it('a throwing listener does not prevent other listeners from being called on put', async () => {
+    const events: StoreEvent[] = [];
+
+    // First listener throws
+    store.onEvent(() => {
+      throw new Error('listener kaboom');
+    });
+    // Second listener should still receive the event
+    store.onEvent((e) => events.push(e));
+
+    await store.put(makeDoc({ id: 'doc-1' }));
+
+    expect(events.length).toBe(1);
+    expect(events[0]!.type).toBe('put');
+    expect(events[0]!.documentId).toBe('doc-1');
+  });
+
+  it('a throwing listener does not prevent other listeners from being called on delete', async () => {
+    await store.put(makeDoc({ id: 'doc-1' }));
+
+    const events: StoreEvent[] = [];
+
+    // First listener throws
+    store.onEvent(() => {
+      throw new Error('delete listener error');
+    });
+    // Second listener should still receive the event
+    store.onEvent((e) => events.push(e));
+
+    await store.delete('doc-1');
+
+    expect(events.length).toBe(1);
+    expect(events[0]!.type).toBe('delete');
+    expect(events[0]!.documentId).toBe('doc-1');
+  });
+
+  it('all three listeners are called even when the middle one throws', async () => {
+    const calls: number[] = [];
+
+    store.onEvent(() => { calls.push(1); });
+    store.onEvent(() => { calls.push(2); throw new Error('middle throws'); });
+    store.onEvent(() => { calls.push(3); });
+
+    await store.put(makeDoc({ id: 'doc-1' }));
+
+    expect(calls).toEqual([1, 2, 3]);
+  });
+
+  it('put succeeds even when all listeners throw', async () => {
+    store.onEvent(() => { throw new Error('boom 1'); });
+    store.onEvent(() => { throw new Error('boom 2'); });
+
+    // put should not throw
+    await store.put(makeDoc({ id: 'doc-1' }));
+
+    // document should still be stored
+    expect(store.size).toBe(1);
+    expect(await store.has('doc-1')).toBe(true);
+  });
+
+  it('delete succeeds even when all listeners throw', async () => {
+    await store.put(makeDoc({ id: 'doc-1' }));
+
+    store.onEvent(() => { throw new Error('boom'); });
+
+    const deleted = await store.delete('doc-1');
+    expect(deleted).toBe(true);
+    expect(store.size).toBe(0);
+  });
+
+  it('putBatch processes all docs even when listeners throw', async () => {
+    const events: string[] = [];
+
+    store.onEvent(() => { throw new Error('always throws'); });
+    store.onEvent((e) => { events.push(e.documentId); });
+
+    const docs = [makeDoc({ id: 'a' }), makeDoc({ id: 'b' }), makeDoc({ id: 'c' })];
+    await store.putBatch(docs);
+
+    expect(store.size).toBe(3);
+    expect(events).toEqual(['a', 'b', 'c']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MemoryStore — count() and has() additional coverage
+// ---------------------------------------------------------------------------
+describe('MemoryStore - count() and has() additional coverage', () => {
+  let store: MemoryStore;
+
+  beforeEach(() => {
+    store = new MemoryStore();
+  });
+
+  it('count reflects insertions and deletions', async () => {
+    expect(await store.count()).toBe(0);
+    await store.put(makeDoc({ id: 'a' }));
+    expect(await store.count()).toBe(1);
+    await store.put(makeDoc({ id: 'b' }));
+    expect(await store.count()).toBe(2);
+    await store.delete('a');
+    expect(await store.count()).toBe(1);
+    await store.delete('b');
+    expect(await store.count()).toBe(0);
+  });
+
+  it('count with filter after batch insert', async () => {
+    await store.putBatch([
+      makeDoc({ id: 'alice-1', issuer: { id: 'alice', publicKey: 'aa'.repeat(32), role: 'issuer' } }),
+      makeDoc({ id: 'alice-2', issuer: { id: 'alice', publicKey: 'aa'.repeat(32), role: 'issuer' } }),
+      makeDoc({ id: 'bob-1', issuer: { id: 'bob', publicKey: 'aa'.repeat(32), role: 'issuer' } }),
+    ]);
+    expect(await store.count({ issuerId: 'alice' })).toBe(2);
+    expect(await store.count({ issuerId: 'bob' })).toBe(1);
+    expect(await store.count({ issuerId: 'charlie' })).toBe(0);
+    expect(await store.count()).toBe(3);
+  });
+
+  it('has returns false after a document is deleted', async () => {
+    await store.put(makeDoc({ id: 'ephemeral' }));
+    expect(await store.has('ephemeral')).toBe(true);
+    await store.delete('ephemeral');
+    expect(await store.has('ephemeral')).toBe(false);
+  });
+
+  it('has returns true after put overwrites a document', async () => {
+    await store.put(makeDoc({ id: 'overwrite-me', constraints: 'v1' }));
+    await store.put(makeDoc({ id: 'overwrite-me', constraints: 'v2' }));
+    expect(await store.has('overwrite-me')).toBe(true);
+  });
+
+  it('has returns false after clear', async () => {
+    await store.put(makeDoc({ id: 'a' }));
+    await store.put(makeDoc({ id: 'b' }));
+    store.clear();
+    expect(await store.has('a')).toBe(false);
+    expect(await store.has('b')).toBe(false);
+  });
+
+  it('count returns 0 after clear', async () => {
+    await store.putBatch([makeDoc({ id: 'a' }), makeDoc({ id: 'b' })]);
+    store.clear();
+    expect(await store.count()).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MemoryStore — deleteBatch() additional coverage
+// ---------------------------------------------------------------------------
+describe('MemoryStore - deleteBatch() additional coverage', () => {
+  let store: MemoryStore;
+
+  beforeEach(() => {
+    store = new MemoryStore();
+  });
+
+  it('returns 0 when deleting non-existent IDs', async () => {
+    const deleted = await store.deleteBatch(['ghost-1', 'ghost-2', 'ghost-3']);
+    expect(deleted).toBe(0);
+  });
+
+  it('returns correct count when mix of existing and non-existent IDs', async () => {
+    await store.putBatch([
+      makeDoc({ id: 'exists-1' }),
+      makeDoc({ id: 'exists-2' }),
+      makeDoc({ id: 'exists-3' }),
+    ]);
+    const deleted = await store.deleteBatch(['exists-1', 'nope', 'exists-3', 'also-nope']);
+    expect(deleted).toBe(2);
+    expect(store.size).toBe(1);
+    expect(await store.has('exists-2')).toBe(true);
+  });
+
+  it('does not crash when all IDs are non-existent', async () => {
+    await store.put(makeDoc({ id: 'survivor' }));
+    const deleted = await store.deleteBatch(['fake-1', 'fake-2']);
+    expect(deleted).toBe(0);
+    expect(store.size).toBe(1);
+    expect(await store.has('survivor')).toBe(true);
+  });
+
+  it('emits delete events only for actually deleted documents', async () => {
+    await store.putBatch([makeDoc({ id: 'a' }), makeDoc({ id: 'b' })]);
+    const events: StoreEvent[] = [];
+    store.onEvent((e) => events.push(e));
+
+    await store.deleteBatch(['a', 'nonexistent', 'b']);
+
+    expect(events.length).toBe(2);
+    expect(events[0]!.documentId).toBe('a');
+    expect(events[1]!.documentId).toBe('b');
+    expect(events.every((e) => e.type === 'delete')).toBe(true);
+  });
+
+  it('returns 0 for empty ID array', async () => {
+    await store.put(makeDoc({ id: 'untouched' }));
+    const deleted = await store.deleteBatch([]);
+    expect(deleted).toBe(0);
+    expect(store.size).toBe(1);
+  });
+
+  it('handles large batch of deletions', async () => {
+    const ids = Array.from({ length: 100 }, (_, i) => `doc-${i}`);
+    const docs = ids.map((id) => makeDoc({ id }));
+    await store.putBatch(docs);
+    expect(store.size).toBe(100);
+
+    // Delete first 50
+    const deleteIds = ids.slice(0, 50);
+    const deleted = await store.deleteBatch(deleteIds);
+    expect(deleted).toBe(50);
+    expect(store.size).toBe(50);
+
+    // Remaining docs should still be accessible
+    for (let i = 50; i < 100; i++) {
+      expect(await store.has(`doc-${i}`)).toBe(true);
+    }
   });
 });

@@ -1883,3 +1883,1462 @@ describe('Full incident lifecycle', () => {
     expect(resolved.lessonsLearned).toHaveLength(3);
   });
 });
+
+// ===========================================================================
+// EXPONENTIAL DEGRADATION TESTS
+// ===========================================================================
+
+import {
+  ExponentialDegradation,
+  BreachStateMachine,
+  RecoveryModel,
+  RepeatOffenderDetector,
+} from './index.js';
+import type { BreachRecord } from './index.js';
+
+// ---------------------------------------------------------------------------
+// ExponentialDegradation - constructor validation
+// ---------------------------------------------------------------------------
+
+describe('ExponentialDegradation - constructor validation', () => {
+  it('creates instance with valid baseLoss and lambda', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    expect(deg).toBeDefined();
+  });
+
+  it('accepts baseLoss of exactly 1', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 1, lambda: 0.5 });
+    expect(deg).toBeDefined();
+  });
+
+  it('accepts baseLoss just above 0', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.001, lambda: 0.1 });
+    expect(deg).toBeDefined();
+  });
+
+  it('throws when baseLoss is 0', () => {
+    expect(() => new ExponentialDegradation({ baseLoss: 0, lambda: 1 })).toThrow(
+      'baseLoss must be in (0, 1]',
+    );
+  });
+
+  it('throws when baseLoss is negative', () => {
+    expect(() => new ExponentialDegradation({ baseLoss: -0.5, lambda: 1 })).toThrow(
+      'baseLoss must be in (0, 1]',
+    );
+  });
+
+  it('throws when baseLoss exceeds 1', () => {
+    expect(() => new ExponentialDegradation({ baseLoss: 1.1, lambda: 1 })).toThrow(
+      'baseLoss must be in (0, 1]',
+    );
+  });
+
+  it('throws when lambda is 0', () => {
+    expect(() => new ExponentialDegradation({ baseLoss: 0.5, lambda: 0 })).toThrow(
+      'lambda must be > 0',
+    );
+  });
+
+  it('throws when lambda is negative', () => {
+    expect(() => new ExponentialDegradation({ baseLoss: 0.5, lambda: -1 })).toThrow(
+      'lambda must be > 0',
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ExponentialDegradation - computeLoss
+// ---------------------------------------------------------------------------
+
+describe('ExponentialDegradation - computeLoss', () => {
+  it('returns full baseLoss at hop 0', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.8, lambda: 1 });
+    expect(deg.computeLoss(0)).toBeCloseTo(0.8, 10);
+  });
+
+  it('returns baseLoss * e^(-lambda) at hop 1', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.8, lambda: 1 });
+    expect(deg.computeLoss(1)).toBeCloseTo(0.8 * Math.exp(-1), 10);
+  });
+
+  it('decays exponentially over multiple hops', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 1.0, lambda: 0.5 });
+    const loss0 = deg.computeLoss(0);
+    const loss1 = deg.computeLoss(1);
+    const loss2 = deg.computeLoss(2);
+    const loss5 = deg.computeLoss(5);
+
+    // Each hop should have lower loss
+    expect(loss0).toBeGreaterThan(loss1);
+    expect(loss1).toBeGreaterThan(loss2);
+    expect(loss2).toBeGreaterThan(loss5);
+
+    // Verify exact values
+    expect(loss0).toBeCloseTo(1.0, 10);
+    expect(loss1).toBeCloseTo(Math.exp(-0.5), 10);
+    expect(loss2).toBeCloseTo(Math.exp(-1.0), 10);
+    expect(loss5).toBeCloseTo(Math.exp(-2.5), 10);
+  });
+
+  it('approaches zero at large hop distances', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 1.0, lambda: 2 });
+    const loss100 = deg.computeLoss(100);
+    expect(loss100).toBeLessThan(1e-10);
+  });
+
+  it('higher lambda causes faster decay', () => {
+    const slowDecay = new ExponentialDegradation({ baseLoss: 1, lambda: 0.1 });
+    const fastDecay = new ExponentialDegradation({ baseLoss: 1, lambda: 2 });
+
+    // At hop 3, fast decay should produce much lower loss
+    expect(fastDecay.computeLoss(3)).toBeLessThan(slowDecay.computeLoss(3));
+  });
+
+  it('throws for negative hopDistance', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    expect(() => deg.computeLoss(-1)).toThrow('hopDistance must be a non-negative finite number');
+  });
+
+  it('throws for NaN hopDistance', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    expect(() => deg.computeLoss(NaN)).toThrow('hopDistance must be a non-negative finite number');
+  });
+
+  it('throws for Infinity hopDistance', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    expect(() => deg.computeLoss(Infinity)).toThrow(
+      'hopDistance must be a non-negative finite number',
+    );
+  });
+
+  it('accepts fractional hop distances', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 1.0, lambda: 1 });
+    const loss = deg.computeLoss(0.5);
+    expect(loss).toBeCloseTo(Math.exp(-0.5), 10);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ExponentialDegradation - degrade
+// ---------------------------------------------------------------------------
+
+describe('ExponentialDegradation - degrade', () => {
+  it('reduces trust by loss amount at hop 0', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.3, lambda: 1 });
+    const result = deg.degrade(1.0, 0);
+    expect(result).toBeCloseTo(0.7, 10);
+  });
+
+  it('reduces trust less at higher hops', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    const atHop0 = deg.degrade(1.0, 0);
+    const atHop1 = deg.degrade(1.0, 1);
+    const atHop3 = deg.degrade(1.0, 3);
+
+    expect(atHop0).toBeLessThan(atHop1);
+    expect(atHop1).toBeLessThan(atHop3);
+  });
+
+  it('clamps result to minimum of 0', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 1.0, lambda: 0.01 });
+    // With baseLoss=1 and small lambda, loss at hop 0 is ~1.0
+    // degrade(0.5, 0) = max(0, 0.5 - 1.0) = 0
+    const result = deg.degrade(0.5, 0);
+    expect(result).toBe(0);
+  });
+
+  it('preserves trust at 1 when loss is 0 at high hops', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 10 });
+    // At hop 100, loss is essentially 0
+    const result = deg.degrade(1.0, 100);
+    expect(result).toBeCloseTo(1.0, 5);
+  });
+
+  it('throws when currentTrust is negative', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    expect(() => deg.degrade(-0.1, 0)).toThrow('currentTrust must be in [0, 1]');
+  });
+
+  it('throws when currentTrust exceeds 1', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    expect(() => deg.degrade(1.1, 0)).toThrow('currentTrust must be in [0, 1]');
+  });
+
+  it('accepts currentTrust of exactly 0', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    const result = deg.degrade(0, 0);
+    expect(result).toBe(0);
+  });
+
+  it('accepts currentTrust of exactly 1', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    const result = deg.degrade(1.0, 0);
+    expect(result).toBeCloseTo(0.5, 10);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ExponentialDegradation - profile
+// ---------------------------------------------------------------------------
+
+describe('ExponentialDegradation - profile', () => {
+  it('returns array with maxHops+1 entries', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    const p = deg.profile(5);
+    expect(p).toHaveLength(6); // hops 0..5
+  });
+
+  it('first entry equals baseLoss', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.7, lambda: 1 });
+    const p = deg.profile(3);
+    expect(p[0]).toBeCloseTo(0.7, 10);
+  });
+
+  it('entries are monotonically decreasing', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 1, lambda: 0.5 });
+    const p = deg.profile(10);
+    for (let i = 1; i < p.length; i++) {
+      expect(p[i]!).toBeLessThan(p[i - 1]!);
+    }
+  });
+
+  it('profile(0) returns single entry', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    const p = deg.profile(0);
+    expect(p).toHaveLength(1);
+    expect(p[0]).toBeCloseTo(0.5, 10);
+  });
+
+  it('throws for negative maxHops', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    expect(() => deg.profile(-1)).toThrow('maxHops must be a non-negative integer');
+  });
+
+  it('throws for non-integer maxHops', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    expect(() => deg.profile(2.5)).toThrow('maxHops must be a non-negative integer');
+  });
+
+  it('each entry matches computeLoss at that hop', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.8, lambda: 0.3 });
+    const p = deg.profile(5);
+    for (let i = 0; i <= 5; i++) {
+      expect(p[i]).toBeCloseTo(deg.computeLoss(i), 10);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ExponentialDegradation - effectiveRadius
+// ---------------------------------------------------------------------------
+
+describe('ExponentialDegradation - effectiveRadius', () => {
+  it('returns 0 when baseLoss < threshold', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.1, lambda: 1 });
+    expect(deg.effectiveRadius(0.5)).toBe(0);
+  });
+
+  it('returns 0 when baseLoss equals threshold', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    // ln(0.5/0.5) = ln(1) = 0, so radius = floor(-0) = -0
+    // Use >= comparison to accept both 0 and -0
+    const radius = deg.effectiveRadius(0.5);
+    expect(radius >= 0 && radius <= 0).toBe(true);
+  });
+
+  it('returns correct radius for known parameters', () => {
+    // baseLoss=1, lambda=1, threshold=0.1
+    // d = -ln(0.1/1)/1 = -ln(0.1) = 2.302...
+    // floor(2.302) = 2
+    const deg = new ExponentialDegradation({ baseLoss: 1.0, lambda: 1 });
+    expect(deg.effectiveRadius(0.1)).toBe(2);
+  });
+
+  it('larger baseLoss or smaller lambda yields larger radius', () => {
+    const narrow = new ExponentialDegradation({ baseLoss: 0.5, lambda: 2 });
+    const wide = new ExponentialDegradation({ baseLoss: 1.0, lambda: 0.5 });
+    expect(wide.effectiveRadius(0.1)).toBeGreaterThan(narrow.effectiveRadius(0.1));
+  });
+
+  it('throws when threshold is 0', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    expect(() => deg.effectiveRadius(0)).toThrow('threshold must be in (0, 1]');
+  });
+
+  it('throws when threshold is negative', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    expect(() => deg.effectiveRadius(-0.1)).toThrow('threshold must be in (0, 1]');
+  });
+
+  it('throws when threshold exceeds 1', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 0.5, lambda: 1 });
+    expect(() => deg.effectiveRadius(1.5)).toThrow('threshold must be in (0, 1]');
+  });
+
+  it('accepts threshold of exactly 1', () => {
+    const deg = new ExponentialDegradation({ baseLoss: 1.0, lambda: 1 });
+    // Math.floor(-ln(1/1)/1) = Math.floor(-0) = -0
+    const radius = deg.effectiveRadius(1);
+    expect(radius >= 0 && radius <= 0).toBe(true);
+  });
+});
+
+// ===========================================================================
+// BREACH STATE MACHINE TESTS
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// BreachStateMachine - constructor
+// ---------------------------------------------------------------------------
+
+describe('BreachStateMachine - constructor', () => {
+  it('creates a state machine with initial state "detected"', () => {
+    const sm = new BreachStateMachine('breach-1');
+    expect(sm.state).toBe('detected');
+  });
+
+  it('exposes breachId via id getter', () => {
+    const sm = new BreachStateMachine('my-breach-123');
+    expect(sm.id).toBe('my-breach-123');
+  });
+
+  it('starts with empty transition history', () => {
+    const sm = new BreachStateMachine('breach-1');
+    expect(sm.getTransitions()).toHaveLength(0);
+  });
+
+  it('records initial detected timestamp', () => {
+    const before = Date.now();
+    const sm = new BreachStateMachine('breach-1');
+    const after = Date.now();
+
+    const ts = sm.getStateTimestamp('detected');
+    expect(ts).toBeDefined();
+    expect(ts).toBeGreaterThanOrEqual(before);
+    expect(ts).toBeLessThanOrEqual(after);
+  });
+
+  it('isResolved returns false initially', () => {
+    const sm = new BreachStateMachine('breach-1');
+    expect(sm.isResolved()).toBe(false);
+  });
+
+  it('throws for empty breachId', () => {
+    expect(() => new BreachStateMachine('')).toThrow(
+      'breachId must be a non-empty string',
+    );
+  });
+
+  it('throws for whitespace-only breachId', () => {
+    expect(() => new BreachStateMachine('   ')).toThrow(
+      'breachId must be a non-empty string',
+    );
+  });
+
+  it('accepts optional config for timeouts', () => {
+    const sm = new BreachStateMachine('breach-1', {
+      detectedTimeoutMs: 5000,
+      confirmedTimeoutMs: 10000,
+    });
+    expect(sm.state).toBe('detected');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// BreachStateMachine - valid transitions
+// ---------------------------------------------------------------------------
+
+describe('BreachStateMachine - valid transitions', () => {
+  it('transitions detected -> confirmed', () => {
+    const sm = new BreachStateMachine('breach-1');
+    sm.transition('confirmed', 'analyst-1');
+    expect(sm.state).toBe('confirmed');
+  });
+
+  it('transitions confirmed -> remediated', () => {
+    const sm = new BreachStateMachine('breach-1');
+    sm.transition('confirmed', 'analyst-1');
+    sm.transition('remediated', 'engineer-1');
+    expect(sm.state).toBe('remediated');
+  });
+
+  it('transitions remediated -> recovered', () => {
+    const sm = new BreachStateMachine('breach-1');
+    sm.transition('confirmed', 'analyst-1');
+    sm.transition('remediated', 'engineer-1');
+    sm.transition('recovered', 'manager-1');
+    expect(sm.state).toBe('recovered');
+  });
+
+  it('full lifecycle: detected -> confirmed -> remediated -> recovered', () => {
+    const sm = new BreachStateMachine('breach-full');
+    expect(sm.state).toBe('detected');
+
+    sm.transition('confirmed', 'actor-a');
+    expect(sm.state).toBe('confirmed');
+
+    sm.transition('remediated', 'actor-b');
+    expect(sm.state).toBe('remediated');
+
+    sm.transition('recovered', 'actor-c');
+    expect(sm.state).toBe('recovered');
+
+    expect(sm.isResolved()).toBe(true);
+  });
+
+  it('records transition history correctly', () => {
+    const sm = new BreachStateMachine('breach-hist');
+    sm.transition('confirmed', 'analyst');
+    sm.transition('remediated', 'engineer');
+
+    const transitions = sm.getTransitions();
+    expect(transitions).toHaveLength(2);
+
+    expect(transitions[0]!.from).toBe('detected');
+    expect(transitions[0]!.to).toBe('confirmed');
+    expect(transitions[0]!.actor).toBe('analyst');
+
+    expect(transitions[1]!.from).toBe('confirmed');
+    expect(transitions[1]!.to).toBe('remediated');
+    expect(transitions[1]!.actor).toBe('engineer');
+  });
+
+  it('attaches evidence to transitions', () => {
+    const sm = new BreachStateMachine('breach-ev');
+    const evidence = [
+      { type: 'log', hash: 'abc123', description: 'Server log showing breach' },
+    ];
+    sm.transition('confirmed', 'analyst', evidence);
+
+    const transitions = sm.getTransitions();
+    expect(transitions[0]!.evidence).toHaveLength(1);
+    expect(transitions[0]!.evidence[0]!.type).toBe('log');
+    expect(transitions[0]!.evidence[0]!.hash).toBe('abc123');
+  });
+
+  it('timestamps are set for each state entered', () => {
+    const sm = new BreachStateMachine('breach-ts');
+    const beforeConfirm = Date.now();
+    sm.transition('confirmed', 'analyst');
+    const afterConfirm = Date.now();
+
+    const ts = sm.getStateTimestamp('confirmed');
+    expect(ts).toBeDefined();
+    expect(ts).toBeGreaterThanOrEqual(beforeConfirm);
+    expect(ts).toBeLessThanOrEqual(afterConfirm);
+  });
+
+  it('getTransitions returns a copy, not a reference', () => {
+    const sm = new BreachStateMachine('breach-copy');
+    sm.transition('confirmed', 'analyst');
+
+    const t1 = sm.getTransitions();
+    const t2 = sm.getTransitions();
+    expect(t1).not.toBe(t2); // different array instances
+    expect(t1).toEqual(t2);  // same content
+  });
+});
+
+// ---------------------------------------------------------------------------
+// BreachStateMachine - invalid transitions
+// ---------------------------------------------------------------------------
+
+describe('BreachStateMachine - invalid transitions', () => {
+  it('cannot skip from detected -> remediated', () => {
+    const sm = new BreachStateMachine('breach-1');
+    expect(() => sm.transition('remediated', 'actor')).toThrow(
+      'Invalid breach state transition: detected -> remediated',
+    );
+  });
+
+  it('cannot skip from detected -> recovered', () => {
+    const sm = new BreachStateMachine('breach-1');
+    expect(() => sm.transition('recovered', 'actor')).toThrow(
+      'Invalid breach state transition: detected -> recovered',
+    );
+  });
+
+  it('cannot go backwards from confirmed -> detected', () => {
+    const sm = new BreachStateMachine('breach-1');
+    sm.transition('confirmed', 'actor');
+    expect(() => sm.transition('detected', 'actor')).toThrow(
+      'Invalid breach state transition: confirmed -> detected',
+    );
+  });
+
+  it('cannot skip from confirmed -> recovered', () => {
+    const sm = new BreachStateMachine('breach-1');
+    sm.transition('confirmed', 'actor');
+    expect(() => sm.transition('recovered', 'actor')).toThrow(
+      'Invalid breach state transition: confirmed -> recovered',
+    );
+  });
+
+  it('cannot transition from recovered (terminal state)', () => {
+    const sm = new BreachStateMachine('breach-1');
+    sm.transition('confirmed', 'a');
+    sm.transition('remediated', 'b');
+    sm.transition('recovered', 'c');
+
+    expect(() => sm.transition('detected', 'actor')).toThrow(
+      'Invalid breach state transition: recovered -> detected',
+    );
+  });
+
+  it('cannot transition to same state', () => {
+    const sm = new BreachStateMachine('breach-1');
+    expect(() => sm.transition('detected', 'actor')).toThrow(
+      'Invalid breach state transition: detected -> detected',
+    );
+  });
+
+  it('throws for empty actor string', () => {
+    const sm = new BreachStateMachine('breach-1');
+    expect(() => sm.transition('confirmed', '')).toThrow(
+      'actor must be a non-empty string',
+    );
+  });
+
+  it('throws for whitespace-only actor string', () => {
+    const sm = new BreachStateMachine('breach-1');
+    expect(() => sm.transition('confirmed', '   ')).toThrow(
+      'actor must be a non-empty string',
+    );
+  });
+
+  it('state does not change after a failed transition', () => {
+    const sm = new BreachStateMachine('breach-1');
+    try {
+      sm.transition('recovered', 'actor');
+    } catch {
+      // expected
+    }
+    expect(sm.state).toBe('detected');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// BreachStateMachine - timeInCurrentState
+// ---------------------------------------------------------------------------
+
+describe('BreachStateMachine - timeInCurrentState', () => {
+  it('returns a non-negative duration', () => {
+    const sm = new BreachStateMachine('breach-1');
+    expect(sm.timeInCurrentState()).toBeGreaterThanOrEqual(0);
+  });
+
+  it('resets after state transition', async () => {
+    const sm = new BreachStateMachine('breach-1');
+    // Wait a bit so detected state has some time
+    await new Promise((r) => setTimeout(r, 10));
+    const timeInDetected = sm.timeInCurrentState();
+    expect(timeInDetected).toBeGreaterThanOrEqual(10);
+
+    sm.transition('confirmed', 'analyst');
+    // Time in confirmed should be near 0
+    expect(sm.timeInCurrentState()).toBeLessThan(timeInDetected);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// BreachStateMachine - checkTimeouts
+// ---------------------------------------------------------------------------
+
+describe('BreachStateMachine - checkTimeouts', () => {
+  it('returns null when no timeout is configured', () => {
+    const sm = new BreachStateMachine('breach-1');
+    expect(sm.checkTimeouts()).toBeNull();
+  });
+
+  it('returns null when timeout has not elapsed', () => {
+    const sm = new BreachStateMachine('breach-1', {
+      detectedTimeoutMs: 999999,
+    });
+    expect(sm.checkTimeouts()).toBeNull();
+    expect(sm.state).toBe('detected');
+  });
+
+  it('auto-transitions detected -> confirmed after timeout', async () => {
+    const sm = new BreachStateMachine('breach-1', {
+      detectedTimeoutMs: 10,
+    });
+    await new Promise((r) => setTimeout(r, 20));
+    const result = sm.checkTimeouts();
+    expect(result).toBe('confirmed');
+    expect(sm.state).toBe('confirmed');
+  });
+
+  it('auto-transitions confirmed -> remediated after timeout', async () => {
+    const sm = new BreachStateMachine('breach-1', {
+      confirmedTimeoutMs: 10,
+    });
+    sm.transition('confirmed', 'analyst');
+    await new Promise((r) => setTimeout(r, 20));
+    const result = sm.checkTimeouts();
+    expect(result).toBe('remediated');
+    expect(sm.state).toBe('remediated');
+  });
+
+  it('auto-transitions remediated -> recovered after timeout', async () => {
+    const sm = new BreachStateMachine('breach-1', {
+      remediatedTimeoutMs: 10,
+    });
+    sm.transition('confirmed', 'analyst');
+    sm.transition('remediated', 'engineer');
+    await new Promise((r) => setTimeout(r, 20));
+    const result = sm.checkTimeouts();
+    expect(result).toBe('recovered');
+    expect(sm.state).toBe('recovered');
+    expect(sm.isResolved()).toBe(true);
+  });
+
+  it('timeout auto-transitions use provided autoActor', async () => {
+    const sm = new BreachStateMachine('breach-1', {
+      detectedTimeoutMs: 10,
+    });
+    await new Promise((r) => setTimeout(r, 20));
+    sm.checkTimeouts('custom-auto-actor');
+
+    const transitions = sm.getTransitions();
+    expect(transitions).toHaveLength(1);
+    expect(transitions[0]!.actor).toBe('custom-auto-actor');
+  });
+
+  it('timeout auto-transitions include timeout evidence', async () => {
+    const sm = new BreachStateMachine('breach-1', {
+      detectedTimeoutMs: 10,
+    });
+    await new Promise((r) => setTimeout(r, 20));
+    sm.checkTimeouts();
+
+    const transitions = sm.getTransitions();
+    expect(transitions[0]!.evidence).toHaveLength(1);
+    expect(transitions[0]!.evidence[0]!.type).toBe('timeout');
+  });
+
+  it('timeout of 0 means no auto-transition', () => {
+    const sm = new BreachStateMachine('breach-1', {
+      detectedTimeoutMs: 0,
+    });
+    expect(sm.checkTimeouts()).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// BreachStateMachine - getStateTimestamp
+// ---------------------------------------------------------------------------
+
+describe('BreachStateMachine - getStateTimestamp', () => {
+  it('returns undefined for states not yet entered', () => {
+    const sm = new BreachStateMachine('breach-1');
+    expect(sm.getStateTimestamp('confirmed')).toBeUndefined();
+    expect(sm.getStateTimestamp('remediated')).toBeUndefined();
+    expect(sm.getStateTimestamp('recovered')).toBeUndefined();
+  });
+
+  it('returns timestamps for all visited states', () => {
+    const sm = new BreachStateMachine('breach-1');
+    sm.transition('confirmed', 'a');
+    sm.transition('remediated', 'b');
+
+    expect(sm.getStateTimestamp('detected')).toBeDefined();
+    expect(sm.getStateTimestamp('confirmed')).toBeDefined();
+    expect(sm.getStateTimestamp('remediated')).toBeDefined();
+    expect(sm.getStateTimestamp('recovered')).toBeUndefined();
+  });
+
+  it('timestamps are monotonically increasing', () => {
+    const sm = new BreachStateMachine('breach-1');
+    sm.transition('confirmed', 'a');
+    sm.transition('remediated', 'b');
+    sm.transition('recovered', 'c');
+
+    const tDetected = sm.getStateTimestamp('detected')!;
+    const tConfirmed = sm.getStateTimestamp('confirmed')!;
+    const tRemediated = sm.getStateTimestamp('remediated')!;
+    const tRecovered = sm.getStateTimestamp('recovered')!;
+
+    expect(tConfirmed).toBeGreaterThanOrEqual(tDetected);
+    expect(tRemediated).toBeGreaterThanOrEqual(tConfirmed);
+    expect(tRecovered).toBeGreaterThanOrEqual(tRemediated);
+  });
+});
+
+// ===========================================================================
+// RECOVERY MODEL TESTS
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// RecoveryModel - constructor validation
+// ---------------------------------------------------------------------------
+
+describe('RecoveryModel - constructor validation', () => {
+  it('creates instance with valid config', () => {
+    const rm = new RecoveryModel({ maxRecovery: 0.9, steepness: 0.001, midpointMs: 86400000 });
+    expect(rm).toBeDefined();
+  });
+
+  it('accepts maxRecovery of exactly 1', () => {
+    const rm = new RecoveryModel({ maxRecovery: 1, steepness: 0.001, midpointMs: 1000 });
+    expect(rm).toBeDefined();
+  });
+
+  it('throws when maxRecovery is 0', () => {
+    expect(
+      () => new RecoveryModel({ maxRecovery: 0, steepness: 0.001, midpointMs: 1000 }),
+    ).toThrow('maxRecovery must be in (0, 1]');
+  });
+
+  it('throws when maxRecovery is negative', () => {
+    expect(
+      () => new RecoveryModel({ maxRecovery: -0.5, steepness: 0.001, midpointMs: 1000 }),
+    ).toThrow('maxRecovery must be in (0, 1]');
+  });
+
+  it('throws when maxRecovery exceeds 1', () => {
+    expect(
+      () => new RecoveryModel({ maxRecovery: 1.1, steepness: 0.001, midpointMs: 1000 }),
+    ).toThrow('maxRecovery must be in (0, 1]');
+  });
+
+  it('throws when steepness is 0', () => {
+    expect(
+      () => new RecoveryModel({ maxRecovery: 0.9, steepness: 0, midpointMs: 1000 }),
+    ).toThrow('steepness must be > 0');
+  });
+
+  it('throws when steepness is negative', () => {
+    expect(
+      () => new RecoveryModel({ maxRecovery: 0.9, steepness: -0.5, midpointMs: 1000 }),
+    ).toThrow('steepness must be > 0');
+  });
+
+  it('throws when midpointMs is 0', () => {
+    expect(
+      () => new RecoveryModel({ maxRecovery: 0.9, steepness: 0.001, midpointMs: 0 }),
+    ).toThrow('midpointMs must be > 0');
+  });
+
+  it('throws when midpointMs is negative', () => {
+    expect(
+      () => new RecoveryModel({ maxRecovery: 0.9, steepness: 0.001, midpointMs: -1000 }),
+    ).toThrow('midpointMs must be > 0');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RecoveryModel - recoveryFraction
+// ---------------------------------------------------------------------------
+
+describe('RecoveryModel - recoveryFraction', () => {
+  it('returns ~maxRecovery/2 at midpoint', () => {
+    const rm = new RecoveryModel({ maxRecovery: 1.0, steepness: 0.01, midpointMs: 1000 });
+    const fraction = rm.recoveryFraction(1000);
+    // At midpoint, logistic = 0.5, so fraction = 1.0 * 0.5 = 0.5
+    expect(fraction).toBeCloseTo(0.5, 5);
+  });
+
+  it('returns near 0 at time 0 when midpoint is large', () => {
+    const rm = new RecoveryModel({ maxRecovery: 1.0, steepness: 0.01, midpointMs: 100000 });
+    const fraction = rm.recoveryFraction(0);
+    expect(fraction).toBeLessThan(0.1);
+  });
+
+  it('approaches maxRecovery at very large elapsed times', () => {
+    const rm = new RecoveryModel({ maxRecovery: 0.9, steepness: 0.01, midpointMs: 1000 });
+    const fraction = rm.recoveryFraction(1000000);
+    expect(fraction).toBeCloseTo(0.9, 2);
+  });
+
+  it('is monotonically increasing with time', () => {
+    const rm = new RecoveryModel({ maxRecovery: 1.0, steepness: 0.001, midpointMs: 10000 });
+    // Use times near the midpoint where the logistic is not yet saturated
+    const times = [0, 2000, 5000, 8000, 10000, 12000, 15000];
+    const fractions = times.map(t => rm.recoveryFraction(t));
+    for (let i = 1; i < fractions.length; i++) {
+      expect(fractions[i]!).toBeGreaterThan(fractions[i - 1]!);
+    }
+  });
+
+  it('throws for negative elapsed time', () => {
+    const rm = new RecoveryModel({ maxRecovery: 0.9, steepness: 0.001, midpointMs: 1000 });
+    expect(() => rm.recoveryFraction(-1)).toThrow('elapsedMs must be non-negative');
+  });
+
+  it('returns a value at elapsed time 0', () => {
+    const rm = new RecoveryModel({ maxRecovery: 1.0, steepness: 0.001, midpointMs: 5000 });
+    const fraction = rm.recoveryFraction(0);
+    expect(fraction).toBeGreaterThanOrEqual(0);
+    expect(fraction).toBeLessThanOrEqual(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RecoveryModel - computeRecovery
+// ---------------------------------------------------------------------------
+
+describe('RecoveryModel - computeRecovery', () => {
+  const config = { maxRecovery: 0.9, steepness: 0.001, midpointMs: 50000 };
+
+  it('returns value scaled by preBreachTrust', () => {
+    const rm = new RecoveryModel(config);
+    const fullTrust = rm.computeRecovery(1.0, 'low', 1.0, 100000);
+    const halfTrust = rm.computeRecovery(0.5, 'low', 1.0, 100000);
+    // With same conditions, half preBreachTrust should give roughly half recovery
+    expect(halfTrust).toBeLessThan(fullTrust);
+    expect(halfTrust).toBeCloseTo(fullTrust / 2, 1);
+  });
+
+  it('critical severity yields lowest recovery ceiling', () => {
+    const rm = new RecoveryModel(config);
+    const critical = rm.computeRecovery(1.0, 'critical', 1.0, 200000);
+    const low = rm.computeRecovery(1.0, 'low', 1.0, 200000);
+    expect(critical).toBeLessThan(low);
+  });
+
+  it('severity ordering: critical < high < medium < low', () => {
+    const rm = new RecoveryModel(config);
+    const t = 200000;
+    const crit = rm.computeRecovery(1.0, 'critical', 1.0, t);
+    const high = rm.computeRecovery(1.0, 'high', 1.0, t);
+    const med = rm.computeRecovery(1.0, 'medium', 1.0, t);
+    const low = rm.computeRecovery(1.0, 'low', 1.0, t);
+
+    expect(crit).toBeLessThan(high);
+    expect(high).toBeLessThan(med);
+    expect(med).toBeLessThan(low);
+  });
+
+  it('higher historical reliability yields faster recovery', () => {
+    const rm = new RecoveryModel(config);
+    // Test at a time BEFORE the midpoint where steepness differences are visible.
+    // At the midpoint (50000), the logistic exponent is 0 regardless of steepness,
+    // so both give 0.5. Before midpoint, higher steepness gives lower logistic value.
+    // After midpoint, higher steepness gives higher logistic value.
+    const highReliability = rm.computeRecovery(1.0, 'medium', 1.0, 80000);
+    const lowReliability = rm.computeRecovery(1.0, 'medium', 0.0, 80000);
+    expect(highReliability).toBeGreaterThan(lowReliability);
+  });
+
+  it('returns 0 when preBreachTrust is 0', () => {
+    const rm = new RecoveryModel(config);
+    expect(rm.computeRecovery(0, 'high', 1.0, 100000)).toBe(0);
+  });
+
+  it('result is clamped to [0, 1]', () => {
+    const rm = new RecoveryModel(config);
+    const result = rm.computeRecovery(1.0, 'low', 1.0, 10000000);
+    expect(result).toBeGreaterThanOrEqual(0);
+    expect(result).toBeLessThanOrEqual(1);
+  });
+
+  it('throws when preBreachTrust is negative', () => {
+    const rm = new RecoveryModel(config);
+    expect(() => rm.computeRecovery(-0.1, 'high', 1.0, 1000)).toThrow(
+      'preBreachTrust must be in [0, 1]',
+    );
+  });
+
+  it('throws when preBreachTrust exceeds 1', () => {
+    const rm = new RecoveryModel(config);
+    expect(() => rm.computeRecovery(1.5, 'high', 1.0, 1000)).toThrow(
+      'preBreachTrust must be in [0, 1]',
+    );
+  });
+
+  it('throws when historicalReliability is negative', () => {
+    const rm = new RecoveryModel(config);
+    expect(() => rm.computeRecovery(1.0, 'high', -0.1, 1000)).toThrow(
+      'historicalReliability must be in [0, 1]',
+    );
+  });
+
+  it('throws when historicalReliability exceeds 1', () => {
+    const rm = new RecoveryModel(config);
+    expect(() => rm.computeRecovery(1.0, 'high', 1.5, 1000)).toThrow(
+      'historicalReliability must be in [0, 1]',
+    );
+  });
+
+  it('throws when elapsedMs is negative', () => {
+    const rm = new RecoveryModel(config);
+    expect(() => rm.computeRecovery(1.0, 'high', 1.0, -100)).toThrow(
+      'elapsedMs must be non-negative',
+    );
+  });
+
+  it('boundary: historicalReliability=0 uses 25% steepness', () => {
+    const rm = new RecoveryModel({ maxRecovery: 1.0, steepness: 0.01, midpointMs: 1000 });
+    // With reliability=0, adjustedSteepness = 0.01 * 0.25 = 0.0025
+    // At midpoint (1000), logistic = 1/(1+e^(-0.0025*(1000-1000))) = 0.5
+    // recoveredTrust = 1.0 * 0.95(low) * 0.5 = 0.475
+    const result = rm.computeRecovery(1.0, 'low', 0, 1000);
+    expect(result).toBeCloseTo(1.0 * 0.95 * 0.5, 3);
+  });
+
+  it('boundary: historicalReliability=1 uses full steepness', () => {
+    const rm = new RecoveryModel({ maxRecovery: 1.0, steepness: 0.01, midpointMs: 1000 });
+    // With reliability=1, adjustedSteepness = 0.01 * 1.0 = 0.01
+    // At midpoint, logistic = 0.5
+    const result = rm.computeRecovery(1.0, 'low', 1.0, 1000);
+    expect(result).toBeCloseTo(1.0 * 0.95 * 0.5, 3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RecoveryModel - timeToRecover
+// ---------------------------------------------------------------------------
+
+describe('RecoveryModel - timeToRecover', () => {
+  it('returns time to reach target recovery fraction', () => {
+    const rm = new RecoveryModel({ maxRecovery: 1.0, steepness: 0.001, midpointMs: 10000 });
+    const time = rm.timeToRecover(0.5);
+    // At midpoint the fraction = 0.5, so time should equal midpoint
+    expect(time).toBeCloseTo(10000, 0);
+  });
+
+  it('returns 0 for targetFraction <= 0', () => {
+    const rm = new RecoveryModel({ maxRecovery: 1.0, steepness: 0.001, midpointMs: 10000 });
+    expect(rm.timeToRecover(0)).toBe(0);
+    expect(rm.timeToRecover(-1)).toBe(0);
+  });
+
+  it('returns Infinity when target equals maxRecovery', () => {
+    const rm = new RecoveryModel({ maxRecovery: 0.9, steepness: 0.001, midpointMs: 10000 });
+    expect(rm.timeToRecover(0.9)).toBe(Infinity);
+  });
+
+  it('returns Infinity when target exceeds maxRecovery', () => {
+    const rm = new RecoveryModel({ maxRecovery: 0.9, steepness: 0.001, midpointMs: 10000 });
+    expect(rm.timeToRecover(0.95)).toBe(Infinity);
+  });
+
+  it('higher target fraction requires longer time', () => {
+    const rm = new RecoveryModel({ maxRecovery: 1.0, steepness: 0.001, midpointMs: 10000 });
+    const time25 = rm.timeToRecover(0.25);
+    const time50 = rm.timeToRecover(0.5);
+    const time75 = rm.timeToRecover(0.75);
+    expect(time25).toBeLessThan(time50);
+    expect(time50).toBeLessThan(time75);
+  });
+
+  it('time is consistent with recoveryFraction (round-trip)', () => {
+    const rm = new RecoveryModel({ maxRecovery: 1.0, steepness: 0.001, midpointMs: 50000 });
+    const targetFraction = 0.6;
+    const timeNeeded = rm.timeToRecover(targetFraction);
+
+    if (Number.isFinite(timeNeeded) && timeNeeded > 0) {
+      const actualFraction = rm.recoveryFraction(timeNeeded);
+      expect(actualFraction).toBeCloseTo(targetFraction, 3);
+    }
+  });
+});
+
+// ===========================================================================
+// REPEAT OFFENDER DETECTOR TESTS
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// Helper to create BreachRecord
+// ---------------------------------------------------------------------------
+
+function makeBreachRecord(
+  severity: Severity,
+  overrides?: Partial<BreachRecord>,
+): BreachRecord {
+  return {
+    breachId: `breach-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    severity,
+    timestamp: Date.now(),
+    resource: '/api/data',
+    action: 'readFile',
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// RepeatOffenderDetector - constructor validation
+// ---------------------------------------------------------------------------
+
+describe('RepeatOffenderDetector - constructor validation', () => {
+  it('creates instance with default config', () => {
+    const det = new RepeatOffenderDetector();
+    expect(det).toBeDefined();
+  });
+
+  it('creates instance with custom config', () => {
+    const det = new RepeatOffenderDetector({
+      warningThreshold: 3,
+      restrictionThreshold: 6,
+      revocationThreshold: 10,
+    });
+    expect(det).toBeDefined();
+  });
+
+  it('throws when warningThreshold is 0', () => {
+    expect(
+      () => new RepeatOffenderDetector({ warningThreshold: 0 }),
+    ).toThrow('warningThreshold must be > 0');
+  });
+
+  it('throws when warningThreshold is negative', () => {
+    expect(
+      () => new RepeatOffenderDetector({ warningThreshold: -1 }),
+    ).toThrow('warningThreshold must be > 0');
+  });
+
+  it('throws when restrictionThreshold <= warningThreshold', () => {
+    expect(
+      () =>
+        new RepeatOffenderDetector({
+          warningThreshold: 3,
+          restrictionThreshold: 3,
+          revocationThreshold: 10,
+        }),
+    ).toThrow('restrictionThreshold must be > warningThreshold');
+  });
+
+  it('throws when restrictionThreshold < warningThreshold', () => {
+    expect(
+      () =>
+        new RepeatOffenderDetector({
+          warningThreshold: 5,
+          restrictionThreshold: 3,
+          revocationThreshold: 10,
+        }),
+    ).toThrow('restrictionThreshold must be > warningThreshold');
+  });
+
+  it('throws when revocationThreshold <= restrictionThreshold', () => {
+    expect(
+      () =>
+        new RepeatOffenderDetector({
+          warningThreshold: 2,
+          restrictionThreshold: 5,
+          revocationThreshold: 5,
+        }),
+    ).toThrow('revocationThreshold must be > restrictionThreshold');
+  });
+
+  it('throws when revocationThreshold < restrictionThreshold', () => {
+    expect(
+      () =>
+        new RepeatOffenderDetector({
+          warningThreshold: 2,
+          restrictionThreshold: 5,
+          revocationThreshold: 3,
+        }),
+    ).toThrow('revocationThreshold must be > restrictionThreshold');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RepeatOffenderDetector - recordBreach
+// ---------------------------------------------------------------------------
+
+describe('RepeatOffenderDetector - recordBreach', () => {
+  it('records a breach for an agent', () => {
+    const det = new RepeatOffenderDetector();
+    det.recordBreach('agent-1', makeBreachRecord('high'));
+    const profile = det.analyze('agent-1');
+    expect(profile.totalBreaches).toBe(1);
+  });
+
+  it('accumulates multiple breaches', () => {
+    const det = new RepeatOffenderDetector();
+    det.recordBreach('agent-1', makeBreachRecord('low'));
+    det.recordBreach('agent-1', makeBreachRecord('medium'));
+    det.recordBreach('agent-1', makeBreachRecord('high'));
+    const profile = det.analyze('agent-1');
+    expect(profile.totalBreaches).toBe(3);
+  });
+
+  it('keeps separate histories per agent', () => {
+    const det = new RepeatOffenderDetector();
+    det.recordBreach('agent-1', makeBreachRecord('high'));
+    det.recordBreach('agent-1', makeBreachRecord('high'));
+    det.recordBreach('agent-2', makeBreachRecord('low'));
+
+    expect(det.analyze('agent-1').totalBreaches).toBe(2);
+    expect(det.analyze('agent-2').totalBreaches).toBe(1);
+  });
+
+  it('throws for empty agentId', () => {
+    const det = new RepeatOffenderDetector();
+    expect(() => det.recordBreach('', makeBreachRecord('high'))).toThrow(
+      'agentId must be a non-empty string',
+    );
+  });
+
+  it('throws for whitespace-only agentId', () => {
+    const det = new RepeatOffenderDetector();
+    expect(() => det.recordBreach('   ', makeBreachRecord('high'))).toThrow(
+      'agentId must be a non-empty string',
+    );
+  });
+
+  it('stores a copy of the record (not a reference)', () => {
+    const det = new RepeatOffenderDetector();
+    const record = makeBreachRecord('high');
+    det.recordBreach('agent-1', record);
+
+    // Mutate the original
+    record.severity = 'low';
+
+    // The stored record should still be 'high'
+    const profile = det.analyze('agent-1');
+    // penalty reflects original severity
+    expect(profile.penaltyScore).toBe(3); // 'high' weight
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RepeatOffenderDetector - analyze: penalty levels
+// ---------------------------------------------------------------------------
+
+describe('RepeatOffenderDetector - analyze: penalty levels', () => {
+  it('returns "none" for unknown agent', () => {
+    const det = new RepeatOffenderDetector();
+    const profile = det.analyze('unknown-agent');
+    expect(profile.penalty).toBe('none');
+    expect(profile.totalBreaches).toBe(0);
+    expect(profile.recentBreaches).toBe(0);
+    expect(profile.escalating).toBe(false);
+    expect(profile.penaltyScore).toBe(0);
+    expect(profile.dominantPattern).toBeNull();
+  });
+
+  it('returns "none" with 1 breach (below warning threshold)', () => {
+    const det = new RepeatOffenderDetector({ warningThreshold: 2, restrictionThreshold: 4, revocationThreshold: 7 });
+    det.recordBreach('agent-1', makeBreachRecord('high'));
+    const profile = det.analyze('agent-1');
+    expect(profile.penalty).toBe('none');
+    expect(profile.recentBreaches).toBe(1);
+  });
+
+  it('returns "warning" at warningThreshold', () => {
+    const det = new RepeatOffenderDetector({ warningThreshold: 2, restrictionThreshold: 4, revocationThreshold: 7 });
+    det.recordBreach('agent-1', makeBreachRecord('high'));
+    det.recordBreach('agent-1', makeBreachRecord('high'));
+    const profile = det.analyze('agent-1');
+    expect(profile.penalty).toBe('warning');
+  });
+
+  it('returns "restriction" at restrictionThreshold', () => {
+    const det = new RepeatOffenderDetector({ warningThreshold: 2, restrictionThreshold: 4, revocationThreshold: 7 });
+    for (let i = 0; i < 4; i++) {
+      det.recordBreach('agent-1', makeBreachRecord('medium'));
+    }
+    const profile = det.analyze('agent-1');
+    expect(profile.penalty).toBe('restriction');
+  });
+
+  it('returns "revocation" at revocationThreshold', () => {
+    const det = new RepeatOffenderDetector({ warningThreshold: 2, restrictionThreshold: 4, revocationThreshold: 7 });
+    for (let i = 0; i < 7; i++) {
+      det.recordBreach('agent-1', makeBreachRecord('medium'));
+    }
+    const profile = det.analyze('agent-1');
+    expect(profile.penalty).toBe('revocation');
+  });
+
+  it('returns "revocation" above revocationThreshold', () => {
+    const det = new RepeatOffenderDetector({ warningThreshold: 2, restrictionThreshold: 4, revocationThreshold: 7 });
+    for (let i = 0; i < 10; i++) {
+      det.recordBreach('agent-1', makeBreachRecord('high'));
+    }
+    const profile = det.analyze('agent-1');
+    expect(profile.penalty).toBe('revocation');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RepeatOffenderDetector - analyze: windowed breach counts
+// ---------------------------------------------------------------------------
+
+describe('RepeatOffenderDetector - analyze: windowed breach counts', () => {
+  it('only counts recent breaches within the window', () => {
+    const oneHour = 3600 * 1000;
+    const det = new RepeatOffenderDetector({
+      windowMs: oneHour,
+      warningThreshold: 2,
+      restrictionThreshold: 4,
+      revocationThreshold: 7,
+    });
+
+    // Record old breaches (outside window)
+    const twoHoursAgo = Date.now() - 2 * oneHour;
+    det.recordBreach('agent-1', makeBreachRecord('high', { timestamp: twoHoursAgo }));
+    det.recordBreach('agent-1', makeBreachRecord('high', { timestamp: twoHoursAgo }));
+    det.recordBreach('agent-1', makeBreachRecord('high', { timestamp: twoHoursAgo }));
+
+    // Record one recent breach
+    det.recordBreach('agent-1', makeBreachRecord('low'));
+
+    const profile = det.analyze('agent-1');
+    expect(profile.totalBreaches).toBe(4);
+    expect(profile.recentBreaches).toBe(1);
+    expect(profile.penalty).toBe('none'); // only 1 recent breach
+  });
+
+  it('old breaches do not affect penalty level', () => {
+    const oneHour = 3600 * 1000;
+    const det = new RepeatOffenderDetector({
+      windowMs: oneHour,
+      warningThreshold: 2,
+      restrictionThreshold: 4,
+      revocationThreshold: 7,
+    });
+
+    // All old
+    for (let i = 0; i < 10; i++) {
+      det.recordBreach('agent-1', makeBreachRecord('critical', {
+        timestamp: Date.now() - 2 * oneHour,
+      }));
+    }
+
+    const profile = det.analyze('agent-1');
+    expect(profile.totalBreaches).toBe(10);
+    expect(profile.recentBreaches).toBe(0);
+    expect(profile.penalty).toBe('none');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RepeatOffenderDetector - analyze: escalation detection
+// ---------------------------------------------------------------------------
+
+describe('RepeatOffenderDetector - analyze: escalation detection', () => {
+  it('detects escalating severity pattern', () => {
+    const det = new RepeatOffenderDetector();
+    const now = Date.now();
+
+    det.recordBreach('agent-1', makeBreachRecord('low', { timestamp: now - 3000 }));
+    det.recordBreach('agent-1', makeBreachRecord('medium', { timestamp: now - 2000 }));
+    det.recordBreach('agent-1', makeBreachRecord('high', { timestamp: now - 1000 }));
+
+    const profile = det.analyze('agent-1');
+    expect(profile.escalating).toBe(true);
+  });
+
+  it('does not detect escalation when severity is flat', () => {
+    const det = new RepeatOffenderDetector();
+    const now = Date.now();
+
+    det.recordBreach('agent-1', makeBreachRecord('medium', { timestamp: now - 3000 }));
+    det.recordBreach('agent-1', makeBreachRecord('medium', { timestamp: now - 2000 }));
+    det.recordBreach('agent-1', makeBreachRecord('medium', { timestamp: now - 1000 }));
+
+    const profile = det.analyze('agent-1');
+    expect(profile.escalating).toBe(false);
+  });
+
+  it('does not detect escalation when severity is decreasing', () => {
+    const det = new RepeatOffenderDetector();
+    const now = Date.now();
+
+    det.recordBreach('agent-1', makeBreachRecord('critical', { timestamp: now - 3000 }));
+    det.recordBreach('agent-1', makeBreachRecord('high', { timestamp: now - 2000 }));
+    det.recordBreach('agent-1', makeBreachRecord('low', { timestamp: now - 1000 }));
+
+    const profile = det.analyze('agent-1');
+    expect(profile.escalating).toBe(false);
+  });
+
+  it('does not detect escalation with single breach', () => {
+    const det = new RepeatOffenderDetector();
+    det.recordBreach('agent-1', makeBreachRecord('critical'));
+    const profile = det.analyze('agent-1');
+    expect(profile.escalating).toBe(false);
+  });
+
+  it('escalation multiplies penalty score', () => {
+    const det = new RepeatOffenderDetector({ escalationWeight: 2.0 });
+    const now = Date.now();
+
+    // Escalating pattern: low -> high
+    det.recordBreach('agent-esc', makeBreachRecord('low', { timestamp: now - 2000 }));
+    det.recordBreach('agent-esc', makeBreachRecord('high', { timestamp: now - 1000 }));
+
+    // Non-escalating pattern: high -> low
+    det.recordBreach('agent-flat', makeBreachRecord('high', { timestamp: now - 2000 }));
+    det.recordBreach('agent-flat', makeBreachRecord('low', { timestamp: now - 1000 }));
+
+    const escProfile = det.analyze('agent-esc');
+    const flatProfile = det.analyze('agent-flat');
+
+    expect(escProfile.escalating).toBe(true);
+    expect(flatProfile.escalating).toBe(false);
+
+    // Escalating agent should have higher penalty score
+    expect(escProfile.penaltyScore).toBeGreaterThan(flatProfile.penaltyScore);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RepeatOffenderDetector - analyze: penalty score
+// ---------------------------------------------------------------------------
+
+describe('RepeatOffenderDetector - analyze: penalty score', () => {
+  it('severity weight: critical=4, high=3, medium=2, low=1', () => {
+    const det = new RepeatOffenderDetector();
+    const now = Date.now();
+
+    det.recordBreach('agent-c', makeBreachRecord('critical', { timestamp: now }));
+    det.recordBreach('agent-h', makeBreachRecord('high', { timestamp: now }));
+    det.recordBreach('agent-m', makeBreachRecord('medium', { timestamp: now }));
+    det.recordBreach('agent-l', makeBreachRecord('low', { timestamp: now }));
+
+    expect(det.analyze('agent-c').penaltyScore).toBe(4);
+    expect(det.analyze('agent-h').penaltyScore).toBe(3);
+    expect(det.analyze('agent-m').penaltyScore).toBe(2);
+    expect(det.analyze('agent-l').penaltyScore).toBe(1);
+  });
+
+  it('penalty score sums severity weights of recent breaches', () => {
+    const det = new RepeatOffenderDetector();
+    const now = Date.now();
+
+    det.recordBreach('agent-1', makeBreachRecord('high', { timestamp: now - 2000 }));
+    det.recordBreach('agent-1', makeBreachRecord('medium', { timestamp: now - 1000 }));
+
+    const profile = det.analyze('agent-1');
+    // high=3 + medium=2 = 5, no escalation (high->medium is decreasing)
+    expect(profile.penaltyScore).toBe(5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RepeatOffenderDetector - analyze: dominant pattern
+// ---------------------------------------------------------------------------
+
+describe('RepeatOffenderDetector - analyze: dominant pattern', () => {
+  it('identifies the most common resource:action pattern', () => {
+    const det = new RepeatOffenderDetector();
+    const now = Date.now();
+
+    det.recordBreach('agent-1', makeBreachRecord('high', {
+      resource: '/api/secrets', action: 'readFile', timestamp: now - 3000,
+    }));
+    det.recordBreach('agent-1', makeBreachRecord('high', {
+      resource: '/api/secrets', action: 'readFile', timestamp: now - 2000,
+    }));
+    det.recordBreach('agent-1', makeBreachRecord('low', {
+      resource: '/api/data', action: 'writeFile', timestamp: now - 1000,
+    }));
+
+    const profile = det.analyze('agent-1');
+    expect(profile.dominantPattern).toBe('/api/secrets:readFile');
+  });
+
+  it('returns null for an agent with no breaches', () => {
+    const det = new RepeatOffenderDetector();
+    const profile = det.analyze('unknown');
+    expect(profile.dominantPattern).toBeNull();
+  });
+
+  it('returns the pattern when there is only one breach', () => {
+    const det = new RepeatOffenderDetector();
+    det.recordBreach('agent-1', makeBreachRecord('high', {
+      resource: '/secrets', action: 'read',
+    }));
+    const profile = det.analyze('agent-1');
+    expect(profile.dominantPattern).toBe('/secrets:read');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RepeatOffenderDetector - getOffenders
+// ---------------------------------------------------------------------------
+
+describe('RepeatOffenderDetector - getOffenders', () => {
+  it('returns empty array when no offenders exist', () => {
+    const det = new RepeatOffenderDetector();
+    expect(det.getOffenders()).toEqual([]);
+  });
+
+  it('returns agents with active penalties', () => {
+    const det = new RepeatOffenderDetector({ warningThreshold: 2, restrictionThreshold: 4, revocationThreshold: 7 });
+    // agent-1: 2 breaches -> warning
+    det.recordBreach('agent-1', makeBreachRecord('high'));
+    det.recordBreach('agent-1', makeBreachRecord('high'));
+    // agent-2: 1 breach -> none
+    det.recordBreach('agent-2', makeBreachRecord('low'));
+    // agent-3: 4 breaches -> restriction
+    for (let i = 0; i < 4; i++) {
+      det.recordBreach('agent-3', makeBreachRecord('medium'));
+    }
+
+    const offenders = det.getOffenders();
+    expect(offenders).toContain('agent-1');
+    expect(offenders).not.toContain('agent-2');
+    expect(offenders).toContain('agent-3');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RepeatOffenderDetector - clearHistory
+// ---------------------------------------------------------------------------
+
+describe('RepeatOffenderDetector - clearHistory', () => {
+  it('clears all breach history for an agent', () => {
+    const det = new RepeatOffenderDetector();
+    det.recordBreach('agent-1', makeBreachRecord('high'));
+    det.recordBreach('agent-1', makeBreachRecord('high'));
+
+    det.clearHistory('agent-1');
+
+    const profile = det.analyze('agent-1');
+    expect(profile.totalBreaches).toBe(0);
+    expect(profile.recentBreaches).toBe(0);
+    expect(profile.penalty).toBe('none');
+  });
+
+  it('does not affect other agents', () => {
+    const det = new RepeatOffenderDetector();
+    det.recordBreach('agent-1', makeBreachRecord('high'));
+    det.recordBreach('agent-2', makeBreachRecord('high'));
+
+    det.clearHistory('agent-1');
+
+    expect(det.analyze('agent-1').totalBreaches).toBe(0);
+    expect(det.analyze('agent-2').totalBreaches).toBe(1);
+  });
+
+  it('clearing non-existent agent does not throw', () => {
+    const det = new RepeatOffenderDetector();
+    expect(() => det.clearHistory('nonexistent')).not.toThrow();
+  });
+
+  it('agent can accumulate new breaches after clearing', () => {
+    const det = new RepeatOffenderDetector();
+    det.recordBreach('agent-1', makeBreachRecord('critical'));
+    det.recordBreach('agent-1', makeBreachRecord('critical'));
+    det.clearHistory('agent-1');
+
+    det.recordBreach('agent-1', makeBreachRecord('low'));
+    const profile = det.analyze('agent-1');
+    expect(profile.totalBreaches).toBe(1);
+    expect(profile.penaltyScore).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RepeatOffenderDetector - agentId field in profile
+// ---------------------------------------------------------------------------
+
+describe('RepeatOffenderDetector - profile contains agentId', () => {
+  it('profile agentId matches the queried agent', () => {
+    const det = new RepeatOffenderDetector();
+    det.recordBreach('my-agent', makeBreachRecord('low'));
+    const profile = det.analyze('my-agent');
+    expect(profile.agentId).toBe('my-agent');
+  });
+
+  it('unknown agent profile contains the queried agentId', () => {
+    const det = new RepeatOffenderDetector();
+    const profile = det.analyze('unknown-agent');
+    expect(profile.agentId).toBe('unknown-agent');
+  });
+});

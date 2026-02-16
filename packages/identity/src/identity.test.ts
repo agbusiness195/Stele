@@ -17,11 +17,19 @@ import {
   triggerReverification,
   computeDecayedTrust,
   completeReverification,
+  AdaptiveCarryForward,
+  LineageCompactor,
+  SemanticVersion,
+  IdentitySimilarity,
 } from './index';
 import type {
   ModelUpdateEvent,
   ReverificationRequirement,
   ReverificationResult,
+  CarryForwardObservation,
+  CompactedLineage,
+  SemVer,
+  VersionBumpReason,
 } from './index';
 
 import type {
@@ -29,6 +37,7 @@ import type {
   ModelAttestation,
   DeploymentContext,
   CreateIdentityOptions,
+  LineageEntry,
 } from './index';
 
 // ---------------------------------------------------------------------------
@@ -2481,5 +2490,1316 @@ describe('re-verification integration', () => {
       expect(req.deadline).toBeGreaterThan(event.timestamp);
       expect(req.requiredActions.length).toBeGreaterThanOrEqual(2);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AdaptiveCarryForward
+// ---------------------------------------------------------------------------
+
+describe('AdaptiveCarryForward', () => {
+  // ── Construction ──────────────────────────────────────────────────────
+
+  describe('construction', () => {
+    it('creates with default alpha and default policy', () => {
+      const acf = new AdaptiveCarryForward();
+      const policy = acf.toPolicy();
+      expect(policy.minorUpdate).toBe(DEFAULT_EVOLUTION_POLICY.minorUpdate);
+      expect(policy.modelVersionChange).toBe(DEFAULT_EVOLUTION_POLICY.modelVersionChange);
+      expect(policy.modelFamilyChange).toBe(DEFAULT_EVOLUTION_POLICY.modelFamilyChange);
+      expect(policy.operatorTransfer).toBe(DEFAULT_EVOLUTION_POLICY.operatorTransfer);
+      expect(policy.capabilityExpansion).toBe(DEFAULT_EVOLUTION_POLICY.capabilityExpansion);
+      expect(policy.capabilityReduction).toBe(DEFAULT_EVOLUTION_POLICY.capabilityReduction);
+      expect(policy.fullRebuild).toBe(DEFAULT_EVOLUTION_POLICY.fullRebuild);
+    });
+
+    it('creates with a custom alpha', () => {
+      const acf = new AdaptiveCarryForward(0.5);
+      // Should still initialize from default policy
+      expect(acf.toPolicy().minorUpdate).toBe(DEFAULT_EVOLUTION_POLICY.minorUpdate);
+    });
+
+    it('creates with a custom base policy', () => {
+      const customPolicy = {
+        minorUpdate: 0.8,
+        modelVersionChange: 0.6,
+        modelFamilyChange: 0.1,
+        operatorTransfer: 0.3,
+        capabilityExpansion: 0.7,
+        capabilityReduction: 0.9,
+        fullRebuild: 0.05,
+      };
+      const acf = new AdaptiveCarryForward(0.2, customPolicy);
+      const policy = acf.toPolicy();
+      expect(policy.minorUpdate).toBe(0.8);
+      expect(policy.modelFamilyChange).toBe(0.1);
+      expect(policy.fullRebuild).toBe(0.05);
+    });
+
+    it('throws on alpha <= 0', () => {
+      expect(() => new AdaptiveCarryForward(0)).toThrow(/alpha must be in \(0, 1\)/);
+      expect(() => new AdaptiveCarryForward(-0.1)).toThrow(/alpha must be in \(0, 1\)/);
+    });
+
+    it('throws on alpha >= 1', () => {
+      expect(() => new AdaptiveCarryForward(1)).toThrow(/alpha must be in \(0, 1\)/);
+      expect(() => new AdaptiveCarryForward(1.5)).toThrow(/alpha must be in \(0, 1\)/);
+    });
+  });
+
+  // ── observe & getRate ─────────────────────────────────────────────────
+
+  describe('observe and getRate', () => {
+    it('updates the rate for a change type via EMA', () => {
+      const alpha = 0.5;
+      const acf = new AdaptiveCarryForward(alpha);
+      const initialRate = DEFAULT_EVOLUTION_POLICY.modelVersionChange;
+
+      acf.observe({
+        changeType: 'model_update',
+        appliedRate: initialRate,
+        postEvolutionPerformance: 1.0,
+        timestamp: Date.now(),
+      });
+
+      // EMA: 0.5 * 1.0 + 0.5 * 0.80 = 0.90
+      expect(acf.getRate('model_update')).toBeCloseTo(0.90, 5);
+    });
+
+    it('decreases rate on low performance observations', () => {
+      const alpha = 0.5;
+      const acf = new AdaptiveCarryForward(alpha);
+      const initialRate = DEFAULT_EVOLUTION_POLICY.modelVersionChange; // 0.80
+
+      acf.observe({
+        changeType: 'model_update',
+        appliedRate: initialRate,
+        postEvolutionPerformance: 0.0,
+        timestamp: Date.now(),
+      });
+
+      // EMA: 0.5 * 0.0 + 0.5 * 0.80 = 0.40
+      expect(acf.getRate('model_update')).toBeCloseTo(0.40, 5);
+    });
+
+    it('clamps rates to [0, 1]', () => {
+      const acf = new AdaptiveCarryForward(0.9);
+
+      // Observe performance = 0 many times to push rate down
+      for (let i = 0; i < 100; i++) {
+        acf.observe({
+          changeType: 'model_update',
+          appliedRate: 0,
+          postEvolutionPerformance: 0.0,
+          timestamp: Date.now(),
+        });
+      }
+      expect(acf.getRate('model_update')).toBeGreaterThanOrEqual(0);
+
+      // Observe performance = 1 many times to push rate up
+      for (let i = 0; i < 100; i++) {
+        acf.observe({
+          changeType: 'model_update',
+          appliedRate: 0,
+          postEvolutionPerformance: 1.0,
+          timestamp: Date.now(),
+        });
+      }
+      expect(acf.getRate('model_update')).toBeLessThanOrEqual(1);
+    });
+
+    it('throws on postEvolutionPerformance < 0', () => {
+      const acf = new AdaptiveCarryForward();
+      expect(() =>
+        acf.observe({
+          changeType: 'model_update',
+          appliedRate: 0.5,
+          postEvolutionPerformance: -0.1,
+          timestamp: Date.now(),
+        }),
+      ).toThrow(/postEvolutionPerformance must be in \[0, 1\]/);
+    });
+
+    it('throws on postEvolutionPerformance > 1', () => {
+      const acf = new AdaptiveCarryForward();
+      expect(() =>
+        acf.observe({
+          changeType: 'model_update',
+          appliedRate: 0.5,
+          postEvolutionPerformance: 1.1,
+          timestamp: Date.now(),
+        }),
+      ).toThrow(/postEvolutionPerformance must be in \[0, 1\]/);
+    });
+
+    it('maps change types to correct policy keys', () => {
+      const acf = new AdaptiveCarryForward();
+
+      // 'created' -> minorUpdate
+      expect(acf.getRate('created')).toBe(DEFAULT_EVOLUTION_POLICY.minorUpdate);
+      // 'model_update' -> modelVersionChange
+      expect(acf.getRate('model_update')).toBe(DEFAULT_EVOLUTION_POLICY.modelVersionChange);
+      // 'capability_change' -> capabilityExpansion
+      expect(acf.getRate('capability_change')).toBe(DEFAULT_EVOLUTION_POLICY.capabilityExpansion);
+      // 'operator_transfer' -> operatorTransfer
+      expect(acf.getRate('operator_transfer')).toBe(DEFAULT_EVOLUTION_POLICY.operatorTransfer);
+      // 'fork' -> operatorTransfer
+      expect(acf.getRate('fork')).toBe(DEFAULT_EVOLUTION_POLICY.operatorTransfer);
+      // 'merge' -> modelVersionChange
+      expect(acf.getRate('merge')).toBe(DEFAULT_EVOLUTION_POLICY.modelVersionChange);
+    });
+  });
+
+  // ── getObservationCount ───────────────────────────────────────────────
+
+  describe('getObservationCount', () => {
+    it('returns 0 for unseen change types', () => {
+      const acf = new AdaptiveCarryForward();
+      expect(acf.getObservationCount('model_update')).toBe(0);
+      expect(acf.getObservationCount('capability_change')).toBe(0);
+    });
+
+    it('increments with each observation', () => {
+      const acf = new AdaptiveCarryForward();
+
+      for (let i = 0; i < 5; i++) {
+        acf.observe({
+          changeType: 'model_update',
+          appliedRate: 0.5,
+          postEvolutionPerformance: 0.8,
+          timestamp: Date.now(),
+        });
+      }
+
+      expect(acf.getObservationCount('model_update')).toBe(5);
+      // 'merge' maps to the same key (modelVersionChange), so it should also be 5
+      expect(acf.getObservationCount('merge')).toBe(5);
+      // Other change types should still be 0
+      expect(acf.getObservationCount('capability_change')).toBe(0);
+    });
+  });
+
+  // ── toPolicy ──────────────────────────────────────────────────────────
+
+  describe('toPolicy', () => {
+    it('returns a valid EvolutionPolicy object', () => {
+      const acf = new AdaptiveCarryForward();
+      const policy = acf.toPolicy();
+
+      expect(typeof policy.minorUpdate).toBe('number');
+      expect(typeof policy.modelVersionChange).toBe('number');
+      expect(typeof policy.modelFamilyChange).toBe('number');
+      expect(typeof policy.operatorTransfer).toBe('number');
+      expect(typeof policy.capabilityExpansion).toBe('number');
+      expect(typeof policy.capabilityReduction).toBe('number');
+      expect(typeof policy.fullRebuild).toBe('number');
+    });
+
+    it('reflects observed changes in the exported policy', () => {
+      const acf = new AdaptiveCarryForward(0.5);
+
+      acf.observe({
+        changeType: 'capability_change',
+        appliedRate: 0.9,
+        postEvolutionPerformance: 0.5,
+        timestamp: Date.now(),
+      });
+
+      const policy = acf.toPolicy();
+      // EMA: 0.5 * 0.5 + 0.5 * 0.9 = 0.70
+      expect(policy.capabilityExpansion).toBeCloseTo(0.70, 5);
+    });
+  });
+
+  // ── confidence ────────────────────────────────────────────────────────
+
+  describe('confidence', () => {
+    it('returns 0 when no observations', () => {
+      const acf = new AdaptiveCarryForward();
+      expect(acf.confidence('model_update')).toBeCloseTo(0, 5);
+    });
+
+    it('increases with more observations', () => {
+      const acf = new AdaptiveCarryForward();
+      const obs: CarryForwardObservation = {
+        changeType: 'model_update',
+        appliedRate: 0.8,
+        postEvolutionPerformance: 0.7,
+        timestamp: Date.now(),
+      };
+
+      const confidences: number[] = [];
+      for (let i = 0; i < 20; i++) {
+        acf.observe(obs);
+        confidences.push(acf.confidence('model_update'));
+      }
+
+      // Each subsequent confidence should be higher (strictly increasing)
+      for (let i = 1; i < confidences.length; i++) {
+        expect(confidences[i]!).toBeGreaterThan(confidences[i - 1]!);
+      }
+    });
+
+    it('approaches 1.0 as observations accumulate (formula: 1 - e^(-count/10))', () => {
+      const acf = new AdaptiveCarryForward();
+      const obs: CarryForwardObservation = {
+        changeType: 'model_update',
+        appliedRate: 0.8,
+        postEvolutionPerformance: 0.7,
+        timestamp: Date.now(),
+      };
+
+      for (let i = 0; i < 50; i++) {
+        acf.observe(obs);
+      }
+
+      // After 50 observations: 1 - e^(-50/10) = 1 - e^(-5) ~ 0.9933
+      expect(acf.confidence('model_update')).toBeCloseTo(1 - Math.exp(-50 / 10), 3);
+    });
+
+    it('follows the exact formula 1 - e^(-count/10)', () => {
+      const acf = new AdaptiveCarryForward();
+
+      for (let i = 0; i < 10; i++) {
+        acf.observe({
+          changeType: 'capability_change',
+          appliedRate: 0.9,
+          postEvolutionPerformance: 0.8,
+          timestamp: Date.now(),
+        });
+      }
+
+      // After 10 observations: 1 - e^(-10/10) = 1 - e^(-1)
+      expect(acf.confidence('capability_change')).toBeCloseTo(1 - Math.exp(-1), 5);
+    });
+  });
+
+  // ── getBlendedRate ────────────────────────────────────────────────────
+
+  describe('getBlendedRate', () => {
+    it('returns the base rate when no observations (confidence = 0)', () => {
+      const acf = new AdaptiveCarryForward();
+      // With no observations, confidence is 0, so blended = 0 * learned + 1 * base = base
+      const blended = acf.getBlendedRate('model_update');
+      expect(blended).toBeCloseTo(DEFAULT_EVOLUTION_POLICY.modelVersionChange, 5);
+    });
+
+    it('approaches the learned rate as confidence increases', () => {
+      const alpha = 0.9; // Very reactive
+      const acf = new AdaptiveCarryForward(alpha);
+
+      // Push rate toward 1.0 with many high-performance observations
+      for (let i = 0; i < 100; i++) {
+        acf.observe({
+          changeType: 'model_update',
+          appliedRate: 0.8,
+          postEvolutionPerformance: 1.0,
+          timestamp: Date.now(),
+        });
+      }
+
+      const blended = acf.getBlendedRate('model_update');
+      const learned = acf.getRate('model_update');
+      // With high confidence, blended should be very close to learned
+      expect(Math.abs(blended - learned)).toBeLessThan(0.02);
+    });
+
+    it('is a weighted mix of learned and base rates', () => {
+      const acf = new AdaptiveCarryForward(0.5);
+
+      // 1 observation => count = 1 => confidence = 1 - e^(-0.1) ~ 0.0952
+      acf.observe({
+        changeType: 'model_update',
+        appliedRate: 0.8,
+        postEvolutionPerformance: 0.5,
+        timestamp: Date.now(),
+      });
+
+      const conf = acf.confidence('model_update');
+      const learned = acf.getRate('model_update');
+      const base = DEFAULT_EVOLUTION_POLICY.modelVersionChange;
+      const expected = conf * learned + (1 - conf) * base;
+
+      expect(acf.getBlendedRate('model_update')).toBeCloseTo(expected, 5);
+    });
+  });
+
+  // ── EMA convergence ───────────────────────────────────────────────────
+
+  describe('EMA convergence', () => {
+    it('converges to the performance value with repeated identical observations', () => {
+      const targetPerformance = 0.6;
+      const acf = new AdaptiveCarryForward(0.3);
+
+      for (let i = 0; i < 200; i++) {
+        acf.observe({
+          changeType: 'model_update',
+          appliedRate: 0.8,
+          postEvolutionPerformance: targetPerformance,
+          timestamp: Date.now(),
+        });
+      }
+
+      // After many identical observations, the rate should converge to the target
+      expect(acf.getRate('model_update')).toBeCloseTo(targetPerformance, 2);
+    });
+
+    it('higher alpha converges faster', () => {
+      const target = 0.3;
+      const slowAcf = new AdaptiveCarryForward(0.05);
+      const fastAcf = new AdaptiveCarryForward(0.5);
+
+      const obs: CarryForwardObservation = {
+        changeType: 'capability_change',
+        appliedRate: 0.9,
+        postEvolutionPerformance: target,
+        timestamp: Date.now(),
+      };
+
+      for (let i = 0; i < 20; i++) {
+        slowAcf.observe(obs);
+        fastAcf.observe(obs);
+      }
+
+      const slowError = Math.abs(slowAcf.getRate('capability_change') - target);
+      const fastError = Math.abs(fastAcf.getRate('capability_change') - target);
+      expect(fastError).toBeLessThan(slowError);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// LineageCompactor
+// ---------------------------------------------------------------------------
+
+describe('LineageCompactor', () => {
+  function makeLineageEntry(
+    index: number,
+    changeType: LineageEntry['changeType'] = 'capability_change',
+  ): LineageEntry {
+    return {
+      identityHash: `hash_${index}` as any,
+      changeType,
+      description: `Change ${index}`,
+      timestamp: new Date(2024, 0, 1 + index).toISOString(),
+      parentHash: index > 0 ? (`hash_${index - 1}` as any) : null,
+      signature: `sig_${index}`,
+      reputationCarryForward: 0.9,
+    };
+  }
+
+  function makeLineage(count: number): LineageEntry[] {
+    const entries: LineageEntry[] = [];
+    entries.push({
+      identityHash: 'hash_0' as any,
+      changeType: 'created',
+      description: 'Change 0',
+      timestamp: new Date(2024, 0, 1).toISOString(),
+      parentHash: null,
+      signature: 'sig_0',
+      reputationCarryForward: 1.0,
+    });
+    for (let i = 1; i < count; i++) {
+      entries.push(makeLineageEntry(i));
+    }
+    return entries;
+  }
+
+  const compactor = new LineageCompactor();
+
+  // ── compact ───────────────────────────────────────────────────────────
+
+  describe('compact', () => {
+    it('retains all entries when lineage length <= retainCount', () => {
+      const lineage = makeLineage(3);
+      const result = compactor.compact(lineage, 5);
+
+      expect(result.compactedCount).toBe(0);
+      expect(result.retainedEntries).toHaveLength(3);
+      expect(result.proofHashes).toHaveLength(0);
+    });
+
+    it('retains all entries when retainCount equals lineage length', () => {
+      const lineage = makeLineage(5);
+      const result = compactor.compact(lineage, 5);
+
+      expect(result.compactedCount).toBe(0);
+      expect(result.retainedEntries).toHaveLength(5);
+    });
+
+    it('compacts older entries and retains the most recent', () => {
+      const lineage = makeLineage(10);
+      const result = compactor.compact(lineage, 3);
+
+      expect(result.compactedCount).toBe(7);
+      expect(result.retainedEntries).toHaveLength(3);
+      // Retained should be the last 3
+      expect(result.retainedEntries[0]!.identityHash).toBe('hash_7');
+      expect(result.retainedEntries[1]!.identityHash).toBe('hash_8');
+      expect(result.retainedEntries[2]!.identityHash).toBe('hash_9');
+    });
+
+    it('returns a valid merkleRoot hash', () => {
+      const lineage = makeLineage(10);
+      const result = compactor.compact(lineage, 2);
+
+      expect(result.merkleRoot).toBeTruthy();
+      expect(typeof result.merkleRoot).toBe('string');
+      // Should be a hex hash
+      expect(result.merkleRoot).toMatch(/^[0-9a-f]+$/);
+    });
+
+    it('has a compactedAt timestamp', () => {
+      const lineage = makeLineage(5);
+      const result = compactor.compact(lineage, 2);
+
+      expect(result.compactedAt).toBeTruthy();
+      // Should be a valid ISO date
+      expect(new Date(result.compactedAt).toISOString()).toBe(result.compactedAt);
+    });
+
+    it('produces proof hashes when compacting', () => {
+      const lineage = makeLineage(6);
+      const result = compactor.compact(lineage, 2);
+
+      // 4 entries compacted => Merkle tree produces sibling hashes
+      expect(result.proofHashes.length).toBeGreaterThan(0);
+    });
+
+    it('retainCount = 1 retains only the last entry', () => {
+      const lineage = makeLineage(5);
+      const result = compactor.compact(lineage, 1);
+
+      expect(result.compactedCount).toBe(4);
+      expect(result.retainedEntries).toHaveLength(1);
+      expect(result.retainedEntries[0]!.identityHash).toBe('hash_4');
+    });
+
+    it('does not mutate the original lineage array', () => {
+      const lineage = makeLineage(5);
+      const originalLength = lineage.length;
+      compactor.compact(lineage, 2);
+
+      expect(lineage).toHaveLength(originalLength);
+    });
+  });
+
+  // ── compact error cases ───────────────────────────────────────────────
+
+  describe('compact error cases', () => {
+    it('throws on empty lineage', () => {
+      expect(() => compactor.compact([], 1)).toThrow(/lineage must be a non-empty array/);
+    });
+
+    it('throws on retainCount < 1', () => {
+      const lineage = makeLineage(3);
+      expect(() => compactor.compact(lineage, 0)).toThrow(/retainCount must be a positive integer/);
+    });
+
+    it('throws on negative retainCount', () => {
+      const lineage = makeLineage(3);
+      expect(() => compactor.compact(lineage, -1)).toThrow(/retainCount must be a positive integer/);
+    });
+
+    it('throws on non-integer retainCount', () => {
+      const lineage = makeLineage(3);
+      expect(() => compactor.compact(lineage, 1.5)).toThrow(/retainCount must be a positive integer/);
+    });
+  });
+
+  // ── verifyMembership ──────────────────────────────────────────────────
+
+  describe('verifyMembership', () => {
+    it('verifies a compacted entry is part of the Merkle tree', () => {
+      const lineage = makeLineage(6);
+      const result = compactor.compact(lineage, 2);
+
+      // Entry at index 0 should be verifiable (it was compacted)
+      const verified = compactor.verifyMembership(lineage[0]!, result, 0);
+      expect(verified).toBe(true);
+    });
+
+    it('returns false for out-of-range negative index', () => {
+      const lineage = makeLineage(6);
+      const result = compactor.compact(lineage, 2);
+
+      expect(compactor.verifyMembership(lineage[0]!, result, -1)).toBe(false);
+    });
+
+    it('returns false for index >= compactedCount', () => {
+      const lineage = makeLineage(6);
+      const result = compactor.compact(lineage, 2);
+
+      // compactedCount is 4, so index 4 is out of range
+      expect(compactor.verifyMembership(lineage[0]!, result, 4)).toBe(false);
+      expect(compactor.verifyMembership(lineage[0]!, result, 100)).toBe(false);
+    });
+
+    it('returns false when nothing was compacted', () => {
+      const lineage = makeLineage(3);
+      const result = compactor.compact(lineage, 5);
+
+      // Nothing compacted, so any index is out of range
+      expect(compactor.verifyMembership(lineage[0]!, result, 0)).toBe(false);
+    });
+  });
+
+  // ── Merkle root determinism ───────────────────────────────────────────
+
+  describe('Merkle root determinism', () => {
+    it('produces the same root for the same lineage', () => {
+      const lineage = makeLineage(8);
+      const result1 = compactor.compact(lineage, 2);
+      const result2 = compactor.compact(lineage, 2);
+
+      expect(result1.merkleRoot).toBe(result2.merkleRoot);
+    });
+
+    it('produces different roots for different lineages', () => {
+      const lineageA = makeLineage(8);
+      const lineageB = makeLineage(8);
+      lineageB[0] = {
+        ...lineageB[0]!,
+        identityHash: 'different_hash' as any,
+      };
+
+      const resultA = compactor.compact(lineageA, 2);
+      const resultB = compactor.compact(lineageB, 2);
+
+      expect(resultA.merkleRoot).not.toBe(resultB.merkleRoot);
+    });
+
+    it('produces a meaningful root even for a single compacted entry', () => {
+      const lineage = makeLineage(2);
+      const result = compactor.compact(lineage, 1);
+
+      expect(result.compactedCount).toBe(1);
+      expect(result.merkleRoot).toBeTruthy();
+      // With 1 entry, the root IS the leaf hash
+      expect(result.proofHashes).toHaveLength(0);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SemanticVersion
+// ---------------------------------------------------------------------------
+
+describe('SemanticVersion', () => {
+  // ── Construction ──────────────────────────────────────────────────────
+
+  describe('construction', () => {
+    it('defaults to 1.0.0', () => {
+      const sv = new SemanticVersion();
+      expect(sv.current).toEqual({ major: 1, minor: 0, patch: 0 });
+      expect(sv.toString()).toBe('1.0.0');
+    });
+
+    it('accepts an initial version', () => {
+      const sv = new SemanticVersion({ major: 2, minor: 3, patch: 4 });
+      expect(sv.current).toEqual({ major: 2, minor: 3, patch: 4 });
+      expect(sv.toString()).toBe('2.3.4');
+    });
+
+    it('accepts version 0.0.0', () => {
+      const sv = new SemanticVersion({ major: 0, minor: 0, patch: 0 });
+      expect(sv.current).toEqual({ major: 0, minor: 0, patch: 0 });
+    });
+
+    it('throws on negative major', () => {
+      expect(() => new SemanticVersion({ major: -1, minor: 0, patch: 0 })).toThrow(
+        /Version components must be non-negative/,
+      );
+    });
+
+    it('throws on negative minor', () => {
+      expect(() => new SemanticVersion({ major: 0, minor: -1, patch: 0 })).toThrow(
+        /Version components must be non-negative/,
+      );
+    });
+
+    it('throws on negative patch', () => {
+      expect(() => new SemanticVersion({ major: 0, minor: 0, patch: -1 })).toThrow(
+        /Version components must be non-negative/,
+      );
+    });
+
+    it('returns a copy from current (not a reference)', () => {
+      const sv = new SemanticVersion({ major: 1, minor: 2, patch: 3 });
+      const v1 = sv.current;
+      const v2 = sv.current;
+      expect(v1).toEqual(v2);
+      expect(v1).not.toBe(v2); // Different object references
+    });
+
+    it('has an initial history entry', () => {
+      const sv = new SemanticVersion();
+      const history = sv.getHistory();
+      expect(history).toHaveLength(1);
+      expect(history[0]!.version).toEqual({ major: 1, minor: 0, patch: 0 });
+      expect(history[0]!.reason).toBe('metadata_update');
+    });
+  });
+
+  // ── bump ──────────────────────────────────────────────────────────────
+
+  describe('bump', () => {
+    it('bumps major on breaking_capability_change (resets minor and patch)', () => {
+      const sv = new SemanticVersion({ major: 1, minor: 2, patch: 3 });
+      const result = sv.bump('breaking_capability_change');
+      expect(result).toEqual({ major: 2, minor: 0, patch: 0 });
+      expect(sv.current).toEqual({ major: 2, minor: 0, patch: 0 });
+    });
+
+    it('bumps major on operator_transfer', () => {
+      const sv = new SemanticVersion({ major: 1, minor: 2, patch: 3 });
+      const result = sv.bump('operator_transfer');
+      expect(result).toEqual({ major: 2, minor: 0, patch: 0 });
+    });
+
+    it('bumps major on model_family_change', () => {
+      const sv = new SemanticVersion({ major: 1, minor: 2, patch: 3 });
+      const result = sv.bump('model_family_change');
+      expect(result).toEqual({ major: 2, minor: 0, patch: 0 });
+    });
+
+    it('bumps minor on new_capability (resets patch)', () => {
+      const sv = new SemanticVersion({ major: 1, minor: 2, patch: 3 });
+      const result = sv.bump('new_capability');
+      expect(result).toEqual({ major: 1, minor: 3, patch: 0 });
+    });
+
+    it('bumps minor on model_version_change', () => {
+      const sv = new SemanticVersion({ major: 1, minor: 2, patch: 3 });
+      const result = sv.bump('model_version_change');
+      expect(result).toEqual({ major: 1, minor: 3, patch: 0 });
+    });
+
+    it('bumps patch on metadata_update', () => {
+      const sv = new SemanticVersion({ major: 1, minor: 2, patch: 3 });
+      const result = sv.bump('metadata_update');
+      expect(result).toEqual({ major: 1, minor: 2, patch: 4 });
+    });
+
+    it('returns a copy (not a reference to internal state)', () => {
+      const sv = new SemanticVersion();
+      const bumped = sv.bump('metadata_update');
+      bumped.patch = 999;
+      expect(sv.current.patch).toBe(1); // Not affected
+    });
+
+    it('multiple bumps accumulate correctly', () => {
+      const sv = new SemanticVersion();
+      sv.bump('metadata_update'); // 1.0.1
+      sv.bump('metadata_update'); // 1.0.2
+      sv.bump('new_capability'); // 1.1.0
+      sv.bump('metadata_update'); // 1.1.1
+      sv.bump('breaking_capability_change'); // 2.0.0
+      sv.bump('metadata_update'); // 2.0.1
+
+      expect(sv.current).toEqual({ major: 2, minor: 0, patch: 1 });
+    });
+  });
+
+  // ── getHistory ────────────────────────────────────────────────────────
+
+  describe('getHistory', () => {
+    it('records each bump in history', () => {
+      const sv = new SemanticVersion();
+      sv.bump('new_capability');
+      sv.bump('metadata_update');
+      sv.bump('breaking_capability_change');
+
+      const history = sv.getHistory();
+      // Initial + 3 bumps
+      expect(history).toHaveLength(4);
+      expect(history[1]!.reason).toBe('new_capability');
+      expect(history[2]!.reason).toBe('metadata_update');
+      expect(history[3]!.reason).toBe('breaking_capability_change');
+    });
+
+    it('history entries have timestamps', () => {
+      const sv = new SemanticVersion();
+      sv.bump('metadata_update');
+
+      const history = sv.getHistory();
+      for (const entry of history) {
+        expect(entry.timestamp).toBeGreaterThan(0);
+      }
+    });
+
+    it('returns copies of version objects in history', () => {
+      const sv = new SemanticVersion();
+      sv.bump('new_capability');
+
+      const history = sv.getHistory();
+      const entry = history[1]!;
+      entry.version.major = 999;
+
+      // Should not affect internal state
+      const history2 = sv.getHistory();
+      expect(history2[1]!.version.major).toBe(1);
+    });
+  });
+
+  // ── parse ─────────────────────────────────────────────────────────────
+
+  describe('parse', () => {
+    it('parses a valid version string', () => {
+      expect(SemanticVersion.parse('1.2.3')).toEqual({ major: 1, minor: 2, patch: 3 });
+    });
+
+    it('parses 0.0.0', () => {
+      expect(SemanticVersion.parse('0.0.0')).toEqual({ major: 0, minor: 0, patch: 0 });
+    });
+
+    it('parses large numbers', () => {
+      expect(SemanticVersion.parse('100.200.300')).toEqual({ major: 100, minor: 200, patch: 300 });
+    });
+
+    it('throws on too few parts', () => {
+      expect(() => SemanticVersion.parse('1.2')).toThrow(/Invalid version string/);
+    });
+
+    it('throws on too many parts', () => {
+      expect(() => SemanticVersion.parse('1.2.3.4')).toThrow(/Invalid version string/);
+    });
+
+    it('throws on non-numeric parts', () => {
+      expect(() => SemanticVersion.parse('a.b.c')).toThrow(/Components must be numeric/);
+    });
+
+    it('throws on negative components', () => {
+      expect(() => SemanticVersion.parse('-1.0.0')).toThrow(/Version components must be non-negative/);
+    });
+
+    it('throws on empty string', () => {
+      expect(() => SemanticVersion.parse('')).toThrow(/Invalid version string/);
+    });
+  });
+
+  // ── compare ───────────────────────────────────────────────────────────
+
+  describe('compare', () => {
+    it('returns 0 for equal versions', () => {
+      expect(SemanticVersion.compare({ major: 1, minor: 2, patch: 3 }, { major: 1, minor: 2, patch: 3 })).toBe(0);
+    });
+
+    it('compares by major first', () => {
+      expect(SemanticVersion.compare({ major: 1, minor: 0, patch: 0 }, { major: 2, minor: 0, patch: 0 })).toBe(-1);
+      expect(SemanticVersion.compare({ major: 3, minor: 0, patch: 0 }, { major: 2, minor: 0, patch: 0 })).toBe(1);
+    });
+
+    it('compares by minor when major is equal', () => {
+      expect(SemanticVersion.compare({ major: 1, minor: 1, patch: 0 }, { major: 1, minor: 2, patch: 0 })).toBe(-1);
+      expect(SemanticVersion.compare({ major: 1, minor: 3, patch: 0 }, { major: 1, minor: 2, patch: 0 })).toBe(1);
+    });
+
+    it('compares by patch when major and minor are equal', () => {
+      expect(SemanticVersion.compare({ major: 1, minor: 2, patch: 3 }, { major: 1, minor: 2, patch: 4 })).toBe(-1);
+      expect(SemanticVersion.compare({ major: 1, minor: 2, patch: 5 }, { major: 1, minor: 2, patch: 4 })).toBe(1);
+    });
+
+    it('major takes precedence over minor and patch', () => {
+      expect(SemanticVersion.compare({ major: 1, minor: 99, patch: 99 }, { major: 2, minor: 0, patch: 0 })).toBe(-1);
+    });
+  });
+
+  // ── isCompatible ──────────────────────────────────────────────────────
+
+  describe('isCompatible', () => {
+    it('same version is compatible', () => {
+      const sv = new SemanticVersion({ major: 1, minor: 2, patch: 3 });
+      expect(sv.isCompatible({ major: 1, minor: 2, patch: 3 })).toBe(true);
+    });
+
+    it('higher minor is compatible (backward compatible addition)', () => {
+      const sv = new SemanticVersion({ major: 1, minor: 2, patch: 0 });
+      expect(sv.isCompatible({ major: 1, minor: 5, patch: 0 })).toBe(true);
+    });
+
+    it('lower minor is NOT compatible', () => {
+      const sv = new SemanticVersion({ major: 1, minor: 3, patch: 0 });
+      expect(sv.isCompatible({ major: 1, minor: 2, patch: 0 })).toBe(false);
+    });
+
+    it('different major is NOT compatible', () => {
+      const sv = new SemanticVersion({ major: 1, minor: 0, patch: 0 });
+      expect(sv.isCompatible({ major: 2, minor: 0, patch: 0 })).toBe(false);
+    });
+
+    it('lower major is NOT compatible', () => {
+      const sv = new SemanticVersion({ major: 2, minor: 0, patch: 0 });
+      expect(sv.isCompatible({ major: 1, minor: 99, patch: 99 })).toBe(false);
+    });
+
+    it('different patch with same major.minor is compatible', () => {
+      const sv = new SemanticVersion({ major: 1, minor: 2, patch: 0 });
+      expect(sv.isCompatible({ major: 1, minor: 2, patch: 99 })).toBe(true);
+    });
+  });
+
+  // ── bumpReasonFromChangeType ──────────────────────────────────────────
+
+  describe('bumpReasonFromChangeType', () => {
+    it('created -> metadata_update', () => {
+      expect(SemanticVersion.bumpReasonFromChangeType('created')).toBe('metadata_update');
+    });
+
+    it('model_update -> model_version_change', () => {
+      expect(SemanticVersion.bumpReasonFromChangeType('model_update')).toBe('model_version_change');
+    });
+
+    it('capability_change -> new_capability', () => {
+      expect(SemanticVersion.bumpReasonFromChangeType('capability_change')).toBe('new_capability');
+    });
+
+    it('operator_transfer -> operator_transfer', () => {
+      expect(SemanticVersion.bumpReasonFromChangeType('operator_transfer')).toBe('operator_transfer');
+    });
+
+    it('fork -> breaking_capability_change', () => {
+      expect(SemanticVersion.bumpReasonFromChangeType('fork')).toBe('breaking_capability_change');
+    });
+
+    it('merge -> new_capability', () => {
+      expect(SemanticVersion.bumpReasonFromChangeType('merge')).toBe('new_capability');
+    });
+  });
+
+  // ── toString ──────────────────────────────────────────────────────────
+
+  describe('toString', () => {
+    it('formats correctly after bumps', () => {
+      const sv = new SemanticVersion({ major: 1, minor: 0, patch: 0 });
+      expect(sv.toString()).toBe('1.0.0');
+      sv.bump('new_capability');
+      expect(sv.toString()).toBe('1.1.0');
+      sv.bump('metadata_update');
+      expect(sv.toString()).toBe('1.1.1');
+      sv.bump('operator_transfer');
+      expect(sv.toString()).toBe('2.0.0');
+    });
+
+    it('round-trips through parse', () => {
+      const sv = new SemanticVersion({ major: 5, minor: 12, patch: 7 });
+      const str = sv.toString();
+      const parsed = SemanticVersion.parse(str);
+      expect(parsed).toEqual({ major: 5, minor: 12, patch: 7 });
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// IdentitySimilarity
+// ---------------------------------------------------------------------------
+
+describe('IdentitySimilarity', () => {
+  // Helper to create a minimal AgentIdentity for similarity tests.
+  function makeIdentity(overrides: {
+    capabilities?: string[];
+    lineage?: LineageEntry[];
+    model?: ModelAttestation;
+  } = {}): AgentIdentity {
+    const lineage: LineageEntry[] = overrides.lineage ?? [
+      {
+        identityHash: 'hash_default' as any,
+        changeType: 'created',
+        description: 'Created',
+        timestamp: new Date().toISOString(),
+        parentHash: null,
+        signature: 'sig_default',
+        reputationCarryForward: 1.0,
+      },
+    ];
+
+    return {
+      id: 'id_test' as any,
+      operatorPublicKey: 'pubkey_test',
+      model: overrides.model ?? {
+        provider: 'anthropic',
+        modelId: 'claude-3',
+        modelVersion: '20240101',
+        attestationType: 'provider_signed',
+      },
+      capabilities: overrides.capabilities ?? ['text_generation', 'code_generation'],
+      capabilityManifestHash: 'manifest_test' as any,
+      deployment: { runtime: 'container' },
+      lineage,
+      version: lineage.length,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      signature: 'sig_test',
+    };
+  }
+
+  function makeLineageEntryForSim(
+    hash: string,
+    changeType: LineageEntry['changeType'] = 'created',
+    carryForward = 1.0,
+  ): LineageEntry {
+    return {
+      identityHash: hash as any,
+      changeType,
+      description: `Entry ${hash}`,
+      timestamp: new Date().toISOString(),
+      parentHash: null,
+      signature: `sig_${hash}`,
+      reputationCarryForward: carryForward,
+    };
+  }
+
+  // ── Construction ──────────────────────────────────────────────────────
+
+  describe('construction', () => {
+    it('creates with default weights (0.4, 0.3, 0.3)', () => {
+      const sim = new IdentitySimilarity();
+      // No error means weights sum to 1.0 with defaults
+      expect(sim).toBeDefined();
+    });
+
+    it('creates with custom weights that sum to 1.0', () => {
+      const sim = new IdentitySimilarity({ capability: 0.5, lineage: 0.3, profile: 0.2 });
+      expect(sim).toBeDefined();
+    });
+
+    it('accepts all weight on one factor', () => {
+      const sim = new IdentitySimilarity({ capability: 1.0, lineage: 0, profile: 0 });
+      expect(sim).toBeDefined();
+    });
+
+    it('throws when weights do not sum to 1.0', () => {
+      expect(
+        () => new IdentitySimilarity({ capability: 0.5, lineage: 0.5, profile: 0.5 }),
+      ).toThrow(/weights must sum to 1\.0/);
+    });
+
+    it('throws when weights sum to less than 1.0', () => {
+      expect(
+        () => new IdentitySimilarity({ capability: 0.1, lineage: 0.1, profile: 0.1 }),
+      ).toThrow(/weights must sum to 1\.0/);
+    });
+
+    it('allows small floating point tolerance (within 0.001)', () => {
+      // 0.3333 + 0.3333 + 0.3334 = 1.0
+      const sim = new IdentitySimilarity({ capability: 0.3333, lineage: 0.3333, profile: 0.3334 });
+      expect(sim).toBeDefined();
+    });
+  });
+
+  // ── capabilitySimilarity (Jaccard) ────────────────────────────────────
+
+  describe('capabilitySimilarity', () => {
+    const sim = new IdentitySimilarity();
+
+    it('returns 1.0 for identical capability sets', () => {
+      const a = makeIdentity({ capabilities: ['a', 'b', 'c'] });
+      const b = makeIdentity({ capabilities: ['a', 'b', 'c'] });
+      expect(sim.capabilitySimilarity(a, b)).toBe(1.0);
+    });
+
+    it('returns 0.0 for completely disjoint sets', () => {
+      const a = makeIdentity({ capabilities: ['a', 'b'] });
+      const b = makeIdentity({ capabilities: ['c', 'd'] });
+      expect(sim.capabilitySimilarity(a, b)).toBe(0.0);
+    });
+
+    it('returns 1.0 when both have empty capabilities', () => {
+      const a = makeIdentity({ capabilities: [] });
+      const b = makeIdentity({ capabilities: [] });
+      expect(sim.capabilitySimilarity(a, b)).toBe(1.0);
+    });
+
+    it('returns 0.0 when one set is empty and the other is not', () => {
+      const a = makeIdentity({ capabilities: [] });
+      const b = makeIdentity({ capabilities: ['a', 'b'] });
+      expect(sim.capabilitySimilarity(a, b)).toBe(0.0);
+    });
+
+    it('computes correct Jaccard similarity', () => {
+      // A = {a, b, c}, B = {b, c, d} => intersection = {b, c} = 2, union = {a,b,c,d} = 4
+      const a = makeIdentity({ capabilities: ['a', 'b', 'c'] });
+      const b = makeIdentity({ capabilities: ['b', 'c', 'd'] });
+      expect(sim.capabilitySimilarity(a, b)).toBeCloseTo(2 / 4, 5);
+    });
+
+    it('is symmetric: similarity(a, b) === similarity(b, a)', () => {
+      const a = makeIdentity({ capabilities: ['x', 'y', 'z'] });
+      const b = makeIdentity({ capabilities: ['y', 'w'] });
+      expect(sim.capabilitySimilarity(a, b)).toBe(sim.capabilitySimilarity(b, a));
+    });
+
+    it('returns 1/3 when one is a subset of the other', () => {
+      // A = {a}, B = {a, b, c} => intersection = 1, union = 3
+      const a = makeIdentity({ capabilities: ['a'] });
+      const b = makeIdentity({ capabilities: ['a', 'b', 'c'] });
+      expect(sim.capabilitySimilarity(a, b)).toBeCloseTo(1 / 3, 5);
+    });
+  });
+
+  // ── lineageSimilarity ─────────────────────────────────────────────────
+
+  describe('lineageSimilarity', () => {
+    const sim = new IdentitySimilarity();
+
+    it('returns 1.0 for both empty lineages', () => {
+      const a = makeIdentity({ lineage: [] });
+      const b = makeIdentity({ lineage: [] });
+      expect(sim.lineageSimilarity(a, b)).toBe(1.0);
+    });
+
+    it('returns 0 when one lineage is empty and the other is not', () => {
+      const a = makeIdentity({ lineage: [] });
+      const b = makeIdentity({ lineage: [makeLineageEntryForSim('h1')] });
+      expect(sim.lineageSimilarity(a, b)).toBe(0);
+    });
+
+    it('returns 1.0 for identical lineages', () => {
+      const entry = makeLineageEntryForSim('same_hash');
+      const a = makeIdentity({ lineage: [entry] });
+      const b = makeIdentity({ lineage: [entry] });
+      // shared = 1, unique = 1, ancestorSim = 1.0
+      // depth ratio = 1/1 = 1.0
+      // result = 0.6 * 1.0 + 0.4 * 1.0 = 1.0
+      expect(sim.lineageSimilarity(a, b)).toBeCloseTo(1.0, 5);
+    });
+
+    it('returns pure depth ratio when no shared hashes', () => {
+      const a = makeIdentity({ lineage: [makeLineageEntryForSim('a1')] });
+      const b = makeIdentity({
+        lineage: [
+          makeLineageEntryForSim('b1'),
+          makeLineageEntryForSim('b2', 'capability_change'),
+        ],
+      });
+      // shared = 0, unique = 3, ancestorSim = 0
+      // depth ratio = 1/2 = 0.5
+      // result = 0.6 * 0 + 0.4 * 0.5 = 0.2
+      expect(sim.lineageSimilarity(a, b)).toBeCloseTo(0.2, 5);
+    });
+
+    it('is symmetric: similarity(a, b) === similarity(b, a)', () => {
+      const a = makeIdentity({
+        lineage: [makeLineageEntryForSim('shared'), makeLineageEntryForSim('a_only')],
+      });
+      const b = makeIdentity({
+        lineage: [makeLineageEntryForSim('shared'), makeLineageEntryForSim('b_only'), makeLineageEntryForSim('b_only2', 'model_update')],
+      });
+      expect(sim.lineageSimilarity(a, b)).toBe(sim.lineageSimilarity(b, a));
+    });
+
+    it('higher shared ancestor ratio produces higher similarity', () => {
+      const shared1 = makeLineageEntryForSim('shared_1');
+      const shared2 = makeLineageEntryForSim('shared_2', 'model_update');
+
+      // Only 1 shared ancestor
+      const a1 = makeIdentity({ lineage: [shared1, makeLineageEntryForSim('x')] });
+      const b1 = makeIdentity({ lineage: [shared1, makeLineageEntryForSim('y')] });
+
+      // 2 shared ancestors
+      const a2 = makeIdentity({ lineage: [shared1, shared2] });
+      const b2 = makeIdentity({ lineage: [shared1, shared2] });
+
+      expect(sim.lineageSimilarity(a2, b2)).toBeGreaterThan(sim.lineageSimilarity(a1, b1));
+    });
+  });
+
+  // ── profileSimilarity ─────────────────────────────────────────────────
+
+  describe('profileSimilarity', () => {
+    const sim = new IdentitySimilarity();
+
+    it('returns 1.0 for identical identities', () => {
+      const a = makeIdentity({ capabilities: ['text_gen'] });
+      const b = makeIdentity({ capabilities: ['text_gen'] });
+      expect(sim.profileSimilarity(a, b)).toBeCloseTo(1.0, 3);
+    });
+
+    it('is symmetric: similarity(a, b) === similarity(b, a)', () => {
+      const a = makeIdentity({ capabilities: ['a', 'b'] });
+      const b = makeIdentity({ capabilities: ['c', 'd', 'e'] });
+      expect(sim.profileSimilarity(a, b)).toBeCloseTo(sim.profileSimilarity(b, a), 10);
+    });
+
+    it('returns a value in [0, 1]', () => {
+      const a = makeIdentity({ capabilities: ['alpha'] });
+      const b = makeIdentity({ capabilities: ['beta', 'gamma'] });
+      const result = sim.profileSimilarity(a, b);
+      expect(result).toBeGreaterThanOrEqual(0);
+      expect(result).toBeLessThanOrEqual(1);
+    });
+
+    it('returns higher similarity for identities with similar feature profiles', () => {
+      // Same capabilities = same feature vectors
+      const a = makeIdentity({ capabilities: ['text_generation', 'code_generation'] });
+      const b = makeIdentity({ capabilities: ['text_generation', 'code_generation'] });
+      const c = makeIdentity({ capabilities: ['image_generation', 'audio_generation', 'video_generation'] });
+
+      const simAB = sim.profileSimilarity(a, b);
+      const simAC = sim.profileSimilarity(a, c);
+
+      expect(simAB).toBeGreaterThan(simAC);
+    });
+  });
+
+  // ── compute (overall similarity) ──────────────────────────────────────
+
+  describe('compute', () => {
+    it('returns 1.0 for identical identities', () => {
+      const sim = new IdentitySimilarity();
+      const a = makeIdentity();
+      const b = makeIdentity();
+      expect(sim.compute(a, b)).toBeCloseTo(1.0, 3);
+    });
+
+    it('is symmetric: compute(a, b) === compute(b, a)', () => {
+      const sim = new IdentitySimilarity();
+      const a = makeIdentity({ capabilities: ['a', 'b'] });
+      const b = makeIdentity({ capabilities: ['b', 'c', 'd'] });
+      expect(sim.compute(a, b)).toBeCloseTo(sim.compute(b, a), 10);
+    });
+
+    it('returns a value in [0, 1]', () => {
+      const sim = new IdentitySimilarity();
+      const a = makeIdentity({ capabilities: ['x'] });
+      const b = makeIdentity({ capabilities: ['y', 'z'] });
+      const result = sim.compute(a, b);
+      expect(result).toBeGreaterThanOrEqual(0);
+      expect(result).toBeLessThanOrEqual(1);
+    });
+
+    it('weights affect the result as expected', () => {
+      // Capability-only weight
+      const capOnly = new IdentitySimilarity({ capability: 1.0, lineage: 0, profile: 0 });
+      const a = makeIdentity({ capabilities: ['a', 'b', 'c'] });
+      const b = makeIdentity({ capabilities: ['a', 'b', 'c'] });
+
+      // Identical capabilities => score should be 1.0
+      expect(capOnly.compute(a, b)).toBeCloseTo(1.0, 5);
+    });
+
+    it('totally different identities have low similarity', () => {
+      const sim = new IdentitySimilarity();
+      const a = makeIdentity({
+        capabilities: ['alpha', 'beta'],
+        lineage: [makeLineageEntryForSim('unique_a')],
+      });
+      const b = makeIdentity({
+        capabilities: ['gamma', 'delta', 'epsilon'],
+        lineage: [
+          makeLineageEntryForSim('unique_b'),
+          makeLineageEntryForSim('unique_b2', 'model_update'),
+          makeLineageEntryForSim('unique_b3', 'capability_change'),
+        ],
+      });
+      const result = sim.compute(a, b);
+      expect(result).toBeLessThan(0.5);
+    });
+
+    it('equals weighted sum of component similarities', () => {
+      const sim = new IdentitySimilarity({ capability: 0.5, lineage: 0.3, profile: 0.2 });
+      const a = makeIdentity({ capabilities: ['a', 'b'] });
+      const b = makeIdentity({ capabilities: ['b', 'c'] });
+
+      const capSim = sim.capabilitySimilarity(a, b);
+      const linSim = sim.lineageSimilarity(a, b);
+      const profSim = sim.profileSimilarity(a, b);
+
+      const expected = 0.5 * capSim + 0.3 * linSim + 0.2 * profSim;
+      expect(sim.compute(a, b)).toBeCloseTo(expected, 10);
+    });
+  });
+
+  // ── Jaccard mathematical properties ───────────────────────────────────
+
+  describe('Jaccard similarity mathematical properties', () => {
+    const sim = new IdentitySimilarity();
+
+    it('J(A, A) = 1 for any non-empty set', () => {
+      const a = makeIdentity({ capabilities: ['x', 'y', 'z'] });
+      expect(sim.capabilitySimilarity(a, a)).toBe(1.0);
+    });
+
+    it('0 <= J(A, B) <= 1 for any sets', () => {
+      const cases = [
+        [['a'], ['b']],
+        [['a', 'b', 'c'], ['c', 'd']],
+        [[], []],
+        [['x'], ['x', 'y', 'z', 'w']],
+      ];
+
+      for (const [capsA, capsB] of cases) {
+        const a = makeIdentity({ capabilities: capsA });
+        const b = makeIdentity({ capabilities: capsB });
+        const result = sim.capabilitySimilarity(a, b);
+        expect(result).toBeGreaterThanOrEqual(0);
+        expect(result).toBeLessThanOrEqual(1);
+      }
+    });
+
+    it('J(A, B) = J(B, A) (commutativity)', () => {
+      const a = makeIdentity({ capabilities: ['a', 'b', 'c'] });
+      const b = makeIdentity({ capabilities: ['b', 'd'] });
+      expect(sim.capabilitySimilarity(a, b)).toBe(sim.capabilitySimilarity(b, a));
+    });
+  });
+
+  // ── Cosine similarity properties ──────────────────────────────────────
+
+  describe('cosine similarity properties (via profileSimilarity)', () => {
+    const sim = new IdentitySimilarity();
+
+    it('identical vectors yield similarity 1.0', () => {
+      const a = makeIdentity({ capabilities: ['text_generation'] });
+      expect(sim.profileSimilarity(a, a)).toBeCloseTo(1.0, 3);
+    });
+
+    it('result is always in [0, 1]', () => {
+      const configs = [
+        { capabilities: ['a'] },
+        { capabilities: ['a', 'b', 'c', 'd', 'e'] },
+        { capabilities: [] },
+      ];
+
+      for (const cfg of configs) {
+        for (const cfg2 of configs) {
+          const result = sim.profileSimilarity(makeIdentity(cfg), makeIdentity(cfg2));
+          expect(result).toBeGreaterThanOrEqual(0);
+          expect(result).toBeLessThanOrEqual(1);
+        }
+      }
+    });
+  });
+
+  // ── Edge cases ────────────────────────────────────────────────────────
+
+  describe('edge cases', () => {
+    it('handles identities with no capabilities and no lineage', () => {
+      const sim = new IdentitySimilarity();
+      const a = makeIdentity({ capabilities: [], lineage: [] });
+      const b = makeIdentity({ capabilities: [], lineage: [] });
+      // Both empty caps => Jaccard 1.0, both empty lineage => 1.0
+      const result = sim.compute(a, b);
+      expect(result).toBeGreaterThanOrEqual(0);
+      expect(result).toBeLessThanOrEqual(1);
+    });
+
+    it('handles identity with many capabilities', () => {
+      const sim = new IdentitySimilarity();
+      const caps = Array.from({ length: 100 }, (_, i) => `cap_${i}`);
+      const a = makeIdentity({ capabilities: caps });
+      const b = makeIdentity({ capabilities: caps });
+      expect(sim.compute(a, b)).toBeCloseTo(1.0, 3);
+    });
+
+    it('handles identity with deep lineage', () => {
+      const sim = new IdentitySimilarity();
+      const deepLineage = Array.from({ length: 50 }, (_, i) =>
+        makeLineageEntryForSim(`hash_${i}`, i === 0 ? 'created' : 'capability_change'),
+      );
+      const a = makeIdentity({ lineage: deepLineage });
+      const b = makeIdentity({ lineage: deepLineage });
+      expect(sim.compute(a, b)).toBeCloseTo(1.0, 3);
+    });
   });
 });
