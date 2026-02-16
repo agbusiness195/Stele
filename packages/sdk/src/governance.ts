@@ -63,7 +63,20 @@ export interface GovernanceDashboard {
  * Create a governance policy with sensible defaults.
  *
  * @param params - Required organization ID and optional overrides.
- * @returns A complete GovernancePolicy.
+ * @param params.organizationId - Unique identifier for the organization.
+ * @param params.maxAgents - Maximum number of agents allowed (default 100).
+ * @param params.globalConstraints - CCL rules all agents must follow (default `[]`).
+ * @param params.monitoringLevel - Level of monitoring detail (default `"standard"`).
+ * @returns A complete {@link GovernancePolicy}.
+ *
+ * @example
+ * ```typescript
+ * const policy = createGovernancePolicy({
+ *   organizationId: 'acme-corp',
+ *   maxAgents: 50,
+ *   monitoringLevel: 'comprehensive',
+ * });
+ * ```
  */
 export function createGovernancePolicy(params: {
   organizationId: string;
@@ -86,11 +99,20 @@ export function createGovernancePolicy(params: {
 /**
  * Register a new agent within a governance policy.
  *
- * The agent starts with full compliance, zero violations, and a healthy status.
+ * The agent starts with full compliance (1.0), zero violations, and a healthy status.
+ * The `lastCheckIn` is set to the current time.
  *
  * @param _policy - The governance policy (used for context; agent limits checked externally).
  * @param agentId - The unique identifier for the new agent.
- * @returns An initial AgentStatus for the registered agent.
+ * @returns An initial {@link AgentStatus} for the registered agent.
+ *
+ * @example
+ * ```typescript
+ * const policy = createGovernancePolicy({ organizationId: 'acme' });
+ * const agentStatus = registerAgent(policy, 'agent-001');
+ * console.log(agentStatus.complianceScore); // 1.0
+ * console.log(agentStatus.healthy);         // true
+ * ```
  */
 export function registerAgent(_policy: GovernancePolicy, agentId: string): AgentStatus {
   return {
@@ -112,7 +134,18 @@ export function registerAgent(_policy: GovernancePolicy, agentId: string): Agent
  *
  * @param status - The current agent status.
  * @param params - Updated values for compliance score and/or violations.
- * @returns A new AgentStatus reflecting the updates.
+ * @param params.complianceScore - New compliance score (0-1). Omit to keep current.
+ * @param params.violations - New violation count. Omit to keep current.
+ * @returns A new {@link AgentStatus} reflecting the updates.
+ *
+ * @example
+ * ```typescript
+ * const updated = updateAgentStatus(agentStatus, {
+ *   complianceScore: 0.2,
+ *   violations: 3,
+ * });
+ * console.log(updated.quarantined); // true (auto-quarantined below 0.3)
+ * ```
  */
 export function updateAgentStatus(
   status: AgentStatus,
@@ -143,9 +176,18 @@ export function updateAgentStatus(
 /**
  * Quarantine an agent, preventing it from operating.
  *
+ * Sets `quarantined` to `true` and `healthy` to `false`. The reason
+ * string is available for logging and audit trail purposes.
+ *
  * @param status - The current agent status.
  * @param _reason - Reason for quarantine (for logging/audit purposes).
- * @returns A new AgentStatus with the agent quarantined.
+ * @returns A new {@link AgentStatus} with the agent quarantined.
+ *
+ * @example
+ * ```typescript
+ * const quarantined = quarantineAgent(agentStatus, 'Repeated policy violations');
+ * console.log(quarantined.quarantined); // true
+ * ```
  */
 export function quarantineAgent(status: AgentStatus, _reason: string): AgentStatus {
   return {
@@ -158,10 +200,17 @@ export function quarantineAgent(status: AgentStatus, _reason: string): AgentStat
 /**
  * Remove an agent from quarantine, allowing it to resume operations.
  *
- * Health status is recalculated based on the current compliance score.
+ * Health status is recalculated based on the current compliance score:
+ * the agent is marked healthy only if `complianceScore >= 0.5`.
  *
  * @param status - The current agent status.
- * @returns A new AgentStatus with quarantine removed.
+ * @returns A new {@link AgentStatus} with quarantine removed.
+ *
+ * @example
+ * ```typescript
+ * const restored = unquarantineAgent(quarantinedAgent);
+ * console.log(restored.quarantined); // false
+ * ```
  */
 export function unquarantineAgent(status: AgentStatus): AgentStatus {
   return {
@@ -176,9 +225,20 @@ export function unquarantineAgent(status: AgentStatus): AgentStatus {
 /**
  * Build an aggregated governance dashboard from policy and agent statuses.
  *
+ * Computes overall fleet health (average compliance of non-quarantined agents),
+ * sums active violations, and generates an actionable recommendation string
+ * based on the fleet's current state.
+ *
  * @param policy - The organization's governance policy.
  * @param agents - Array of current agent statuses.
- * @returns A GovernanceDashboard with health metrics and recommendations.
+ * @returns A {@link GovernanceDashboard} with health metrics and recommendations.
+ *
+ * @example
+ * ```typescript
+ * const dashboard = buildDashboard(policy, [agent1Status, agent2Status]);
+ * console.log(dashboard.overallHealth);   // 0.85
+ * console.log(dashboard.recommendation);  // 'All agents are healthy...'
+ * ```
  */
 export function buildDashboard(
   policy: GovernancePolicy,

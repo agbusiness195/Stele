@@ -3,6 +3,7 @@ export type {
   HonestyProof,
 } from './types';
 
+import { SteleError, SteleErrorCode } from '@stele/types';
 import type { HonestyParameters, HonestyProof } from './types';
 
 /**
@@ -11,23 +12,23 @@ import type { HonestyParameters, HonestyProof } from './types';
  */
 export function validateParameters(params: Partial<HonestyParameters>): void {
   if (params.stakeAmount !== undefined && params.stakeAmount < 0) {
-    throw new Error(`stakeAmount must be >= 0, got ${params.stakeAmount}`);
+    throw new SteleError(`stakeAmount must be >= 0, got ${params.stakeAmount}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (params.detectionProbability !== undefined) {
     if (params.detectionProbability < 0 || params.detectionProbability > 1) {
-      throw new Error(
+      throw new SteleError(
         `detectionProbability must be in [0, 1], got ${params.detectionProbability}`,
       );
     }
   }
   if (params.reputationValue !== undefined && params.reputationValue < 0) {
-    throw new Error(`reputationValue must be >= 0, got ${params.reputationValue}`);
+    throw new SteleError(`reputationValue must be >= 0, got ${params.reputationValue}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (params.maxViolationGain !== undefined && params.maxViolationGain < 0) {
-    throw new Error(`maxViolationGain must be >= 0, got ${params.maxViolationGain}`);
+    throw new SteleError(`maxViolationGain must be >= 0, got ${params.maxViolationGain}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (params.coburn !== undefined && params.coburn < 0) {
-    throw new Error(`coburn must be >= 0, got ${params.coburn}`);
+    throw new SteleError(`coburn must be >= 0, got ${params.coburn}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 }
 
@@ -214,24 +215,24 @@ export function repeatedGameEquilibrium(params: RepeatedGameParams): RepeatedGam
 
   // Validate payoff ordering: T > R > P > S (Prisoner's Dilemma structure)
   if (T <= R) {
-    throw new Error(
+    throw new SteleError(
       `temptationPayoff (${T}) must be > cooperatePayoff (${R}) for a valid dilemma`,
     );
   }
   if (R <= P) {
-    throw new Error(
+    throw new SteleError(
       `cooperatePayoff (${R}) must be > defectPayoff (${P}) for a valid dilemma`,
     );
   }
   if (P <= S) {
-    throw new Error(
+    throw new SteleError(
       `defectPayoff (${P}) must be > suckerPayoff (${S}) for a valid dilemma`,
     );
   }
 
   // Validate discount factor is in (0, 1)
   if (delta <= 0 || delta >= 1) {
-    throw new Error(
+    throw new SteleError(
       `discountFactor must be in (0, 1), got ${delta}`,
     );
   }
@@ -315,10 +316,10 @@ export function coalitionStability(
   coalitionValues: CoalitionValue[],
 ): CoalitionStabilityResult {
   if (agentCount < 1) {
-    throw new Error(`agentCount must be >= 1, got ${agentCount}`);
+    throw new SteleError(`agentCount must be >= 1, got ${agentCount}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (allocation.length !== agentCount) {
-    throw new Error(
+    throw new SteleError(
       `allocation length (${allocation.length}) must equal agentCount (${agentCount})`,
     );
   }
@@ -335,7 +336,7 @@ export function coalitionStability(
   const grandKey = grandCoalition.join(',');
   const grandCoalitionValue = valueMap.get(grandKey);
   if (grandCoalitionValue === undefined) {
-    throw new Error('coalitionValues must include the grand coalition (all agents)');
+    throw new SteleError('coalitionValues must include the grand coalition (all agents)', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Efficiency check: sum of allocation vs grand coalition value
@@ -446,15 +447,15 @@ export function mechanismDesign(params: MechanismDesignParams): MechanismDesignR
   const { dishonestGain, detectionProbability, intrinsicHonestyCost = 0 } = params;
 
   if (dishonestGain < 0) {
-    throw new Error(`dishonestGain must be >= 0, got ${dishonestGain}`);
+    throw new SteleError(`dishonestGain must be >= 0, got ${dishonestGain}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (detectionProbability < 0 || detectionProbability > 1) {
-    throw new Error(
+    throw new SteleError(
       `detectionProbability must be in [0, 1], got ${detectionProbability}`,
     );
   }
   if (intrinsicHonestyCost < 0) {
-    throw new Error(
+    throw new SteleError(
       `intrinsicHonestyCost must be >= 0, got ${intrinsicHonestyCost}`,
     );
   }
@@ -558,16 +559,16 @@ export function modelPrincipalAgent(params: {
   const { operator, agentBreachRate, detectionRate, breachCost, monitoringCostPerUnit } = params;
 
   if (agentBreachRate < 0 || agentBreachRate > 1) {
-    throw new Error(`agentBreachRate must be in [0, 1], got ${agentBreachRate}`);
+    throw new SteleError(`agentBreachRate must be in [0, 1], got ${agentBreachRate}`);
   }
   if (detectionRate < 0 || detectionRate > 1) {
-    throw new Error(`detectionRate must be in [0, 1], got ${detectionRate}`);
+    throw new SteleError(`detectionRate must be in [0, 1], got ${detectionRate}`);
   }
   if (breachCost < 0) {
-    throw new Error(`breachCost must be >= 0, got ${breachCost}`);
+    throw new SteleError(`breachCost must be >= 0, got ${breachCost}`);
   }
   if (monitoringCostPerUnit < 0) {
-    throw new Error(`monitoringCostPerUnit must be >= 0, got ${monitoringCostPerUnit}`);
+    throw new SteleError(`monitoringCostPerUnit must be >= 0, got ${monitoringCostPerUnit}`);
   }
 
   const monitoringEffectiveness = detectionRate;
@@ -659,16 +660,16 @@ export function analyzeTier(params: {
   const { tier, baseDetectionRate, participantCount, stake, breachGain } = params;
 
   if (baseDetectionRate < 0 || baseDetectionRate > 1) {
-    throw new Error(`baseDetectionRate must be in [0, 1], got ${baseDetectionRate}`);
+    throw new SteleError(`baseDetectionRate must be in [0, 1], got ${baseDetectionRate}`);
   }
   if (participantCount < 1) {
-    throw new Error(`participantCount must be >= 1, got ${participantCount}`);
+    throw new SteleError(`participantCount must be >= 1, got ${participantCount}`);
   }
   if (stake < 0) {
-    throw new Error(`stake must be >= 0, got ${stake}`);
+    throw new SteleError(`stake must be >= 0, got ${stake}`);
   }
   if (breachGain < 0) {
-    throw new Error(`breachGain must be >= 0, got ${breachGain}`);
+    throw new SteleError(`breachGain must be >= 0, got ${breachGain}`);
   }
 
   const { floor, ceiling } = TIER_PARAMS[tier];
@@ -752,19 +753,19 @@ export function defineConjecture(params: {
   const confidence = params.confidence ?? 0.5;
 
   if (confidence < 0 || confidence > 1) {
-    throw new Error(`confidence must be in [0, 1], got ${confidence}`);
+    throw new SteleError(`confidence must be in [0, 1], got ${confidence}`);
   }
   if (!params.id) {
-    throw new Error('id must be a non-empty string');
+    throw new SteleError('id must be a non-empty string');
   }
   if (!params.name) {
-    throw new Error('name must be a non-empty string');
+    throw new SteleError('name must be a non-empty string');
   }
   if (!params.statement) {
-    throw new Error('statement must be a non-empty string');
+    throw new SteleError('statement must be a non-empty string');
   }
   if (!params.informalArgument) {
-    throw new Error('informalArgument must be a non-empty string');
+    throw new SteleError('informalArgument must be a non-empty string');
   }
 
   return {
@@ -921,19 +922,19 @@ export function analyzeImpossibilityBounds(params: {
   const { actionSpaceSize, observationBudget, privacyRequirement, chainLength, collateral } = params;
 
   if (actionSpaceSize < 0) {
-    throw new Error(`actionSpaceSize must be >= 0, got ${actionSpaceSize}`);
+    throw new SteleError(`actionSpaceSize must be >= 0, got ${actionSpaceSize}`);
   }
   if (observationBudget <= 0) {
-    throw new Error(`observationBudget must be > 0, got ${observationBudget}`);
+    throw new SteleError(`observationBudget must be > 0, got ${observationBudget}`);
   }
   if (privacyRequirement < 0 || privacyRequirement > 1) {
-    throw new Error(`privacyRequirement must be in [0, 1], got ${privacyRequirement}`);
+    throw new SteleError(`privacyRequirement must be in [0, 1], got ${privacyRequirement}`);
   }
   if (chainLength < 1) {
-    throw new Error(`chainLength must be >= 1, got ${chainLength}`);
+    throw new SteleError(`chainLength must be >= 1, got ${chainLength}`);
   }
   if (collateral < 0) {
-    throw new Error(`collateral must be >= 0, got ${collateral}`);
+    throw new SteleError(`collateral must be >= 0, got ${collateral}`);
   }
 
   const conjectures = getStandardConjectures();

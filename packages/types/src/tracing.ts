@@ -6,6 +6,7 @@
  */
 
 import { generateId } from '@stele/crypto';
+import { SteleError, SteleErrorCode } from './errors';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -193,7 +194,11 @@ export class ActiveSpan {
   /** @internal */
   private _assertNotEnded(): void {
     if (this._isEnded) {
-      throw new Error(`Span "${this.name}" has already ended`);
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `Span "${this.name}" has already ended`,
+        { hint: 'A span can only be modified before calling end(). Create a new span instead.' },
+      );
     }
   }
 }

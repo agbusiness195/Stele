@@ -1510,3 +1510,190 @@ describe('CCL matches operator', () => {
     expect(result).toBe(false);
   });
 });
+
+// ===========================================================================
+// Edge case: empty string constraint handling
+// ===========================================================================
+describe('Edge case: empty string constraint handling', () => {
+  it('parse throws on empty string input', () => {
+    expect(() => parse('')).toThrow();
+  });
+
+  it('parse throws on whitespace-only input', () => {
+    expect(() => parse('   ')).toThrow();
+    expect(() => parse('\n\n')).toThrow();
+    expect(() => parse('\t\t')).toThrow();
+  });
+
+  it('parse handles document with only comments (no statements)', () => {
+    const doc = parse('# just a comment\n# another comment');
+    expect(doc.statements.length).toBe(0);
+    expect(doc.permits.length).toBe(0);
+    expect(doc.denies.length).toBe(0);
+    expect(doc.obligations.length).toBe(0);
+    expect(doc.limits.length).toBe(0);
+  });
+
+  it('evaluate on an empty document returns default deny', () => {
+    const emptyDoc = buildDoc({});
+    const result = evaluate(emptyDoc, 'file.read', '/data');
+    expect(result.permitted, 'empty document should default-deny all actions').toBe(false);
+  });
+});
+
+// ===========================================================================
+// Edge case: unicode characters in resource paths
+// ===========================================================================
+describe('Edge case: unicode characters in resource paths', () => {
+  it('matchResource handles unicode path segments', () => {
+    expect(matchResource('/datos/archivos', '/datos/archivos')).toBe(true);
+    expect(matchResource('/datos/**', '/datos/archivos')).toBe(true);
+  });
+
+  it('matchResource handles emoji in resource paths', () => {
+    expect(matchResource('/data/\u{1F600}', '/data/\u{1F600}')).toBe(true);
+    expect(matchResource('/data/**', '/data/\u{1F600}/nested')).toBe(true);
+  });
+
+  it('matchResource handles CJK characters in resource paths', () => {
+    expect(matchResource('/\u6570\u636e/\u6587\u4ef6', '/\u6570\u636e/\u6587\u4ef6')).toBe(true);
+    expect(matchResource('/\u6570\u636e/*', '/\u6570\u636e/\u6587\u4ef6')).toBe(true);
+  });
+
+  it('matchResource handles accented characters in resource paths', () => {
+    expect(matchResource('/caf\u00e9/m\u00e9nu', '/caf\u00e9/m\u00e9nu')).toBe(true);
+    expect(matchResource('/caf\u00e9/**', '/caf\u00e9/m\u00e9nu/item')).toBe(true);
+  });
+
+  it('evaluate works with unicode resource paths', () => {
+    const doc = buildDoc({
+      permits: [makePermit('file.read', '/\u6570\u636e/**')],
+    });
+    const result = evaluate(doc, 'file.read', '/\u6570\u636e/\u6587\u4ef6');
+    expect(result.permitted, 'permit with CJK resource path should match CJK request').toBe(true);
+  });
+});
+
+// ===========================================================================
+// Edge case: very long resource paths (1000+ chars)
+// ===========================================================================
+describe('Edge case: very long resource paths (1000+ chars)', () => {
+  it('matchResource handles a resource path with 1000+ characters', () => {
+    const longSegment = 'a'.repeat(200);
+    const longPath = '/' + Array.from({ length: 6 }, () => longSegment).join('/');
+    expect(longPath.length).toBeGreaterThan(1000);
+    expect(matchResource(longPath, longPath), 'exact match should work for 1000+ char path').toBe(true);
+  });
+
+  it('matchResource handles wildcard matching on very long paths', () => {
+    const longSegment = 'segment'.repeat(50);
+    const longPath = '/root/' + longSegment + '/leaf';
+    expect(matchResource('/root/**', longPath), '** should match very long path').toBe(true);
+    expect(matchResource('/root/*/leaf', longPath), '* should match single long segment').toBe(true);
+  });
+
+  it('matchResource with deeply nested path (50+ segments)', () => {
+    const segments = Array.from({ length: 50 }, (_, i) => `level${i}`);
+    const deepPath = '/' + segments.join('/');
+    expect(deepPath.length).toBeGreaterThan(300);
+    expect(matchResource('/**', deepPath), '/** should match deeply nested path').toBe(true);
+    expect(matchResource(deepPath, deepPath), 'exact deep path should match itself').toBe(true);
+  });
+
+  it('evaluate works with very long resource paths', () => {
+    const longPath = '/data/' + 'subdir/'.repeat(150) + 'file';
+    const doc = buildDoc({
+      permits: [makePermit('file.read', '/data/**')],
+    });
+    const result = evaluate(doc, 'file.read', longPath);
+    expect(result.permitted, 'wildcard permit should match very long nested path').toBe(true);
+  });
+});
+
+// ===========================================================================
+// Edge case: nested wildcard patterns
+// ===========================================================================
+describe('Edge case: nested wildcard patterns', () => {
+  it('matchResource with multiple ** wildcards', () => {
+    // /a/**/b/**/c should match /a/x/b/y/c
+    expect(matchResource('/a/**/b/**/c', '/a/x/b/y/c')).toBe(true);
+    expect(matchResource('/a/**/b/**/c', '/a/b/c')).toBe(true);
+    expect(matchResource('/a/**/b/**/c', '/a/x/y/b/z/w/c')).toBe(true);
+  });
+
+  it('matchAction with multiple ** wildcards', () => {
+    expect(matchAction('a.**.b.**.c', 'a.x.b.y.c')).toBe(true);
+    expect(matchAction('a.**.b.**.c', 'a.b.c')).toBe(true);
+  });
+
+  it('matchResource with * and ** mixed', () => {
+    expect(matchResource('/data/*/files/**', '/data/user/files/doc.txt')).toBe(true);
+    expect(matchResource('/data/*/files/**', '/data/user/files/deep/nested/doc.txt')).toBe(true);
+    expect(matchResource('/data/*/files/**', '/data/user/files')).toBe(true);
+  });
+
+  it('matchAction with * and ** mixed', () => {
+    expect(matchAction('file.*.deep.**', 'file.read.deep.nested.thing')).toBe(true);
+    expect(matchAction('file.*.deep.**', 'file.read.deep')).toBe(true);
+    expect(matchAction('file.*.deep.**', 'file.read.shallow')).toBe(false);
+  });
+
+  it('evaluate uses most specific wildcard match', () => {
+    const doc = buildDoc({
+      permits: [makePermit('file.*', '/data/*')],
+      denies: [makeDeny('**', '**')],
+    });
+    // file.read on /data/files is more specific than ** on **
+    const result = evaluate(doc, 'file.read', '/data/files');
+    expect(result.permitted, 'more specific wildcard permit should override broad deny').toBe(true);
+  });
+});
+
+// ===========================================================================
+// Edge case: case sensitivity behavior
+// ===========================================================================
+describe('Edge case: case sensitivity behavior', () => {
+  it('matchAction is case-sensitive for action names', () => {
+    expect(matchAction('file.read', 'file.read')).toBe(true);
+    expect(matchAction('file.read', 'File.Read')).toBe(false);
+    expect(matchAction('file.read', 'FILE.READ')).toBe(false);
+    expect(matchAction('File.Read', 'file.read')).toBe(false);
+  });
+
+  it('matchResource is case-sensitive for resource paths', () => {
+    expect(matchResource('/Data/Files', '/Data/Files')).toBe(true);
+    expect(matchResource('/Data/Files', '/data/files')).toBe(false);
+    expect(matchResource('/data/files', '/Data/Files')).toBe(false);
+  });
+
+  it('evaluateCondition is case-sensitive for string equality', () => {
+    const cond: Condition = { field: 'role', operator: '=', value: 'Admin' };
+    expect(evaluateCondition(cond, { role: 'Admin' }), 'exact case match should succeed').toBe(true);
+    expect(evaluateCondition(cond, { role: 'admin' }), 'different case should fail equality').toBe(false);
+    expect(evaluateCondition(cond, { role: 'ADMIN' }), 'all caps should fail equality').toBe(false);
+  });
+
+  it('evaluateCondition contains is case-sensitive', () => {
+    const cond: Condition = { field: 'text', operator: 'contains', value: 'Secret' };
+    expect(evaluateCondition(cond, { text: 'this is Secret data' }), 'exact case substring should match').toBe(true);
+    expect(evaluateCondition(cond, { text: 'this is secret data' }), 'different case substring should not match').toBe(false);
+  });
+
+  it('evaluate is case-sensitive for action and resource matching', () => {
+    const doc = buildDoc({
+      permits: [makePermit('file.read', '/data')],
+    });
+    const matchResult = evaluate(doc, 'file.read', '/data');
+    expect(matchResult.permitted, 'exact case action+resource should be permitted').toBe(true);
+
+    const noMatchResult = evaluate(doc, 'File.Read', '/Data');
+    expect(noMatchResult.permitted, 'different case action+resource should be default-denied').toBe(false);
+  });
+
+  it('wildcard matching is case-sensitive for literal segments', () => {
+    expect(matchAction('File.*', 'File.read')).toBe(true);
+    expect(matchAction('File.*', 'file.read')).toBe(false);
+    expect(matchResource('/Data/*', '/Data/files')).toBe(true);
+    expect(matchResource('/Data/*', '/data/files')).toBe(false);
+  });
+});

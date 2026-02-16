@@ -157,12 +157,18 @@ export class FileStore implements CovenantStore {
 
   /**
    * Atomically write `data` to `filePath` by writing to a temporary file
-   * in the same directory and then renaming.  Rename on the same
-   * filesystem is atomic on POSIX systems.
+   * in the same directory and then renaming.
+   *
+   * This two-step approach guarantees that readers never see a half-written
+   * file: `fs.rename()` on the same filesystem is atomic on POSIX systems.
+   * The temporary file name includes the PID, timestamp, and a random suffix
+   * to avoid collisions between concurrent writers.
    */
   private async atomicWrite(filePath: string, data: string): Promise<void> {
+    // Step 1: Write to a uniquely-named temp file in the same directory.
     const tmpPath = `${filePath}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
     await fs.writeFile(tmpPath, data, 'utf-8');
+    // Step 2: Atomic rename replaces the target file in one syscall.
     await fs.rename(tmpPath, filePath);
   }
 
@@ -210,6 +216,21 @@ export class FileStore implements CovenantStore {
 
   // ── Single-document CRUD ────────────────────────────────────────────────
 
+  /**
+   * Store a covenant document, overwriting any existing document with the same ID.
+   *
+   * Writes the document JSON to disk atomically (temp file + rename), then
+   * updates the index under the mutex lock. Emits a `"put"` event on success.
+   *
+   * @param doc - The covenant document to store. Must have a non-empty `id`.
+   * @throws {SteleError} If `doc` is null/undefined or has no valid `id`.
+   *
+   * @example
+   * ```typescript
+   * const store = new FileStore('/tmp/covenants');
+   * await store.put(myCovenantDoc);
+   * ```
+   */
   async put(doc: CovenantDocument): Promise<void> {
     if (doc == null) {
       throw new SteleError(
@@ -235,6 +256,21 @@ export class FileStore implements CovenantStore {
     this.emit('put', doc.id, doc);
   }
 
+  /**
+   * Retrieve a covenant document by its ID.
+   *
+   * Reads the document JSON file directly from disk. Returns `undefined`
+   * if no document with the given ID exists (ENOENT).
+   *
+   * @param id - The document ID to look up.
+   * @returns The document, or `undefined` if not found.
+   *
+   * @example
+   * ```typescript
+   * const doc = await store.get('abc123...');
+   * if (doc) console.log(doc.constraints);
+   * ```
+   */
   async get(id: string): Promise<CovenantDocument | undefined> {
     try {
       const raw = await fs.readFile(this.docPath(id), 'utf-8');
@@ -247,11 +283,30 @@ export class FileStore implements CovenantStore {
     }
   }
 
+  /**
+   * Check whether a document with the given ID exists in the store.
+   *
+   * Uses the in-memory index rather than checking the filesystem,
+   * so this is a fast O(1) lookup.
+   *
+   * @param id - The document ID to check.
+   * @returns `true` if the document exists, `false` otherwise.
+   */
   async has(id: string): Promise<boolean> {
     const index = await this.readIndex();
     return id in index.entries;
   }
 
+  /**
+   * Delete a document by its ID.
+   *
+   * Removes the document file from disk and its index entry atomically
+   * (under the index mutex). Emits a `"delete"` event if the document
+   * existed and was successfully removed.
+   *
+   * @param id - The document ID to delete.
+   * @returns `true` if the document was found and deleted, `false` if it did not exist.
+   */
   async delete(id: string): Promise<boolean> {
     const deleted = await this.withIndexLock(async () => {
       const index = await this.readIndex();
@@ -273,6 +328,25 @@ export class FileStore implements CovenantStore {
     return deleted;
   }
 
+  /**
+   * List all documents matching an optional filter.
+   *
+   * Uses the index to find matching document IDs, then reads each
+   * document file from disk. If no filter is provided, returns all
+   * stored documents.
+   *
+   * @param filter - Optional filter criteria (issuer, beneficiary, date range, tags, etc.).
+   * @returns An array of matching covenant documents.
+   *
+   * @example
+   * ```typescript
+   * // All documents by a specific issuer
+   * const docs = await store.list({ issuerId: 'alice' });
+   *
+   * // All documents (no filter)
+   * const all = await store.list();
+   * ```
+   */
   async list(filter?: StoreFilter): Promise<CovenantDocument[]> {
     const index = await this.readIndex();
 
@@ -295,6 +369,16 @@ export class FileStore implements CovenantStore {
     return docs;
   }
 
+  /**
+   * Count documents matching an optional filter.
+   *
+   * Operates entirely on the in-memory index without reading document
+   * files, making it significantly faster than `list().length` for
+   * large stores.
+   *
+   * @param filter - Optional filter criteria. Counts all documents when omitted.
+   * @returns The number of matching documents.
+   */
   async count(filter?: StoreFilter): Promise<number> {
     const index = await this.readIndex();
     if (!filter) {
@@ -307,6 +391,21 @@ export class FileStore implements CovenantStore {
 
   // ── Batch operations ────────────────────────────────────────────────────
 
+  /**
+   * Store multiple documents in a single batch operation.
+   *
+   * Document files are written in parallel for throughput, then the
+   * index is updated in a single atomic step under the mutex. When
+   * the same ID appears multiple times, only the last occurrence is kept.
+   * Emits a `"put"` event for each document in the original array.
+   *
+   * @param docs - Array of covenant documents to store.
+   *
+   * @example
+   * ```typescript
+   * await store.putBatch([doc1, doc2, doc3]);
+   * ```
+   */
   async putBatch(docs: CovenantDocument[]): Promise<void> {
     if (docs.length === 0) return;
     await this.ensureDir();
@@ -340,10 +439,29 @@ export class FileStore implements CovenantStore {
     }
   }
 
+  /**
+   * Retrieve multiple documents by their IDs in a single call.
+   *
+   * Returns results in the same order as the input IDs. Missing
+   * documents are represented as `undefined` in the output array.
+   *
+   * @param ids - Array of document IDs to retrieve.
+   * @returns Array of documents (or `undefined`) corresponding to each input ID.
+   */
   async getBatch(ids: string[]): Promise<(CovenantDocument | undefined)[]> {
     return Promise.all(ids.map((id) => this.get(id)));
   }
 
+  /**
+   * Delete multiple documents by their IDs in a single batch operation.
+   *
+   * All deletions and the index update happen under a single mutex
+   * acquisition. Emits a `"delete"` event for each successfully
+   * deleted document (after the lock is released).
+   *
+   * @param ids - Array of document IDs to delete.
+   * @returns The number of documents that were actually deleted.
+   */
   async deleteBatch(ids: string[]): Promise<number> {
     if (ids.length === 0) return 0;
 
@@ -375,10 +493,27 @@ export class FileStore implements CovenantStore {
 
   // ── Event system ────────────────────────────────────────────────────────
 
+  /**
+   * Register a callback to be invoked on store events (put, delete).
+   *
+   * @param callback - The event handler function.
+   *
+   * @example
+   * ```typescript
+   * store.onEvent((event) => {
+   *   console.log(`${event.type}: ${event.documentId}`);
+   * });
+   * ```
+   */
   onEvent(callback: StoreEventCallback): void {
     this.listeners.add(callback);
   }
 
+  /**
+   * Unregister a previously registered event callback.
+   *
+   * @param callback - The same function reference that was passed to {@link onEvent}.
+   */
   offEvent(callback: StoreEventCallback): void {
     this.listeners.delete(callback);
   }

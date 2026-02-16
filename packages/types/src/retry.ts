@@ -7,6 +7,8 @@
  * @packageDocumentation
  */
 
+import { SteleError, SteleErrorCode } from './errors';
+
 // ─── Retry ──────────────────────────────────────────────────────────────────────
 
 /** Configuration for the {@link withRetry} helper. */
@@ -134,11 +136,19 @@ export class CircuitBreaker {
     this._checkStateTransition();
 
     if (this._state === 'open') {
-      throw new Error('Circuit breaker is open');
+      throw new SteleError(
+        SteleErrorCode.RATE_LIMIT_EXCEEDED,
+        'Circuit breaker is open',
+        { hint: 'The circuit breaker has tripped due to repeated failures. Wait for the reset timeout before retrying.' },
+      );
     }
 
     if (this._state === 'half-open' && this._halfOpenAttempts >= this._halfOpenMax) {
-      throw new Error('Circuit breaker is open');
+      throw new SteleError(
+        SteleErrorCode.RATE_LIMIT_EXCEEDED,
+        'Circuit breaker is open',
+        { hint: 'The circuit breaker is in half-open state and has exhausted its probe attempts. Wait for the reset timeout.' },
+      );
     }
 
     if (this._state === 'half-open') {

@@ -77,12 +77,13 @@ export function validateConfig(config: AccountabilityConfig): void {
     const t = { ...DEFAULT_TIER_THRESHOLDS, ...config.tierThresholds };
     for (const [name, val] of Object.entries(t)) {
       if (val < 0 || val > 1) {
-        throw new Error(`Tier threshold '${name}' must be in [0, 1], got ${val}`);
+        throw new SteleError(`Tier threshold '${name}' must be in [0, 1], got ${val}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
       }
     }
     if (t.exemplary <= t.trusted || t.trusted <= t.verified || t.verified <= t.basic) {
-      throw new Error(
+      throw new SteleError(
         `Tier thresholds must be strictly ordered: exemplary(${t.exemplary}) > trusted(${t.trusted}) > verified(${t.verified}) > basic(${t.basic})`,
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
   }
@@ -91,20 +92,22 @@ export function validateConfig(config: AccountabilityConfig): void {
     const w = { ...DEFAULT_COMPONENT_WEIGHTS, ...config.componentWeights };
     for (const [name, val] of Object.entries(w)) {
       if (val < 0) {
-        throw new Error(`Component weight '${name}' must be >= 0, got ${val}`);
+        throw new SteleError(`Component weight '${name}' must be >= 0, got ${val}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
       }
     }
     const sum = Object.values(w).reduce((s, v) => s + v, 0);
     if (Math.abs(sum - 1.0) > 0.001) {
-      throw new Error(
+      throw new SteleError(
         `Component weights must sum to approximately 1.0, got ${sum}`,
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
   }
 
   if (config.minimumCovenants !== undefined && config.minimumCovenants < 1) {
-    throw new Error(
+    throw new SteleError(
       `minimumCovenants must be >= 1, got ${config.minimumCovenants}`,
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
     );
   }
 }
@@ -114,37 +117,39 @@ export function validateConfig(config: AccountabilityConfig): void {
  */
 export function validateProtocolData(data: ProtocolData): void {
   if (data.covenantCount < 0) {
-    throw new Error(`covenantCount must be >= 0, got ${data.covenantCount}`);
+    throw new SteleError(`covenantCount must be >= 0, got ${data.covenantCount}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (data.totalInteractions < 0) {
-    throw new Error(`totalInteractions must be >= 0, got ${data.totalInteractions}`);
+    throw new SteleError(`totalInteractions must be >= 0, got ${data.totalInteractions}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (data.compliantInteractions < 0) {
-    throw new Error(`compliantInteractions must be >= 0, got ${data.compliantInteractions}`);
+    throw new SteleError(`compliantInteractions must be >= 0, got ${data.compliantInteractions}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (data.compliantInteractions > data.totalInteractions) {
-    throw new Error(
+    throw new SteleError(
       `compliantInteractions (${data.compliantInteractions}) must be <= totalInteractions (${data.totalInteractions})`,
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
     );
   }
   if (data.stakeAmount < 0) {
-    throw new Error(`stakeAmount must be >= 0, got ${data.stakeAmount}`);
+    throw new SteleError(`stakeAmount must be >= 0, got ${data.stakeAmount}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (data.maxStake < 0) {
-    throw new Error(`maxStake must be >= 0, got ${data.maxStake}`);
+    throw new SteleError(`maxStake must be >= 0, got ${data.maxStake}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (data.attestedInteractions < 0) {
-    throw new Error(`attestedInteractions must be >= 0, got ${data.attestedInteractions}`);
+    throw new SteleError(`attestedInteractions must be >= 0, got ${data.attestedInteractions}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (data.canaryTests < 0) {
-    throw new Error(`canaryTests must be >= 0, got ${data.canaryTests}`);
+    throw new SteleError(`canaryTests must be >= 0, got ${data.canaryTests}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (data.canaryPasses < 0) {
-    throw new Error(`canaryPasses must be >= 0, got ${data.canaryPasses}`);
+    throw new SteleError(`canaryPasses must be >= 0, got ${data.canaryPasses}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (data.canaryPasses > data.canaryTests) {
-    throw new Error(
+    throw new SteleError(
       `canaryPasses (${data.canaryPasses}) must be <= canaryTests (${data.canaryTests})`,
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
     );
   }
 }
@@ -154,8 +159,9 @@ export function validateProtocolData(data: ProtocolData): void {
  */
 export function validatePolicy(policy: InteractionPolicy): void {
   if (policy.minimumScore < 0 || policy.minimumScore > 1) {
-    throw new Error(
+    throw new SteleError(
       `minimumScore must be in [0, 1], got ${policy.minimumScore}`,
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
     );
   }
 }
@@ -165,8 +171,9 @@ export function validatePolicy(policy: InteractionPolicy): void {
  */
 function validateScore(score: AccountabilityScore): void {
   if (score.score < 0 || score.score > 1) {
-    throw new Error(
+    throw new SteleError(
       `AccountabilityScore.score must be in [0, 1], got ${score.score}`,
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
     );
   }
 }
@@ -408,11 +415,11 @@ export function byzantineFaultTolerance(
   requestedFaults?: number,
 ): BFTResult {
   if (!Number.isInteger(totalNodes) || totalNodes < 1) {
-    throw new Error(`totalNodes must be a positive integer, got ${totalNodes}`);
+    throw new SteleError(`totalNodes must be a positive integer, got ${totalNodes}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (requestedFaults !== undefined) {
     if (!Number.isInteger(requestedFaults) || requestedFaults < 0) {
-      throw new Error(`requestedFaults must be a non-negative integer, got ${requestedFaults}`);
+      throw new SteleError(`requestedFaults must be a non-negative integer, got ${requestedFaults}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
   }
 
@@ -492,7 +499,7 @@ export function quorumSize(
   protocol: ConsensusProtocol,
 ): QuorumResult {
   if (!Number.isInteger(totalNodes) || totalNodes < 1) {
-    throw new Error(`totalNodes must be a positive integer, got ${totalNodes}`);
+    throw new SteleError(`totalNodes must be a positive integer, got ${totalNodes}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   let q: number;
@@ -519,7 +526,7 @@ export function quorumSize(
       formulaDetail = `Unanimous: quorum = ${totalNodes} (all nodes required)`;
       break;
     default:
-      throw new Error(`Unknown protocol: ${protocol}`);
+      throw new SteleError(`Unknown protocol: ${protocol}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Ensure quorum does not exceed total nodes
@@ -607,21 +614,22 @@ export function consensusLatency(params: ConsensusLatencyParams): ConsensusLaten
   } = params;
 
   if (!Number.isInteger(nodeCount) || nodeCount < 1) {
-    throw new Error(`nodeCount must be a positive integer, got ${nodeCount}`);
+    throw new SteleError(`nodeCount must be a positive integer, got ${nodeCount}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (averageLatencyMs < 0) {
-    throw new Error(`averageLatencyMs must be >= 0, got ${averageLatencyMs}`);
+    throw new SteleError(`averageLatencyMs must be >= 0, got ${averageLatencyMs}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!Number.isInteger(messageRounds) || messageRounds < 1) {
-    throw new Error(`messageRounds must be a positive integer, got ${messageRounds}`);
+    throw new SteleError(`messageRounds must be a positive integer, got ${messageRounds}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (messageLossProbability < 0 || messageLossProbability >= 1) {
-    throw new Error(
+    throw new SteleError(
       `messageLossProbability must be in [0, 1), got ${messageLossProbability}`,
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
     );
   }
   if (processingTimeMs < 0) {
-    throw new Error(`processingTimeMs must be >= 0, got ${processingTimeMs}`);
+    throw new SteleError(`processingTimeMs must be >= 0, got ${processingTimeMs}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Network latency: each round requires one RTT

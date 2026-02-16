@@ -8,6 +8,7 @@
 
 import { generateNonce, timestamp, toHex } from '@stele/crypto';
 import type { KeyPair } from '@stele/crypto';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 import type {
   DiscoveryDocument,

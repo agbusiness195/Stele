@@ -980,3 +980,224 @@ describe('MemoryStore - deleteBatch() additional coverage', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// MemoryStore — concurrent put operations for the same document ID
+// ---------------------------------------------------------------------------
+describe('MemoryStore - concurrent put operations for same document ID', () => {
+  let store: MemoryStore;
+
+  beforeEach(() => {
+    store = new MemoryStore();
+  });
+
+  it('concurrent puts for the same ID all resolve without error', async () => {
+    const docs = Array.from({ length: 10 }, (_, i) =>
+      makeDoc({ id: 'contested-id', constraints: `version-${i}` }),
+    );
+    // Fire all puts concurrently
+    await Promise.all(docs.map((doc) => store.put(doc)));
+
+    // Only one document should exist
+    expect(store.size, 'store should contain exactly 1 document after concurrent puts with same ID').toBe(1);
+    const retrieved = await store.get('contested-id');
+    expect(retrieved, 'document should be retrievable after concurrent puts').toBeDefined();
+  });
+
+  it('concurrent puts for the same ID emit one event per put', async () => {
+    const events: StoreEvent[] = [];
+    store.onEvent((e) => events.push(e));
+
+    const docs = Array.from({ length: 5 }, (_, i) =>
+      makeDoc({ id: 'same-id', constraints: `v${i}` }),
+    );
+    await Promise.all(docs.map((doc) => store.put(doc)));
+
+    expect(events.length, 'each concurrent put should emit an event').toBe(5);
+    expect(events.every((e) => e.type === 'put'), 'all events should be put events').toBe(true);
+    expect(events.every((e) => e.documentId === 'same-id'), 'all events should reference same-id').toBe(true);
+  });
+
+  it('concurrent puts for different IDs all succeed', async () => {
+    const docs = Array.from({ length: 20 }, (_, i) =>
+      makeDoc({ id: `concurrent-${i}` }),
+    );
+    await Promise.all(docs.map((doc) => store.put(doc)));
+
+    expect(store.size, 'all 20 concurrent puts with different IDs should succeed').toBe(20);
+    for (let i = 0; i < 20; i++) {
+      expect(await store.has(`concurrent-${i}`), `concurrent-${i} should exist in store`).toBe(true);
+    }
+  });
+
+  it('concurrent put and delete for same ID resolves without error', async () => {
+    await store.put(makeDoc({ id: 'race-target' }));
+
+    // Race a put and delete
+    await Promise.all([
+      store.put(makeDoc({ id: 'race-target', constraints: 'updated' })),
+      store.delete('race-target'),
+    ]);
+
+    // Final state is implementation-defined but should not throw
+    // The document either exists or not, but the store should be in a consistent state
+    const exists = await store.has('race-target');
+    expect(typeof exists, 'has should return a boolean after concurrent put+delete').toBe('boolean');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MemoryStore — list with empty store
+// ---------------------------------------------------------------------------
+describe('MemoryStore - list with empty store', () => {
+  it('list() on brand new empty store returns empty array', async () => {
+    const store = new MemoryStore();
+    const docs = await store.list();
+    expect(docs, 'list on empty store should return an array').toBeInstanceOf(Array);
+    expect(docs.length, 'list on empty store should return 0 documents').toBe(0);
+  });
+
+  it('list() with filter on empty store returns empty array', async () => {
+    const store = new MemoryStore();
+    const docs = await store.list({ issuerId: 'anyone' });
+    expect(docs.length, 'filtered list on empty store should return 0 documents').toBe(0);
+  });
+
+  it('list() with tags filter on empty store returns empty array', async () => {
+    const store = new MemoryStore();
+    const docs = await store.list({ tags: ['ai', 'safety'] });
+    expect(docs.length, 'tag-filtered list on empty store should return 0 documents').toBe(0);
+  });
+
+  it('list() with date filters on empty store returns empty array', async () => {
+    const store = new MemoryStore();
+    const docs = await store.list({
+      createdAfter: '2020-01-01T00:00:00.000Z',
+      createdBefore: '2030-01-01T00:00:00.000Z',
+    });
+    expect(docs.length, 'date-filtered list on empty store should return 0 documents').toBe(0);
+  });
+
+  it('list() on a store after all documents are deleted returns empty array', async () => {
+    const store = new MemoryStore();
+    await store.put(makeDoc({ id: 'temp-1' }));
+    await store.put(makeDoc({ id: 'temp-2' }));
+    await store.delete('temp-1');
+    await store.delete('temp-2');
+    const docs = await store.list();
+    expect(docs.length, 'list after deleting all documents should return 0').toBe(0);
+  });
+
+  it('list() on a store after clear() returns empty array', async () => {
+    const store = new MemoryStore();
+    await store.putBatch([makeDoc({ id: 'a' }), makeDoc({ id: 'b' }), makeDoc({ id: 'c' })]);
+    store.clear();
+    const docs = await store.list();
+    expect(docs.length, 'list after clear should return 0').toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MemoryStore — pagination with zero/negative limits (via QueryBuilder)
+// ---------------------------------------------------------------------------
+describe('MemoryStore - pagination edge cases with zero/negative limits', () => {
+  let store: MemoryStore;
+
+  beforeEach(async () => {
+    store = new MemoryStore();
+    await store.putBatch([
+      makeDoc({ id: 'p1' }),
+      makeDoc({ id: 'p2' }),
+      makeDoc({ id: 'p3' }),
+    ]);
+  });
+
+  it('list returns all documents regardless of pagination (list has no built-in limit)', async () => {
+    // MemoryStore.list does not accept limit/offset natively -- that is on QueryBuilder.
+    // This tests that list returns everything without pagination.
+    const docs = await store.list();
+    expect(docs.length, 'list should return all documents when no pagination is applied').toBe(3);
+  });
+
+  it('count returns correct value regardless of how many documents exist', async () => {
+    expect(await store.count(), 'count should return 3 for 3 documents').toBe(3);
+    await store.delete('p1');
+    expect(await store.count(), 'count should return 2 after deleting one').toBe(2);
+    await store.delete('p2');
+    await store.delete('p3');
+    expect(await store.count(), 'count should return 0 after deleting all').toBe(0);
+  });
+
+  it('list with combined contradictory date filters returns empty', async () => {
+    // createdAfter is AFTER createdBefore -- impossible window
+    const docs = await store.list({
+      createdAfter: '2030-01-01T00:00:00.000Z',
+      createdBefore: '2020-01-01T00:00:00.000Z',
+    });
+    expect(docs.length, 'contradictory date range should return 0 documents').toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MemoryStore — query builder with conflicting filters
+// ---------------------------------------------------------------------------
+describe('MemoryStore - conflicting filters', () => {
+  let store: MemoryStore;
+
+  beforeEach(async () => {
+    store = new MemoryStore();
+    await store.putBatch([
+      makeDoc({
+        id: 'alice-doc',
+        issuer: { id: 'alice', publicKey: 'aa'.repeat(32), role: 'issuer' },
+        beneficiary: { id: 'bob', publicKey: 'bb'.repeat(32), role: 'beneficiary' },
+        createdAt: '2025-06-15T00:00:00.000Z',
+      }),
+      makeDoc({
+        id: 'bob-doc',
+        issuer: { id: 'bob', publicKey: 'aa'.repeat(32), role: 'issuer' },
+        beneficiary: { id: 'alice', publicKey: 'bb'.repeat(32), role: 'beneficiary' },
+        createdAt: '2025-03-01T00:00:00.000Z',
+      }),
+    ]);
+  });
+
+  it('filtering by non-existent issuer AND valid beneficiary returns empty', async () => {
+    const docs = await store.list({ issuerId: 'nonexistent', beneficiaryId: 'bob' });
+    expect(docs.length, 'no documents should match a non-existent issuer').toBe(0);
+  });
+
+  it('filtering by valid issuer AND non-existent beneficiary returns empty', async () => {
+    const docs = await store.list({ issuerId: 'alice', beneficiaryId: 'nonexistent' });
+    expect(docs.length, 'no documents should match a non-existent beneficiary').toBe(0);
+  });
+
+  it('filtering by issuer AND beneficiary that never appear together returns empty', async () => {
+    // alice is issuer on alice-doc (beneficiary=bob), bob is issuer on bob-doc (beneficiary=alice)
+    // There is no doc where issuer=alice AND beneficiary=alice
+    const docs = await store.list({ issuerId: 'alice', beneficiaryId: 'alice' });
+    expect(docs.length, 'no documents should match issuer=alice and beneficiary=alice').toBe(0);
+  });
+
+  it('filtering by date range that excludes all documents returns empty', async () => {
+    const docs = await store.list({
+      createdAfter: '2099-01-01T00:00:00.000Z',
+    });
+    expect(docs.length, 'future date filter should match no documents').toBe(0);
+  });
+
+  it('filtering by hasChain when no documents have chains returns empty', async () => {
+    const docs = await store.list({ hasChain: true });
+    expect(docs.length, 'no documents have chains so hasChain=true should return empty').toBe(0);
+  });
+
+  it('filtering by hasChain=false returns all documents when none have chains', async () => {
+    const docs = await store.list({ hasChain: false });
+    expect(docs.length, 'hasChain=false should return all documents when none have chains').toBe(2);
+  });
+
+  it('filtering by tags when no documents have metadata returns empty', async () => {
+    const docs = await store.list({ tags: ['anything'] });
+    expect(docs.length, 'tag filter should match no documents when none have metadata.tags').toBe(0);
+  });
+});

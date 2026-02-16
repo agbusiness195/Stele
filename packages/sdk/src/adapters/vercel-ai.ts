@@ -142,9 +142,20 @@ export function withStele<T extends ToolLike>(tool: T, options: SteleToolOptions
 /**
  * Wrap an array of tools with Stele covenant enforcement.
  *
+ * Each tool in the array gets its own guarded `execute()` method.
+ *
  * @param tools   - Array of tools to wrap.
  * @param options - Enforcement options.
  * @returns A new array of wrapped tools.
+ *
+ * @example
+ * ```typescript
+ * const protectedTools = withSteleTools(
+ *   [searchTool, browseTool],
+ *   { client, covenant },
+ * );
+ * await protectedTools[0].execute('query'); // throws if denied
+ * ```
  */
 export function withSteleTools(
   tools: ToolLike[],
@@ -154,9 +165,21 @@ export function withSteleTools(
 /**
  * Wrap a record of tools with Stele covenant enforcement.
  *
+ * Returns a new record with the same keys; each tool's `execute()`
+ * is individually guarded by the covenant.
+ *
  * @param tools   - Record of named tools to wrap.
  * @param options - Enforcement options.
  * @returns A new record with the same keys and wrapped tool values.
+ *
+ * @example
+ * ```typescript
+ * const protectedTools = withSteleTools(
+ *   { search: searchTool, browse: browseTool },
+ *   { client, covenant },
+ * );
+ * await protectedTools.search.execute('query'); // throws if denied
+ * ```
  */
 export function withSteleTools(
   tools: Record<string, ToolLike>,

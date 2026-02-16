@@ -13,6 +13,7 @@
  */
 
 import { generateNonce, toHex } from '@stele/crypto';
+import { SteleError, SteleErrorCode } from '@stele/types';
 import { PROTOCOL_VERSION } from './types.js';
 
 // ─── Public types ────────────────────────────────────────────────────────────────
@@ -119,16 +120,18 @@ export class DocumentMigrator {
     const startVersion = docVersion ?? this.findEarliestVersion();
 
     if (startVersion === undefined) {
-      throw new Error(
+      throw new SteleError(
         `No migrations registered; cannot migrate document with version "${docVersion ?? '(none)'}"`,
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
     // Find the migration path
     const path = this.getMigrationPath(startVersion, current);
     if (path.length === 0 && startVersion !== current) {
-      throw new Error(
+      throw new SteleError(
         `No migration path from version "${startVersion}" to "${current}"`,
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 

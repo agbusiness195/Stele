@@ -1,4 +1,5 @@
 import { sha256Object } from '@stele/crypto';
+import { SteleError, SteleErrorCode } from '@stele/types';
 import {
   parse,
   evaluate,
@@ -174,16 +175,16 @@ function concretizeResource(pattern: string): string {
 function validateCovenant(c: unknown): asserts c is CovenantSummary {
   const cov = c as Record<string, unknown>;
   if (!cov || typeof cov !== 'object') {
-    throw new Error('Each covenant must be a non-null object');
+    throw new SteleError('Each covenant must be a non-null object', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (typeof cov.id !== 'string' || cov.id === '') {
-    throw new Error('Covenant id must be a non-empty string');
+    throw new SteleError('Covenant id must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (typeof cov.agentId !== 'string' || cov.agentId === '') {
-    throw new Error('Covenant agentId must be a non-empty string');
+    throw new SteleError('Covenant agentId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!Array.isArray(cov.constraints)) {
-    throw new Error('Covenant constraints must be an array');
+    throw new SteleError('Covenant constraints must be an array', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 }
 
@@ -200,7 +201,7 @@ function validateCovenant(c: unknown): asserts c is CovenantSummary {
  */
 export function compose(covenants: CovenantSummary[]): CompositionProof {
   if (!Array.isArray(covenants)) {
-    throw new Error('covenants must be an array');
+    throw new SteleError('covenants must be an array', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   for (const c of covenants) validateCovenant(c);
 
@@ -267,10 +268,10 @@ export function proveSystemProperty(
   property: string,
 ): SystemProperty {
   if (!Array.isArray(covenants)) {
-    throw new Error('covenants must be an array');
+    throw new SteleError('covenants must be an array', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (typeof property !== 'string' || property.trim() === '') {
-    throw new Error('property must be a non-empty string');
+    throw new SteleError('property must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const propKeywords = extractKeywords(property);
@@ -327,13 +328,13 @@ export function proveSystemProperty(
  */
 export function validateComposition(proof: CompositionProof): boolean {
   if (!proof || typeof proof !== 'object') {
-    throw new Error('proof must be a CompositionProof object');
+    throw new SteleError('proof must be a CompositionProof object', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!Array.isArray(proof.composedConstraints)) {
-    throw new Error('proof.composedConstraints must be an array');
+    throw new SteleError('proof.composedConstraints must be an array', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (typeof proof.proof !== 'string') {
-    throw new Error('proof.proof must be a string');
+    throw new SteleError('proof.proof must be a string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // 1. Hash integrity
@@ -371,7 +372,7 @@ export function validateComposition(proof: CompositionProof): boolean {
  */
 export function intersectConstraints(a: string[], b: string[]): string[] {
   if (!Array.isArray(a) || !Array.isArray(b)) {
-    throw new Error('Arguments must be arrays');
+    throw new SteleError('Arguments must be arrays', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   const setB = new Set(b);
   return a.filter(c => setB.has(c));
@@ -385,7 +386,7 @@ export function findConflicts(
   covenants: CovenantSummary[],
 ): Array<[string, string]> {
   if (!Array.isArray(covenants)) {
-    throw new Error('covenants must be an array');
+    throw new SteleError('covenants must be an array', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   interface Entry { constraint: string; stmt: PermitDenyStatement }
@@ -464,7 +465,7 @@ function conditionDepth(cond?: Condition | CompoundCondition): number {
  */
 export function decomposeCovenants(covenants: CovenantSummary[]): DecomposedCovenant[] {
   if (!Array.isArray(covenants)) {
-    throw new Error('covenants must be an array');
+    throw new SteleError('covenants must be an array', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   for (const c of covenants) validateCovenant(c);
 
@@ -510,7 +511,7 @@ export function decomposeCovenants(covenants: CovenantSummary[]): DecomposedCove
  */
 export function compositionComplexity(covenants: CovenantSummary[]): CompositionComplexityResult {
   if (!Array.isArray(covenants)) {
-    throw new Error('covenants must be an array');
+    throw new SteleError('covenants must be an array', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   for (const c of covenants) validateCovenant(c);
 

@@ -118,7 +118,7 @@ export class MemoryStore implements CovenantStore {
       try {
         cb(event);
       } catch {
-        // Listener errors must not prevent other listeners from being notified
+        // Listener errors are isolated to prevent cascading failures across event subscribers
       }
     }
   }

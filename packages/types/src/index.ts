@@ -43,19 +43,47 @@ export enum SteleErrorCode {
 
 // ─── Error classes ──────────────────────────────────────────────────────────────
 
+/** Set of all SteleErrorCode values for argument-order detection. */
+const ALL_ERROR_CODES: ReadonlySet<string> = new Set(Object.values(SteleErrorCode));
+
 /**
  * Base error class for the Stele SDK.
  *
  * Every Stele error carries a {@link SteleErrorCode} so callers can
  * programmatically distinguish error categories without parsing messages.
+ *
+ * Supports two calling conventions:
+ * - Legacy: `new SteleError(message, code)`
+ * - Modern: `new SteleError(code, message, options?)`
  */
 export class SteleError extends Error {
   readonly code: SteleErrorCode;
+  readonly context?: Record<string, unknown>;
+  readonly hint?: string;
 
-  constructor(message: string, code: SteleErrorCode) {
-    super(message);
+  constructor(
+    first: string,
+    second?: string | SteleErrorCode,
+    options?: { hint?: string; context?: Record<string, unknown>; cause?: Error },
+  ) {
+    let message: string;
+    let code: SteleErrorCode;
+
+    if (ALL_ERROR_CODES.has(first)) {
+      // Modern style: (code, message, options?)
+      code = first as SteleErrorCode;
+      message = (second as string) ?? first;
+    } else {
+      // Legacy style: (message, code)
+      message = first;
+      code = (second as SteleErrorCode) ?? SteleErrorCode.INVALID_INPUT;
+    }
+
+    super(message, options?.cause ? { cause: options.cause } : undefined);
     this.name = 'SteleError';
     this.code = code;
+    this.context = options?.context;
+    this.hint = options?.hint;
   }
 }
 

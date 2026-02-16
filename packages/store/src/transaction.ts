@@ -9,6 +9,7 @@
  */
 
 import type { CovenantDocument } from '@stele/core';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 import type { CovenantStore } from './types.js';
 

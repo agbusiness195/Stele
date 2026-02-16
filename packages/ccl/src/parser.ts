@@ -34,6 +34,24 @@ import { CCLSyntaxError } from './errors.js';
  *   value        = STRING | NUMBER | IDENTIFIER | array
  *   array        = LBRACKET value { COMMA value }* RBRACKET
  */
+/**
+ * Parse a token array into a structured CCL document.
+ *
+ * Entry point for the recursive descent parser. Delegates to the internal
+ * {@link Parser} class which implements the full CCL grammar.
+ *
+ * @param tokens - Token array produced by the CCL lexer.
+ * @returns A fully parsed {@link CCLDocument} with categorized statement arrays.
+ * @throws {CCLSyntaxError} When the token stream does not conform to the CCL grammar.
+ *
+ * @example
+ * ```typescript
+ * import { tokenize } from './lexer.js';
+ * const tokens = tokenize("permit read on '/data/**'");
+ * const doc = parseTokens(tokens);
+ * console.log(doc.permits.length); // 1
+ * ```
+ */
 export function parseTokens(tokens: Token[]): CCLDocument {
   const parser = new Parser(tokens);
   return parser.parse();
@@ -48,6 +66,17 @@ class Parser {
     this.pos = 0;
   }
 
+  /**
+   * Parse the entire token stream into a CCLDocument.
+   *
+   * Iterates over top-level tokens, skipping newlines and comments,
+   * and delegates each statement to {@link parseStatement}. The
+   * resulting statements are categorized into permits, denies,
+   * obligations, and limits by {@link buildDocument}.
+   *
+   * @returns A fully parsed CCLDocument.
+   * @throws {CCLSyntaxError} On unexpected tokens.
+   */
   parse(): CCLDocument {
     const statements: Statement[] = [];
 
@@ -56,6 +85,7 @@ class Parser {
     while (!this.isAtEnd()) {
       const tok = this.current();
 
+      // Skip inter-statement whitespace and comments.
       if (tok.type === 'NEWLINE' || tok.type === 'COMMENT') {
         this.advance();
         this.skipNewlinesAndComments();
@@ -74,6 +104,17 @@ class Parser {
     return buildDocument(statements);
   }
 
+  /**
+   * Parse a single statement.
+   *
+   * Grammar rule:
+   *   statement = permit_deny | require_stmt | limit_stmt
+   *
+   * Dispatches based on the leading keyword token.
+   *
+   * @returns A parsed {@link Statement} (permit/deny, require, or limit).
+   * @throws {CCLSyntaxError} If the current token is not a valid statement keyword.
+   */
   private parseStatement(): Statement {
     const tok = this.current();
 
@@ -94,6 +135,15 @@ class Parser {
     }
   }
 
+  /**
+   * Parse a permit or deny statement.
+   *
+   * Grammar rule:
+   *   permit_deny = (PERMIT | DENY) action ON resource [WHEN condition] [SEVERITY level]
+   *
+   * @returns A parsed {@link PermitDenyStatement}.
+   * @throws {CCLSyntaxError} On missing `on` keyword or invalid action/resource.
+   */
   private parsePermitDeny(): PermitDenyStatement {
     const keyword = this.current();
     const stmtType = keyword.type === 'PERMIT' ? 'permit' : 'deny';
@@ -128,6 +178,15 @@ class Parser {
     };
   }
 
+  /**
+   * Parse a require (obligation) statement.
+   *
+   * Grammar rule:
+   *   require_stmt = REQUIRE action ON resource [WHEN condition] [SEVERITY level]
+   *
+   * @returns A parsed {@link RequireStatement}.
+   * @throws {CCLSyntaxError} On missing `on` keyword or invalid action/resource.
+   */
   private parseRequire(): RequireStatement {
     const keyword = this.current();
     const stmtLine = keyword.line;
@@ -161,6 +220,19 @@ class Parser {
     };
   }
 
+  /**
+   * Parse a limit (rate-limiting) statement.
+   *
+   * Grammar rule:
+   *   limit_stmt = LIMIT action NUMBER PER NUMBER time_unit [SEVERITY level]
+   *   time_unit  = 'seconds' | 'minutes' | 'hours' | 'days'
+   *
+   * The raw period value is multiplied by the time-unit multiplier to
+   * produce `periodSeconds` in the resulting statement.
+   *
+   * @returns A parsed {@link LimitStatement}.
+   * @throws {CCLSyntaxError} On missing count, `per` keyword, period, or time unit.
+   */
   private parseLimit(): LimitStatement {
     const keyword = this.current();
     const stmtLine = keyword.line;
@@ -307,6 +379,14 @@ class Parser {
     return this.parseOrExpr();
   }
 
+  /**
+   * Parse an OR expression (lowest precedence in condition grammar).
+   *
+   * Grammar rule:
+   *   or_expr = and_expr { OR and_expr }*
+   *
+   * Left-associative: `a or b or c` becomes `{ type: 'or', conditions: [a, b, c] }`.
+   */
   private parseOrExpr(): Condition | CompoundCondition {
     let left = this.parseAndExpr();
 
@@ -324,6 +404,14 @@ class Parser {
     return left;
   }
 
+  /**
+   * Parse an AND expression (binds tighter than OR).
+   *
+   * Grammar rule:
+   *   and_expr = not_expr { AND not_expr }*
+   *
+   * Left-associative: `a and b and c` becomes `{ type: 'and', conditions: [a, b, c] }`.
+   */
   private parseAndExpr(): Condition | CompoundCondition {
     let left = this.parseNotExpr();
 
@@ -341,18 +429,35 @@ class Parser {
     return left;
   }
 
+  /**
+   * Parse a NOT expression (unary prefix, right-recursive).
+   *
+   * Grammar rule:
+   *   not_expr = NOT not_expr | primary_cond
+   *
+   * Supports chained negations: `not not x` is double negation.
+   */
   private parseNotExpr(): Condition | CompoundCondition {
     if (this.check('NOT')) {
       this.advance();
+      // Right-recursive: allows `not not expr`
       const expr = this.parseNotExpr();
       return { type: 'not', conditions: [expr] };
     }
     return this.parsePrimaryCond();
   }
 
+  /**
+   * Parse a primary condition: either a parenthesized sub-expression or
+   * a simple field-operator-value comparison.
+   *
+   * Grammar rule:
+   *   primary_cond = LPAREN condition RPAREN | comparison
+   */
   private parsePrimaryCond(): Condition | CompoundCondition {
     if (this.check('LPAREN')) {
       this.advance();
+      // Parenthesized sub-expression: recurse into the full condition grammar.
       const expr = this.parseCondition();
       this.expect('RPAREN', `Expected ')' after condition`);
       return expr;
@@ -360,6 +465,15 @@ class Parser {
     return this.parseComparison();
   }
 
+  /**
+   * Parse a comparison expression: `field OPERATOR value`.
+   *
+   * Grammar rule:
+   *   comparison = field OPERATOR value
+   *
+   * @returns A parsed {@link Condition} with field, operator, and value.
+   * @throws {CCLSyntaxError} If no operator token follows the field.
+   */
   private parseComparison(): Condition {
     const field = this.parseField();
 
@@ -476,6 +590,12 @@ class Parser {
     return values;
   }
 
+  /**
+   * Parse a scalar value inside an array literal: string, number, or bare identifier.
+   *
+   * @returns The parsed scalar value.
+   * @throws {CCLSyntaxError} If the token is not a valid scalar.
+   */
   private parseScalarValue(): string | number {
     const tok = this.current();
     if (tok.type === 'STRING') {
@@ -497,6 +617,14 @@ class Parser {
     );
   }
 
+  /**
+   * Parse a severity level identifier.
+   *
+   * Valid values (case-insensitive): `critical`, `high`, `medium`, `low`.
+   *
+   * @returns The parsed severity level (lowercase).
+   * @throws {CCLSyntaxError} If the token is not a valid severity level.
+   */
   private parseSeverity(): Severity {
     const tok = this.current();
     if (tok.type !== 'IDENTIFIER') {
@@ -518,8 +646,9 @@ class Parser {
     return level;
   }
 
-  // -- Utility methods --
+  // -- Utility methods (token stream navigation) --
 
+  /** Return the token at the current position, or a synthetic EOF token if past the end. */
   private current(): Token {
     if (this.pos >= this.tokens.length) {
       return { type: 'EOF', value: '', line: 0, column: 0 };
@@ -527,6 +656,7 @@ class Parser {
     return this.tokens[this.pos]!;
   }
 
+  /** Consume and return the current token, advancing the position by one. */
   private advance(): Token {
     const tok = this.current();
     if (this.pos < this.tokens.length) {
@@ -535,10 +665,12 @@ class Parser {
     return tok;
   }
 
+  /** Return `true` if the current token matches the expected type (without consuming). */
   private check(type: TokenType): boolean {
     return this.current().type === type;
   }
 
+  /** Assert that the current token is of the expected type, consume it, and return it. Throws on mismatch. */
   private expect(type: TokenType, message: string): Token {
     const tok = this.current();
     if (tok.type !== type) {
@@ -554,10 +686,12 @@ class Parser {
     return this.advance();
   }
 
+  /** Return `true` if the current token is EOF (end of input). */
   private isAtEnd(): boolean {
     return this.current().type === 'EOF';
   }
 
+  /** Advance past any consecutive NEWLINE and COMMENT tokens. */
   private skipNewlinesAndComments(): void {
     while (
       this.pos < this.tokens.length &&
@@ -568,6 +702,12 @@ class Parser {
   }
 }
 
+/**
+ * Convert a time-unit string to its equivalent in seconds.
+ *
+ * @param unit - The time unit (e.g. `"seconds"`, `"minutes"`, `"hours"`, `"days"`).
+ * @returns The number of seconds in one of the given unit.
+ */
 function timeUnitMultiplier(unit: string): number {
   switch (unit.toLowerCase()) {
     case 'second':
@@ -587,10 +727,17 @@ function timeUnitMultiplier(unit: string): number {
   }
 }
 
+/** Type guard: returns `true` if the condition is a compound (and/or/not) condition. */
 function isCompoundCondition(c: Condition | CompoundCondition): c is CompoundCondition {
   return 'type' in c && (c.type === 'and' || c.type === 'or' || c.type === 'not');
 }
 
+/**
+ * Categorize parsed statements into a CCLDocument.
+ *
+ * Splits the flat statement array into typed sub-arrays (permits, denies,
+ * obligations, limits) for efficient access by the evaluator.
+ */
 function buildDocument(statements: Statement[]): CCLDocument {
   const permits: PermitDenyStatement[] = [];
   const denies: PermitDenyStatement[] = [];

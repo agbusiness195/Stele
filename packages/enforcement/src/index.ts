@@ -948,6 +948,7 @@ export class CapabilityGate {
       const pubKeyBytes = fromHex(manifest.runtimePublicKey);
       return await cryptoVerify(messageBytes, sigBytes, pubKeyBytes);
     } catch {
+      // Verification failure (malformed key/signature) is treated as "not verified" rather than an error
       return false;
     }
   }

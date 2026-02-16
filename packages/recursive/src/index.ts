@@ -1,4 +1,5 @@
 import { sha256Object, generateId } from '@stele/crypto';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 export type {
   MetaTargetType,

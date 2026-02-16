@@ -281,7 +281,7 @@ async function cmdInit(flags: Record<string, string | boolean>, configDir?: stri
   try {
     saveConfig(config, configDir);
   } catch {
-    // Config write failure is non-fatal -- user may be in a read-only dir
+    // Intentionally silent: config write failure is non-fatal in read-only environments
   }
 
   const lines: string[] = [
@@ -582,7 +582,7 @@ async function cmdInspect(positional: string[], flags: Record<string, string | b
       ['  Limits', String(cclDoc.limits.length)],
     ]));
   } catch {
-    // CCL parse failure is non-fatal for inspect
+    // Intentionally silent: CCL parse failure is non-fatal for inspect display
   }
 
   // Build extras section
@@ -1054,7 +1054,7 @@ export async function run(args: string[], configDir?: string): Promise<RunResult
   try {
     config = loadConfig(configDir);
   } catch {
-    // config load failure is non-fatal
+    // Intentionally silent: config load failure is non-fatal when no config file exists
   }
 
   // If config says outputFormat is json, treat as --json

@@ -6,6 +6,7 @@
  */
 
 import type { SteleMiddleware, MiddlewareContext } from '../middleware.js';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -56,8 +57,10 @@ export function authMiddleware(options: AuthOptions): SteleMiddleware {
   const { apiKey, keyPair, requiredFor } = options;
 
   if (!apiKey && !keyPair) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       'authMiddleware requires at least one of apiKey or keyPair',
+      { hint: 'Provide either an apiKey string or a keyPair with publicKeyHex and privateKey.' },
     );
   }
 
@@ -108,8 +111,10 @@ export function authMiddleware(options: AuthOptions): SteleMiddleware {
       }
 
       // No valid authentication found
-      throw new Error(
+      throw new SteleError(
+        SteleErrorCode.AUTH_REQUIRED,
         `Authentication required for operation "${ctx.operation}"`,
+        { hint: 'Provide a valid apiKey or keyPair in the auth middleware options.' },
       );
     },
   };

@@ -64,6 +64,11 @@ import {
 } from '@stele/identity';
 import type { AgentIdentity } from '@stele/identity';
 
+import { STELE_VERSION, SteleError, SteleErrorCode } from '@stele/types';
+import { Logger } from '@stele/types';
+
+import { MiddlewarePipeline } from './middleware.js';
+
 import type {
   SteleClientOptions,
   CreateCovenantOptions,
@@ -323,12 +328,40 @@ export class SteleClient {
   private _keyManager: KeyManager | undefined;
   /** Cache parsed CCL documents to avoid re-parsing on repeated evaluations. */
   private readonly _cclCache = new Map<string, CCLDocument>();
+  /** Whether this client has been disposed. Once disposed, all operations throw. */
+  private _disposed = false;
+  /** Optional logger for structured logging during lifecycle events. */
+  private readonly _logger: Logger | undefined;
+  /** Optional middleware pipeline managed by this client. Disposed with the client. */
+  private _pipeline: MiddlewarePipeline | undefined;
 
   constructor(options: SteleClientOptions = {}) {
+    // ── Input validation ──────────────────────────────────────────────────
+    if (options.agentId !== undefined) {
+      if (typeof options.agentId !== 'string' || options.agentId.trim().length === 0) {
+        throw new Error('SteleClient: agentId must be a non-empty string');
+      }
+    }
+
+    if (options.keyPair !== undefined) {
+      const kp = options.keyPair;
+      if (!(kp.privateKey instanceof Uint8Array) || (kp.privateKey.length !== 32 && kp.privateKey.length !== 64)) {
+        throw new Error(
+          `SteleClient: keyPair.privateKey must be a Uint8Array of 32 or 64 bytes, got ${kp.privateKey instanceof Uint8Array ? kp.privateKey.length : typeof kp.privateKey} bytes`,
+        );
+      }
+      if (!(kp.publicKey instanceof Uint8Array) || kp.publicKey.length !== 32) {
+        throw new Error(
+          `SteleClient: keyPair.publicKey must be a 32-byte Uint8Array, got ${kp.publicKey instanceof Uint8Array ? kp.publicKey.length : typeof kp.publicKey} bytes`,
+        );
+      }
+    }
+
     this._keyPair = options.keyPair;
     this._agentId = options.agentId;
     this._strictMode = options.strictMode ?? false;
     this._listeners = new Map();
+    this._logger = options.logger;
 
     if (options.keyRotation) {
       this._keyManager = new KeyManager({
@@ -339,7 +372,28 @@ export class SteleClient {
     }
   }
 
+  // ── Static methods ──────────────────────────────────────────────────────
+
+  /**
+   * Return the Stele SDK version string.
+   *
+   * @returns A semver version string (e.g., `"0.1.0"`).
+   *
+   * @example
+   * ```typescript
+   * console.log(SteleClient.version()); // "0.1.0"
+   * ```
+   */
+  static version(): string {
+    return STELE_VERSION;
+  }
+
   // ── Accessors ───────────────────────────────────────────────────────────
+
+  /** Whether this client instance has been disposed. */
+  get disposed(): boolean {
+    return this._disposed;
+  }
 
   /** The currently configured key pair, if any. */
   get keyPair(): KeyPair | undefined {
@@ -359,6 +413,150 @@ export class SteleClient {
   /** Get the key manager instance, if key rotation is configured. */
   get keyManager(): KeyManager | undefined {
     return this._keyManager;
+  }
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────
+
+  /**
+   * Associate a middleware pipeline with this client.
+   *
+   * The pipeline will be disposed when the client is disposed via {@link dispose}.
+   *
+   * @param pipeline - The middleware pipeline to manage.
+   */
+  usePipeline(pipeline: MiddlewarePipeline): void {
+    this._pipeline = pipeline;
+  }
+
+  /**
+   * Dispose the client and release all associated resources.
+   *
+   * After disposal:
+   * - All event listeners are removed
+   * - The middleware pipeline (if any) is disposed, calling each middleware's
+   *   `dispose` hook
+   * - The internal CCL cache is cleared
+   * - Subsequent calls to {@link createCovenant}, {@link verifyCovenant}, or
+   *   {@link evaluateAction} will throw an error
+   *
+   * This method is idempotent; calling it multiple times has no additional effect.
+   *
+   * @example
+   * ```typescript
+   * const client = new SteleClient();
+   * // ... use the client ...
+   * await client.dispose(); // release all resources
+   * ```
+   */
+  async dispose(): Promise<void> {
+    if (this._disposed) {
+      return;
+    }
+
+    this._logger?.info('[stele] SteleClient disposing', { agentId: this._agentId });
+
+    // Clear all event listeners
+    this.removeAllListeners();
+
+    // Dispose middleware pipeline (calls each middleware's dispose hook)
+    if (this._pipeline) {
+      await this._pipeline.dispose();
+      this._pipeline = undefined;
+    }
+
+    // Clear internal caches
+    this._cclCache.clear();
+
+    // Mark as disposed
+    this._disposed = true;
+
+    this._logger?.info('[stele] SteleClient disposed', { agentId: this._agentId });
+  }
+
+  /**
+   * Run a health check that validates the internal state of the client.
+   *
+   * Checks key pair availability and internal state validity, measuring
+   * the latency of each check.
+   *
+   * @returns Structured health status with per-check details.
+   *
+   * @example
+   * ```typescript
+   * const health = await client.healthCheck();
+   * console.log(health.healthy); // true
+   * console.log(health.checks.keyPair.healthy); // true
+   * ```
+   */
+  async healthCheck(): Promise<{
+    healthy: boolean;
+    checks: Record<string, { healthy: boolean; latencyMs: number }>;
+  }> {
+    const checks: Record<string, { healthy: boolean; latencyMs: number }> = {};
+
+    // Check: key pair availability
+    const kpStart = performance.now();
+    const keyPairHealthy = this._keyPair !== undefined;
+    checks.keyPair = {
+      healthy: keyPairHealthy,
+      latencyMs: performance.now() - kpStart,
+    };
+
+    // Check: client not disposed
+    const stateStart = performance.now();
+    const stateHealthy = !this._disposed;
+    checks.notDisposed = {
+      healthy: stateHealthy,
+      latencyMs: performance.now() - stateStart,
+    };
+
+    // Check: key manager health (if configured)
+    if (this._keyManager) {
+      const kmStart = performance.now();
+      let kmHealthy = false;
+      try {
+        this._keyManager.current();
+        kmHealthy = true;
+      } catch {
+        // Key manager not initialized or key expired
+        kmHealthy = false;
+      }
+      checks.keyManager = {
+        healthy: kmHealthy,
+        latencyMs: performance.now() - kmStart,
+      };
+    }
+
+    // Check: CCL parser operational
+    const cclStart = performance.now();
+    let cclHealthy = false;
+    try {
+      cclParse("permit read on '/healthcheck'");
+      cclHealthy = true;
+    } catch {
+      cclHealthy = false;
+    }
+    checks.cclParser = {
+      healthy: cclHealthy,
+      latencyMs: performance.now() - cclStart,
+    };
+
+    const healthy = Object.values(checks).every((c) => c.healthy);
+
+    return { healthy, checks };
+  }
+
+  /**
+   * Throw if this client has been disposed.
+   *
+   * @param method - Name of the method that was called, for the error message.
+   */
+  private _assertNotDisposed(method: string): void {
+    if (this._disposed) {
+      throw new Error(
+        `SteleClient.${method}(): Client has been disposed. Create a new SteleClient instance to continue operations.`,
+      );
+    }
   }
 
   // ── Key management ──────────────────────────────────────────────────────
@@ -470,6 +668,8 @@ export class SteleClient {
    * ```
    */
   async createCovenant(options: CreateCovenantOptions): Promise<CovenantDocument> {
+    this._assertNotDisposed('createCovenant');
+
     // ── Input validation (Stripe-quality errors at the public API boundary) ──
     if (!options.issuer || !options.issuer.id) {
       throw new Error(
@@ -559,6 +759,8 @@ export class SteleClient {
    * ```
    */
   async verifyCovenant(doc: CovenantDocument): Promise<VerificationResult> {
+    this._assertNotDisposed('verifyCovenant');
+
     const result = await coreVerifyCovenant(doc);
 
     this._emit('covenant:verified', {
@@ -653,6 +855,8 @@ export class SteleClient {
     resource: string,
     context?: EvaluationContext,
   ): Promise<EvaluationResult> {
+    this._assertNotDisposed('evaluateAction');
+
     if (!action || action.trim().length === 0) {
       throw new Error(
         "SteleClient.evaluateAction(): action must be a non-empty string (e.g., 'read', 'write', 'api.call').",

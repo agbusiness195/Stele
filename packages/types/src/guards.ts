@@ -136,8 +136,15 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
 
 /**
  * Sanitize a string value by trimming whitespace, truncating to `maxLength`,
- * and stripping ASCII control characters (U+0000–U+001F, U+007F) except
- * tab (U+0009), newline (U+000A), and carriage return (U+000D).
+ * and stripping control characters.
+ *
+ * Stripped character ranges:
+ * - ASCII C0 controls (U+0000--U+001F) **except** tab (U+0009), newline (U+000A),
+ *   and carriage return (U+000D)
+ * - ASCII DEL (U+007F)
+ * - ISO 8859 C1 controls (U+0080--U+009F) -- these are invisible formatting
+ *   characters that have no valid use in user-facing text and can be abused
+ *   for text-direction attacks or invisible content injection
  *
  * @param value     - The string to sanitize.
  * @param maxLength - Maximum allowed length (default: 10_000).
@@ -152,21 +159,38 @@ export function sanitizeString(value: string, maxLength: number = 10_000): strin
     result = result.slice(0, maxLength);
   }
 
-  // Strip control characters except tab (\x09), newline (\x0A), carriage return (\x0D)
+  // Strip ASCII C0 controls (except tab, newline, CR), DEL, and C1 controls (U+0080–U+009F)
   // eslint-disable-next-line no-control-regex
-  result = result.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  result = result.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\x80-\x9F]/g, '');
 
   return result;
 }
 
-/** Keys that are dangerous if present in parsed JSON (prototype pollution vectors). */
+/**
+ * Keys that are dangerous if present in parsed JSON (prototype pollution vectors).
+ *
+ * - `__proto__`   -- directly sets the prototype chain on assignment
+ * - `constructor` -- can be used to access `constructor.prototype` and pollute
+ * - `prototype`   -- allows modification of an object's prototype properties
+ *
+ * @see https://github.com/advisories/GHSA-hrpp-h998-j3pp for background on prototype pollution
+ */
 const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
 /**
  * Recursively check an object for dangerous keys that could lead to prototype pollution.
  *
- * @param obj - The value to scan (recursively walks objects and arrays).
- * @throws Error if a dangerous key is found.
+ * Walks every nested object and array element, checking each key against the
+ * {@link DANGEROUS_KEYS} set. This provides defence-in-depth on top of
+ * `JSON.parse`, which itself does not prevent `__proto__` keys from appearing
+ * in parsed output.
+ *
+ * Recursion is bounded by {@link MAX_SANITIZE_DEPTH} to prevent stack overflow
+ * attacks via deeply nested payloads.
+ *
+ * @param obj   - The value to scan (recursively walks objects and arrays).
+ * @param depth - Current recursion depth (internal, callers should omit).
+ * @throws {Error} If a dangerous key is found or maximum depth is exceeded.
  */
 /** Maximum recursion depth for JSON sanitization to prevent stack overflow on deeply nested input. */
 const MAX_SANITIZE_DEPTH = 64;

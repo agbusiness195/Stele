@@ -93,20 +93,20 @@ describe('@stele/core', () => {
     it('creates a valid CovenantDocument', async () => {
       const { doc } = await buildValidCovenant();
 
-      expect(doc).toBeDefined();
-      expect(doc.id).toBeTruthy();
-      expect(typeof doc.id).toBe('string');
-      expect(doc.version).toBe(PROTOCOL_VERSION);
-      expect(doc.issuer.role).toBe('issuer');
-      expect(doc.beneficiary.role).toBe('beneficiary');
-      expect(doc.constraints).toBe(validConstraints());
-      expect(doc.nonce).toBeTruthy();
-      expect(doc.createdAt).toBeTruthy();
-      expect(doc.signature).toBeTruthy();
+      expect(doc, 'buildCovenant should return a defined document').toBeDefined();
+      expect(doc.id, 'covenant document should have a truthy id').toBeTruthy();
+      expect(typeof doc.id, 'covenant id should be a string').toBe('string');
+      expect(doc.version, 'covenant version should match PROTOCOL_VERSION').toBe(PROTOCOL_VERSION);
+      expect(doc.issuer.role, 'issuer role should be "issuer"').toBe('issuer');
+      expect(doc.beneficiary.role, 'beneficiary role should be "beneficiary"').toBe('beneficiary');
+      expect(doc.constraints, 'constraints should match the input').toBe(validConstraints());
+      expect(doc.nonce, 'covenant should have a non-empty nonce').toBeTruthy();
+      expect(doc.createdAt, 'covenant should have a non-empty createdAt timestamp').toBeTruthy();
+      expect(doc.signature, 'covenant should have a non-empty signature').toBeTruthy();
       // id should be a hex string (64 chars for SHA-256)
-      expect(doc.id).toMatch(/^[0-9a-f]{64}$/);
+      expect(doc.id, 'covenant id should be a 64-char hex string (SHA-256)').toMatch(/^[0-9a-f]{64}$/);
       // signature should be a hex string (128 chars for Ed25519)
-      expect(doc.signature).toMatch(/^[0-9a-f]{128}$/);
+      expect(doc.signature, 'signature should be a 128-char hex string (Ed25519)').toMatch(/^[0-9a-f]{128}$/);
     });
 
     it('includes optional fields when provided', async () => {
@@ -138,12 +138,12 @@ describe('@stele/core', () => {
 
       const result = await verifyCovenant(doc);
 
-      expect(result.valid).toBe(true);
-      expect(result.checks.length).toBeGreaterThanOrEqual(11);
+      expect(result.valid, 'freshly-built covenant should pass verification').toBe(true);
+      expect(result.checks.length, 'verification should include at least 11 checks').toBeGreaterThanOrEqual(11);
       for (const check of result.checks) {
-        expect(check.passed).toBe(true);
+        expect(check.passed, `verification check "${check.name}" should pass for a valid covenant`).toBe(true);
       }
-      expect(result.document).toEqual(doc);
+      expect(result.document, 'verification result should contain the original document').toEqual(doc);
     });
   });
 
@@ -161,10 +161,10 @@ describe('@stele/core', () => {
 
       const result = await verifyCovenant(tampered);
 
-      expect(result.valid).toBe(false);
+      expect(result.valid, 'covenant with tampered signature should fail verification').toBe(false);
       const sigCheck = result.checks.find((c) => c.name === 'signature_valid');
-      expect(sigCheck).toBeDefined();
-      expect(sigCheck!.passed).toBe(false);
+      expect(sigCheck, 'signature_valid check should exist in verification results').toBeDefined();
+      expect(sigCheck!.passed, 'signature_valid check should fail for tampered signature').toBe(false);
     });
 
     it('fails when document ID is tampered', async () => {
@@ -177,10 +177,10 @@ describe('@stele/core', () => {
 
       const result = await verifyCovenant(tampered);
 
-      expect(result.valid).toBe(false);
+      expect(result.valid, 'covenant with tampered ID should fail verification').toBe(false);
       const idCheck = result.checks.find((c) => c.name === 'id_match');
-      expect(idCheck).toBeDefined();
-      expect(idCheck!.passed).toBe(false);
+      expect(idCheck, 'id_match check should exist in verification results').toBeDefined();
+      expect(idCheck!.passed, 'id_match check should fail for tampered document ID').toBe(false);
     });
   });
 
@@ -194,11 +194,11 @@ describe('@stele/core', () => {
 
       const result = await verifyCovenant(doc);
 
-      expect(result.valid).toBe(false);
+      expect(result.valid, 'expired covenant should fail verification').toBe(false);
       const expiryCheck = result.checks.find((c) => c.name === 'not_expired');
-      expect(expiryCheck).toBeDefined();
-      expect(expiryCheck!.passed).toBe(false);
-      expect(expiryCheck!.message).toContain('expired');
+      expect(expiryCheck, 'not_expired check should exist in verification results').toBeDefined();
+      expect(expiryCheck!.passed, 'not_expired check should fail for expired covenant').toBe(false);
+      expect(expiryCheck!.message, 'not_expired message should mention "expired"').toContain('expired');
     });
 
     it('passes for a non-expired covenant', async () => {
@@ -209,8 +209,8 @@ describe('@stele/core', () => {
       const result = await verifyCovenant(doc);
 
       const expiryCheck = result.checks.find((c) => c.name === 'not_expired');
-      expect(expiryCheck).toBeDefined();
-      expect(expiryCheck!.passed).toBe(true);
+      expect(expiryCheck, 'not_expired check should exist in verification results').toBeDefined();
+      expect(expiryCheck!.passed, 'not_expired check should pass for non-expired covenant').toBe(true);
     });
   });
 
@@ -223,7 +223,7 @@ describe('@stele/core', () => {
       const form1 = canonicalForm(doc);
       const form2 = canonicalForm(doc);
 
-      expect(form1).toBe(form2);
+      expect(form1, 'canonicalForm should produce identical output for the same document').toBe(form2);
     });
 
     it('strips id, signature, and countersignatures', async () => {
@@ -232,9 +232,9 @@ describe('@stele/core', () => {
       const form = canonicalForm(doc);
       const parsed = JSON.parse(form);
 
-      expect(parsed.id).toBeUndefined();
-      expect(parsed.signature).toBeUndefined();
-      expect(parsed.countersignatures).toBeUndefined();
+      expect(parsed.id, 'canonical form should not include id field').toBeUndefined();
+      expect(parsed.signature, 'canonical form should not include signature field').toBeUndefined();
+      expect(parsed.countersignatures, 'canonical form should not include countersignatures field').toBeUndefined();
     });
 
     it('produces identical output regardless of object key order', async () => {
@@ -250,7 +250,7 @@ describe('@stele/core', () => {
       const form1 = canonicalForm(doc);
       const form2 = canonicalForm(reordered as unknown as CovenantDocument);
 
-      expect(form1).toBe(form2);
+      expect(form1, 'canonical form should be identical regardless of key insertion order').toBe(form2);
     });
   });
 
@@ -262,7 +262,7 @@ describe('@stele/core', () => {
 
       const computedId = computeId(doc);
 
-      expect(computedId).toBe(doc.id);
+      expect(computedId, 'computeId should produce an ID that matches the document id field').toBe(doc.id);
     });
 
     it('changes when document content changes', async () => {
@@ -274,7 +274,7 @@ describe('@stele/core', () => {
       const modified = { ...doc, nonce: 'aaaa' };
       const id2 = computeId(modified);
 
-      expect(id1).not.toBe(id2);
+      expect(id1, 'computeId should produce different IDs when document content changes').not.toBe(id2);
     });
   });
 
@@ -287,12 +287,12 @@ describe('@stele/core', () => {
 
       const countersigned = await countersignCovenant(doc, auditorKeyPair, 'auditor');
 
-      expect(countersigned.countersignatures).toBeDefined();
-      expect(countersigned.countersignatures).toHaveLength(1);
-      expect(countersigned.countersignatures![0]!.signerPublicKey).toBe(auditorKeyPair.publicKeyHex);
-      expect(countersigned.countersignatures![0]!.signerRole).toBe('auditor');
-      expect(countersigned.countersignatures![0]!.signature).toBeTruthy();
-      expect(countersigned.countersignatures![0]!.timestamp).toBeTruthy();
+      expect(countersigned.countersignatures, 'countersigned document should have countersignatures array').toBeDefined();
+      expect(countersigned.countersignatures, 'countersigned document should have exactly 1 countersignature').toHaveLength(1);
+      expect(countersigned.countersignatures![0]!.signerPublicKey, 'countersignature signer public key should match auditor key').toBe(auditorKeyPair.publicKeyHex);
+      expect(countersigned.countersignatures![0]!.signerRole, 'countersignature signer role should be auditor').toBe('auditor');
+      expect(countersigned.countersignatures![0]!.signature, 'countersignature should have a non-empty signature').toBeTruthy();
+      expect(countersigned.countersignatures![0]!.timestamp, 'countersignature should have a non-empty timestamp').toBeTruthy();
     });
 
     it('countersigned document passes verification', async () => {
@@ -302,11 +302,11 @@ describe('@stele/core', () => {
       const countersigned = await countersignCovenant(doc, auditorKeyPair, 'auditor');
 
       const result = await verifyCovenant(countersigned);
-      expect(result.valid).toBe(true);
+      expect(result.valid, 'countersigned document should pass verification').toBe(true);
 
       const csCheck = result.checks.find((c) => c.name === 'countersignatures');
-      expect(csCheck).toBeDefined();
-      expect(csCheck!.passed).toBe(true);
+      expect(csCheck, 'countersignatures check should exist in verification results').toBeDefined();
+      expect(csCheck!.passed, 'countersignatures check should pass for valid countersigned document').toBe(true);
     });
 
     it('does not mutate the original document', async () => {
@@ -344,12 +344,12 @@ describe('@stele/core', () => {
 
       const resigned = await resignCovenant(doc, issuerKeyPair.privateKey);
 
-      expect(resigned.id).not.toBe(doc.id);
-      expect(resigned.nonce).not.toBe(doc.nonce);
-      expect(resigned.signature).not.toBe(doc.signature);
+      expect(resigned.id, 'resigned document should have a different id than the original').not.toBe(doc.id);
+      expect(resigned.nonce, 'resigned document should have a different nonce than the original').not.toBe(doc.nonce);
+      expect(resigned.signature, 'resigned document should have a different signature than the original').not.toBe(doc.signature);
 
       const result = await verifyCovenant(resigned);
-      expect(result.valid).toBe(true);
+      expect(result.valid, 'resigned document should pass verification').toBe(true);
     });
 
     it('strips countersignatures on re-sign', async () => {
@@ -595,9 +595,9 @@ describe('@stele/core', () => {
 
       const ancestors = await resolveChain(grandchild, resolver);
 
-      expect(ancestors).toHaveLength(2);
-      expect(ancestors[0]!.id).toBe(child.id);
-      expect(ancestors[1]!.id).toBe(root.id);
+      expect(ancestors, 'resolveChain should return 2 ancestors for a grandchild').toHaveLength(2);
+      expect(ancestors[0]!.id, 'first ancestor should be the direct parent (child)').toBe(child.id);
+      expect(ancestors[1]!.id, 'second ancestor should be the root').toBe(root.id);
     });
 
     it('returns empty array for root covenant (no chain)', async () => {
@@ -607,7 +607,7 @@ describe('@stele/core', () => {
 
       const ancestors = await resolveChain(doc, resolver);
 
-      expect(ancestors).toHaveLength(0);
+      expect(ancestors, 'root covenant with no chain should have no ancestors').toHaveLength(0);
     });
 
     it('stops at maxDepth', async () => {
@@ -666,7 +666,7 @@ describe('@stele/core', () => {
       const json = serializeCovenant(doc);
       const restored = deserializeCovenant(json);
 
-      expect(restored).toEqual(doc);
+      expect(restored, 'deserialized document should be deeply equal to the original').toEqual(doc);
     });
 
     it('deserialized document still passes verification', async () => {
@@ -676,7 +676,7 @@ describe('@stele/core', () => {
       const restored = deserializeCovenant(json);
 
       const result = await verifyCovenant(restored);
-      expect(result.valid).toBe(true);
+      expect(result.valid, 'deserialized document should still pass verification').toBe(true);
     });
 
     it('deserializeCovenant throws on invalid JSON', () => {
@@ -1631,8 +1631,8 @@ describe('@stele/core', () => {
       });
 
       const result = await validateChainNarrowing(child, parent);
-      expect(result.valid).toBe(true);
-      expect(result.violations).toHaveLength(0);
+      expect(result.valid, 'child narrowing parent to a subset should be valid').toBe(true);
+      expect(result.violations, 'valid narrowing should have no violations').toHaveLength(0);
     });
 
     it('invalid: child permits something the parent denies', async () => {
@@ -1654,9 +1654,9 @@ describe('@stele/core', () => {
       });
 
       const result = await validateChainNarrowing(child, parent);
-      expect(result.valid).toBe(false);
-      expect(result.violations.length).toBeGreaterThan(0);
-      expect(result.violations[0]!.reason).toContain('denies');
+      expect(result.valid, 'child permitting something parent denies should be invalid').toBe(false);
+      expect(result.violations.length, 'should have at least one violation for denied permission').toBeGreaterThan(0);
+      expect(result.violations[0]!.reason, 'violation reason should mention parent denies').toContain('denies');
     });
 
     it('invalid: child permits a broader scope than parent', async () => {
@@ -1678,9 +1678,9 @@ describe('@stele/core', () => {
       });
 
       const result = await validateChainNarrowing(child, parent);
-      expect(result.valid).toBe(false);
-      expect(result.violations.length).toBeGreaterThan(0);
-      expect(result.violations[0]!.reason).toContain('not a subset');
+      expect(result.valid, 'child with broader scope than parent should be invalid').toBe(false);
+      expect(result.violations.length, 'should have at least one violation for scope widening').toBeGreaterThan(0);
+      expect(result.violations[0]!.reason, 'violation reason should mention not a subset').toContain('not a subset');
     });
   });
 

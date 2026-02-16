@@ -9,6 +9,21 @@
 
 import { COVENANT_SCHEMA, DISCOVERY_DOCUMENT_SCHEMA, AGENT_KEY_SCHEMA, CCL_EVALUATION_CONTEXT_SCHEMA } from './covenant.js';
 
+/**
+ * A JSON Schema definition object compatible with our lightweight validator.
+ * The schema constants from `./covenant.js` use `as const` narrowing for their
+ * property values, so their inferred types are deeply literal. This alias
+ * provides the `Record<string, unknown>` shape that `validateField` expects,
+ * allowing us to cast the schemas once at module level rather than at every
+ * call site.
+ */
+type SchemaDefinition = Record<string, unknown>;
+
+/** Pre-cast schema references to avoid repeated `as unknown as Record<string, unknown>` casts. */
+const covenantSchema: SchemaDefinition = COVENANT_SCHEMA as SchemaDefinition;
+const discoverySchema: SchemaDefinition = DISCOVERY_DOCUMENT_SCHEMA as SchemaDefinition;
+const agentKeySchema: SchemaDefinition = AGENT_KEY_SCHEMA as SchemaDefinition;
+
 export interface SchemaValidationError {
   path: string;
   message: string;
@@ -147,7 +162,7 @@ function validateField(
  */
 export function validateCovenantSchema(doc: unknown): SchemaValidationResult {
   const errors: SchemaValidationError[] = [];
-  validateField(doc, COVENANT_SCHEMA as unknown as Record<string, unknown>, '', errors);
+  validateField(doc, covenantSchema, '', errors);
   return { valid: errors.length === 0, errors };
 }
 
@@ -159,7 +174,7 @@ export function validateCovenantSchema(doc: unknown): SchemaValidationResult {
  */
 export function validateDiscoverySchema(doc: unknown): SchemaValidationResult {
   const errors: SchemaValidationError[] = [];
-  validateField(doc, DISCOVERY_DOCUMENT_SCHEMA as unknown as Record<string, unknown>, '', errors);
+  validateField(doc, discoverySchema, '', errors);
   return { valid: errors.length === 0, errors };
 }
 
@@ -171,7 +186,7 @@ export function validateDiscoverySchema(doc: unknown): SchemaValidationResult {
  */
 export function validateAgentKeySchema(key: unknown): SchemaValidationResult {
   const errors: SchemaValidationError[] = [];
-  validateField(key, AGENT_KEY_SCHEMA as unknown as Record<string, unknown>, '', errors);
+  validateField(key, agentKeySchema, '', errors);
   return { valid: errors.length === 0, errors };
 }
 

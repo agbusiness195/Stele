@@ -63,6 +63,55 @@ async function processLine(line: string): Promise<void> {
   }
 }
 
-// Handle graceful shutdown
-process.on('SIGINT', () => process.exit(0));
-process.on('SIGTERM', () => process.exit(0));
+// ─── Graceful shutdown ─────────────────────────────────────────────────────
+
+/** Maximum time (ms) to wait for in-flight requests before force-exiting. */
+const SHUTDOWN_TIMEOUT_MS = 5_000;
+
+let shuttingDown = false;
+
+async function gracefulShutdown(signal: string): Promise<void> {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
+  process.stderr.write(`[stele-mcp] Received ${signal}, shutting down gracefully...\n`);
+
+  // Set a hard deadline so we don't hang indefinitely
+  const forceExitTimer = setTimeout(() => {
+    process.stderr.write('[stele-mcp] Shutdown timeout exceeded, forcing exit.\n');
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT_MS);
+
+  // Ensure the timer doesn't keep the event loop alive if cleanup finishes early
+  if (forceExitTimer.unref) {
+    forceExitTimer.unref();
+  }
+
+  try {
+    // Stop accepting new input
+    process.stdin.destroy();
+
+    // Flush stdout to ensure all pending responses are sent
+    await new Promise<void>((resolve) => {
+      if (process.stdout.writableFinished) {
+        resolve();
+      } else {
+        process.stdout.once('drain', resolve);
+        // If nothing to drain, resolve immediately
+        setTimeout(resolve, 100);
+      }
+    });
+
+    process.stderr.write('[stele-mcp] Cleanup complete.\n');
+  } catch (err) {
+    process.stderr.write(
+      `[stele-mcp] Error during shutdown: ${err instanceof Error ? err.message : String(err)}\n`,
+    );
+  } finally {
+    clearTimeout(forceExitTimer);
+    process.exit(0);
+  }
+}
+
+process.on('SIGINT', () => void gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => void gracefulShutdown('SIGTERM'));

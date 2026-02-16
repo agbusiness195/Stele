@@ -375,3 +375,191 @@ describe('KeyManager full lifecycle', () => {
     expect(result.valid).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Edge case: negative maxAgeMs throws
+// ---------------------------------------------------------------------------
+describe('KeyManager edge case: negative maxAgeMs throws', () => {
+  it('throws for maxAgeMs = -1', () => {
+    expect(
+      () => new KeyManager({ maxAgeMs: -1, overlapPeriodMs: 0 }),
+      'negative maxAgeMs should throw',
+    ).toThrow(/maxAgeMs must be positive/);
+  });
+
+  it('throws for maxAgeMs = -1000', () => {
+    expect(
+      () => new KeyManager({ maxAgeMs: -1000, overlapPeriodMs: 0 }),
+      'large negative maxAgeMs should throw',
+    ).toThrow(/maxAgeMs must be positive/);
+  });
+
+  it('throws for maxAgeMs = -Number.MAX_SAFE_INTEGER', () => {
+    expect(
+      () => new KeyManager({ maxAgeMs: -Number.MAX_SAFE_INTEGER, overlapPeriodMs: 0 }),
+      'extremely negative maxAgeMs should throw',
+    ).toThrow(/maxAgeMs must be positive/);
+  });
+
+  it('throws for maxAgeMs = 0 (zero is not positive)', () => {
+    expect(
+      () => new KeyManager({ maxAgeMs: 0, overlapPeriodMs: 0 }),
+      'zero maxAgeMs should throw because it is not positive',
+    ).toThrow(/maxAgeMs must be positive/);
+  });
+
+  it('does not throw for maxAgeMs = 1 (smallest valid value)', () => {
+    expect(
+      () => new KeyManager({ maxAgeMs: 1, overlapPeriodMs: 0 }),
+      'maxAgeMs = 1 should be the smallest accepted value',
+    ).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Edge case: zero overlapPeriodMs works
+// ---------------------------------------------------------------------------
+describe('KeyManager edge case: zero overlapPeriodMs works', () => {
+  it('accepts overlapPeriodMs = 0 without throwing', () => {
+    expect(
+      () => new KeyManager({ maxAgeMs: 10000, overlapPeriodMs: 0 }),
+      'zero overlapPeriodMs should be accepted',
+    ).not.toThrow();
+  });
+
+  it('initializes and rotates with zero overlap', async () => {
+    const km = new KeyManager({ maxAgeMs: 10000, overlapPeriodMs: 0 });
+    const managed = await km.initialize();
+    expect(managed.status, 'initial key should be active').toBe('active');
+
+    const { previous, current } = await km.rotate();
+    expect(previous.status, 'old key should be in rotating status').toBe('rotating');
+    expect(current.status, 'new key should be active').toBe('active');
+  });
+
+  it('with zero overlap, rotating keys are immediately eligible for retirement', async () => {
+    const km = new KeyManager({ maxAgeMs: 10000, overlapPeriodMs: 0 });
+    await km.initialize();
+
+    const oldKey = km.current();
+    const message = new TextEncoder().encode('zero-overlap-test');
+    const signature = await sign(message, oldKey.keyPair.privateKey);
+
+    await km.rotate();
+
+    // With 0 overlap, the old key should be immediately retirable
+    // Need just a tiny delay for the timestamp to differ
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const retired = km.retireExpired();
+    expect(retired.length, 'old key should be retired immediately with zero overlap').toBe(1);
+    expect(retired[0]!.status, 'retired key should have retired status').toBe('retired');
+
+    // After retirement, old signature should not verify
+    const result = await km.verifyWithAnyKey(message, signature);
+    expect(result.valid, 'signature from retired key should not verify').toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Edge case: overlapPeriodMs >= maxAgeMs throws
+// ---------------------------------------------------------------------------
+describe('KeyManager edge case: overlapPeriodMs >= maxAgeMs throws', () => {
+  it('throws when overlapPeriodMs equals maxAgeMs', () => {
+    expect(
+      () => new KeyManager({ maxAgeMs: 5000, overlapPeriodMs: 5000 }),
+      'overlapPeriodMs equal to maxAgeMs should throw',
+    ).toThrow(/overlapPeriodMs.*must be less than maxAgeMs/);
+  });
+
+  it('throws when overlapPeriodMs is greater than maxAgeMs', () => {
+    expect(
+      () => new KeyManager({ maxAgeMs: 5000, overlapPeriodMs: 10000 }),
+      'overlapPeriodMs greater than maxAgeMs should throw',
+    ).toThrow(/overlapPeriodMs.*must be less than maxAgeMs/);
+  });
+
+  it('throws when overlapPeriodMs is just 1ms greater than maxAgeMs', () => {
+    expect(
+      () => new KeyManager({ maxAgeMs: 1000, overlapPeriodMs: 1001 }),
+      'overlapPeriodMs just over maxAgeMs should throw',
+    ).toThrow(/overlapPeriodMs.*must be less than maxAgeMs/);
+  });
+
+  it('accepts overlapPeriodMs that is 1ms less than maxAgeMs', () => {
+    expect(
+      () => new KeyManager({ maxAgeMs: 1000, overlapPeriodMs: 999 }),
+      'overlapPeriodMs just under maxAgeMs should be accepted',
+    ).not.toThrow();
+  });
+
+  it('throws when both are the same large value', () => {
+    expect(
+      () => new KeyManager({ maxAgeMs: 86400000, overlapPeriodMs: 86400000 }),
+      'equal large values should throw',
+    ).toThrow(/overlapPeriodMs.*must be less than maxAgeMs/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Edge case: double initialization throws
+// ---------------------------------------------------------------------------
+describe('KeyManager edge case: double initialization throws', () => {
+  it('second initialize() call throws "already initialized"', async () => {
+    const km = new KeyManager({ maxAgeMs: 10000, overlapPeriodMs: 1000 });
+    await km.initialize();
+    await expect(
+      km.initialize(),
+    ).rejects.toThrow('already initialized');
+  });
+
+  it('state is preserved after failed second initialize', async () => {
+    const km = new KeyManager({ maxAgeMs: 10000, overlapPeriodMs: 1000 });
+    const firstKey = await km.initialize();
+
+    try {
+      await km.initialize();
+    } catch {
+      // expected
+    }
+
+    // The key manager should still be in a valid state with the original key
+    const current = km.current();
+    expect(current.keyPair.publicKeyHex, 'current key should remain unchanged after failed re-initialization').toBe(firstKey.keyPair.publicKeyHex);
+    expect(km.all().length, 'key count should remain 1 after failed re-initialization').toBe(1);
+  });
+
+  it('double initialization after rotate still throws', async () => {
+    const km = new KeyManager({ maxAgeMs: 10000, overlapPeriodMs: 1000 });
+    await km.initialize();
+    await km.rotate();
+
+    await expect(
+      km.initialize(),
+    ).rejects.toThrow('already initialized');
+
+    // Should still have 2 keys (initial + rotated)
+    expect(km.all().length, 'key count should be 2 after init + rotate + failed re-init').toBe(2);
+  });
+
+  it('operations still work normally after failed re-initialization', async () => {
+    const km = new KeyManager({ maxAgeMs: 10000, overlapPeriodMs: 1000 });
+    await km.initialize();
+
+    try {
+      await km.initialize();
+    } catch {
+      // expected
+    }
+
+    // All normal operations should still work
+    expect(km.needsRotation(), 'needsRotation should still work').toBe(false);
+
+    const { current } = await km.rotate();
+    expect(current.status, 'rotate should still produce an active key').toBe('active');
+
+    const message = new TextEncoder().encode('post-failure-test');
+    const sig = await sign(message, current.keyPair.privateKey);
+    const result = await km.verifyWithAnyKey(message, sig);
+    expect(result.valid, 'verification should still work after failed re-initialization').toBe(true);
+  });
+});

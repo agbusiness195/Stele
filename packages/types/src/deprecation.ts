@@ -104,6 +104,15 @@ export function wrapDeprecated<T extends (...args: unknown[]) => unknown>(
   fn: T,
   warning: DeprecationWarning,
 ): T {
+  /**
+   * The `as unknown as T` assertion is necessary here because TypeScript
+   * cannot structurally verify that a generic function wrapper preserves the
+   * exact signature of the original function `T`. The wrapper has the same
+   * runtime behavior (accepts the same arguments, returns the same value via
+   * `fn.apply`), but the compiler sees it as `(...args: unknown[]) => unknown`
+   * rather than the original call signature. The double cast through `unknown`
+   * is the standard pattern for this kind of signature-preserving wrapper.
+   */
   const wrapped = function (this: unknown, ...args: unknown[]): unknown {
     deprecated(warning);
     return fn.apply(this, args);

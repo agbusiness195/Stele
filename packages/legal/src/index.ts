@@ -101,10 +101,10 @@ export const JURISDICTIONS: Record<string, JurisdictionInfo> = jurisdictionRegis
  */
 export function registerJurisdiction(code: string, info: JurisdictionInfo): void {
   if (!code || code.trim() === '') {
-    throw new Error('Jurisdiction code must be a non-empty string');
+    throw new SteleError('Jurisdiction code must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!info.legalFramework || !info.complianceStandard || !Array.isArray(info.requiredFields)) {
-    throw new Error('JurisdictionInfo must include legalFramework, complianceStandard, and requiredFields');
+    throw new SteleError('JurisdictionInfo must include legalFramework, complianceStandard, and requiredFields', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   jurisdictionRegistry[code] = { ...info, requiredFields: [...info.requiredFields] };
 }
@@ -151,37 +151,37 @@ export const COMPLIANCE_STANDARDS: Record<ComplianceStandard, ComplianceStandard
 
 function validateNonEmpty(value: string, name: string): void {
   if (!value || value.trim() === '') {
-    throw new Error(`${name} must be a non-empty string`);
+    throw new SteleError(`${name} must be a non-empty string`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 }
 
 function validateComplianceRecord(record: ComplianceRecord): void {
   if (record.totalInteractions < 0) {
-    throw new Error('totalInteractions must be non-negative');
+    throw new SteleError('totalInteractions must be non-negative', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (record.covenantedInteractions < 0) {
-    throw new Error('covenantedInteractions must be non-negative');
+    throw new SteleError('covenantedInteractions must be non-negative', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (record.breaches < 0) {
-    throw new Error('breaches must be non-negative');
+    throw new SteleError('breaches must be non-negative', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (record.canaryTests < 0) {
-    throw new Error('canaryTests must be non-negative');
+    throw new SteleError('canaryTests must be non-negative', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (record.canaryPasses < 0) {
-    throw new Error('canaryPasses must be non-negative');
+    throw new SteleError('canaryPasses must be non-negative', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (record.attestationCoverage < 0 || record.attestationCoverage > 1) {
-    throw new Error('attestationCoverage must be between 0 and 1');
+    throw new SteleError('attestationCoverage must be between 0 and 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (record.covenantedInteractions > record.totalInteractions) {
-    throw new Error('covenantedInteractions cannot exceed totalInteractions');
+    throw new SteleError('covenantedInteractions cannot exceed totalInteractions', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (record.breaches > record.totalInteractions) {
-    throw new Error('breaches cannot exceed totalInteractions');
+    throw new SteleError('breaches cannot exceed totalInteractions', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (record.canaryPasses > record.canaryTests) {
-    throw new Error('canaryPasses cannot exceed canaryTests');
+    throw new SteleError('canaryPasses cannot exceed canaryTests', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 }
 
@@ -386,7 +386,7 @@ export function crossJurisdictionCompliance(
   compliance: ComplianceRecord,
 ): CrossJurisdictionResult {
   if (!jurisdictions || jurisdictions.length === 0) {
-    throw new Error('jurisdictions must be a non-empty array');
+    throw new SteleError('jurisdictions must be a non-empty array', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   for (const j of jurisdictions) {
     validateNonEmpty(j, 'jurisdiction code');
@@ -693,7 +693,7 @@ export function regulatoryGapAnalysis(
 
   const requirements = COMPLIANCE_STANDARDS[targetStandard];
   if (!requirements) {
-    throw new Error(`Unknown compliance standard: "${targetStandard}"`);
+    throw new SteleError(`Unknown compliance standard: "${targetStandard}"`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const report = generateComplianceReport(compliance, targetStandard, weights);

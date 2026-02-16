@@ -8,6 +8,7 @@
 
 import type { CovenantDocument } from '@stele/core';
 import { verifyCovenant } from '@stele/core';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 import type {
   DiscoveryDocument,

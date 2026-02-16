@@ -146,6 +146,7 @@ function buildCacheKey(ctx: MiddlewareContext): string | undefined {
     try {
       return `verify:${JSON.stringify(args)}`;
     } catch {
+      // JSON.stringify can throw for circular references - gracefully degrade cache key generation
       return undefined;
     }
   }
@@ -173,6 +174,7 @@ function buildCacheKey(ctx: MiddlewareContext): string | undefined {
     try {
       return `eval:${JSON.stringify(args)}`;
     } catch {
+      // JSON.stringify can throw for circular references - gracefully degrade cache key generation
       return undefined;
     }
   }

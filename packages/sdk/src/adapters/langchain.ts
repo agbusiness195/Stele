@@ -111,6 +111,11 @@ export class SteleCallbackHandler {
   /** Ordered list of recorded events. */
   readonly events: CallbackEvent[] = [];
 
+  /**
+   * Create a new callback handler.
+   *
+   * @param options - Configuration with a SteleClient and CovenantDocument.
+   */
   constructor(options: { client: SteleClient; covenant: CovenantDocument }) {
     this.client = options.client;
     this.covenant = options.covenant;

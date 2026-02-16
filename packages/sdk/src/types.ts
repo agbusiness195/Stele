@@ -6,6 +6,7 @@
  */
 
 import type { KeyPair } from '@stele/crypto';
+import type { Logger } from '@stele/types';
 import type {
   CovenantDocument,
   VerificationResult,
@@ -55,6 +56,13 @@ export interface SteleClientOptions {
     /** Optional callback invoked when rotation occurs. */
     onRotation?: (oldKey: string, newKey: string) => void;
   };
+  /**
+   * Optional structured logger for lifecycle events (dispose, health checks).
+   *
+   * When provided, the client logs shutdown and diagnostic messages through
+   * this logger rather than silently.
+   */
+  logger?: Logger;
 }
 
 // ─── Covenant creation ──────────────────────────────────────────────────────

@@ -9,6 +9,7 @@
 
 import { keccak_256 } from '@noble/hashes/sha3';
 import { sha256String } from '@stele/crypto';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
@@ -75,10 +76,10 @@ function keccak256Hex(hexData: string): string {
  */
 export function encodeUint256(value: bigint): string {
   if (value < 0n) {
-    throw new Error(`uint256 cannot be negative: got ${value}`);
+    throw new SteleError(`uint256 cannot be negative: got ${value}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (value > MAX_UINT256) {
-    throw new Error(`uint256 overflow: value ${value} exceeds max ${MAX_UINT256}`);
+    throw new SteleError(`uint256 overflow: value ${value} exceeds max ${MAX_UINT256}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   return value.toString(16).padStart(64, '0');
 }
@@ -91,10 +92,10 @@ export function encodeUint256(value: bigint): string {
 export function encodeBytes32(hex: string): string {
   const clean = strip0x(hex);
   if (clean.length > 64) {
-    throw new Error('bytes32 value exceeds 32 bytes');
+    throw new SteleError('bytes32 value exceeds 32 bytes', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (clean.length > 0 && !/^[0-9a-fA-F]+$/.test(clean)) {
-    throw new Error('Invalid hex string');
+    throw new SteleError('Invalid hex string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   return clean.toLowerCase().padEnd(64, '0');
 }
@@ -107,10 +108,10 @@ export function encodeBytes32(hex: string): string {
 export function encodeAddress(address: string): string {
   const clean = strip0x(address).toLowerCase();
   if (clean.length !== 40) {
-    throw new Error('Invalid address: must be 20 bytes (40 hex chars)');
+    throw new SteleError('Invalid address: must be 20 bytes (40 hex chars)', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!/^[0-9a-f]{40}$/.test(clean)) {
-    throw new Error('Invalid address: not valid hex');
+    throw new SteleError('Invalid address: not valid hex', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   return clean.padStart(64, '0');
 }
@@ -149,7 +150,7 @@ export function encodeString(value: string): string {
 export function decodeUint256(hex: string): bigint {
   const clean = strip0x(hex);
   if (clean.length !== 64) {
-    throw new Error('Expected 64-character hex string for uint256');
+    throw new SteleError('Expected 64-character hex string for uint256', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   return BigInt('0x' + clean);
 }
@@ -162,7 +163,7 @@ export function decodeUint256(hex: string): bigint {
 export function decodeBytes32(hex: string): string {
   const clean = strip0x(hex);
   if (clean.length !== 64) {
-    throw new Error('Expected 64-character hex string for bytes32');
+    throw new SteleError('Expected 64-character hex string for bytes32', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   return clean.toLowerCase();
 }
@@ -176,7 +177,7 @@ export function decodeBytes32(hex: string): string {
 export function decodeAddress(hex: string): string {
   const clean = strip0x(hex);
   if (clean.length !== 64) {
-    throw new Error('Expected 64-character hex string for address');
+    throw new SteleError('Expected 64-character hex string for address', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   const addrHex = clean.slice(24);
   return checksumAddress('0x' + addrHex);
@@ -193,7 +194,7 @@ export function decodeAddress(hex: string): string {
 export function encodeFunctionCall(selector: string, ...params: string[]): string {
   const cleanSelector = strip0x(selector);
   if (cleanSelector.length !== 8) {
-    throw new Error('Function selector must be 4 bytes (8 hex chars)');
+    throw new SteleError('Function selector must be 4 bytes (8 hex chars)', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   return '0x' + cleanSelector + params.join('');
 }
@@ -263,12 +264,13 @@ export function parseAnchorFromCalldata(calldata: string): CovenantAnchor {
   const data = strip0x(calldata);
   // 8 chars selector + 5 × 64 chars params = 328 chars minimum
   if (data.length < 328) {
-    throw new Error('Calldata too short for anchor function');
+    throw new SteleError('Calldata too short for anchor function', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   const selector = data.slice(0, 8);
   if (selector !== ANCHOR_SELECTOR) {
-    throw new Error(
+    throw new SteleError(
       `Invalid function selector: expected ${ANCHOR_SELECTOR}, got ${selector}`,
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
     );
   }
 
@@ -395,7 +397,7 @@ export function isValidAddress(address: string): boolean {
  */
 export function checksumAddress(address: string): string {
   if (!isValidAddress(address)) {
-    throw new Error('Invalid EVM address');
+    throw new SteleError('Invalid EVM address', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   const lower = address.slice(2).toLowerCase();
   const hash = keccak256String(lower);
@@ -421,10 +423,10 @@ export function checksumAddress(address: string): string {
 export function covenantIdToBytes32(id: string): string {
   const clean = strip0x(id);
   if (clean.length !== 64) {
-    throw new Error('Covenant ID must be 32 bytes (64 hex chars)');
+    throw new SteleError('Covenant ID must be 32 bytes (64 hex chars)', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!/^[0-9a-fA-F]{64}$/.test(clean)) {
-    throw new Error('Invalid hex string');
+    throw new SteleError('Invalid hex string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   return '0x' + clean.toLowerCase();
 }
@@ -492,7 +494,7 @@ export class EVMClient {
 
   constructor(provider: EVMProvider, registryAddress: string) {
     if (!isValidAddress(registryAddress)) {
-      throw new Error('Invalid registry address');
+      throw new SteleError('Invalid registry address', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     this.provider = provider;
     this.registryAddress = registryAddress;
@@ -507,7 +509,7 @@ export class EVMClient {
    */
   async anchorCovenant(anchor: CovenantAnchor, from: string): Promise<string> {
     if (!/^[0-9a-fA-F]{64}$/i.test(anchor.covenantId)) {
-      throw new Error(`Invalid covenant ID: expected 64 hex characters, got '${anchor.covenantId.slice(0, 20)}${anchor.covenantId.length > 20 ? '...' : ''}'`);
+      throw new SteleError(`Invalid covenant ID: expected 64 hex characters, got '${anchor.covenantId.slice(0, 20)}${anchor.covenantId.length > 20 ? '...' : ''}'`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const calldata = buildAnchorCalldata(anchor);
     const txHash = await this.provider.request({
@@ -529,7 +531,7 @@ export class EVMClient {
    */
   async verifyCovenant(covenantId: string): Promise<boolean> {
     if (!/^[0-9a-fA-F]{64}$/i.test(covenantId)) {
-      throw new Error(`Invalid covenant ID: expected 64 hex characters, got '${covenantId.slice(0, 20)}${covenantId.length > 20 ? '...' : ''}'`);
+      throw new SteleError(`Invalid covenant ID: expected 64 hex characters, got '${covenantId.slice(0, 20)}${covenantId.length > 20 ? '...' : ''}'`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const selector = computeFunctionSelector('verify(bytes32)');
     const calldata = '0x' + selector + encodeBytes32(covenantId);
@@ -623,7 +625,7 @@ export class EVMClient {
     }) as string;
     const chainId = parseInt(result, 16);
     if (isNaN(chainId)) {
-      throw new Error(`Invalid chain ID returned by provider: ${result}`);
+      throw new SteleError(`Invalid chain ID returned by provider: ${result}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     return chainId;
   }

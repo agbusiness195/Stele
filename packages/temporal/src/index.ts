@@ -49,21 +49,22 @@ const VALID_TRIGGER_ACTIONS: TriggerAction[] = [
  */
 function validateTriggerCondition(trigger: EvolutionTrigger): void {
   if (!trigger.type || !VALID_TRIGGER_TYPES.includes(trigger.type)) {
-    throw new Error(`Invalid trigger type: ${trigger.type}`);
+    throw new SteleError(`Invalid trigger type: ${trigger.type}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!trigger.action || !VALID_TRIGGER_ACTIONS.includes(trigger.action)) {
-    throw new Error(`Invalid trigger action: ${trigger.action}`);
+    throw new SteleError(`Invalid trigger action: ${trigger.action}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (typeof trigger.condition !== 'string') {
-    throw new Error('Trigger condition must be a string');
+    throw new SteleError('Trigger condition must be a string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   switch (trigger.type) {
     case 'time_elapsed': {
       const conditionMs = parseFloat(trigger.condition);
       if (isNaN(conditionMs) || conditionMs < 0) {
-        throw new Error(
+        throw new SteleError(
           `Invalid time_elapsed condition: "${trigger.condition}". Must be a non-negative number (milliseconds).`,
+          SteleErrorCode.PROTOCOL_INVALID_INPUT,
         );
       }
       break;
@@ -71,8 +72,9 @@ function validateTriggerCondition(trigger: EvolutionTrigger): void {
     case 'reputation_threshold': {
       const match = trigger.condition.match(/^([><]=?)(\d+(?:\.\d+)?)$/);
       if (!match) {
-        throw new Error(
+        throw new SteleError(
           `Invalid reputation_threshold condition: "${trigger.condition}". Must be ">N", "<N", ">=N", or "<=N".`,
+          SteleErrorCode.PROTOCOL_INVALID_INPUT,
         );
       }
       break;
@@ -80,7 +82,7 @@ function validateTriggerCondition(trigger: EvolutionTrigger): void {
     case 'breach_event': {
       // breach_event accepts any condition string (e.g. 'any')
       if (trigger.condition.length === 0) {
-        throw new Error('breach_event condition must not be empty');
+        throw new SteleError('breach_event condition must not be empty', SteleErrorCode.PROTOCOL_INVALID_INPUT);
       }
       break;
     }
@@ -88,13 +90,13 @@ function validateTriggerCondition(trigger: EvolutionTrigger): void {
       // Must be a comma-separated list, possibly empty (meaning "no capabilities expected")
       // but the string itself must be present
       if (typeof trigger.condition !== 'string') {
-        throw new Error('capability_change condition must be a string');
+        throw new SteleError('capability_change condition must be a string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
       }
       break;
     }
     case 'governance_vote': {
       if (trigger.condition.length === 0) {
-        throw new Error('governance_vote condition must not be empty (should be proposal ID)');
+        throw new SteleError('governance_vote condition must not be empty (should be proposal ID)', SteleErrorCode.PROTOCOL_INVALID_INPUT);
       }
       break;
     }
@@ -106,13 +108,13 @@ function validateTriggerCondition(trigger: EvolutionTrigger): void {
  */
 function validateTransition(transition: TransitionFunction): void {
   if (!transition.fromConstraint || typeof transition.fromConstraint !== 'string') {
-    throw new Error('Transition fromConstraint must be a non-empty string');
+    throw new SteleError('Transition fromConstraint must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!transition.toConstraint || typeof transition.toConstraint !== 'string') {
-    throw new Error('Transition toConstraint must be a non-empty string');
+    throw new SteleError('Transition toConstraint must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (typeof transition.cooldown !== 'number' || transition.cooldown < 0) {
-    throw new Error(`Transition cooldown must be a non-negative number, got: ${transition.cooldown}`);
+    throw new SteleError(`Transition cooldown must be a non-negative number, got: ${transition.cooldown}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 }
 
@@ -127,7 +129,7 @@ export function defineEvolution(
   governanceApproval: boolean = false,
 ): EvolutionPolicy {
   if (!covenantId || typeof covenantId !== 'string') {
-    throw new Error('covenantId must be a non-empty string');
+    throw new SteleError('covenantId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   for (const trigger of triggers) {
@@ -169,16 +171,16 @@ export function evaluateTriggers(
 
   // Validate agentState fields
   if (typeof agentState.reputationScore !== 'number') {
-    throw new Error('agentState.reputationScore must be a number');
+    throw new SteleError('agentState.reputationScore must be a number', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!Array.isArray(agentState.capabilities)) {
-    throw new Error('agentState.capabilities must be an array');
+    throw new SteleError('agentState.capabilities must be an array', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (typeof agentState.breachCount !== 'number') {
-    throw new Error('agentState.breachCount must be a number');
+    throw new SteleError('agentState.breachCount must be a number', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (typeof agentState.currentTime !== 'number') {
-    throw new Error('agentState.currentTime must be a number');
+    throw new SteleError('agentState.currentTime must be a number', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const fired: EvolutionTrigger[] = [];
@@ -188,8 +190,9 @@ export function evaluateTriggers(
       case 'time_elapsed': {
         const conditionMs = parseFloat(trigger.condition);
         if (isNaN(conditionMs)) {
-          throw new Error(
+          throw new SteleError(
             `Malformed time_elapsed condition: "${trigger.condition}". Expected a number.`,
+            SteleErrorCode.PROTOCOL_INVALID_INPUT,
           );
         }
         const lastTransition = covenant.lastTransitionAt ?? 0;
@@ -201,8 +204,9 @@ export function evaluateTriggers(
       case 'reputation_threshold': {
         const match = trigger.condition.match(/^([><]=?)(\d+(?:\.\d+)?)$/);
         if (!match) {
-          throw new Error(
+          throw new SteleError(
             `Malformed reputation_threshold condition: "${trigger.condition}". Expected ">N", "<N", ">=N", or "<=N".`,
+            SteleErrorCode.PROTOCOL_INVALID_INPUT,
           );
         }
         const operator = match[1]!;
@@ -249,7 +253,7 @@ export function evaluateTriggers(
         break;
       }
       default: {
-        throw new Error(`Unknown trigger type: ${(trigger as EvolutionTrigger).type}`);
+        throw new SteleError(`Unknown trigger type: ${(trigger as EvolutionTrigger).type}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
       }
     }
   }
@@ -453,16 +457,16 @@ export function computeDecaySchedule(
   steps: number,
 ): DecayPoint[] {
   if (initialWeight <= 0) {
-    throw new Error('initialWeight must be positive');
+    throw new SteleError('initialWeight must be positive', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (decayRate < 0) {
-    throw new Error('decayRate must be non-negative');
+    throw new SteleError('decayRate must be non-negative', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (lifetimeMs <= 0) {
-    throw new Error('lifetimeMs must be positive');
+    throw new SteleError('lifetimeMs must be positive', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (steps < 2) {
-    throw new Error('steps must be at least 2');
+    throw new SteleError('steps must be at least 2', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const schedule: DecayPoint[] = [];
@@ -509,16 +513,16 @@ export function expirationForecast(
   violationImpact: number = 0.05,
 ): ExpirationForecastResult {
   if (initialWeight <= 0) {
-    throw new Error('initialWeight must be positive');
+    throw new SteleError('initialWeight must be positive', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (decayRate < 0) {
-    throw new Error('decayRate must be non-negative');
+    throw new SteleError('decayRate must be non-negative', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (threshold < 0 || threshold >= initialWeight) {
-    throw new Error('threshold must be in [0, initialWeight)');
+    throw new SteleError('threshold must be in [0, initialWeight)', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (violationImpact < 0) {
-    throw new Error('violationImpact must be non-negative');
+    throw new SteleError('violationImpact must be non-negative', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Sort violations by timestamp

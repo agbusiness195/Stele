@@ -13,6 +13,7 @@ import {
   sha256String,
   timestamp,
 } from '@stele/crypto';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 /**
  * Options for configuring the authentication middleware.

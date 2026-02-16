@@ -68,8 +68,20 @@ function isPlainObject(val: unknown): val is Record<string, unknown> {
  * - `role`: non-empty string
  *
  * @param party - The value to validate.
- * @param path  - The base path for error reporting (e.g. "issuer" or "beneficiary").
- * @returns An array of validation errors (empty if valid).
+ * @param path  - The base path for error reporting (e.g. `"issuer"` or `"beneficiary"`).
+ * @returns An array of {@link ValidationError} items (empty if valid).
+ *
+ * @example
+ * ```typescript
+ * const errors = validatePartySchema(
+ *   { id: 'alice', publicKey: 'ab'.repeat(32), role: 'issuer' },
+ *   'issuer',
+ * );
+ * console.log(errors.length); // 0
+ *
+ * const bad = validatePartySchema({ id: '', publicKey: 'short', role: '' }, 'issuer');
+ * console.log(bad.length); // 3
+ * ```
  */
 export function validatePartySchema(party: unknown, path: string): ValidationError[] {
   const errors: ValidationError[] = [];
@@ -103,10 +115,18 @@ export function validatePartySchema(party: unknown, path: string): ValidationErr
 /**
  * Validate CCL constraints.
  *
- * Checks that constraints is a non-empty string.
+ * Checks that `constraints` is a non-empty string. Does NOT parse the
+ * CCL grammar; use `@stele/ccl` `parse()` for syntactic validation.
  *
  * @param constraints - The value to validate.
- * @returns An array of validation errors (empty if valid).
+ * @returns An array of {@link ValidationError} items (empty if valid).
+ *
+ * @example
+ * ```typescript
+ * validateConstraintsSchema("permit read on '/data/**'"); // []
+ * validateConstraintsSchema('');    // [{ path: 'constraints', message: '...' }]
+ * validateConstraintsSchema(42);    // [{ path: 'constraints', message: '...' }]
+ * ```
  */
 export function validateConstraintsSchema(constraints: unknown): ValidationError[] {
   const errors: ValidationError[] = [];
@@ -128,10 +148,17 @@ export function validateConstraintsSchema(constraints: unknown): ValidationError
  * Checks that chain is an object with:
  * - `parentId`: non-empty string
  * - `relation`: non-empty string
- * - `depth`: positive integer
+ * - `depth`: positive integer (>= 1)
  *
  * @param chain - The value to validate.
- * @returns An array of validation errors (empty if valid).
+ * @returns An array of {@link ValidationError} items (empty if valid).
+ *
+ * @example
+ * ```typescript
+ * validateChainSchema({ parentId: 'abc123', relation: 'delegation', depth: 1 }); // []
+ * validateChainSchema({ parentId: '', relation: '', depth: 0 });
+ * // => 3 errors: parentId, relation, depth
+ * ```
  */
 export function validateChainSchema(chain: unknown): ValidationError[] {
   const errors: ValidationError[] = [];
@@ -185,6 +212,16 @@ export function validateChainSchema(chain: unknown): ValidationError[] {
  *
  * @param doc - The value to validate (typically parsed JSON).
  * @returns A {@link ValidationResult} with `valid` boolean and `errors` array.
+ *
+ * @example
+ * ```typescript
+ * const result = validateDocumentSchema(JSON.parse(rawJson));
+ * if (!result.valid) {
+ *   for (const err of result.errors) {
+ *     console.error(`${err.path}: ${err.message}`);
+ *   }
+ * }
+ * ```
  */
 export function validateDocumentSchema(doc: unknown): ValidationResult {
   const errors: ValidationError[] = [];

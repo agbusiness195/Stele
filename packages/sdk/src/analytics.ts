@@ -64,7 +64,22 @@ export interface AnonymizedDataset {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Compute the median of a sorted numeric array. */
+/**
+ * Compute the median of a pre-sorted numeric array.
+ *
+ * For even-length arrays, returns the average of the two middle values.
+ * Returns 0 for empty arrays.
+ *
+ * @param sorted - A numeric array that MUST already be sorted in ascending order.
+ * @returns The median value, or 0 if the array is empty.
+ *
+ * @example
+ * ```typescript
+ * median([1, 2, 3]);       // 2
+ * median([1, 2, 3, 4]);    // 2.5
+ * median([]);               // 0
+ * ```
+ */
 function median(sorted: number[]): number {
   if (sorted.length === 0) return 0;
   const mid = Math.floor(sorted.length / 2);
@@ -74,7 +89,15 @@ function median(sorted: number[]): number {
   return sorted[mid]!;
 }
 
-/** Simple deterministic ID generator for datasets. */
+/**
+ * Generate a unique dataset identifier.
+ *
+ * Combines `Date.now()` with a monotonically increasing counter to produce
+ * IDs that are unique within a single process lifetime. The format is
+ * `ds-{timestamp}-{counter}`.
+ *
+ * @returns A unique dataset ID string (e.g. `"ds-1700000000000-1"`).
+ */
 let _datasetCounter = 0;
 function generateDatasetId(): string {
   _datasetCounter += 1;
@@ -101,7 +124,17 @@ const TRUST_BUCKETS: Array<{ label: string; min: number; max: number }> = [
  * top performers and at-risk agents.
  *
  * @param dataPoints - Raw trust data points.
- * @returns An AggregatedInsight summarizing the data.
+ * @returns An {@link AggregatedInsight} summarizing the data.
+ *
+ * @example
+ * ```typescript
+ * const insight = aggregateData([
+ *   { agentId: 'a1', timestamp: 1000, trustScore: 0.9, breachCount: 0, attestationCount: 5, transactionVolume: 100 },
+ *   { agentId: 'a2', timestamp: 1000, trustScore: 0.4, breachCount: 1, attestationCount: 2, transactionVolume: 50 },
+ * ]);
+ * console.log(insight.averageTrustScore); // 0.65
+ * console.log(insight.breachRate);        // 0.5
+ * ```
  */
 export function aggregateData(dataPoints: TrustDataPoint[]): AggregatedInsight {
   if (dataPoints.length === 0) {
@@ -189,12 +222,24 @@ export function aggregateData(dataPoints: TrustDataPoint[]): AggregatedInsight {
 /**
  * Create an anonymized dataset from aggregated insights.
  *
- * Strips individual agent identifiers and optionally adds noise
- * for differential privacy (proportional to 1/privacyBudget).
+ * Strips individual agent identifiers (topPerformers, atRiskAgents)
+ * and optionally adds noise for differential privacy (proportional
+ * to `1 / privacyBudget`).
  *
  * @param insight - The aggregated insight to anonymize.
  * @param params - Anonymization method and privacy budget.
- * @returns An AnonymizedDataset suitable for sharing.
+ * @param params.method - `"k-anonymity"` (default) or `"differential-privacy"`.
+ * @param params.privacyBudget - Epsilon value for differential privacy (default 1.0).
+ * @returns An {@link AnonymizedDataset} suitable for external sharing.
+ *
+ * @example
+ * ```typescript
+ * const dataset = anonymizeDataset(insight, {
+ *   method: 'differential-privacy',
+ *   privacyBudget: 0.5,
+ * });
+ * console.log(dataset.insights.topPerformers); // [] (stripped)
+ * ```
  */
 export function anonymizeDataset(
   insight: AggregatedInsight,
@@ -250,10 +295,21 @@ export function anonymizeDataset(
  *
  * Determines whether trust scores and breach rates are improving,
  * stable, or declining/worsening. Also computes the growth rate
- * of the agent population and an overall health score.
+ * of the agent population and an overall health score (0-100).
  *
- * @param insights - Array of insights ordered chronologically.
- * @returns Trend analysis with trust, breach, growth, and health metrics.
+ * Thresholds:
+ * - Trust trend: delta > 0.05 = improving, delta < -0.05 = declining.
+ * - Breach trend: delta < -0.02 = improving, delta > 0.02 = worsening.
+ *
+ * @param insights - Array of insights ordered chronologically (oldest first).
+ * @returns Trend analysis with `trustTrend`, `breachTrend`, `growthRate`, and `healthScore`.
+ *
+ * @example
+ * ```typescript
+ * const trends = computeTrends([insightT1, insightT2, insightT3]);
+ * console.log(trends.trustTrend);  // 'improving' | 'stable' | 'declining'
+ * console.log(trends.healthScore); // 0-100
+ * ```
  */
 export function computeTrends(insights: AggregatedInsight[]): {
   trustTrend: 'improving' | 'stable' | 'declining';

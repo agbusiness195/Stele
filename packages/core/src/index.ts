@@ -19,6 +19,8 @@ import {
 
 import type { CCLDocument, NarrowingViolation } from '@stele/ccl';
 
+import { SteleError, SteleErrorCode } from '@stele/types';
+
 import {
   PROTOCOL_VERSION,
   MAX_CONSTRAINTS,
@@ -735,15 +737,38 @@ export class MemoryChainResolver implements ChainResolver {
   private readonly store = new Map<HashHex, CovenantDocument>();
 
   /**
-   * Add a covenant document to the resolver's store.
+   * Add a covenant document to the resolver's in-memory store.
+   *
+   * If a document with the same ID already exists, it is overwritten.
+   *
+   * @param doc - The covenant document to store. Its `id` field is used as the lookup key.
+   *
+   * @example
+   * ```typescript
+   * const resolver = new MemoryChainResolver();
+   * resolver.add(parentDoc);
+   * resolver.add(grandparentDoc);
+   * ```
    */
   add(doc: CovenantDocument): void {
     this.store.set(doc.id, doc);
   }
 
   /**
-   * Resolve a covenant document by its ID.
-   * Returns undefined if not found.
+   * Resolve a covenant document by its SHA-256 ID.
+   *
+   * Performs an O(1) lookup in the internal Map.
+   *
+   * @param id - The document ID (64-character hex SHA-256 hash).
+   * @returns The document if found, or `undefined` if no document with that ID has been added.
+   *
+   * @example
+   * ```typescript
+   * const parent = await resolver.resolve(childDoc.chain.parentId);
+   * if (parent) {
+   *   console.log('Found parent:', parent.id);
+   * }
+   * ```
    */
   async resolve(id: HashHex): Promise<CovenantDocument | undefined> {
     return this.store.get(id);
@@ -905,11 +930,11 @@ export function deserializeCovenant(json: string): CovenantDocument {
     parsed = JSON.parse(json);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    throw new Error(`Invalid JSON: ${msg}`);
+    throw new SteleError(`Invalid JSON: ${msg}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-    throw new Error('Covenant document must be a JSON object');
+    throw new SteleError('Covenant document must be a JSON object', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const obj = parsed as Record<string, unknown>;
@@ -918,22 +943,22 @@ export function deserializeCovenant(json: string): CovenantDocument {
   const requiredStrings = ['id', 'version', 'constraints', 'nonce', 'createdAt', 'signature'] as const;
   for (const field of requiredStrings) {
     if (typeof obj[field] !== 'string') {
-      throw new Error(`Missing or invalid required field: ${field}`);
+      throw new SteleError(`Missing or invalid required field: ${field}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
   }
 
   // Validate issuer
   if (!obj.issuer || typeof obj.issuer !== 'object') {
-    throw new Error('Missing or invalid required field: issuer');
+    throw new SteleError('Missing or invalid required field: issuer', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   const issuer = obj.issuer as Record<string, unknown>;
   if (typeof issuer.id !== 'string' || typeof issuer.publicKey !== 'string' || issuer.role !== 'issuer') {
-    throw new Error('Invalid issuer: must have id, publicKey, and role="issuer"');
+    throw new SteleError('Invalid issuer: must have id, publicKey, and role="issuer"', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Validate beneficiary
   if (!obj.beneficiary || typeof obj.beneficiary !== 'object') {
-    throw new Error('Missing or invalid required field: beneficiary');
+    throw new SteleError('Missing or invalid required field: beneficiary', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   const beneficiary = obj.beneficiary as Record<string, unknown>;
   if (
@@ -941,12 +966,12 @@ export function deserializeCovenant(json: string): CovenantDocument {
     typeof beneficiary.publicKey !== 'string' ||
     beneficiary.role !== 'beneficiary'
   ) {
-    throw new Error('Invalid beneficiary: must have id, publicKey, and role="beneficiary"');
+    throw new SteleError('Invalid beneficiary: must have id, publicKey, and role="beneficiary"', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Validate version
   if (obj.version !== PROTOCOL_VERSION) {
-    throw new Error(`Unsupported protocol version: ${obj.version as string} (expected ${PROTOCOL_VERSION})`);
+    throw new SteleError(`Unsupported protocol version: ${obj.version as string} (expected ${PROTOCOL_VERSION})`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Validate chain if present

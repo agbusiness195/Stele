@@ -16,6 +16,7 @@ import {
   toHex,
   timestamp,
 } from '@stele/crypto';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 /**
  * A single entry in the audit chain.
@@ -233,11 +234,11 @@ export class AuditChain {
     try {
       entries = JSON.parse(json);
     } catch {
-      throw new Error('Invalid JSON: failed to parse audit chain');
+      throw new SteleError('Invalid JSON: failed to parse audit chain', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     if (!Array.isArray(entries)) {
-      throw new Error('Invalid audit chain: expected an array');
+      throw new SteleError('Invalid audit chain: expected an array', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     const chain = new AuditChain();
@@ -246,8 +247,9 @@ export class AuditChain {
     // Verify integrity of the imported chain
     const result = chain.verify();
     if (!result.valid) {
-      throw new Error(
+      throw new SteleError(
         `Audit chain integrity check failed at entry ${result.brokenAt}`,
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 

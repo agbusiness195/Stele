@@ -10,6 +10,7 @@
 import type { CovenantDocument, VerificationResult } from '@stele/core';
 import type { AgentIdentity } from '@stele/identity';
 import type { CovenantStore, StoreFilter, StoreEvent } from '@stele/store';
+import { SteleError, SteleErrorCode } from '@stele/types';
 import type {
   CreateCovenantOptions,
   EvaluationResult,

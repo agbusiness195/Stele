@@ -26,16 +26,16 @@ import type {
  */
 function validateProposal(proposal: Proposal): void {
   if (!proposal.from || typeof proposal.from !== 'string') {
-    throw new Error('Proposal must have a non-empty "from" field');
+    throw new SteleError('Proposal must have a non-empty "from" field', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!Array.isArray(proposal.constraints)) {
-    throw new Error('Proposal constraints must be an array');
+    throw new SteleError('Proposal constraints must be an array', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!Array.isArray(proposal.requirements)) {
-    throw new Error('Proposal requirements must be an array');
+    throw new SteleError('Proposal requirements must be an array', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (typeof proposal.timestamp !== 'number' || proposal.timestamp < 0) {
-    throw new Error('Proposal timestamp must be a non-negative number');
+    throw new SteleError('Proposal timestamp must be a non-negative number', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 }
 
@@ -44,10 +44,10 @@ function validateProposal(proposal: Proposal): void {
  */
 function assertNotTerminal(session: NegotiationSession): void {
   if (session.status === 'agreed') {
-    throw new Error('Cannot modify an agreed session');
+    throw new SteleError('Cannot modify an agreed session', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (session.status === 'failed') {
-    throw new Error('Cannot modify a failed session');
+    throw new SteleError('Cannot modify a failed session', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 }
 
@@ -78,13 +78,13 @@ export function initiate(
   policy: NegotiationPolicy,
 ): NegotiationSession {
   if (!initiatorId || typeof initiatorId !== 'string') {
-    throw new Error('initiatorId must be a non-empty string');
+    throw new SteleError('initiatorId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!responderId || typeof responderId !== 'string') {
-    throw new Error('responderId must be a non-empty string');
+    throw new SteleError('responderId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (policy.maxRounds < 1) {
-    throw new Error('maxRounds must be at least 1');
+    throw new SteleError('maxRounds must be at least 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (policy.timeoutMs < 0) {
     throw new Error('timeoutMs must be non-negative');

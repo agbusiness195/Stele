@@ -6,7 +6,7 @@
  * logging, metrics, validation, caching, and rate limiting.
  */
 
-import { Logger, defaultLogger } from '@stele/types';
+import { Logger, defaultLogger, SteleError, SteleErrorCode } from '@stele/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -48,6 +48,13 @@ export interface SteleMiddleware {
   after?: (ctx: MiddlewareContext, result: unknown) => Promise<unknown>;
   /** Called when the operation throws an error. */
   onError?: (ctx: MiddlewareContext, error: Error) => Promise<void>;
+  /**
+   * Called when the middleware is removed from the pipeline via {@link MiddlewarePipeline.dispose}
+   * or when the owning SteleClient is disposed.
+   *
+   * Use this hook to release resources such as timers, connections, or file handles.
+   */
+  dispose?: () => Promise<void> | void;
 }
 
 // ─── Pipeline ────────────────────────────────────────────────────────────────
@@ -93,6 +100,22 @@ export class MiddlewarePipeline {
   }
 
   /**
+   * Dispose all middleware in the pipeline and remove them.
+   *
+   * Calls each middleware's {@link SteleMiddleware.dispose} hook (if defined)
+   * before clearing the pipeline. Unlike {@link clear}, this method awaits
+   * async dispose hooks so resources are properly released.
+   */
+  async dispose(): Promise<void> {
+    for (const mw of this._middlewares) {
+      if (mw.dispose) {
+        await mw.dispose();
+      }
+    }
+    this._middlewares.length = 0;
+  }
+
+  /**
    * Execute the middleware pipeline around an operation.
    *
    * Runs `before` hooks in order, then the operation function,
@@ -110,7 +133,7 @@ export class MiddlewarePipeline {
     operation: string,
     args: Record<string, unknown>,
     fn: () => Promise<T>,
-  ): Promise<T> {
+  ): Promise<T | undefined> {
     const ctx: MiddlewareContext = {
       operation,
       args: { ...args },
@@ -134,9 +157,11 @@ export class MiddlewarePipeline {
             Object.assign(ctx.args, result.modifiedArgs);
           }
 
-          // Short-circuit if proceed is false
+          // Short-circuit: when a middleware vetoes the operation, return
+          // undefined rather than executing fn(). Callers must handle the
+          // `T | undefined` return type accordingly.
           if (!result.proceed) {
-            return undefined as unknown as T;
+            return undefined;
           }
         }
       }
@@ -196,11 +221,31 @@ export function loggingMiddleware(logger?: Logger): SteleMiddleware {
       return result;
     },
     async onError(ctx, error) {
-      log.error(`[stele] ${ctx.operation} failed: ${error.message}`, {
+      // Build structured error fields, including SteleError properties when available
+      const errorFields: Record<string, unknown> = {
         operation: ctx.operation,
         error: error.message,
         timestamp: ctx.timestamp,
-      });
+      };
+
+      // Enrich with SteleError structured data if present
+      const steleErr = error as { code?: string; context?: Record<string, unknown>; hint?: string };
+      if (steleErr.code) {
+        errorFields.errorCode = steleErr.code;
+      }
+      if (steleErr.context) {
+        errorFields.errorContext = steleErr.context;
+      }
+      if (steleErr.hint) {
+        errorFields.hint = steleErr.hint;
+      }
+
+      // Include operation context from pipeline metadata
+      if (Object.keys(ctx.metadata).length > 0) {
+        errorFields.pipelineMetadata = ctx.metadata;
+      }
+
+      log.error(`[stele] ${ctx.operation} failed: ${error.message}`, errorFields);
     },
   };
 }

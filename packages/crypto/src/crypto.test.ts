@@ -944,3 +944,176 @@ describe('cross-function integration', () => {
     expect(hash1).toBe(hash2);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Property-based tests
+// ---------------------------------------------------------------------------
+
+/** Generate a random Uint8Array of `length` bytes. */
+function randomBytes(length: number): Uint8Array {
+  const buf = new Uint8Array(length);
+  for (let i = 0; i < length; i++) {
+    buf[i] = Math.floor(Math.random() * 256);
+  }
+  return buf;
+}
+
+/** Generate a random hex string of `byteLength` bytes (2 * byteLength hex chars). */
+function randomHexString(byteLength: number): string {
+  return toHex(randomBytes(byteLength));
+}
+
+/** Generate a random string of `length` characters from printable ASCII + unicode. */
+function randomString(length: number): string {
+  const chars: string[] = [];
+  for (let i = 0; i < length; i++) {
+    // Mix of ASCII and multi-byte unicode
+    const r = Math.random();
+    if (r < 0.7) {
+      // printable ASCII
+      chars.push(String.fromCharCode(32 + Math.floor(Math.random() * 95)));
+    } else if (r < 0.9) {
+      // extended Latin
+      chars.push(String.fromCharCode(0xc0 + Math.floor(Math.random() * 64)));
+    } else {
+      // emoji range surrogate pair
+      chars.push(String.fromCodePoint(0x1f600 + Math.floor(Math.random() * 80)));
+    }
+  }
+  return chars.join('');
+}
+
+const PROPERTY_ITERATIONS = 20;
+
+describe('property-based: sign then verify always succeeds for any valid message', () => {
+  it('sign then verify succeeds for random byte messages of varying lengths', async () => {
+    const kp = await generateKeyPair();
+    for (let i = 0; i < PROPERTY_ITERATIONS; i++) {
+      const msgLength = Math.floor(Math.random() * 1024);
+      const message = randomBytes(msgLength);
+      const signature = await sign(message, kp.privateKey);
+      const valid = await verify(message, signature, kp.publicKey);
+      expect(valid, `sign-then-verify should succeed for random message of length ${msgLength} (iteration ${i})`).toBe(true);
+    }
+  });
+
+  it('sign then verify succeeds for random string messages', async () => {
+    const kp = await generateKeyPair();
+    for (let i = 0; i < PROPERTY_ITERATIONS; i++) {
+      const msgLength = Math.floor(Math.random() * 512);
+      const msgStr = randomString(msgLength);
+      const message = new TextEncoder().encode(msgStr);
+      const signature = await sign(message, kp.privateKey);
+      const valid = await verify(message, signature, kp.publicKey);
+      expect(valid, `sign-then-verify should succeed for random string of length ${msgLength} (iteration ${i})`).toBe(true);
+    }
+  });
+
+  it('sign then verify succeeds for empty message', async () => {
+    const kp = await generateKeyPair();
+    const message = new Uint8Array(0);
+    const signature = await sign(message, kp.privateKey);
+    const valid = await verify(message, signature, kp.publicKey);
+    expect(valid, 'sign-then-verify should succeed for empty message').toBe(true);
+  });
+
+  it('sign then verify succeeds with different key pairs for each message', async () => {
+    for (let i = 0; i < PROPERTY_ITERATIONS; i++) {
+      const kp = await generateKeyPair();
+      const message = randomBytes(Math.floor(Math.random() * 256) + 1);
+      const signature = await sign(message, kp.privateKey);
+      const valid = await verify(message, signature, kp.publicKey);
+      expect(valid, `sign-then-verify should succeed with fresh key pair (iteration ${i})`).toBe(true);
+    }
+  });
+});
+
+describe('property-based: sign then verify with wrong key always fails', () => {
+  it('verification fails when using a different public key than the signer', async () => {
+    for (let i = 0; i < PROPERTY_ITERATIONS; i++) {
+      const signerKp = await generateKeyPair();
+      const wrongKp = await generateKeyPair();
+      const message = randomBytes(Math.floor(Math.random() * 512) + 1);
+      const signature = await sign(message, signerKp.privateKey);
+      const valid = await verify(message, signature, wrongKp.publicKey);
+      expect(valid, `verification with wrong key should fail (iteration ${i})`).toBe(false);
+    }
+  });
+
+  it('verification fails when using a random public key (not from generateKeyPair)', async () => {
+    const kp = await generateKeyPair();
+    for (let i = 0; i < PROPERTY_ITERATIONS; i++) {
+      const message = randomBytes(64);
+      const signature = await sign(message, kp.privateKey);
+      const randomKey = randomBytes(32);
+      const valid = await verify(message, signature, randomKey);
+      expect(valid, `verification with random 32-byte key should fail (iteration ${i})`).toBe(false);
+    }
+  });
+});
+
+describe('property-based: sha256 is deterministic (same input always produces same output)', () => {
+  it('sha256 produces identical output for identical random byte inputs', () => {
+    for (let i = 0; i < PROPERTY_ITERATIONS; i++) {
+      const data = randomBytes(Math.floor(Math.random() * 1024));
+      const hash1 = sha256(data);
+      const hash2 = sha256(new Uint8Array(data));
+      expect(hash1, `sha256 should be deterministic for random input (iteration ${i})`).toBe(hash2);
+    }
+  });
+
+  it('sha256String produces identical output for identical random string inputs', () => {
+    for (let i = 0; i < PROPERTY_ITERATIONS; i++) {
+      const str = randomString(Math.floor(Math.random() * 256));
+      const hash1 = sha256String(str);
+      const hash2 = sha256String(str);
+      expect(hash1, `sha256String should be deterministic for random string (iteration ${i})`).toBe(hash2);
+    }
+  });
+
+  it('sha256 output is always 64 hex characters for any input length', () => {
+    for (let i = 0; i < PROPERTY_ITERATIONS; i++) {
+      const length = Math.floor(Math.random() * 2048);
+      const data = randomBytes(length);
+      const hash = sha256(data);
+      expect(hash.length, `sha256 output should be 64 hex chars for input of length ${length}`).toBe(64);
+      expect(/^[0-9a-f]{64}$/.test(hash), `sha256 output should be valid lowercase hex for input of length ${length}`).toBe(true);
+    }
+  });
+});
+
+describe('property-based: toHex(fromHex(x)) round-trips for valid hex strings', () => {
+  it('toHex(fromHex(hex)) returns the original lowercase hex string', () => {
+    for (let i = 0; i < PROPERTY_ITERATIONS; i++) {
+      const byteLength = Math.floor(Math.random() * 128) + 1;
+      const originalHex = randomHexString(byteLength);
+      const bytes = fromHex(originalHex);
+      const roundTripped = toHex(bytes);
+      expect(roundTripped, `toHex(fromHex(x)) should round-trip for hex of ${byteLength} bytes (iteration ${i})`).toBe(originalHex);
+    }
+  });
+
+  it('fromHex(toHex(bytes)) returns the original bytes', () => {
+    for (let i = 0; i < PROPERTY_ITERATIONS; i++) {
+      const byteLength = Math.floor(Math.random() * 128) + 1;
+      const originalBytes = randomBytes(byteLength);
+      const hex = toHex(originalBytes);
+      const roundTripped = fromHex(hex);
+      expect(roundTripped, `fromHex(toHex(x)) should round-trip for ${byteLength} random bytes (iteration ${i})`).toEqual(originalBytes);
+    }
+  });
+
+  it('toHex always produces a string of exactly 2 * input.length characters', () => {
+    for (let i = 0; i < PROPERTY_ITERATIONS; i++) {
+      const byteLength = Math.floor(Math.random() * 256);
+      const bytes = randomBytes(byteLength);
+      const hex = toHex(bytes);
+      expect(hex.length, `toHex output should be 2 * ${byteLength} = ${byteLength * 2} chars (iteration ${i})`).toBe(byteLength * 2);
+    }
+  });
+
+  it('round-trips the empty hex string', () => {
+    expect(toHex(fromHex('')), 'toHex(fromHex("")) should return ""').toBe('');
+    expect(fromHex(toHex(new Uint8Array(0))), 'fromHex(toHex(empty)) should return empty array').toEqual(new Uint8Array(0));
+  });
+});

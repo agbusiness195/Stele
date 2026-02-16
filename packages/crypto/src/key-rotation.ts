@@ -17,6 +17,7 @@ import {
 } from './index';
 
 import type { KeyPair } from './types';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 /**
  * Policy configuration for key rotation behavior.
@@ -67,13 +68,13 @@ export class KeyManager {
 
   constructor(policy: KeyRotationPolicy) {
     if (policy.maxAgeMs <= 0) {
-      throw new Error(`maxAgeMs must be positive (> 0), got ${policy.maxAgeMs}ms`);
+      throw new SteleError(`maxAgeMs must be positive (> 0), got ${policy.maxAgeMs}ms`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (policy.overlapPeriodMs < 0) {
-      throw new Error(`overlapPeriodMs must be non-negative (>= 0), got ${policy.overlapPeriodMs}ms`);
+      throw new SteleError(`overlapPeriodMs must be non-negative (>= 0), got ${policy.overlapPeriodMs}ms`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (policy.overlapPeriodMs >= policy.maxAgeMs) {
-      throw new Error(`overlapPeriodMs (${policy.overlapPeriodMs}ms) must be less than maxAgeMs (${policy.maxAgeMs}ms)`);
+      throw new SteleError(`overlapPeriodMs (${policy.overlapPeriodMs}ms) must be less than maxAgeMs (${policy.maxAgeMs}ms)`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     this.policy = policy;
   }
@@ -86,7 +87,7 @@ export class KeyManager {
    */
   async initialize(): Promise<ManagedKeyPair> {
     if (this.initialized) {
-      throw new Error('KeyManager is already initialized');
+      throw new SteleError('KeyManager is already initialized', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     const keyPair = await generateKeyPair();
@@ -133,7 +134,7 @@ export class KeyManager {
 
     const previous = this.findActive();
     if (!previous) {
-      throw new Error('No active key to rotate');
+      throw new SteleError('No active key to rotate', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     // Move the current active key to rotating status
@@ -172,7 +173,7 @@ export class KeyManager {
 
     const active = this.findActive();
     if (!active) {
-      throw new Error('No active key available');
+      throw new SteleError('No active key available', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     return active;
@@ -248,7 +249,7 @@ export class KeyManager {
 
   private ensureInitialized(): void {
     if (!this.initialized) {
-      throw new Error('KeyManager is not initialized. Call initialize() first.');
+      throw new SteleError('KeyManager is not initialized. Call initialize() first.', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
   }
 

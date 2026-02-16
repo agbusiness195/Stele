@@ -73,7 +73,24 @@ export function matchResource(pattern: string, resource: string): boolean {
 }
 
 /**
- * Generic segment matcher supporting * (single) and ** (multi) wildcards.
+ * Recursive segment matcher supporting single (`*`) and globstar (`**`) wildcards.
+ *
+ * Uses a greedy-with-backtracking algorithm:
+ * 1. Walk pattern and target arrays in parallel from the given indices.
+ * 2. On a literal or `*` segment, advance both cursors (literal must match
+ *    exactly; `*` matches any single segment).
+ * 3. On a `**` segment, try matching zero additional segments first (advance
+ *    pattern index only). If that fails, consume one target segment and retry
+ *    (recursive backtracking). This lets `**` match zero-or-more segments.
+ * 4. After the loop, any trailing `**` in the pattern are consumed (they
+ *    match zero remaining segments).
+ * 5. Both cursors must reach their respective ends for a successful match.
+ *
+ * @param pattern - Array of pattern segments (e.g. `['file', '*']`).
+ * @param pi      - Current index into the pattern array.
+ * @param target  - Array of concrete segments to match against.
+ * @param ti      - Current index into the target array.
+ * @returns `true` if the target segments match the pattern from the given offsets.
  */
 function matchSegments(
   pattern: string[],
@@ -85,23 +102,24 @@ function matchSegments(
     const p = pattern[pi]!;
 
     if (p === '**') {
-      // ** can match zero or more segments
-      // Try matching zero segments (advance pattern only)
+      // ** (globstar) can match zero or more segments.
+      // First, try matching zero segments by advancing only the pattern cursor.
       if (matchSegments(pattern, pi + 1, target, ti)) {
         return true;
       }
-      // Try matching one or more segments (advance target)
+      // If zero-match failed, consume one target segment and retry with
+      // the same ** pattern position (allows matching 1, 2, ... N segments).
       return matchSegments(pattern, pi, target, ti + 1);
     }
 
     if (p === '*') {
-      // * matches exactly one segment (any content)
+      // * (single wildcard) matches exactly one segment regardless of content.
       pi++;
       ti++;
       continue;
     }
 
-    // Literal match
+    // Literal segment: must match the target segment exactly.
     if (p !== target[ti]) {
       return false;
     }
@@ -110,11 +128,13 @@ function matchSegments(
     ti++;
   }
 
-  // Skip trailing ** patterns (they can match zero segments)
+  // Consume any trailing ** patterns in the pattern array, since they
+  // can legally match zero remaining segments.
   while (pi < pattern.length && pattern[pi] === '**') {
     pi++;
   }
 
+  // Both cursors must have reached the end for a full match.
   return pi === pattern.length && ti === target.length;
 }
 
@@ -197,29 +217,46 @@ export function evaluateCondition(
   return evaluateSimpleCondition(condition, context);
 }
 
+/**
+ * Evaluate a compound (logical) condition against a context.
+ *
+ * - `and`: all sub-conditions must be true (short-circuit on first false).
+ * - `or`: at least one sub-condition must be true (short-circuit on first true).
+ * - `not`: negates the single sub-condition.
+ */
 function evaluateCompoundCondition(
   condition: CompoundCondition,
   context: EvaluationContext,
 ): boolean {
   switch (condition.type) {
     case 'and':
+      // All sub-conditions must hold; short-circuits on first failure.
       return condition.conditions.every((c) => evaluateCondition(c, context));
     case 'or':
+      // At least one sub-condition must hold; short-circuits on first success.
       return condition.conditions.some((c) => evaluateCondition(c, context));
     case 'not':
+      // Logical negation of the single sub-condition.
       return !evaluateCondition(condition.conditions[0]!, context);
     default:
       return false;
   }
 }
 
+/**
+ * Evaluate a simple (field operator value) condition against a context.
+ *
+ * Resolves the field via dot-path lookup, then applies the operator.
+ * Missing fields always evaluate to `false` (default-deny principle).
+ */
 function evaluateSimpleCondition(
   condition: Condition,
   context: EvaluationContext,
 ): boolean {
+  // Resolve dotted field path (e.g. "user.role") against the context object.
   const fieldValue = resolveField(context, condition.field);
 
-  // Missing fields evaluate to false
+  // Default-deny: if the field doesn't exist in the context, the condition fails.
   if (fieldValue === undefined) {
     return false;
   }
@@ -271,6 +308,7 @@ function evaluateSimpleCondition(
           const re = new RegExp(value);
           return re.test(fieldValue);
         } catch {
+          // Returns false for invalid regex patterns - treated as non-matching rather than error
           return false;
         }
       }
@@ -609,6 +647,14 @@ export function validateNarrowing(
 
 /**
  * Check if two patterns can match any of the same strings.
+ *
+ * Uses a heuristic approach: converts each pattern to a concrete representative
+ * string (replacing wildcards with `"x"`) and checks whether the other pattern
+ * can match that concrete string. Universal wildcards (`*`, `**`) always overlap.
+ *
+ * @param pattern1 - First pattern (action or resource).
+ * @param pattern2 - Second pattern (action or resource).
+ * @returns `true` if the two patterns could match at least one common string.
  */
 function patternsOverlap(pattern1: string, pattern2: string): boolean {
   // If either is a universal wildcard, they overlap
@@ -633,7 +679,12 @@ function patternsOverlap(pattern1: string, pattern2: string): boolean {
 }
 
 /**
- * Convert a pattern to a concrete representative string.
+ * Convert a wildcard pattern to a concrete representative string by
+ * replacing all `**` and `*` with the literal `"x"`. Used by
+ * {@link patternsOverlap} for heuristic overlap detection.
+ *
+ * @param pattern - A wildcard pattern (action or resource).
+ * @returns A concrete string with wildcards replaced by `"x"`.
  */
 function patternToConcrete(pattern: string): string {
   return pattern
@@ -642,8 +693,16 @@ function patternToConcrete(pattern: string): string {
 }
 
 /**
- * Check if childPattern is a subset of (at most as broad as) parentPattern.
- * A pattern is a subset if everything it matches is also matched by the parent.
+ * Check if `childPattern` is a subset of (at most as broad as) `parentPattern`.
+ *
+ * A pattern A is a subset of pattern B if every concrete string matched by A
+ * is also matched by B. Used by {@link validateNarrowing} to ensure a child
+ * covenant never permits a broader scope than its parent.
+ *
+ * @param childPattern  - The child pattern to test.
+ * @param parentPattern - The parent pattern that should be at least as broad.
+ * @param separator     - Segment separator (`"."` for actions, `"/"` for resources).
+ * @returns `true` if every string matched by `childPattern` is also matched by `parentPattern`.
  */
 function isSubsetPattern(childPattern: string, parentPattern: string, separator: string): boolean {
   // If parent is **, it matches everything, so child is always a subset
