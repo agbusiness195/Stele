@@ -1,4 +1,5 @@
 import { sha256Object } from '@stele/crypto';
+import { SteleError, SteleErrorCode } from '@stele/types';
 import { parse, evaluate, checkRateLimit } from '@stele/ccl';
 import type { CCLDocument, Statement } from '@stele/ccl';
 
@@ -95,7 +96,7 @@ export function generateCanary(
 ): Canary {
   // --- Validation ---
   if (ttlMs !== undefined && ttlMs !== null && ttlMs <= 0) {
-    throw new Error('ttlMs must be positive');
+    throw new SteleError('ttlMs must be positive', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // --- Parse constraint as CCL ---
@@ -221,10 +222,10 @@ export function detectionProbability(
   coverageRatio: number,
 ): number {
   if (canaryFrequency < 0) {
-    throw new Error('canaryFrequency must be >= 0');
+    throw new SteleError('canaryFrequency must be >= 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (coverageRatio < 0 || coverageRatio > 1) {
-    throw new Error('coverageRatio must be in [0, 1]');
+    throw new SteleError('coverageRatio must be in [0, 1]', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const raw = 1 - Math.pow(1 - coverageRatio, canaryFrequency);
@@ -260,7 +261,7 @@ export function canarySchedule(
   maxCanaries?: number,
 ): CanaryScheduleResult {
   if (totalDurationMs <= 0) {
-    throw new Error('totalDurationMs must be positive');
+    throw new SteleError('totalDurationMs must be positive', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   if (covenants.length === 0) {
@@ -380,10 +381,10 @@ export function canaryCorrelation(
   actualBreaches: Array<{ covenantId: string; breached: boolean }>,
 ): CanaryCorrelationResult {
   if (canaryResults.length === 0) {
-    throw new Error('canaryResults must not be empty');
+    throw new SteleError('canaryResults must not be empty', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (actualBreaches.length === 0) {
-    throw new Error('actualBreaches must not be empty');
+    throw new SteleError('actualBreaches must not be empty', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Compute canary pass rates per covenant

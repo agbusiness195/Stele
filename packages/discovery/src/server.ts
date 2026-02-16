@@ -98,6 +98,9 @@ export class DiscoveryServer {
     publicKey: string,
     options?: { expiresAt?: string },
   ): AgentKeyEntry {
+    if (!/^[0-9a-fA-F]{64}$/i.test(publicKey)) {
+      throw new Error(`registerAgentKey(): publicKey must be 64 hex characters (Ed25519 public key), got ${publicKey.length} characters`);
+    }
     const entry = buildKeyEntry(agentId, publicKey, options);
 
     this._keys.set(entry.kid, entry);

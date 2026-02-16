@@ -195,6 +195,12 @@ export async function buildCovenant(
       'issuer.publicKey',
     );
   }
+  if (!/^[0-9a-fA-F]{64}$/.test(options.issuer.publicKey)) {
+    throw new CovenantBuildError(
+      `buildCovenant: issuer.publicKey must be a 64-character hex string (Ed25519 public key), got ${options.issuer.publicKey.length} characters`,
+      'issuer.publicKey',
+    );
+  }
   if (options.issuer.role !== 'issuer') {
     throw new CovenantBuildError('issuer.role must be "issuer"', 'issuer.role');
   }
@@ -207,6 +213,12 @@ export async function buildCovenant(
   }
   if (!options.beneficiary.publicKey) {
     throw new CovenantBuildError('beneficiary.publicKey is required', 'beneficiary.publicKey');
+  }
+  if (!/^[0-9a-fA-F]{64}$/.test(options.beneficiary.publicKey)) {
+    throw new CovenantBuildError(
+      `buildCovenant: beneficiary.publicKey must be a 64-character hex string (Ed25519 public key), got ${options.beneficiary.publicKey.length} characters`,
+      'beneficiary.publicKey',
+    );
   }
   if (options.beneficiary.role !== 'beneficiary') {
     throw new CovenantBuildError('beneficiary.role must be "beneficiary"', 'beneficiary.role');
@@ -338,9 +350,10 @@ export async function buildCovenant(
 
   // ── Validate serialized size ──────────────────────────────────────────
   const serialized = JSON.stringify(doc);
-  if (new TextEncoder().encode(serialized).byteLength > MAX_DOCUMENT_SIZE) {
+  const serializedByteLength = new TextEncoder().encode(serialized).byteLength;
+  if (serializedByteLength > MAX_DOCUMENT_SIZE) {
     throw new CovenantBuildError(
-      `Serialized document exceeds maximum size of ${MAX_DOCUMENT_SIZE} bytes`,
+      `Serialized document is ${serializedByteLength} bytes, exceeds maximum of ${MAX_DOCUMENT_SIZE} bytes. Consider reducing constraints or metadata.`,
       'document',
     );
   }

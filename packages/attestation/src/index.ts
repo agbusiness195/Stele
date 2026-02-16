@@ -1,4 +1,5 @@
 import { sha256Object, signString, toHex, verify, fromHex } from '@stele/crypto';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 export type {
   ExternalAttestation,
@@ -39,16 +40,16 @@ export function createAttestation(
   timestamp: number,
 ): ExternalAttestation {
   if (!agentId || typeof agentId !== 'string') {
-    throw new Error('agentId must be a non-empty string');
+    throw new SteleError('agentId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!counterpartyId || typeof counterpartyId !== 'string') {
-    throw new Error('counterpartyId must be a non-empty string');
+    throw new SteleError('counterpartyId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!endpoint || typeof endpoint !== 'string') {
-    throw new Error('endpoint must be a non-empty string');
+    throw new SteleError('endpoint must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (typeof timestamp !== 'number' || timestamp < 0) {
-    throw new Error('timestamp must be a non-negative number');
+    throw new SteleError('timestamp must be a non-negative number', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const content = {
@@ -334,7 +335,7 @@ export function computeAttestationCoverage(
   timeWindowMs: number = 5000,
 ): AttestationCoverageResult {
   if (timeWindowMs < 0) {
-    throw new Error('timeWindowMs must be non-negative');
+    throw new SteleError('timeWindowMs must be non-negative', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   if (actions.length === 0) {
@@ -426,13 +427,13 @@ export function createEntanglement(params: {
   conditionalDependencies?: string[];
 }): EntanglementLink {
   if (!params.sourceAgentId || typeof params.sourceAgentId !== 'string') {
-    throw new Error('sourceAgentId must be a non-empty string');
+    throw new SteleError('sourceAgentId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!params.targetAgentId || typeof params.targetAgentId !== 'string') {
-    throw new Error('targetAgentId must be a non-empty string');
+    throw new SteleError('targetAgentId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (typeof params.strength !== 'number' || params.strength < 0 || params.strength > 1) {
-    throw new Error('strength must be a number between 0 and 1');
+    throw new SteleError('strength must be a number between 0 and 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const mutualObligations = params.mutualObligations ?? [];

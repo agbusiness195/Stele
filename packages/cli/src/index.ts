@@ -928,12 +928,14 @@ async function cmdAudit(
     return { stdout: AUDIT_HELP, stderr: '', exitCode: 0 };
   }
 
-  const covenantCount = getFlag(flags, 'covenants')
-    ? parseInt(getFlag(flags, 'covenants')!, 10)
+  const covenantCountRaw = getFlag(flags, 'covenants');
+  const covenantCount = covenantCountRaw
+    ? (Number.isNaN(parseInt(covenantCountRaw, 10)) ? 0 : parseInt(covenantCountRaw, 10))
     : 0;
   const enforcementMode = getFlag(flags, 'enforcement') ?? 'none';
-  const attestationCoverage = getFlag(flags, 'attestation')
-    ? parseFloat(getFlag(flags, 'attestation')!)
+  const attestationRaw = getFlag(flags, 'attestation');
+  const attestationCoverage = attestationRaw
+    ? (Number.isNaN(parseFloat(attestationRaw)) ? 0 : parseFloat(attestationRaw))
     : 0;
   const identityVerified = hasFlag(flags, 'identity-verified');
   const frameworksStr = getFlag(flags, 'frameworks');

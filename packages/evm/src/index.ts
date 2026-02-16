@@ -75,10 +75,10 @@ function keccak256Hex(hexData: string): string {
  */
 export function encodeUint256(value: bigint): string {
   if (value < 0n) {
-    throw new Error('uint256 cannot be negative');
+    throw new Error(`uint256 cannot be negative: got ${value}`);
   }
   if (value > MAX_UINT256) {
-    throw new Error('uint256 overflow');
+    throw new Error(`uint256 overflow: value ${value} exceeds max ${MAX_UINT256}`);
   }
   return value.toString(16).padStart(64, '0');
 }
@@ -506,6 +506,9 @@ export class EVMClient {
    * @returns The transaction hash.
    */
   async anchorCovenant(anchor: CovenantAnchor, from: string): Promise<string> {
+    if (!/^[0-9a-fA-F]{64}$/i.test(anchor.covenantId)) {
+      throw new Error(`Invalid covenant ID: expected 64 hex characters, got '${anchor.covenantId.slice(0, 20)}${anchor.covenantId.length > 20 ? '...' : ''}'`);
+    }
     const calldata = buildAnchorCalldata(anchor);
     const txHash = await this.provider.request({
       method: 'eth_sendTransaction',
@@ -525,6 +528,9 @@ export class EVMClient {
    * @returns true if the covenant is anchored, false otherwise.
    */
   async verifyCovenant(covenantId: string): Promise<boolean> {
+    if (!/^[0-9a-fA-F]{64}$/i.test(covenantId)) {
+      throw new Error(`Invalid covenant ID: expected 64 hex characters, got '${covenantId.slice(0, 20)}${covenantId.length > 20 ? '...' : ''}'`);
+    }
     const selector = computeFunctionSelector('verify(bytes32)');
     const calldata = '0x' + selector + encodeBytes32(covenantId);
     const result = await this.provider.request({

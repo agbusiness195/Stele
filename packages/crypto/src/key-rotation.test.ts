@@ -8,25 +8,25 @@ import type { KeyRotationPolicy, ManagedKeyPair } from './key-rotation';
 describe('KeyManager constructor', () => {
   it('rejects maxAgeMs <= 0', () => {
     expect(() => new KeyManager({ maxAgeMs: 0, overlapPeriodMs: 0 })).toThrow(
-      'maxAgeMs must be positive',
+      /maxAgeMs must be positive/,
     );
     expect(() => new KeyManager({ maxAgeMs: -1, overlapPeriodMs: 0 })).toThrow(
-      'maxAgeMs must be positive',
+      /maxAgeMs must be positive/,
     );
   });
 
   it('rejects negative overlapPeriodMs', () => {
     expect(() => new KeyManager({ maxAgeMs: 1000, overlapPeriodMs: -1 })).toThrow(
-      'overlapPeriodMs must be non-negative',
+      /overlapPeriodMs must be non-negative/,
     );
   });
 
   it('rejects overlapPeriodMs >= maxAgeMs', () => {
     expect(() => new KeyManager({ maxAgeMs: 1000, overlapPeriodMs: 1000 })).toThrow(
-      'overlapPeriodMs must be less than maxAgeMs',
+      /overlapPeriodMs.*must be less than maxAgeMs/,
     );
     expect(() => new KeyManager({ maxAgeMs: 1000, overlapPeriodMs: 2000 })).toThrow(
-      'overlapPeriodMs must be less than maxAgeMs',
+      /overlapPeriodMs.*must be less than maxAgeMs/,
     );
   });
 

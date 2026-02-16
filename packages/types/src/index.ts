@@ -342,6 +342,7 @@ export {
   sanitizeJsonInput,
   freezeDeep,
   assertNever,
+  assertNoDangerousKeys,
 } from './guards';
 
 // ─── Structured logging ─────────────────────────────────────────────────────────

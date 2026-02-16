@@ -96,9 +96,9 @@ export function isValidSignature(value: unknown): value is string {
 export function isValidISODate(value: unknown): value is string {
   if (typeof value !== 'string' || value.length === 0) return false;
 
-  // Must match ISO 8601 pattern
+  // Must match ISO 8601 pattern (fractional seconds limited to 1-9 digits to prevent ReDoS)
   const iso8601 =
-    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?)?$/;
+    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})?)?$/;
   if (!iso8601.test(value)) return false;
 
   // Must parse to a valid date (reject things like 2025-13-45)
@@ -168,12 +168,20 @@ const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
  * @param obj - The value to scan (recursively walks objects and arrays).
  * @throws Error if a dangerous key is found.
  */
-function assertNoDangerousKeys(obj: unknown): void {
+/** Maximum recursion depth for JSON sanitization to prevent stack overflow on deeply nested input. */
+const MAX_SANITIZE_DEPTH = 64;
+
+export function assertNoDangerousKeys(obj: unknown, depth: number = 0): void {
+  if (depth > MAX_SANITIZE_DEPTH) {
+    throw new Error(
+      `JSON input exceeds maximum nesting depth of ${MAX_SANITIZE_DEPTH}`,
+    );
+  }
   if (typeof obj !== 'object' || obj === null) return;
 
   if (Array.isArray(obj)) {
     for (const item of obj) {
-      assertNoDangerousKeys(item);
+      assertNoDangerousKeys(item, depth + 1);
     }
     return;
   }
@@ -184,7 +192,7 @@ function assertNoDangerousKeys(obj: unknown): void {
         `Potentially dangerous key "${key}" detected in JSON input`,
       );
     }
-    assertNoDangerousKeys((obj as Record<string, unknown>)[key]);
+    assertNoDangerousKeys((obj as Record<string, unknown>)[key], depth + 1);
   }
 }
 
@@ -222,7 +230,7 @@ export function sanitizeJsonInput(value: string): unknown {
  * @param obj - The value to deep-freeze.
  * @returns The same value, deeply frozen.
  */
-export function freezeDeep<T>(obj: T): Readonly<T> {
+export function freezeDeep<T>(obj: T, depth: number = 0): Readonly<T> {
   if (obj === null || obj === undefined || typeof obj !== 'object') {
     return obj as Readonly<T>;
   }
@@ -232,15 +240,20 @@ export function freezeDeep<T>(obj: T): Readonly<T> {
     return obj as Readonly<T>;
   }
 
+  // Prevent stack overflow on deeply nested input
+  if (depth > MAX_SANITIZE_DEPTH) {
+    return obj as Readonly<T>;
+  }
+
   Object.freeze(obj);
 
   if (Array.isArray(obj)) {
     for (const item of obj) {
-      freezeDeep(item);
+      freezeDeep(item, depth + 1);
     }
   } else {
     for (const value of Object.values(obj as Record<string, unknown>)) {
-      freezeDeep(value);
+      freezeDeep(value, depth + 1);
     }
   }
 

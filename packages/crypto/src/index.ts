@@ -272,11 +272,14 @@ function sortKeys(value: unknown): unknown {
  * ```
  */
 export function base64urlEncode(data: Uint8Array): Base64Url {
-  let binary = '';
-  for (let i = 0; i < data.length; i++) {
-    binary += String.fromCharCode(data[i]!);
+  // Use chunk-based conversion to avoid O(n) string concatenation
+  const chunks: string[] = [];
+  const chunkSize = 8192;
+  for (let i = 0; i < data.length; i += chunkSize) {
+    const slice = data.subarray(i, Math.min(i + chunkSize, data.length));
+    chunks.push(String.fromCharCode(...slice));
   }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return btoa(chunks.join('')).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 /**
@@ -315,6 +318,9 @@ export function base64urlDecode(encoded: Base64Url): Uint8Array {
  * toHex(new Uint8Array([255, 0])); // 'ff00'
  * ```
  */
+/** Pre-computed hex lookup table for O(1) byte-to-hex conversion. */
+const HEX_TABLE: string[] = Array.from({ length: 256 }, (_, i) => i.toString(16).padStart(2, '0'));
+
 export function toHex(data: Uint8Array): string {
   if (!(data instanceof Uint8Array)) {
     throw new SteleError(
@@ -323,11 +329,11 @@ export function toHex(data: Uint8Array): string {
       { hint: 'Pass a Uint8Array to toHex(). Use new TextEncoder().encode(str) to convert strings.' }
     );
   }
-  let hex = '';
+  const parts = new Array<string>(data.length);
   for (let i = 0; i < data.length; i++) {
-    hex += data[i]!.toString(16).padStart(2, '0');
+    parts[i] = HEX_TABLE[data[i]!]!;
   }
-  return hex;
+  return parts.join('');
 }
 
 /**

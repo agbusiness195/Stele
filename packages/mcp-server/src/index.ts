@@ -509,6 +509,11 @@ export class SteleServer {
         return this._toolError('Missing required field: deployment (must have runtime)');
       }
 
+      const validRuntimes = ['wasm', 'container', 'tee', 'firecracker', 'process', 'browser'];
+      if (deployment.runtime && !validRuntimes.includes(deployment.runtime as string)) {
+        return this._toolError(`Invalid runtime: '${deployment.runtime}'. Must be one of: ${validRuntimes.join(', ')}`);
+      }
+
       let keyPair: KeyPair;
       if (privateKeyHex) {
         const { keyPairFromPrivateKeyHex } = await import('@stele/crypto');

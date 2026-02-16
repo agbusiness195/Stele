@@ -226,6 +226,13 @@ export class Verifier {
         { hint: 'Pass a CovenantDocument produced by buildCovenant() from @stele/core.' }
       );
     }
+    const docObj = doc as Record<string, unknown>;
+    if (!docObj.id || !docObj.signature || !docObj.constraints) {
+      throw new SteleError(
+        SteleErrorCode.SIGNATURE_INVALID,
+        'verify() requires a CovenantDocument with id, signature, and constraints fields',
+      );
+    }
     if (!doc.id || typeof doc.id !== 'string') {
       throw new SteleError(
         SteleErrorCode.SIGNATURE_INVALID,

@@ -95,6 +95,9 @@ export class DiscoveryClient {
     options?: FetchOptions,
   ): Promise<DiscoveryDocument> {
     const opts = { ...this._defaultOptions, ...options };
+    if (!platformUrl || platformUrl.trim().length === 0) {
+      throw new Error('discover(): platformUrl must be a non-empty string');
+    }
     const url = `${platformUrl.replace(/\/+$/, '')}${CONFIGURATION_PATH}`;
 
     // Check cache
@@ -134,6 +137,9 @@ export class DiscoveryClient {
     agentId: string,
     options?: FetchOptions,
   ): Promise<AgentKeyEntry[]> {
+    if (!agentId || agentId.trim().length === 0) {
+      throw new Error('getAgentKeys(): agentId must be a non-empty string');
+    }
     const discovery = await this.discover(platformUrl, options);
     const url = `${discovery.keys_endpoint}?agent_id=${encodeURIComponent(agentId)}`;
     const opts = { ...this._defaultOptions, ...options };

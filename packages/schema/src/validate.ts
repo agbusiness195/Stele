@@ -20,6 +20,21 @@ export interface SchemaValidationResult {
   errors: SchemaValidationError[];
 }
 
+/** Maximum nesting depth for schema validation to prevent stack overflow. */
+const MAX_VALIDATION_DEPTH = 32;
+
+/** Cache compiled regex patterns to avoid re-creating them on every validation. */
+const regexCache = new Map<string, RegExp>();
+
+function getCachedRegex(pattern: string): RegExp {
+  let cached = regexCache.get(pattern);
+  if (!cached) {
+    cached = new RegExp(pattern);
+    regexCache.set(pattern, cached);
+  }
+  return cached;
+}
+
 /**
  * Validate a value against a simple schema definition.
  * This handles the subset of JSON Schema used in our definitions.
@@ -29,7 +44,12 @@ function validateField(
   schema: Record<string, unknown>,
   path: string,
   errors: SchemaValidationError[],
+  depth: number = 0,
 ): void {
+  if (depth > MAX_VALIDATION_DEPTH) {
+    errors.push({ path, message: `exceeds maximum nesting depth of ${MAX_VALIDATION_DEPTH}` });
+    return;
+  }
   // Type check
   const schemaType = schema.type as string | undefined;
   if (schemaType === 'string') {
@@ -42,7 +62,7 @@ function validateField(
       errors.push({ path, message: `must have minimum length ${minLength}`, value });
     }
     const pattern = schema.pattern as string | undefined;
-    if (pattern && !new RegExp(pattern).test(value)) {
+    if (pattern && !getCachedRegex(pattern).test(value)) {
       errors.push({ path, message: `must match pattern ${pattern}`, value });
     }
     const constVal = schema.const as string | undefined;
@@ -81,7 +101,7 @@ function validateField(
     const items = schema.items as Record<string, unknown> | undefined;
     if (items) {
       for (let i = 0; i < value.length; i++) {
-        validateField(value[i], items, `${path}[${i}]`, errors);
+        validateField(value[i], items, `${path}[${i}]`, errors, depth + 1);
       }
     }
   } else if (schemaType === 'object') {
@@ -104,7 +124,7 @@ function validateField(
     if (properties) {
       for (const [key, propSchema] of Object.entries(properties)) {
         if (obj[key] !== undefined) {
-          validateField(obj[key], propSchema, path ? `${path}.${key}` : key, errors);
+          validateField(obj[key], propSchema, path ? `${path}.${key}` : key, errors, depth + 1);
         }
       }
     }

@@ -171,6 +171,18 @@ export async function createIdentity(
       { hint: 'Provide a model object with at least provider and modelId fields.' }
     );
   }
+  if (!options.model.provider || typeof options.model.provider !== 'string' || options.model.provider.trim().length === 0) {
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      'createIdentity(): model.provider must be a non-empty string',
+    );
+  }
+  if (!options.model.modelId || typeof options.model.modelId !== 'string' || options.model.modelId.trim().length === 0) {
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      'createIdentity(): model.modelId must be a non-empty string',
+    );
+  }
   if (!Array.isArray(capabilities)) {
     throw new SteleError(
       SteleErrorCode.IDENTITY_INVALID,
@@ -381,7 +393,7 @@ export async function evolveIdentity(
 // Verify identity
 // ---------------------------------------------------------------------------
 
-interface VerificationCheck {
+export interface VerificationCheck {
   name: string;
   passed: boolean;
   message: string;

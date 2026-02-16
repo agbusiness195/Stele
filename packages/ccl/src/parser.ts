@@ -177,6 +177,7 @@ class Parser {
       );
     }
     const count = parseInt(countTok.value, 10);
+    if (count <= 0) throw new CCLSyntaxError('LIMIT count must be positive', countTok.line, countTok.column);
     this.advance();
 
     this.expect('PER', `Expected 'per' in limit statement`);
@@ -190,6 +191,7 @@ class Parser {
       );
     }
     const rawPeriod = parseInt(periodTok.value, 10);
+    if (rawPeriod <= 0) throw new CCLSyntaxError('LIMIT period must be positive', periodTok.line, periodTok.column);
     this.advance();
 
     const unitTok = this.expect('SECONDS', `Expected time unit (seconds, minutes, hours, days) in limit statement`);

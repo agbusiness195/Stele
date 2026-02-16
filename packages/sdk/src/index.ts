@@ -321,6 +321,8 @@ export class SteleClient {
   private readonly _strictMode: boolean;
   private readonly _listeners: Map<SteleEventType, Set<SteleEventHandler<SteleEventType>>>;
   private _keyManager: KeyManager | undefined;
+  /** Cache parsed CCL documents to avoid re-parsing on repeated evaluations. */
+  private readonly _cclCache = new Map<string, CCLDocument>();
 
   constructor(options: SteleClientOptions = {}) {
     this._keyPair = options.keyPair;
@@ -477,6 +479,16 @@ export class SteleClient {
     if (!options.beneficiary || !options.beneficiary.id) {
       throw new Error(
         "SteleClient.createCovenant(): beneficiary.id is required. Provide a non-empty string identifying the beneficiary party.",
+      );
+    }
+    if (options.issuer.publicKey && !/^[0-9a-fA-F]{64}$/.test(options.issuer.publicKey)) {
+      throw new Error(
+        `SteleClient.createCovenant(): issuer.publicKey must be a 64-character hex string (Ed25519 public key), got ${options.issuer.publicKey.length} characters.`,
+      );
+    }
+    if (options.beneficiary.publicKey && !/^[0-9a-fA-F]{64}$/.test(options.beneficiary.publicKey)) {
+      throw new Error(
+        `SteleClient.createCovenant(): beneficiary.publicKey must be a 64-character hex string (Ed25519 public key), got ${options.beneficiary.publicKey.length} characters.`,
       );
     }
     if (!options.constraints || options.constraints.trim().length === 0) {
@@ -652,7 +664,11 @@ export class SteleClient {
       );
     }
 
-    const cclDoc = cclParse(doc.constraints);
+    let cclDoc = this._cclCache.get(doc.constraints);
+    if (!cclDoc) {
+      cclDoc = cclParse(doc.constraints);
+      this._cclCache.set(doc.constraints, cclDoc);
+    }
     const cclResult = cclEvaluate(cclDoc, action, resource, context);
 
     const result: EvaluationResult = {

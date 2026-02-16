@@ -302,6 +302,22 @@ export class MemoryStore implements CovenantStore {
    * @returns An array where each element is the document or `undefined` if not found.
    */
   async getBatch(ids: string[]): Promise<(CovenantDocument | undefined)[]> {
+    if (!Array.isArray(ids)) {
+      throw new SteleError(
+        SteleErrorCode.STORE_MISSING_ID,
+        'getBatch(): ids must be an array of strings',
+        { hint: 'Pass an array of document ID strings.' }
+      );
+    }
+    for (let i = 0; i < ids.length; i++) {
+      if (!ids[i] || typeof ids[i] !== 'string' || ids[i]!.trim().length === 0) {
+        throw new SteleError(
+          SteleErrorCode.STORE_MISSING_ID,
+          `getBatch(): ids[${i}] must be a non-empty string`,
+          { hint: 'Each ID in the array must be a non-empty string.' }
+        );
+      }
+    }
     return ids.map((id) => {
       const doc = this.data.get(id);
       return doc ? structuredClone(doc) : undefined;

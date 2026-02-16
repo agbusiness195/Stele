@@ -143,6 +143,7 @@ describe('API Surface Tests', () => {
       'Tracer',
       'ValidationError',
       'assertNever',
+      'assertNoDangerousKeys',
       'createDebugLogger',
       'createLogger',
       'createMetricsRegistry',

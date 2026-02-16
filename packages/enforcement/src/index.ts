@@ -247,7 +247,7 @@ export class Monitor {
           permitted: false,
           matchedRule: result.matchedRule,
           allMatches: result.allMatches,
-          reason: `Rate limit exceeded for action '${action}'`,
+          reason: `Rate limit exceeded for action '${action}': used ${rateResult.count}/${rateResult.limit} in window`,
           severity: 'high',
         };
       }
@@ -342,7 +342,7 @@ export class Monitor {
           permitted: false,
           matchedRule: result.matchedRule,
           allMatches: result.allMatches,
-          reason: `Rate limit exceeded for action '${action}'`,
+          reason: `Rate limit exceeded for action '${action}': used ${rateResult.count}/${rateResult.limit} in window`,
           severity: 'high',
         };
       }
@@ -578,7 +578,7 @@ export class Monitor {
   /**
    * Internal rate limit check using the CCL document's limit statements.
    */
-  private checkRateLimitInternal(action: string): { exceeded: boolean; remaining: number } {
+  private checkRateLimitInternal(action: string): { exceeded: boolean; remaining: number; count: number; limit: number } {
     const now = Date.now();
 
     // Find matching limit statements
@@ -603,7 +603,7 @@ export class Monitor {
     }
 
     if (!matchedLimit) {
-      return { exceeded: false, remaining: Infinity };
+      return { exceeded: false, remaining: Infinity, count: 0, limit: Infinity };
     }
 
     const key = matchedLimit.action;
@@ -632,6 +632,8 @@ export class Monitor {
     return {
       exceeded: state.count >= state.limit,
       remaining,
+      count: state.count,
+      limit: state.limit,
     };
   }
 

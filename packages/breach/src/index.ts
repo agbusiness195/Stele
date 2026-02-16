@@ -412,6 +412,7 @@ export class TrustGraph {
     }
 
     while (queue.length > 0) {
+      if (visited.size > 10000) break; // Safety limit to prevent memory exhaustion
       const current = queue.shift()!;
       result.push(current);
 

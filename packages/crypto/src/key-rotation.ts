@@ -67,13 +67,13 @@ export class KeyManager {
 
   constructor(policy: KeyRotationPolicy) {
     if (policy.maxAgeMs <= 0) {
-      throw new Error('maxAgeMs must be positive');
+      throw new Error(`maxAgeMs must be positive (> 0), got ${policy.maxAgeMs}ms`);
     }
     if (policy.overlapPeriodMs < 0) {
-      throw new Error('overlapPeriodMs must be non-negative');
+      throw new Error(`overlapPeriodMs must be non-negative (>= 0), got ${policy.overlapPeriodMs}ms`);
     }
     if (policy.overlapPeriodMs >= policy.maxAgeMs) {
-      throw new Error('overlapPeriodMs must be less than maxAgeMs');
+      throw new Error(`overlapPeriodMs (${policy.overlapPeriodMs}ms) must be less than maxAgeMs (${policy.maxAgeMs}ms)`);
     }
     this.policy = policy;
   }
