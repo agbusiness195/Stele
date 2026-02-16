@@ -16,6 +16,8 @@
     "packages/reputation",
     "packages/breach",
     "packages/sdk",
+    "packages/enterprise",
+    "packages/protocols",
     "packages/mcp",
     "packages/cli",
     "packages/mcp-server",

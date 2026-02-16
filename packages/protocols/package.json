@@ -1,0 +1,74 @@
+{
+  "name": "@stele/protocols",
+  "version": "0.1.0",
+  "description": "Unified facade for all Stele protocol modules: breach detection, reputation, attestation, game theory, consensus, and more",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@stele/breach": "0.1.0",
+    "@stele/reputation": "0.1.0",
+    "@stele/proof": "0.1.0",
+    "@stele/attestation": "0.1.0",
+    "@stele/canary": "0.1.0",
+    "@stele/gametheory": "0.1.0",
+    "@stele/composition": "0.1.0",
+    "@stele/antifragile": "0.1.0",
+    "@stele/consensus": "0.1.0",
+    "@stele/robustness": "0.1.0",
+    "@stele/recursive": "0.1.0",
+    "@stele/alignment": "0.1.0",
+    "@stele/norms": "0.1.0",
+    "@stele/substrate": "0.1.0",
+    "@stele/derivatives": "0.1.0",
+    "@stele/legal": "0.1.0",
+    "@stele/negotiation": "0.1.0",
+    "@stele/temporal": "0.1.0",
+    "@stele/discovery": "0.1.0",
+    "@stele/schema": "0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agbusiness195/Stele.git",
+    "directory": "packages/protocols"
+  },
+  "homepage": "https://stele.dev",
+  "author": "Stele Labs, Inc.",
+  "keywords": [
+    "stele",
+    "protocols",
+    "breach",
+    "reputation",
+    "attestation",
+    "game-theory",
+    "consensus",
+    "negotiation"
+  ],
+  "module": "./dist/index.mjs"
+}

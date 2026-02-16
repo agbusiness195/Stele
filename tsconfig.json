@@ -30,6 +30,8 @@
     { "path": "packages/reputation" },
     { "path": "packages/breach" },
     { "path": "packages/sdk" },
+    { "path": "packages/enterprise" },
+    { "path": "packages/protocols" },
     { "path": "packages/mcp" },
     { "path": "packages/cli" },
     { "path": "packages/evm" },
@@ -54,4 +56,3 @@
     { "path": "packages/schema" }
   ]
 }
-

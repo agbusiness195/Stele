@@ -1,7 +1,7 @@
 {
-  "name": "@stele/sdk",
+  "name": "@stele/enterprise",
   "version": "0.1.0",
-  "description": "TypeScript SDK for embedding Stele into agent frameworks and applications",
+  "description": "Enterprise features for Stele: analytics, governance, payments, certification, and more",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,16 +24,6 @@
     "test": "vitest run",
     "prepublishOnly": "npm run build"
   },
-  "dependencies": {
-    "@stele/types": "0.1.0",
-    "@stele/crypto": "0.1.0",
-    "@stele/core": "0.1.0",
-    "@stele/ccl": "0.1.0",
-    "@stele/identity": "0.1.0",
-    "@stele/store": "0.1.0",
-    "@stele/verifier": "0.1.0",
-    "@stele/enforcement": "0.1.0"
-  },
   "license": "MIT",
   "engines": {
     "node": ">=18"
@@ -44,21 +34,17 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/agbusiness195/Stele.git",
-    "directory": "packages/sdk"
+    "directory": "packages/enterprise"
   },
   "homepage": "https://stele.dev",
-  "bugs": {
-    "url": "https://github.com/agbusiness195/stele/issues"
-  },
   "author": "Stele Labs, Inc.",
   "keywords": [
     "stele",
-    "covenant",
-    "ai-accountability",
-    "sdk",
-    "ai-agents",
-    "trust",
-    "governance"
+    "enterprise",
+    "analytics",
+    "governance",
+    "payments",
+    "certification"
   ],
   "module": "./dist/index.mjs"
 }

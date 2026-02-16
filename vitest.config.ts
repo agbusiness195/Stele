@@ -4,8 +4,8 @@ import * as path from 'path';
 const packages = [
   'alignment', 'antifragile', 'attestation', 'breach', 'canary', 'ccl',
   'cli', 'composition', 'consensus', 'core', 'crypto', 'derivatives',
-  'discovery', 'enforcement', 'evm', 'gametheory', 'identity', 'legal',
-  'mcp-server', 'mcp', 'negotiation', 'norms', 'proof', 'react',
+  'discovery', 'enforcement', 'enterprise', 'evm', 'gametheory', 'identity', 'legal',
+  'mcp-server', 'mcp', 'negotiation', 'norms', 'proof', 'protocols', 'react',
   'recursive', 'reputation', 'robustness', 'schema', 'sdk', 'store',
   'substrate', 'temporal', 'types', 'verifier',
 ];
