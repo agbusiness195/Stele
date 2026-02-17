@@ -904,7 +904,7 @@ export function serializeCovenant(doc: CovenantDocument): string {
  *
  * @param json - A JSON string to parse.
  * @returns The parsed CovenantDocument.
- * @throws {Error} When the JSON is malformed, missing required fields,
+ * @throws {SteleError} When the JSON is malformed, missing required fields,
  *   or exceeds the maximum document size.
  *
  * @example
@@ -918,11 +918,11 @@ export function deserializeCovenant(json: string): CovenantDocument {
     parsed = JSON.parse(json);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    throw new Error(`Invalid JSON: ${msg}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Invalid JSON: ${msg}`, { hint: 'Ensure the input is a valid JSON string.' });
   }
 
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-    throw new Error('Covenant document must be a JSON object');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Covenant document must be a JSON object', { hint: 'Provide a JSON object, not an array or primitive value.' });
   }
 
   const obj = parsed as Record<string, unknown>;
@@ -931,22 +931,22 @@ export function deserializeCovenant(json: string): CovenantDocument {
   const requiredStrings = ['id', 'version', 'constraints', 'nonce', 'createdAt', 'signature'] as const;
   for (const field of requiredStrings) {
     if (typeof obj[field] !== 'string') {
-      throw new Error(`Missing or invalid required field: ${field}`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Missing or invalid required field: ${field}`, { hint: `Ensure the '${field}' field is present and is a string.` });
     }
   }
 
   // Validate issuer
   if (!obj.issuer || typeof obj.issuer !== 'object') {
-    throw new Error('Missing or invalid required field: issuer');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Missing or invalid required field: issuer', { hint: 'Include an issuer object with id, publicKey, and role fields.' });
   }
   const issuer = obj.issuer as Record<string, unknown>;
   if (typeof issuer.id !== 'string' || typeof issuer.publicKey !== 'string' || issuer.role !== 'issuer') {
-    throw new Error('Invalid issuer: must have id, publicKey, and role="issuer"');
+    throw new SteleError(SteleErrorCode.SIGNATURE_INVALID, 'Invalid issuer: must have id, publicKey, and role="issuer"', { hint: 'Ensure the issuer has valid id, publicKey, and role set to "issuer".' });
   }
 
   // Validate beneficiary
   if (!obj.beneficiary || typeof obj.beneficiary !== 'object') {
-    throw new Error('Missing or invalid required field: beneficiary');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Missing or invalid required field: beneficiary', { hint: 'Include a beneficiary object with id, publicKey, and role fields.' });
   }
   const beneficiary = obj.beneficiary as Record<string, unknown>;
   if (
@@ -954,37 +954,37 @@ export function deserializeCovenant(json: string): CovenantDocument {
     typeof beneficiary.publicKey !== 'string' ||
     beneficiary.role !== 'beneficiary'
   ) {
-    throw new Error('Invalid beneficiary: must have id, publicKey, and role="beneficiary"');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Invalid beneficiary: must have id, publicKey, and role="beneficiary"', { hint: 'Ensure the beneficiary has valid id, publicKey, and role set to "beneficiary".' });
   }
 
   // Validate version
   if (obj.version !== PROTOCOL_VERSION) {
-    throw new Error(`Unsupported protocol version: ${obj.version as string} (expected ${PROTOCOL_VERSION})`);
+    throw new SteleError(SteleErrorCode.VERSION_UNSUPPORTED, `Unsupported protocol version: ${obj.version as string} (expected ${PROTOCOL_VERSION})`, { hint: `Migrate the document to protocol version ${PROTOCOL_VERSION}.` });
   }
 
   // Validate chain if present
   if (obj.chain !== undefined) {
     if (typeof obj.chain !== 'object' || obj.chain === null) {
-      throw new Error('Invalid chain: must be an object');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Invalid chain: must be an object', { hint: 'Provide a chain object with parentId, relation, and depth fields.' });
     }
     const chain = obj.chain as Record<string, unknown>;
     if (typeof chain.parentId !== 'string') {
-      throw new Error('Invalid chain.parentId: must be a string');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Invalid chain.parentId: must be a string', { hint: 'Set chain.parentId to a valid document ID string.' });
     }
     if (typeof chain.relation !== 'string') {
-      throw new Error('Invalid chain.relation: must be a string');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Invalid chain.relation: must be a string', { hint: 'Set chain.relation to a valid relation type string.' });
     }
     if (typeof chain.depth !== 'number') {
-      throw new Error('Invalid chain.depth: must be a number');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Invalid chain.depth: must be a number', { hint: 'Set chain.depth to a positive integer.' });
     }
   }
 
   // Validate document size
   const byteSize = new TextEncoder().encode(json).byteLength;
   if (byteSize > MAX_DOCUMENT_SIZE) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.DOCUMENT_TOO_LARGE,
       `Document size ${byteSize} bytes exceeds maximum of ${MAX_DOCUMENT_SIZE} bytes`,
-    );
+      { hint: `Reduce the document size to stay within the ${MAX_DOCUMENT_SIZE} byte limit.` });
   }
 
   return parsed as CovenantDocument;

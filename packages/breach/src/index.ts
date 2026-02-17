@@ -534,14 +534,16 @@ export class ExponentialDegradation {
   constructor(config: ExponentialDegradationConfig) {
     if (config.baseLoss <= 0 || config.baseLoss > 1) {
       throw new SteleError(
-        'ExponentialDegradation baseLoss must be in (0, 1]',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'ExponentialDegradation baseLoss must be in (0, 1]',
+        { hint: 'Set baseLoss to a value greater than 0 and at most 1.' },
       );
     }
     if (config.lambda <= 0) {
       throw new SteleError(
-        'ExponentialDegradation lambda must be > 0',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'ExponentialDegradation lambda must be > 0',
+        { hint: 'Set lambda to a positive number to control decay rate.' },
       );
     }
     this.baseLoss = config.baseLoss;
@@ -556,8 +558,9 @@ export class ExponentialDegradation {
   computeLoss(hopDistance: number): number {
     if (hopDistance < 0 || !Number.isFinite(hopDistance)) {
       throw new SteleError(
-        'hopDistance must be a non-negative finite number',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'hopDistance must be a non-negative finite number',
+        { hint: 'Provide a non-negative finite number for hopDistance.' },
       );
     }
     return this.baseLoss * Math.exp(-this.lambda * hopDistance);
@@ -572,8 +575,9 @@ export class ExponentialDegradation {
   degrade(currentTrust: number, hopDistance: number): number {
     if (currentTrust < 0 || currentTrust > 1) {
       throw new SteleError(
-        'currentTrust must be in [0, 1]',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'currentTrust must be in [0, 1]',
+        { hint: 'Set currentTrust to a value between 0 and 1 inclusive.' },
       );
     }
     const loss = this.computeLoss(hopDistance);
@@ -587,8 +591,9 @@ export class ExponentialDegradation {
   profile(maxHops: number): number[] {
     if (maxHops < 0 || !Number.isInteger(maxHops)) {
       throw new SteleError(
-        'maxHops must be a non-negative integer',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'maxHops must be a non-negative integer',
+        { hint: 'Provide a non-negative integer for maxHops.' },
       );
     }
     const result: number[] = [];
@@ -607,8 +612,9 @@ export class ExponentialDegradation {
   effectiveRadius(threshold: number): number {
     if (threshold <= 0 || threshold > 1) {
       throw new SteleError(
-        'threshold must be in (0, 1]',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'threshold must be in (0, 1]',
+        { hint: 'Set threshold to a value greater than 0 and at most 1.' },
       );
     }
     if (this.baseLoss < threshold) {
@@ -681,8 +687,9 @@ export class BreachStateMachine {
   constructor(breachId: string, config?: Partial<BreachStateMachineConfig>) {
     if (!breachId || breachId.trim().length === 0) {
       throw new SteleError(
-        'breachId must be a non-empty string',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'breachId must be a non-empty string',
+        { hint: 'Provide a non-empty string as the breach identifier.' },
       );
     }
     this.breachId = breachId;
@@ -732,14 +739,16 @@ export class BreachStateMachine {
     const allowedTargets = VALID_TRANSITIONS[this._state];
     if (!allowedTargets.includes(to)) {
       throw new SteleError(
-        `Invalid breach state transition: ${this._state} -> ${to}. Allowed: [${allowedTargets.join(', ')}]`,
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `Invalid breach state transition: ${this._state} -> ${to}. Allowed: [${allowedTargets.join(', ')}]`,
+        { hint: 'Only transition to one of the allowed target states for the current state.' },
       );
     }
     if (!actor || actor.trim().length === 0) {
       throw new SteleError(
-        'actor must be a non-empty string',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'actor must be a non-empty string',
+        { hint: 'Provide a non-empty string identifying the actor performing the transition.' },
       );
     }
 
@@ -833,20 +842,23 @@ export class RecoveryModel {
   constructor(config: RecoveryModelConfig) {
     if (config.maxRecovery <= 0 || config.maxRecovery > 1) {
       throw new SteleError(
-        'maxRecovery must be in (0, 1]',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'maxRecovery must be in (0, 1]',
+        { hint: 'Set maxRecovery to a value greater than 0 and at most 1.' },
       );
     }
     if (config.steepness <= 0) {
       throw new SteleError(
-        'steepness must be > 0',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'steepness must be > 0',
+        { hint: 'Set steepness to a positive number.' },
       );
     }
     if (config.midpointMs <= 0) {
       throw new SteleError(
-        'midpointMs must be > 0',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'midpointMs must be > 0',
+        { hint: 'Set midpointMs to a positive number of milliseconds.' },
       );
     }
     this.config = { ...config };
@@ -860,8 +872,9 @@ export class RecoveryModel {
   recoveryFraction(elapsedMs: number): number {
     if (elapsedMs < 0) {
       throw new SteleError(
-        'elapsedMs must be non-negative',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'elapsedMs must be non-negative',
+        { hint: 'Provide a non-negative value for elapsed milliseconds.' },
       );
     }
     const { maxRecovery, steepness, midpointMs } = this.config;
@@ -887,20 +900,23 @@ export class RecoveryModel {
   ): number {
     if (preBreachTrust < 0 || preBreachTrust > 1) {
       throw new SteleError(
-        'preBreachTrust must be in [0, 1]',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'preBreachTrust must be in [0, 1]',
+        { hint: 'Set preBreachTrust to a value between 0 and 1 inclusive.' },
       );
     }
     if (historicalReliability < 0 || historicalReliability > 1) {
       throw new SteleError(
-        'historicalReliability must be in [0, 1]',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'historicalReliability must be in [0, 1]',
+        { hint: 'Set historicalReliability to a value between 0 and 1 inclusive.' },
       );
     }
     if (elapsedMs < 0) {
       throw new SteleError(
-        'elapsedMs must be non-negative',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'elapsedMs must be non-negative',
+        { hint: 'Provide a non-negative value for elapsed milliseconds.' },
       );
     }
 
@@ -1054,20 +1070,23 @@ export class RepeatOffenderDetector {
     this.config = { ...DEFAULT_OFFENDER_CONFIG, ...config };
     if (this.config.warningThreshold <= 0) {
       throw new SteleError(
-        'warningThreshold must be > 0',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'warningThreshold must be > 0',
+        { hint: 'Set warningThreshold to a positive number.' },
       );
     }
     if (this.config.restrictionThreshold <= this.config.warningThreshold) {
       throw new SteleError(
-        'restrictionThreshold must be > warningThreshold',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'restrictionThreshold must be > warningThreshold',
+        { hint: 'Set restrictionThreshold to a value greater than warningThreshold.' },
       );
     }
     if (this.config.revocationThreshold <= this.config.restrictionThreshold) {
       throw new SteleError(
-        'revocationThreshold must be > restrictionThreshold',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'revocationThreshold must be > restrictionThreshold',
+        { hint: 'Set revocationThreshold to a value greater than restrictionThreshold.' },
       );
     }
   }
@@ -1078,8 +1097,9 @@ export class RepeatOffenderDetector {
   recordBreach(agentId: string, record: BreachRecord): void {
     if (!agentId || agentId.trim().length === 0) {
       throw new SteleError(
-        'agentId must be a non-empty string',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'agentId must be a non-empty string',
+        { hint: 'Provide a non-empty string as the agent identifier.' },
       );
     }
     let records = this.history.get(agentId);

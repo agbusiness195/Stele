@@ -24,7 +24,7 @@ interface ReactModule {
   useState<T>(initial: T | (() => T)): [T, (v: T | ((prev: T) => T)) => void];
   useEffect(effect: () => void | (() => void), deps?: unknown[]): void;
   useRef<T>(initial: T): { current: T };
-  useCallback<T extends (...args: unknown[]) => unknown>(fn: T, deps: unknown[]): T;
+  useCallback<T extends (...args: never[]) => unknown>(fn: T, deps: unknown[]): T;
   useSyncExternalStore<T>(subscribe: (cb: () => void) => () => void, getSnapshot: () => T): T;
 }
 

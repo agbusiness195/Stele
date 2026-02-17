@@ -175,8 +175,8 @@ function computeIdentityHash(binding: IdentityBinding): string {
  * signature required by KernelInvariant. This preserves type safety at the
  * definition site while allowing heterogeneous predicate storage.
  */
-function predicate<F extends (...args: never[]) => boolean>(fn: F): (...args: unknown[]) => boolean {
-  return fn as (...args: unknown[]) => boolean;
+function predicate(fn: (...args: never[]) => boolean): (...args: unknown[]) => boolean {
+  return fn as unknown as (...args: unknown[]) => boolean;
 }
 
 /**
@@ -717,6 +717,13 @@ export function defineKernelInvariants(): KernelInvariant[] {
  * @param invariant - The kernel invariant to verify.
  * @param testCases - An array of argument tuples for the predicate.
  * @returns A KernelVerificationResult with timing and pass/fail information.
+ *
+ * @example
+ * ```ts
+ * const invariants = defineKernelInvariants();
+ * const result = verifyInvariant(invariants[0], [[testBinding]]);
+ * console.log(result.holds); // true
+ * ```
  */
 export function verifyInvariant(
   invariant: KernelInvariant,
@@ -762,6 +769,15 @@ export function verifyInvariant(
  *   argument tuples. Invariants with no matching key are verified with zero
  *   test cases (trivially passing).
  * @returns An array of KernelVerificationResult, one per invariant.
+ *
+ * @example
+ * ```ts
+ * const results = verifyAllInvariants({
+ *   'INV-001': [[binding1], [binding2]],
+ *   'INV-004': [[account1]],
+ * });
+ * const allPassed = results.every(r => r.holds);
+ * ```
  */
 export function verifyAllInvariants(
   testCases: Record<string, unknown[][]>,
@@ -1073,6 +1089,13 @@ function generateRandomInput(invariantId: string): unknown[] {
  * @param iterations - Number of random inputs to generate and test.
  * @returns A KernelVerificationResult. If a counterexample is found,
  *   `holds` is false and `counterexample` contains the failing input.
+ *
+ * @example
+ * ```ts
+ * const invariants = defineKernelInvariants();
+ * const result = generateCounterexampleSearch(invariants[0], 1000);
+ * if (!result.holds) console.log('Counterexample:', result.counterexample);
+ * ```
  */
 export function generateCounterexampleSearch(
   invariant: KernelInvariant,
@@ -1127,6 +1150,15 @@ export function generateCounterexampleSearch(
  *
  * @param constraints - Array of constraint strings (e.g., "deny:foo", "permit:bar").
  * @returns A ConstraintSatisfiabilityResult with analysis details.
+ *
+ * @example
+ * ```ts
+ * const result = checkConstraintSatisfiability([
+ *   'permit:read', 'deny:write', 'permit:write',
+ * ]);
+ * console.log(result.satisfiable);          // true (read is permitted)
+ * console.log(result.conflictingResources); // ['write']
+ * ```
  */
 export function checkConstraintSatisfiability(constraints: string[]): ConstraintSatisfiabilityResult {
   const denyResources = new Set<string>();
