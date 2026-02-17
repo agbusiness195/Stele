@@ -1093,12 +1093,6 @@ export class CapabilityGate {
    *
    * @param actions - An array of action strings to test.
    * @returns An object with `possible`, `impossible` arrays and the `manifestHash`.
-   *
-   * @example
-   * ```ts
-   * const result = await gate.proveImpossible(['file.read', 'file.delete']);
-   * console.log(result.impossible); // e.g. ['file.delete']
-   * ```
    */
   async proveImpossible(
     actions: string[],

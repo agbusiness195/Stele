@@ -7,7 +7,6 @@
  * @packageDocumentation
  */
 
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 import type { CovenantDocument, VerificationResult } from '@stele/core';
 import type { AgentIdentity } from '@stele/identity';
 import type { CovenantStore, StoreFilter, StoreEvent } from '@stele/store';
@@ -171,7 +170,7 @@ export class CovenantState {
   async verify(): Promise<VerificationResult> {
     const doc = this.document.get();
     if (!doc) {
-      const error = new SteleError(SteleErrorCode.STORE_MISSING_DOC, 'No document to verify. Call create() first.');
+      const error = new Error('No document to verify. Call create() first.');
       this.error.set(error);
       this.status.set('error');
       throw error;
@@ -208,7 +207,7 @@ export class CovenantState {
   ): Promise<EvaluationResult> {
     const doc = this.document.get();
     if (!doc) {
-      throw new SteleError(SteleErrorCode.STORE_MISSING_DOC, 'No document to evaluate. Call create() first.');
+      throw new Error('No document to evaluate. Call create() first.');
     }
 
     return this._client.evaluateAction(doc, action, resource, context);
@@ -279,7 +278,7 @@ export class IdentityState {
   async evolve(options: EvolveOptions): Promise<AgentIdentity> {
     const current = this.identity.get();
     if (!current) {
-      const error = new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'No identity to evolve. Call create() first.');
+      const error = new Error('No identity to evolve. Call create() first.');
       this.error.set(error);
       this.status.set('error');
       throw error;

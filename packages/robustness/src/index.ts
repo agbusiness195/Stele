@@ -1,5 +1,4 @@
 import { parse, evaluate, matchAction, matchResource } from '@stele/ccl';
-import { SteleError, SteleErrorCode } from '@stele/types';
 import type {
   CCLDocument,
   Condition,
@@ -40,28 +39,6 @@ import type {
 
 const DEFAULT_EXHAUSTIVE_THRESHOLD = 1000;
 const DEFAULT_STATISTICAL_SAMPLE_SIZE = 500;
-
-/** Weight of consistency factor in the robustness score. */
-const CONSISTENCY_WEIGHT = 0.3;
-/** Weight of fuzz-resilience factor in the robustness score. */
-const FUZZ_WEIGHT = 0.3;
-/** Weight of coverage factor in the robustness score. */
-const COVERAGE_WEIGHT = 0.2;
-/** Weight of specificity factor in the robustness score. */
-const SPECIFICITY_WEIGHT = 0.2;
-
-/** Score threshold above which robustness is classified as "strong". */
-const STRONG_THRESHOLD = 0.7;
-/** Score threshold above which robustness is classified as "moderate". */
-const MODERATE_THRESHOLD = 0.4;
-
-/** Minimum coverage ratio before recommending additional constraint types. */
-const MIN_COVERAGE_RATIO = 0.75;
-/** Minimum specificity ratio before recommending less use of wildcards. */
-const MIN_SPECIFICITY_RATIO = 0.5;
-
-/** Epsilon for numeric boundary value generation. */
-const BOUNDARY_EPSILON = 0.01;
 
 // ── assessSeverity ───────────────────────────────────────────────────────────
 
@@ -405,14 +382,13 @@ export function proveRobustness(
 ): RobustnessProof {
   // ── Input validation ────────────────────────────────────────────────────
   if (!constraint || constraint.trim().length === 0) {
-    throw new SteleError('Constraint must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('Constraint must be a non-empty string');
   }
   for (const dim of bounds.dimensions) {
     const range = bounds.ranges[dim];
     if (range && range.min > range.max) {
-      throw new SteleError(
+      throw new Error(
         `Invalid bound for dimension '${dim}': min (${range.min}) > max (${range.max})`,
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
   }
@@ -545,7 +521,7 @@ export function fuzz(
   options?: RobustnessOptions,
 ): RobustnessReport {
   if (iterations < 0) {
-    throw new SteleError('Iteration count must be non-negative', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('Iteration count must be non-negative');
   }
 
   const vulnerabilities: Vulnerability[] = [];
@@ -603,7 +579,8 @@ export function fuzz(
  * one step away, and extremes (0, -1).
  */
 function generateNumericBoundaryValues(value: number): number[] {
-  return [value, value - BOUNDARY_EPSILON, value + BOUNDARY_EPSILON, value - 1, value + 1, 0, -1];
+  const epsilon = 0.01;
+  return [value, value - epsilon, value + epsilon, value - 1, value + 1, 0, -1];
 }
 
 /**
@@ -641,7 +618,7 @@ export function generateAdversarialInputs(
   if (count <= 0) return [];
 
   if (!constraint || constraint.trim().length === 0) {
-    throw new SteleError('Constraint must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('Constraint must be a non-empty string');
   }
 
   // Try to parse constraint as CCL
@@ -823,7 +800,7 @@ function generateGenericAdversarialInputs(
  */
 export function formalVerification(covenant: CovenantSpec): FormalVerificationResult {
   if (!covenant || typeof covenant !== 'object') {
-    throw new SteleError('covenant must be a non-null object', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('covenant must be a non-null object');
   }
   if (!covenant.constraints || covenant.constraints.length === 0) {
     return {
@@ -946,7 +923,7 @@ export function robustnessScore(
   fuzzIterations = 50,
 ): RobustnessScoreResult {
   if (!covenant || typeof covenant !== 'object') {
-    throw new SteleError('covenant must be a non-null object', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('covenant must be a non-null object');
   }
 
   const recommendations: string[] = [];
@@ -986,7 +963,7 @@ export function robustnessScore(
   const allTypes = ['permit', 'deny', 'require', 'limit'];
   const coverageScore = typeSet.size / allTypes.length;
 
-  if (coverageScore < MIN_COVERAGE_RATIO) {
+  if (coverageScore < 0.75) {
     const missing = allTypes.filter(t => !typeSet.has(t as ConstraintSpec['type']));
     recommendations.push(
       `Consider adding ${missing.join(', ')} constraints for broader coverage`,
@@ -1006,26 +983,26 @@ export function robustnessScore(
       if (spec.resource !== '**' && spec.resource !== '*') specificPatterns++;
     }
   }
-  const specificityScore = totalPatterns > 0 ? specificPatterns / totalPatterns : MIN_SPECIFICITY_RATIO;
+  const specificityScore = totalPatterns > 0 ? specificPatterns / totalPatterns : 0.5;
 
-  if (specificityScore < MIN_SPECIFICITY_RATIO) {
+  if (specificityScore < 0.5) {
     recommendations.push('Use more specific action/resource patterns instead of wildcards');
   }
 
   // Weighted combination
   const factors: RobustnessFactor[] = [
-    { name: 'consistency', score: consistencyScore, weight: CONSISTENCY_WEIGHT, contribution: consistencyScore * CONSISTENCY_WEIGHT },
-    { name: 'fuzz-resilience', score: fuzzScore, weight: FUZZ_WEIGHT, contribution: fuzzScore * FUZZ_WEIGHT },
-    { name: 'coverage', score: coverageScore, weight: COVERAGE_WEIGHT, contribution: coverageScore * COVERAGE_WEIGHT },
-    { name: 'specificity', score: specificityScore, weight: SPECIFICITY_WEIGHT, contribution: specificityScore * SPECIFICITY_WEIGHT },
+    { name: 'consistency', score: consistencyScore, weight: 0.3, contribution: consistencyScore * 0.3 },
+    { name: 'fuzz-resilience', score: fuzzScore, weight: 0.3, contribution: fuzzScore * 0.3 },
+    { name: 'coverage', score: coverageScore, weight: 0.2, contribution: coverageScore * 0.2 },
+    { name: 'specificity', score: specificityScore, weight: 0.2, contribution: specificityScore * 0.2 },
   ];
 
   const score = factors.reduce((sum, f) => sum + f.contribution, 0);
 
   let classification: 'strong' | 'moderate' | 'weak';
-  if (score >= STRONG_THRESHOLD) {
+  if (score >= 0.7) {
     classification = 'strong';
-  } else if (score >= MODERATE_THRESHOLD) {
+  } else if (score >= 0.4) {
     classification = 'moderate';
   } else {
     classification = 'weak';

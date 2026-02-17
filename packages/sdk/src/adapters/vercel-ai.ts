@@ -18,7 +18,6 @@
  * ```
  */
 
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 import type { SteleClient } from '../index.js';
 import type { CovenantDocument } from '@stele/core';
 import type { EvaluationResult } from '../types.js';
@@ -223,7 +222,7 @@ export function createToolGuard(
     }
 
     if (!tool.execute) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Tool '${tool.name ?? 'unknown'}' has no execute method`);
+      throw new Error(`Tool '${tool.name ?? 'unknown'}' has no execute method`);
     }
 
     return tool.execute(...args);

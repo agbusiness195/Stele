@@ -13,7 +13,6 @@ import {
   sha256String,
   timestamp,
 } from '@stele/crypto';
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 /**
  * Options for configuring the authentication middleware.
@@ -92,7 +91,7 @@ export function createAuthMiddleware(options: MCPAuthOptions): {
     const apiKey = headers['x-api-key'];
     if (apiKey) {
       if (!apiKeys.has(apiKey)) {
-        throw new SteleError(SteleErrorCode.AUTH_INVALID_KEY, 'Invalid API key');
+        throw new Error('Invalid API key');
       }
 
       const clientId = `apikey:${sha256String(apiKey).slice(0, 16)}`;
@@ -112,7 +111,7 @@ export function createAuthMiddleware(options: MCPAuthOptions): {
 
     if (publicKeyHex && signatureHex && payload) {
       if (!trustedKeys.has(publicKeyHex)) {
-        throw new SteleError(SteleErrorCode.AUTH_INVALID_KEY, 'Untrusted public key');
+        throw new Error('Untrusted public key');
       }
 
       // Signature verification is async, but we do a synchronous check
@@ -145,7 +144,7 @@ export function createAuthMiddleware(options: MCPAuthOptions): {
     }
 
     // Authentication is required but no valid credentials provided
-    throw new SteleError(SteleErrorCode.AUTH_REQUIRED, 'Authentication required');
+    throw new Error('Authentication required');
   }
 
   /**

@@ -1,5 +1,5 @@
 import { sha256Object } from '@stele/crypto';
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 export type {
   LegalIdentityPackage,
@@ -101,10 +101,10 @@ export const JURISDICTIONS: Record<string, JurisdictionInfo> = jurisdictionRegis
  */
 export function registerJurisdiction(code: string, info: JurisdictionInfo): void {
   if (!code || code.trim() === '') {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Jurisdiction code must be a non-empty string');
+    throw new Error('Jurisdiction code must be a non-empty string');
   }
   if (!info.legalFramework || !info.complianceStandard || !Array.isArray(info.requiredFields)) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'JurisdictionInfo must include legalFramework, complianceStandard, and requiredFields');
+    throw new Error('JurisdictionInfo must include legalFramework, complianceStandard, and requiredFields');
   }
   jurisdictionRegistry[code] = { ...info, requiredFields: [...info.requiredFields] };
 }
@@ -151,37 +151,37 @@ export const COMPLIANCE_STANDARDS: Record<ComplianceStandard, ComplianceStandard
 
 function validateNonEmpty(value: string, name: string): void {
   if (!value || value.trim() === '') {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `${name} must be a non-empty string`);
+    throw new Error(`${name} must be a non-empty string`);
   }
 }
 
 function validateComplianceRecord(record: ComplianceRecord): void {
   if (record.totalInteractions < 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'totalInteractions must be non-negative');
+    throw new Error('totalInteractions must be non-negative');
   }
   if (record.covenantedInteractions < 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'covenantedInteractions must be non-negative');
+    throw new Error('covenantedInteractions must be non-negative');
   }
   if (record.breaches < 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'breaches must be non-negative');
+    throw new Error('breaches must be non-negative');
   }
   if (record.canaryTests < 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'canaryTests must be non-negative');
+    throw new Error('canaryTests must be non-negative');
   }
   if (record.canaryPasses < 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'canaryPasses must be non-negative');
+    throw new Error('canaryPasses must be non-negative');
   }
   if (record.attestationCoverage < 0 || record.attestationCoverage > 1) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'attestationCoverage must be between 0 and 1');
+    throw new Error('attestationCoverage must be between 0 and 1');
   }
   if (record.covenantedInteractions > record.totalInteractions) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'covenantedInteractions cannot exceed totalInteractions');
+    throw new Error('covenantedInteractions cannot exceed totalInteractions');
   }
   if (record.breaches > record.totalInteractions) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'breaches cannot exceed totalInteractions');
+    throw new Error('breaches cannot exceed totalInteractions');
   }
   if (record.canaryPasses > record.canaryTests) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'canaryPasses cannot exceed canaryTests');
+    throw new Error('canaryPasses cannot exceed canaryTests');
   }
 }
 
@@ -386,7 +386,7 @@ export function crossJurisdictionCompliance(
   compliance: ComplianceRecord,
 ): CrossJurisdictionResult {
   if (!jurisdictions || jurisdictions.length === 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'jurisdictions must be a non-empty array');
+    throw new Error('jurisdictions must be a non-empty array');
   }
   for (const j of jurisdictions) {
     validateNonEmpty(j, 'jurisdiction code');
@@ -693,7 +693,7 @@ export function regulatoryGapAnalysis(
 
   const requirements = COMPLIANCE_STANDARDS[targetStandard];
   if (!requirements) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Unknown compliance standard: "${targetStandard}"`);
+    throw new Error(`Unknown compliance standard: "${targetStandard}"`);
   }
 
   const report = generateComplianceReport(compliance, targetStandard, weights);
@@ -855,7 +855,10 @@ export class ComplianceSurface {
    */
   addRequirement(name: string): void {
     if (!name || name.trim() === '') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Requirement name must be a non-empty string');
+      throw new SteleError(
+        'Requirement name must be a non-empty string',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
     this.requirementNames.add(name);
   }
@@ -866,13 +869,22 @@ export class ComplianceSurface {
    */
   addDependency(dep: RequirementDependency): void {
     if (!dep.dependentRequirement || dep.dependentRequirement.trim() === '') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'dependentRequirement must be a non-empty string');
+      throw new SteleError(
+        'dependentRequirement must be a non-empty string',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
     if (!dep.prerequisiteRequirement || dep.prerequisiteRequirement.trim() === '') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'prerequisiteRequirement must be a non-empty string');
+      throw new SteleError(
+        'prerequisiteRequirement must be a non-empty string',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
     if (!Number.isFinite(dep.couplingStrength) || dep.couplingStrength < 0 || dep.couplingStrength > 1) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'couplingStrength must be between 0 and 1');
+      throw new SteleError(
+        'couplingStrength must be between 0 and 1',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
     this.requirementNames.add(dep.dependentRequirement);
     this.requirementNames.add(dep.prerequisiteRequirement);
@@ -898,11 +910,17 @@ export class ComplianceSurface {
     // Validate all requirement names have scores
     for (const name of this.requirementNames) {
       if (!(name in rawScores)) {
-        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Missing score for requirement "${name}"`);
+        throw new SteleError(
+          `Missing score for requirement "${name}"`,
+          SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        );
       }
       const score = rawScores[name]!;
       if (!Number.isFinite(score) || score < 0 || score > 1) {
-        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Score for "${name}" must be between 0 and 1, got ${score}`);
+        throw new SteleError(
+          `Score for "${name}" must be between 0 and 1, got ${score}`,
+          SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        );
       }
     }
 
@@ -1041,7 +1059,10 @@ export class ComplianceTrajectory {
    */
   constructor(breachThreshold = 0.7) {
     if (!Number.isFinite(breachThreshold) || breachThreshold < 0 || breachThreshold > 1) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'breachThreshold must be between 0 and 1');
+      throw new SteleError(
+        'breachThreshold must be between 0 and 1',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
     this.breachThreshold = breachThreshold;
   }
@@ -1051,10 +1072,16 @@ export class ComplianceTrajectory {
    */
   record(obs: ComplianceObservation): void {
     if (!Number.isFinite(obs.score) || obs.score < 0 || obs.score > 1) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Compliance score must be between 0 and 1');
+      throw new SteleError(
+        'Compliance score must be between 0 and 1',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
     if (!Number.isFinite(obs.timestamp)) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Timestamp must be a finite number');
+      throw new SteleError(
+        'Timestamp must be a finite number',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
     this.observations.push({ ...obs });
   }
@@ -1069,7 +1096,10 @@ export class ComplianceTrajectory {
    */
   analyze(): ComplianceTrajectoryResult {
     if (this.observations.length < 2) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, 'Need at least 2 observations for trajectory analysis');
+      throw new SteleError(
+        'Need at least 2 observations for trajectory analysis',
+        SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
+      );
     }
 
     const sorted = [...this.observations].sort((a, b) => a.timestamp - b.timestamp);
@@ -1204,7 +1234,10 @@ export class RemediationPlanner {
    */
   plan(currentScores: Record<string, number>, targetImprovement = 0.1): RemediationPlanResult {
     if (targetImprovement <= 0 || targetImprovement > 1) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'targetImprovement must be between 0 (exclusive) and 1 (inclusive)');
+      throw new SteleError(
+        'targetImprovement must be between 0 (exclusive) and 1 (inclusive)',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
 
     // Evaluate current state
@@ -1338,16 +1371,28 @@ export class JurisdictionConflictResolver {
    */
   addRequirement(req: JurisdictionalRequirement): void {
     if (!req.jurisdiction || req.jurisdiction.trim() === '') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'jurisdiction must be a non-empty string');
+      throw new SteleError(
+        'jurisdiction must be a non-empty string',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
     if (!req.requirementId || req.requirementId.trim() === '') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'requirementId must be a non-empty string');
+      throw new SteleError(
+        'requirementId must be a non-empty string',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
     if (!Number.isFinite(req.threshold) || req.threshold < 0 || req.threshold > 1) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'threshold must be between 0 and 1');
+      throw new SteleError(
+        'threshold must be between 0 and 1',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
     if (!req.category || req.category.trim() === '') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'category must be a non-empty string');
+      throw new SteleError(
+        'category must be a non-empty string',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
     this.requirements.push({ ...req });
   }
@@ -1362,7 +1407,10 @@ export class JurisdictionConflictResolver {
    */
   resolve(strategy: ResolutionStrategy = 'strictest-wins'): JurisdictionConflictResult {
     if (!['strictest-wins', 'lex-specialis', 'proportionality'].includes(strategy)) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Unknown resolution strategy: "${strategy}"`);
+      throw new SteleError(
+        `Unknown resolution strategy: "${strategy}"`,
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
 
     // Group requirements by category
@@ -1587,17 +1635,26 @@ export class RegulatoryImpactAnalyzer {
     weights: ComplianceWeights = DEFAULT_WEIGHTS,
   ): RegulatoryImpactResult {
     if (!change.changeId || change.changeId.trim() === '') {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'changeId must be a non-empty string');
+      throw new SteleError(
+        'changeId must be a non-empty string',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
     if (!change.affectedStandard) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'affectedStandard must be specified');
+      throw new SteleError(
+        'affectedStandard must be specified',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
     validateComplianceRecord(currentCompliance);
 
     // Get current standard requirements
     const currentStandard = COMPLIANCE_STANDARDS[change.affectedStandard];
     if (!currentStandard) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Unknown compliance standard: "${change.affectedStandard}"`);
+      throw new SteleError(
+        `Unknown compliance standard: "${change.affectedStandard}"`,
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
 
     // Compute current compliance
@@ -1718,7 +1775,10 @@ export class RegulatoryImpactAnalyzer {
     totalRecommendations: string[];
   } {
     if (changes.length === 0) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Must provide at least one regulatory change');
+      throw new SteleError(
+        'Must provide at least one regulatory change',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      );
     }
 
     const individualResults: RegulatoryImpactResult[] = [];

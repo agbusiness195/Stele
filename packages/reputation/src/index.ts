@@ -70,55 +70,6 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
 };
 
 // ---------------------------------------------------------------------------
-// Named scoring constants
-// ---------------------------------------------------------------------------
-
-/**
- * Outcome score values assigned to each execution result type.
- * Used when computing weighted reputation scores from execution receipts.
- */
-const OUTCOME_SCORES = {
-  /** A fully fulfilled covenant earns the maximum score. */
-  FULFILLED: 1.0,
-  /** A partially fulfilled covenant earns half credit. */
-  PARTIAL: 0.5,
-  /** A failed covenant earns zero credit. */
-  FAILED: 0.0,
-  /** Fallback breach penalty when no severity-specific penalty is configured. */
-  DEFAULT_BREACH_PENALTY: 0.15,
-} as const;
-
-/**
- * Base severity scores for the graduated burn penalty curve.
- * Maps breach severity to a normalised [0, 1] score used as input
- * to the burn-fraction calculation.
- */
-const SEVERITY_SCORES = {
-  /** Critical breaches receive the maximum severity score. */
-  CRITICAL: 1.0,
-  /** High-severity breaches. */
-  HIGH: 0.75,
-  /** Medium-severity breaches. */
-  MEDIUM: 0.5,
-  /** Low-severity breaches. */
-  LOW: 0.25,
-  /** Default for unknown severity levels. */
-  DEFAULT: 0.5,
-} as const;
-
-/**
- * Blending weights for DAG reputation propagation at merge points.
- * When a DAG node has parents, its score is a blend of its own
- * receipt score and the average of its parents' scores.
- */
-const DAG_BLEND_WEIGHTS = {
-  /** Weight given to the current node's own receipt score. */
-  SELF: 0.6,
-  /** Weight given to the averaged parent scores. */
-  PARENT: 0.4,
-} as const;
-
-// ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
 
@@ -501,17 +452,17 @@ export function computeReputationScore(
     let outcomeScore: number;
     switch (r.outcome) {
       case 'fulfilled':
-        outcomeScore = OUTCOME_SCORES.FULFILLED;
+        outcomeScore = 1.0;
         break;
       case 'partial':
-        outcomeScore = OUTCOME_SCORES.PARTIAL;
+        outcomeScore = 0.5;
         break;
       case 'failed':
-        outcomeScore = OUTCOME_SCORES.FAILED;
+        outcomeScore = 0.0;
         break;
       case 'breached': {
         const severity: Severity = r.breachSeverity ?? 'medium';
-        outcomeScore = -(cfg.breachPenalty[severity] ?? OUTCOME_SCORES.DEFAULT_BREACH_PENALTY);
+        outcomeScore = -(cfg.breachPenalty[severity] ?? 0.15);
         break;
       }
     }
@@ -581,7 +532,7 @@ export async function createStake(
   agentKeyPair: KeyPair,
 ): Promise<ReputationStake> {
   if (amount < 0 || amount > 1) {
-    throw new SteleError('Stake amount must be between 0 and 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('Stake amount must be between 0 and 1');
   }
 
   const stakedAt = timestamp();
@@ -672,10 +623,10 @@ export async function createDelegation(
   protégéKeyPair: KeyPair,
 ): Promise<ReputationDelegation> {
   if (riskAmount < 0 || riskAmount > 1) {
-    throw new SteleError('Delegation riskAmount must be between 0 and 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('Delegation riskAmount must be between 0 and 1');
   }
   if (scopes.length === 0) {
-    throw new SteleError('Delegation must have at least one scope', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('Delegation must have at least one scope');
   }
 
   const content = buildDelegationContent({
@@ -779,20 +730,20 @@ export async function createEndorsement(
 
   // Validate basis
   if (typeof basis.covenantsCompleted !== 'number' || basis.covenantsCompleted < 0) {
-    throw new SteleError('Endorsement basis.covenantsCompleted must be a non-negative number', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('Endorsement basis.covenantsCompleted must be a non-negative number');
   }
   if (typeof basis.breachRate !== 'number' || basis.breachRate < 0 || basis.breachRate > 1) {
-    throw new SteleError('Endorsement basis.breachRate must be a number between 0 and 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('Endorsement basis.breachRate must be a number between 0 and 1');
   }
   if (basis.averageOutcomeScore !== undefined) {
     if (typeof basis.averageOutcomeScore !== 'number' || basis.averageOutcomeScore < 0 || basis.averageOutcomeScore > 1) {
-      throw new SteleError('Endorsement basis.averageOutcomeScore must be a number between 0 and 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new Error('Endorsement basis.averageOutcomeScore must be a number between 0 and 1');
     }
   }
 
   // Validate weight
   if (weight < 0 || weight > 1) {
-    throw new SteleError('Endorsement weight must be between 0 and 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('Endorsement weight must be between 0 and 1');
   }
 
   const content = buildEndorsementContent({
@@ -1120,17 +1071,17 @@ export class ReceiptDAG {
       let outcomeScore: number;
       switch (receipt.outcome) {
         case 'fulfilled':
-          outcomeScore = OUTCOME_SCORES.FULFILLED;
+          outcomeScore = 1.0;
           break;
         case 'partial':
-          outcomeScore = OUTCOME_SCORES.PARTIAL;
+          outcomeScore = 0.5;
           break;
         case 'failed':
-          outcomeScore = OUTCOME_SCORES.FAILED;
+          outcomeScore = 0.0;
           break;
         case 'breached': {
           const sev: Severity = receipt.breachSeverity ?? 'medium';
-          outcomeScore = -(cfg.breachPenalty[sev] ?? OUTCOME_SCORES.DEFAULT_BREACH_PENALTY);
+          outcomeScore = -(cfg.breachPenalty[sev] ?? 0.15);
           break;
         }
       }
@@ -1150,7 +1101,8 @@ export class ReceiptDAG {
         }
         if (parentCount > 0) {
           const parentAvg = parentSum / parentCount;
-          score = DAG_BLEND_WEIGHTS.SELF * score + DAG_BLEND_WEIGHTS.PARENT * parentAvg;
+          // Blend: 60% this node's score, 40% inherited from parents
+          score = 0.6 * score + 0.4 * parentAvg;
         }
       }
 
@@ -1540,15 +1492,15 @@ export class GraduatedBurner {
   private severityScore(severity: Severity): number {
     switch (severity) {
       case 'critical':
-        return SEVERITY_SCORES.CRITICAL;
+        return 1.0;
       case 'high':
-        return SEVERITY_SCORES.HIGH;
+        return 0.75;
       case 'medium':
-        return SEVERITY_SCORES.MEDIUM;
+        return 0.5;
       case 'low':
-        return SEVERITY_SCORES.LOW;
+        return 0.25;
       default:
-        return SEVERITY_SCORES.DEFAULT;
+        return 0.5;
     }
   }
 }

@@ -9,7 +9,6 @@
  */
 
 import type { CovenantDocument } from '@stele/core';
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 import type { CovenantStore } from './types.js';
 
@@ -145,10 +144,10 @@ class TransactionImpl implements Transaction {
 
   private ensureActive(): void {
     if (this.committed) {
-      throw new SteleError(SteleErrorCode.STORE_WRITE_FAILED, 'Transaction has already been committed');
+      throw new Error('Transaction has already been committed');
     }
     if (this.rolledBack) {
-      throw new SteleError(SteleErrorCode.STORE_WRITE_FAILED, 'Transaction has already been rolled back');
+      throw new Error('Transaction has already been rolled back');
     }
   }
 }

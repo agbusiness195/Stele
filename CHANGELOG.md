@@ -5,48 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.1] - 2026-02-17
-
-### Added
-
-- **ROADMAP.md**: Added a dedicated roadmap document with milestone planning
-  (v0.2.1, v1.0.0, v2.0.0) and explicit non-goals.
-- **@stele/mcp-server**: Exported certification API (`createServerProfile`,
-  `evaluateServer`, `generateTrustReport`, `renewCertification`) from the
-  package's public surface.
-- **Batch proofs, range proofs, Byzantine modeling, lattice operations**, and
-  formal verification utilities across protocol packages.
-- **Cycle detection** in `resolveChain` and input validation for crypto
-  operations.
-
-### Changed
-
-- Migrated all packages from generic `Error` to `SteleError` hierarchy for
-  consistent, structured error handling across the codebase.
-- Added JSDoc documentation to all public APIs in alignment, reputation,
-  enforcement, gametheory, and other packages.
-- Extracted magic numbers to named constants in gametheory, derivatives, and
-  robustness packages.
-- Fixed example imports to use `@stele/sdk` and `@stele/mcp-server` package
-  names instead of relative source paths.
-- Updated README badges to reflect actual counts (6,097 tests, 93 suites,
-  34 packages).
-- Updated examples tables in README and examples/README.md to list all 10
-  runnable examples.
-- Updated CONTRIBUTING.md: corrected package count to 34, added discovery and
-  schema packages to directory listing.
-- Replaced misleading "placeholder" comments with accurate descriptions of
-  two-pass construction patterns.
-- Added `.DS_Store` and `Thumbs.db` to `.gitignore`.
-
-### Fixed
-
-- TypeScript `tsc --build`: added `composite` and `emitDeclarationOnly` to all
-  package tsconfigs; installed `@vitest/coverage-v8`.
-- `SteleError` import consistency: all packages now use `DocumentedSteleError`
-  from `@stele/types`.
-- Regenerated canonical test vectors to match current build output.
-
 ## [0.2.0] - 2026-02-12
 
 ### Added

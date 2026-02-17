@@ -64,11 +64,6 @@ import {
 } from '@stele/identity';
 import type { AgentIdentity } from '@stele/identity';
 
-import {
-  DocumentedSteleError as SteleError,
-  DocumentedErrorCode as SteleErrorCode,
-} from '@stele/types';
-
 import type {
   SteleClientOptions,
   CreateCovenantOptions,
@@ -408,8 +403,7 @@ export class SteleClient {
    */
   async initializeKeyRotation(): Promise<void> {
     if (!this._keyManager) {
-      throw new SteleError(
-        SteleErrorCode.KEY_ROTATION_REQUIRED,
+      throw new Error(
         'Key rotation is not configured. Pass { keyRotation } in the client options.',
       );
     }
@@ -429,8 +423,7 @@ export class SteleClient {
    */
   async rotateKeyIfNeeded(): Promise<boolean> {
     if (!this._keyManager) {
-      throw new SteleError(
-        SteleErrorCode.KEY_ROTATION_REQUIRED,
+      throw new Error(
         'Key rotation is not configured. Pass { keyRotation } in the client options.',
       );
     }
@@ -477,20 +470,17 @@ export class SteleClient {
   async createCovenant(options: CreateCovenantOptions): Promise<CovenantDocument> {
     // ── Input validation (Stripe-quality errors at the public API boundary) ──
     if (!options.issuer || !options.issuer.id) {
-      throw new SteleError(
-        SteleErrorCode.MISSING_ISSUER,
+      throw new Error(
         "SteleClient.createCovenant(): issuer.id is required. Provide a non-empty string identifying the issuing party.",
       );
     }
     if (!options.beneficiary || !options.beneficiary.id) {
-      throw new SteleError(
-        SteleErrorCode.MISSING_BENEFICIARY,
+      throw new Error(
         "SteleClient.createCovenant(): beneficiary.id is required. Provide a non-empty string identifying the beneficiary party.",
       );
     }
     if (!options.constraints || options.constraints.trim().length === 0) {
-      throw new SteleError(
-        SteleErrorCode.EMPTY_CONSTRAINTS,
+      throw new Error(
         "SteleClient.createCovenant(): constraints must be a non-empty CCL string. Example: permit read on '/data/**'",
       );
     }
@@ -506,8 +496,7 @@ export class SteleClient {
 
     const privateKey = options.privateKey ?? this._keyPair?.privateKey;
     if (!privateKey) {
-      throw new SteleError(
-        SteleErrorCode.NO_PRIVATE_KEY,
+      throw new Error(
         "SteleClient.createCovenant(): No private key available. Either call client.generateKeyPair() first, or pass { privateKey } in the options.",
       );
     }
@@ -610,8 +599,7 @@ export class SteleClient {
 
     const kp = signerKeyPair ?? this._keyPair;
     if (!kp) {
-      throw new SteleError(
-        SteleErrorCode.NO_KEY_PAIR,
+      throw new Error(
         "SteleClient.countersign(): No key pair available. Either call client.generateKeyPair() first, or pass a KeyPair as the third argument.",
       );
     }
@@ -654,14 +642,12 @@ export class SteleClient {
     context?: EvaluationContext,
   ): Promise<EvaluationResult> {
     if (!action || action.trim().length === 0) {
-      throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new Error(
         "SteleClient.evaluateAction(): action must be a non-empty string (e.g., 'read', 'write', 'api.call').",
       );
     }
     if (!resource || resource.trim().length === 0) {
-      throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new Error(
         "SteleClient.evaluateAction(): resource must be a non-empty string (e.g., '/data/**', '/api/endpoint').",
       );
     }
@@ -712,8 +698,7 @@ export class SteleClient {
   async createIdentity(options: CreateIdentityOptions): Promise<AgentIdentity> {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
-      throw new SteleError(
-        SteleErrorCode.NO_KEY_PAIR,
+      throw new Error(
         "SteleClient.createIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
@@ -762,8 +747,7 @@ export class SteleClient {
   ): Promise<AgentIdentity> {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
-      throw new SteleError(
-        SteleErrorCode.NO_KEY_PAIR,
+      throw new Error(
         "SteleClient.evolveIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
@@ -1401,10 +1385,6 @@ export type { DashboardConfig, MetricPoint, MetricSeries, DashboardPanel, Dashbo
 // ─── Analytics ────────────────────────────────────────────────────────────────
 export { aggregateData, anonymizeDataset, computeTrends } from './analytics.js';
 export type { TrustDataPoint, AggregatedInsight, AnonymizedDataset } from './analytics.js';
-
-// ─── Health Checks ────────────────────────────────────────────────────────────
-export { liveness, readiness, deepHealth } from './health.js';
-export type { ComponentStatus, ComponentCheck, HealthReport, HealthCheckConfig } from './health.js';
 
 // ─── Gateway ──────────────────────────────────────────────────────────────────
 export {

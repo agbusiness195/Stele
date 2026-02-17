@@ -1,6 +1,5 @@
 import { sha256String } from '@stele/crypto';
 import type { HashHex } from '@stele/crypto';
-import { SteleError, SteleErrorCode } from '@stele/types';
 
 /**
  * BN254 (alt_bn128) scalar field prime.
@@ -66,7 +65,7 @@ const ROUND_CONSTANTS = generateRoundConstants();
 function modInverse(a: bigint, p: bigint): bigint {
   a = ((a % p) + p) % p;
   if (a === 0n) {
-    throw new SteleError('No inverse for zero', SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+    throw new Error('No inverse for zero');
   }
 
   let [old_r, r] = [a, p];
@@ -184,16 +183,15 @@ function partialRound(state: bigint[], round: number): bigint[] {
  */
 export function poseidonHash(inputs: bigint[]): bigint {
   if (inputs.length === 0) {
-    throw new SteleError('Poseidon hash requires at least one input', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('Poseidon hash requires at least one input');
   }
 
   // Validate inputs are in the field
   for (let i = 0; i < inputs.length; i++) {
     const input = inputs[i]!;
     if (input < 0n || input >= FIELD_PRIME) {
-      throw new SteleError(
-        `Input ${i} is out of field range: must be in [0, FIELD_PRIME)`,
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new Error(
+        `Input ${i} is out of field range: must be in [0, FIELD_PRIME)`
       );
     }
   }
@@ -270,7 +268,7 @@ function poseidonPermutation(state: bigint[]): bigint[] {
  */
 export function hashToField(hash: HashHex): bigint {
   if (hash.length < 2) {
-    throw new SteleError('Hash string too short for field conversion', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('Hash string too short for field conversion');
   }
 
   // Use the full hash but reduce mod prime
@@ -284,7 +282,7 @@ export function hashToField(hash: HashHex): bigint {
  */
 export function fieldToHex(value: bigint): string {
   if (value < 0n || value >= FIELD_PRIME) {
-    throw new SteleError('Value out of field range', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new Error('Value out of field range');
   }
   return value.toString(16).padStart(64, '0');
 }

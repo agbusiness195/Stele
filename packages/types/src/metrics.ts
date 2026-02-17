@@ -5,8 +5,6 @@
  * collecting operational metrics without any external dependencies.
  */
 
-import { SteleError, SteleErrorCode } from './errors';
-
 // ─── Snapshot interfaces ─────────────────────────────────────────────────────────
 
 /** A point-in-time snapshot of histogram observations. */
@@ -69,7 +67,7 @@ export class Counter {
   increment(value?: number): void {
     const v = value ?? 1;
     if (v < 0) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Counter increment value must be non-negative');
+      throw new Error('Counter increment value must be non-negative');
     }
     this.value += v;
   }

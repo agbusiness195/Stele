@@ -1,5 +1,4 @@
 import { sha256Object, generateId } from '@stele/crypto';
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 export type {
   SubstrateType,
@@ -55,8 +54,7 @@ const VALID_OPERATORS: ReadonlySet<string> = new Set<string>([
 
 function validateSubstrateType(type: string): asserts type is SubstrateType {
   if (!VALID_SUBSTRATE_TYPES.has(type)) {
-    throw new SteleError(
-      SteleErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new Error(
       `Invalid substrate type: "${type}". Valid types: ${[...VALID_SUBSTRATE_TYPES].join(', ')}`,
     );
   }
@@ -146,7 +144,7 @@ export function createAdapter(type: SubstrateType, config: AdapterConfig): Subst
   validateSubstrateType(type);
 
   if (!config.capabilities || config.capabilities.length === 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'AdapterConfig.capabilities must be a non-empty array');
+    throw new Error('AdapterConfig.capabilities must be a non-empty array');
   }
 
   return {
@@ -273,8 +271,7 @@ export function checkPhysicalConstraint(constraint: PhysicalConstraint, actualVa
     default: {
       const op = (constraint as { operator: string }).operator;
       if (!VALID_OPERATORS.has(op)) {
-        throw new SteleError(
-          SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        throw new Error(
           `Unknown operator: "${op}". Valid operators: ${[...VALID_OPERATORS].join(', ')}`,
         );
       }
@@ -533,7 +530,7 @@ export function constraintTranslation(
   targetSubstrate: SubstrateType,
 ): ConstraintTranslationResult {
   if (!constraint || constraint.trim() === '') {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Constraint must be a non-empty string');
+    throw new Error('Constraint must be a non-empty string');
   }
   validateSubstrateType(targetSubstrate);
 

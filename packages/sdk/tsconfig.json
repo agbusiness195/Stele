@@ -3,96 +3,37 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "composite": true,
-    "emitDeclarationOnly": true
+    "composite": true
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
-    {
-      "path": "../types"
-    },
-    {
-      "path": "../crypto"
-    },
-    {
-      "path": "../core"
-    },
-    {
-      "path": "../ccl"
-    },
-    {
-      "path": "../identity"
-    },
-    {
-      "path": "../store"
-    },
-    {
-      "path": "../verifier"
-    },
-    {
-      "path": "../negotiation"
-    },
-    {
-      "path": "../discovery"
-    },
-    {
-      "path": "../schema"
-    },
-    {
-      "path": "../breach"
-    },
-    {
-      "path": "../reputation"
-    },
-    {
-      "path": "../proof"
-    },
-    {
-      "path": "../attestation"
-    },
-    {
-      "path": "../temporal"
-    },
-    {
-      "path": "../canary"
-    },
-    {
-      "path": "../gametheory"
-    },
-    {
-      "path": "../composition"
-    },
-    {
-      "path": "../antifragile"
-    },
-    {
-      "path": "../consensus"
-    },
-    {
-      "path": "../robustness"
-    },
-    {
-      "path": "../recursive"
-    },
-    {
-      "path": "../alignment"
-    },
-    {
-      "path": "../norms"
-    },
-    {
-      "path": "../substrate"
-    },
-    {
-      "path": "../derivatives"
-    },
-    {
-      "path": "../legal"
-    },
-    {
-      "path": "../enforcement"
-    }
+    { "path": "../types" },
+    { "path": "../crypto" },
+    { "path": "../core" },
+    { "path": "../ccl" },
+    { "path": "../identity" },
+    { "path": "../store" },
+    { "path": "../verifier" },
+    { "path": "../negotiation" },
+    { "path": "../discovery" },
+    { "path": "../schema" },
+    { "path": "../breach" },
+    { "path": "../reputation" },
+    { "path": "../proof" },
+    { "path": "../attestation" },
+    { "path": "../temporal" },
+    { "path": "../canary" },
+    { "path": "../gametheory" },
+    { "path": "../composition" },
+    { "path": "../antifragile" },
+    { "path": "../consensus" },
+    { "path": "../robustness" },
+    { "path": "../recursive" },
+    { "path": "../alignment" },
+    { "path": "../norms" },
+    { "path": "../substrate" },
+    { "path": "../derivatives" },
+    { "path": "../legal" },
+    { "path": "../enforcement" }
   ]
 }

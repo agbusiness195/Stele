@@ -1,5 +1,4 @@
 import { sha256Object, generateId } from '@stele/crypto';
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 export type {
   TrustFuture,
@@ -48,9 +47,6 @@ const DEFAULT_PREMIUM_MULTIPLIER = 1.5;
 const DEFAULT_MINIMUM_PREMIUM_RATE = 0.01;
 const DEFAULT_MATURITY_HALF_LIFE = 365;
 
-/** Tolerance for validating that risk weights sum to 1.0. */
-const WEIGHT_SUM_TOLERANCE = 0.001;
-
 function resolveConfig(config?: PricingConfig) {
   const weights = { ...DEFAULT_RISK_WEIGHTS, ...config?.riskWeights };
   const premiumMultiplier = config?.premiumMultiplier ?? DEFAULT_PREMIUM_MULTIPLIER;
@@ -75,25 +71,33 @@ export function validatePricingConfig(config: PricingConfig): void {
     const w = { ...DEFAULT_RISK_WEIGHTS, ...config.riskWeights };
     for (const [name, val] of Object.entries(w)) {
       if (val < 0) {
-        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Risk weight '${name}' must be >= 0, got ${val}`);
+        throw new Error(`Risk weight '${name}' must be >= 0, got ${val}`);
       }
     }
     const sum = Object.values(w).reduce((s, v) => s + v, 0);
-    if (Math.abs(sum - 1.0) > WEIGHT_SUM_TOLERANCE) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Risk weights must sum to approximately 1.0, got ${sum}`);
+    if (Math.abs(sum - 1.0) > 0.001) {
+      throw new Error(
+        `Risk weights must sum to approximately 1.0, got ${sum}`,
+      );
     }
   }
 
   if (config.premiumMultiplier !== undefined && config.premiumMultiplier <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `premiumMultiplier must be > 0, got ${config.premiumMultiplier}`);
+    throw new Error(
+      `premiumMultiplier must be > 0, got ${config.premiumMultiplier}`,
+    );
   }
 
   if (config.minimumPremiumRate !== undefined && config.minimumPremiumRate < 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `minimumPremiumRate must be >= 0, got ${config.minimumPremiumRate}`);
+    throw new Error(
+      `minimumPremiumRate must be >= 0, got ${config.minimumPremiumRate}`,
+    );
   }
 
   if (config.maturityHalfLife !== undefined && config.maturityHalfLife <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `maturityHalfLife must be > 0, got ${config.maturityHalfLife}`);
+    throw new Error(
+      `maturityHalfLife must be > 0, got ${config.maturityHalfLife}`,
+    );
   }
 }
 
@@ -102,25 +106,35 @@ export function validatePricingConfig(config: PricingConfig): void {
  */
 export function validateReputationData(reputation: ReputationData): void {
   if (reputation.trustScore < 0 || reputation.trustScore > 1) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `trustScore must be in [0, 1], got ${reputation.trustScore}`);
+    throw new Error(
+      `trustScore must be in [0, 1], got ${reputation.trustScore}`,
+    );
   }
   if (reputation.complianceRate < 0 || reputation.complianceRate > 1) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `complianceRate must be in [0, 1], got ${reputation.complianceRate}`);
+    throw new Error(
+      `complianceRate must be in [0, 1], got ${reputation.complianceRate}`,
+    );
   }
   if (reputation.breachCount < 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `breachCount must be >= 0, got ${reputation.breachCount}`);
+    throw new Error(`breachCount must be >= 0, got ${reputation.breachCount}`);
   }
   if (reputation.totalInteractions < 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `totalInteractions must be >= 0, got ${reputation.totalInteractions}`);
+    throw new Error(
+      `totalInteractions must be >= 0, got ${reputation.totalInteractions}`,
+    );
   }
   if (reputation.breachCount > reputation.totalInteractions) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `breachCount (${reputation.breachCount}) must be <= totalInteractions (${reputation.totalInteractions})`);
+    throw new Error(
+      `breachCount (${reputation.breachCount}) must be <= totalInteractions (${reputation.totalInteractions})`,
+    );
   }
   if (reputation.stakeAmount < 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `stakeAmount must be >= 0, got ${reputation.stakeAmount}`);
+    throw new Error(
+      `stakeAmount must be >= 0, got ${reputation.stakeAmount}`,
+    );
   }
   if (reputation.age < 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `age must be >= 0, got ${reputation.age}`);
+    throw new Error(`age must be >= 0, got ${reputation.age}`);
   }
 }
 
@@ -196,10 +210,10 @@ export function priceInsurance(
   if (config) validatePricingConfig(config);
 
   if (coverage <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `coverage must be > 0, got ${coverage}`);
+    throw new Error(`coverage must be > 0, got ${coverage}`);
   }
   if (term <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `term must be > 0, got ${term}`);
+    throw new Error(`term must be > 0, got ${term}`);
   }
 
   const { premiumMultiplier, minimumPremiumRate } = resolveConfig(config);
@@ -222,10 +236,10 @@ export function createPolicy(
   config?: PricingConfig,
 ): AgentInsurancePolicy {
   if (coverage <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `coverage must be > 0, got ${coverage}`);
+    throw new Error(`coverage must be > 0, got ${coverage}`);
   }
   if (term <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `term must be > 0, got ${term}`);
+    throw new Error(`term must be > 0, got ${term}`);
   }
 
   const premium = priceInsurance(assessment, coverage, term, config);
@@ -255,7 +269,7 @@ export function createFuture(
   holder: string,
 ): TrustFuture {
   if (premium <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `premium must be > 0, got ${premium}`);
+    throw new Error(`premium must be > 0, got ${premium}`);
   }
 
   return {
@@ -349,13 +363,17 @@ export function claimPolicy(
   lossAmount: number,
 ): { policy: AgentInsurancePolicy; payout: number } {
   if (lossAmount <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `lossAmount must be > 0, got ${lossAmount}`);
+    throw new Error(`lossAmount must be > 0, got ${lossAmount}`);
   }
   if (lossAmount > policy.coverage) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `lossAmount (${lossAmount}) must be <= coverage (${policy.coverage})`);
+    throw new Error(
+      `lossAmount (${lossAmount}) must be <= coverage (${policy.coverage})`,
+    );
   }
   if (policy.status !== 'active') {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Policy must be active to claim, current status: '${policy.status}'`);
+    throw new Error(
+      `Policy must be active to claim, current status: '${policy.status}'`,
+    );
   }
 
   const payout = Math.min(lossAmount, policy.coverage);
@@ -424,7 +442,7 @@ function normalCDF(x: number): number {
  */
 function normalInverseCDF(p: number): number {
   if (p <= 0 || p >= 1) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Probability must be in (0, 1), got ${p}`);
+    throw new Error(`Probability must be in (0, 1), got ${p}`);
   }
 
   // Rational approximation for the central region
@@ -542,16 +560,16 @@ export function blackScholesPrice(params: BlackScholesParams): BlackScholesResul
   const { spotPrice: S, strikePrice: K, timeToMaturity: T, riskFreeRate: r, volatility: sigma, optionType } = params;
 
   if (S <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `spotPrice must be > 0, got ${S}`);
+    throw new Error(`spotPrice must be > 0, got ${S}`);
   }
   if (K <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `strikePrice must be > 0, got ${K}`);
+    throw new Error(`strikePrice must be > 0, got ${K}`);
   }
   if (T <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `timeToMaturity must be > 0, got ${T}`);
+    throw new Error(`timeToMaturity must be > 0, got ${T}`);
   }
   if (sigma <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `volatility must be > 0, got ${sigma}`);
+    throw new Error(`volatility must be > 0, got ${sigma}`);
   }
 
   // d1 = [ln(S/K) + (r + sigma^2/2) * T] / (sigma * sqrt(T))
@@ -655,16 +673,18 @@ export function valueAtRisk(params: VaRParams): VaRResult {
   } = params;
 
   if (portfolioValue <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `portfolioValue must be > 0, got ${portfolioValue}`);
+    throw new Error(`portfolioValue must be > 0, got ${portfolioValue}`);
   }
   if (volatility < 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `volatility must be >= 0, got ${volatility}`);
+    throw new Error(`volatility must be >= 0, got ${volatility}`);
   }
   if (confidenceLevel <= 0 || confidenceLevel >= 1) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `confidenceLevel must be in (0, 1), got ${confidenceLevel}`);
+    throw new Error(
+      `confidenceLevel must be in (0, 1), got ${confidenceLevel}`,
+    );
   }
   if (timeHorizonDays <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `timeHorizonDays must be > 0, got ${timeHorizonDays}`);
+    throw new Error(`timeHorizonDays must be > 0, got ${timeHorizonDays}`);
   }
 
   // z-score for the confidence level (left tail)
@@ -755,16 +775,16 @@ export function hedgeRatio(params: HedgeRatioParams): HedgeRatioResult {
   const { assetVolatility, hedgeVolatility, correlation, positionSize } = params;
 
   if (assetVolatility < 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `assetVolatility must be >= 0, got ${assetVolatility}`);
+    throw new Error(`assetVolatility must be >= 0, got ${assetVolatility}`);
   }
   if (hedgeVolatility <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `hedgeVolatility must be > 0, got ${hedgeVolatility}`);
+    throw new Error(`hedgeVolatility must be > 0, got ${hedgeVolatility}`);
   }
   if (correlation < -1 || correlation > 1) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `correlation must be in [-1, 1], got ${correlation}`);
+    throw new Error(`correlation must be in [-1, 1], got ${correlation}`);
   }
   if (positionSize !== undefined && positionSize <= 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `positionSize must be > 0, got ${positionSize}`);
+    throw new Error(`positionSize must be > 0, got ${positionSize}`);
   }
 
   // h* = rho * (sigma_a / sigma_h)
