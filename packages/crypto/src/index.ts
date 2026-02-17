@@ -503,4 +503,4 @@ export function timestamp(): string {
 // ─── Key Rotation ─────────────────────────────────────────────────────────────
 
 export { KeyManager } from './key-rotation';
-export type { KeyRotationPolicy, ManagedKeyPair } from './key-rotation';
+export type { KeyRotationPolicy, ManagedKeyPair, RevocationEntry } from './key-rotation';

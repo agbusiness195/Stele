@@ -34,6 +34,18 @@ export interface KeyRotationPolicy {
 /**
  * A key pair with lifecycle metadata.
  */
+/**
+ * An entry in the key revocation list.
+ */
+export interface RevocationEntry {
+  /** Hex-encoded public key that was revoked. */
+  publicKeyHex: string;
+  /** ISO 8601 timestamp when the key was revoked. */
+  revokedAt: string;
+  /** Human-readable reason for revocation. */
+  reason: string;
+}
+
 export interface ManagedKeyPair {
   /** The underlying Ed25519 key pair. */
   keyPair: KeyPair;
@@ -64,6 +76,7 @@ export interface ManagedKeyPair {
 export class KeyManager {
   private readonly policy: KeyRotationPolicy;
   private keys: ManagedKeyPair[] = [];
+  private readonly revocationList: RevocationEntry[] = [];
   private initialized = false;
 
   constructor(policy: KeyRotationPolicy) {
@@ -258,13 +271,63 @@ export class KeyManager {
   }
 
   /**
+   * Explicitly revoke a key by its public key hex, adding it to the
+   * revocation list. Revoked keys are immediately moved to 'retired'
+   * status and will no longer pass verification via {@link verifyWithAnyKey}.
+   *
+   * @param publicKeyHex - The hex-encoded public key to revoke.
+   * @param reason - Human-readable reason for revocation.
+   * @returns The revocation entry, or undefined if the key was not found.
+   */
+  revoke(publicKeyHex: string, reason: string): RevocationEntry | undefined {
+    this.ensureInitialized();
+
+    const managed = this.keys.find((k) => k.keyPair.publicKeyHex === publicKeyHex);
+    if (!managed) return undefined;
+
+    managed.status = 'retired';
+    managed.rotatedAt = managed.rotatedAt ?? timestamp();
+
+    const entry: RevocationEntry = {
+      publicKeyHex,
+      revokedAt: timestamp(),
+      reason,
+    };
+    this.revocationList.push(entry);
+
+    return entry;
+  }
+
+  /**
+   * Check whether a key has been explicitly revoked.
+   *
+   * @param publicKeyHex - The hex-encoded public key to check.
+   * @returns true if the key is on the revocation list.
+   */
+  isRevoked(publicKeyHex: string): boolean {
+    return this.revocationList.some((e) => e.publicKeyHex === publicKeyHex);
+  }
+
+  /**
+   * Get the full revocation list.
+   *
+   * @returns A copy of all revocation entries.
+   */
+  getRevocationList(): RevocationEntry[] {
+    return [...this.revocationList];
+  }
+
+  /**
    * Get all keys eligible for signature verification:
-   * - Active keys
-   * - Rotating keys still within the overlap period
+   * - Active keys (not revoked)
+   * - Rotating keys still within the overlap period (not revoked)
    */
   private getEligibleKeys(): ManagedKeyPair[] {
     const now = Date.now();
     return this.keys.filter((k) => {
+      // Revoked keys are never eligible
+      if (this.isRevoked(k.keyPair.publicKeyHex)) return false;
+
       if (k.status === 'active') return true;
       if (k.status === 'rotating' && k.rotatedAt) {
         const timeSinceRotation = now - new Date(k.rotatedAt).getTime();

@@ -1402,6 +1402,10 @@ export type { DashboardConfig, MetricPoint, MetricSeries, DashboardPanel, Dashbo
 export { aggregateData, anonymizeDataset, computeTrends } from './analytics.js';
 export type { TrustDataPoint, AggregatedInsight, AnonymizedDataset } from './analytics.js';
 
+// ─── Health Checks ────────────────────────────────────────────────────────────
+export { liveness, readiness, deepHealth } from './health.js';
+export type { ComponentStatus, ComponentCheck, HealthReport, HealthCheckConfig } from './health.js';
+
 // ─── Gateway ──────────────────────────────────────────────────────────────────
 export {
   createGateway,

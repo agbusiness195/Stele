@@ -101,6 +101,7 @@ describe('API Surface Tests', () => {
     const mod = await import('@stele/store');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
+      'EncryptedStore',
       'FileStore',
       'IndexedStore',
       'MemoryStore',
@@ -476,6 +477,7 @@ describe('API Surface Tests', () => {
       'crossJurisdictionCompliance',
       'cryptoConformance',
       'decomposeCovenants',
+      'deepHealth',
       'defineAlignment',
       'defineConjecture',
       'defineEvolution',
@@ -544,6 +546,7 @@ describe('API Surface Tests', () => {
       'keyPairFromPrivateKey',
       'keyPairFromPrivateKeyHex',
       'listAgent',
+      'liveness',
       'loggingMiddleware',
       'mapToJurisdiction',
       'matchAction',
@@ -582,6 +585,7 @@ describe('API Surface Tests', () => {
       'queryProvenance',
       'quorumSize',
       'rateLimitMiddleware',
+      'readiness',
       'reconcile',
       'recordQuery',
       'recordQueryIncome',

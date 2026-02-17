@@ -7,8 +7,13 @@ release milestone and ordered roughly by priority within each group.
 
 - [ ] Publish all stable-tier packages to npm under the `@stele` scope
 - [ ] Generate and host TypeDoc API documentation site
-- [ ] Add production deployment guide (HSM/KMS integration patterns)
-- [ ] Add performance tuning guide
+- [x] Add production deployment guide (HSM/KMS integration patterns)
+- [x] Add performance tuning guide
+- [x] Add encrypted-at-rest storage backend (`EncryptedStore`)
+- [x] Add key rotation ceremony with revocation list (`KeyManager`)
+- [x] Add health check / readiness probe utilities
+- [x] Fix example imports, placeholder comments, badge counts
+- [x] Add ROADMAP.md and update CHANGELOG
 
 ## v1.0.0 -- Stable Release
 
@@ -16,8 +21,6 @@ release milestone and ordered roughly by priority within each group.
 
 - [ ] Engage a third-party firm to audit `@stele/crypto`, `@stele/ccl`, and
       `@stele/core` (scope defined in THREAT_MODEL.md)
-- [ ] Add encrypted-at-rest storage backend option
-- [ ] Design and document a formal key rotation ceremony protocol
 
 ### Protocol
 
@@ -31,8 +34,6 @@ release milestone and ordered roughly by priority within each group.
 
 - [ ] Promote Express, Vercel AI SDK, and LangChain adapters from beta to
       stable based on production usage feedback
-- [ ] Publish a reference architecture for key storage (HSM integration,
-      cloud KMS wrappers, encrypted-at-rest patterns)
 
 ## v2.0.0 -- Multi-Language & Ecosystem
 
