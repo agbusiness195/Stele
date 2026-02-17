@@ -1,5 +1,6 @@
 # Generated API docs
 docs/api/
+docs/api-generated/
 
 # tsc --build output in examples, tests, benchmarks, and package dirs
 examples/**/*.js
