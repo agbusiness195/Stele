@@ -1,7 +1,7 @@
 import { sha256Object } from '@stele/crypto';
 import { parse, matchAction, matchResource } from '@stele/ccl';
 import type { Statement } from '@stele/ccl';
-import { SteleError, SteleErrorCode } from '@stele/types';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 export type {
   AlignmentProperty,
@@ -412,14 +412,14 @@ export class AdaptiveAlignmentTracker {
   constructor(properties: AlignmentProperty[], alpha = 0.3) {
     if (properties.length === 0) {
       throw new SteleError(
-        'Must provide at least one alignment property',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Must provide at least one alignment property',
       );
     }
     if (alpha <= 0 || alpha >= 1) {
       throw new SteleError(
-        'alpha must be between 0 and 1 (exclusive)',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'alpha must be between 0 and 1 (exclusive)',
       );
     }
     this.alpha = alpha;
@@ -441,14 +441,14 @@ export class AdaptiveAlignmentTracker {
   recordObservation(obs: WeightObservation): void {
     if (!this.propertyNames.includes(obs.propertyName)) {
       throw new SteleError(
-        `Unknown property: "${obs.propertyName}". Known: [${this.propertyNames.join(', ')}]`,
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `Unknown property: "${obs.propertyName}". Known: [${this.propertyNames.join(', ')}]`,
       );
     }
     if (!Number.isFinite(obs.severity) || obs.severity < 0) {
       throw new SteleError(
-        'severity must be a non-negative finite number',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'severity must be a non-negative finite number',
       );
     }
 
@@ -554,8 +554,8 @@ export class PropertyAnomalyDetector {
   constructor(anomalyThreshold = 3.5) {
     if (!Number.isFinite(anomalyThreshold) || anomalyThreshold <= 0) {
       throw new SteleError(
-        'anomalyThreshold must be a positive finite number',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'anomalyThreshold must be a positive finite number',
       );
     }
     this.anomalyThreshold = anomalyThreshold;
@@ -569,14 +569,14 @@ export class PropertyAnomalyDetector {
   record(propertyName: string, value: number): void {
     if (!propertyName || propertyName.trim() === '') {
       throw new SteleError(
-        'propertyName must be a non-empty string',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'propertyName must be a non-empty string',
       );
     }
     if (!Number.isFinite(value)) {
       throw new SteleError(
-        'value must be a finite number',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'value must be a finite number',
       );
     }
     if (!this.dataByProperty[propertyName]) {
