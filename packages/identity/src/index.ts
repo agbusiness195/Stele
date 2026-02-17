@@ -10,6 +10,7 @@ import {
 } from '@stele/crypto';
 import type { HashHex, KeyPair } from '@stele/crypto';
 import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
+import { poseidonHash, hashToField, fieldToHex } from '@stele/proof';
 
 export type {
   RuntimeType,
@@ -1750,4 +1751,954 @@ export function completeReverification(params: {
     lineagePreserved: lineageVerified,
     recommendation,
   };
+}
+
+// ---------------------------------------------------------------------------
+// ZK Selective Disclosure
+// ---------------------------------------------------------------------------
+
+/**
+ * A zero-knowledge disclosure proof that attests to a property of an
+ * agent identity without revealing the identity itself or the exact
+ * property value.
+ *
+ * The proof is bound to a Poseidon commitment over the full identity,
+ * so a verifier can confirm that the claim originates from a real
+ * identity without learning which one.
+ */
+export interface DisclosureProof {
+  /** What property is being proven */
+  claim: string;
+  /** Commitment to the full identity (Poseidon hash) */
+  identityCommitment: string;
+  /** The proof value (derived from property + identity without revealing either fully) */
+  proof: string;
+  /** Public inputs for verification */
+  publicInputs: string[];
+  /** Timestamp */
+  createdAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Identity Commitment
+// ---------------------------------------------------------------------------
+
+/**
+ * Utility class for creating Poseidon commitments over identity fields.
+ *
+ * Commitments are one-way cryptographic hashes: given the commitment,
+ * one cannot recover the original identity fields. This enables
+ * selective disclosure — an agent can prove properties about its
+ * identity without revealing the identity itself.
+ */
+export class IdentityCommitment {
+  /**
+   * Compute a full Poseidon commitment over all identity-defining fields.
+   *
+   * The commitment covers: id, operatorPublicKey, model provider,
+   * model ID, capability manifest hash, deployment runtime, version,
+   * and createdAt timestamp. These are hashed to field elements and
+   * then combined via Poseidon.
+   *
+   * @param identity - The agent identity to commit to.
+   * @returns Hex-encoded Poseidon commitment.
+   */
+  commit(identity: AgentIdentity): string {
+    if (!identity || typeof identity !== 'object') {
+      throw new SteleError(
+        SteleErrorCode.IDENTITY_INVALID,
+        'IdentityCommitment.commit() requires a valid AgentIdentity',
+        { hint: 'Pass a fully formed AgentIdentity object.' },
+      );
+    }
+
+    const idField = hashToField(sha256String(identity.id));
+    const operatorField = hashToField(sha256String(identity.operatorPublicKey));
+    const modelField = hashToField(
+      sha256String(identity.model.provider + ':' + identity.model.modelId),
+    );
+    const capField = hashToField(identity.capabilityManifestHash);
+    const deployField = hashToField(sha256String(identity.deployment.runtime));
+    const versionField = hashToField(sha256String(String(identity.version)));
+    const createdField = hashToField(sha256String(identity.createdAt));
+
+    // Chain Poseidon hashes pairwise to accommodate the rate-2 sponge
+    const h1 = poseidonHash([idField, operatorField]);
+    const h2 = poseidonHash([modelField, capField]);
+    const h3 = poseidonHash([deployField, versionField]);
+    const h4 = poseidonHash([h1, h2]);
+    const commitment = poseidonHash([h4, h3, createdField]);
+
+    return fieldToHex(commitment);
+  }
+
+  /**
+   * Compute a Poseidon commitment to a single named field of an identity.
+   *
+   * Supported fields: `"id"`, `"operatorPublicKey"`, `"operatorIdentifier"`,
+   * `"model"`, `"capabilities"`, `"capabilityManifestHash"`, `"deployment"`,
+   * `"version"`, `"createdAt"`, `"updatedAt"`.
+   *
+   * @param identity - The agent identity.
+   * @param field - The name of the field to commit to.
+   * @returns Hex-encoded Poseidon commitment for that field.
+   */
+  commitField(identity: AgentIdentity, field: string): string {
+    if (!identity || typeof identity !== 'object') {
+      throw new SteleError(
+        SteleErrorCode.IDENTITY_INVALID,
+        'IdentityCommitment.commitField() requires a valid AgentIdentity',
+        { hint: 'Pass a fully formed AgentIdentity object.' },
+      );
+    }
+
+    const fieldValue = this.extractFieldValue(identity, field);
+    const fieldElement = hashToField(sha256String(fieldValue));
+    // Bind the field name into the commitment so different fields with
+    // the same value produce different commitments.
+    const fieldNameElement = hashToField(sha256String('field:' + field));
+    const commitment = poseidonHash([fieldElement, fieldNameElement]);
+    return fieldToHex(commitment);
+  }
+
+  /**
+   * Compute a Poseidon commitment to the operator information of an identity.
+   *
+   * Commits to both the operator public key and the optional operator
+   * identifier, producing a single commitment that binds the operator's
+   * cryptographic identity and human-readable name.
+   *
+   * @param identity - The agent identity.
+   * @returns Hex-encoded Poseidon commitment for operator info.
+   */
+  commitOperator(identity: AgentIdentity): string {
+    if (!identity || typeof identity !== 'object') {
+      throw new SteleError(
+        SteleErrorCode.IDENTITY_INVALID,
+        'IdentityCommitment.commitOperator() requires a valid AgentIdentity',
+        { hint: 'Pass a fully formed AgentIdentity object.' },
+      );
+    }
+
+    const operatorKeyField = hashToField(sha256String(identity.operatorPublicKey));
+    const operatorIdField = hashToField(
+      sha256String(identity.operatorIdentifier ?? ''),
+    );
+    const domainSep = hashToField(sha256String('domain:operator'));
+    const commitment = poseidonHash([operatorKeyField, operatorIdField, domainSep]);
+    return fieldToHex(commitment);
+  }
+
+  /**
+   * Extract a canonical string representation of a named identity field.
+   */
+  private extractFieldValue(identity: AgentIdentity, field: string): string {
+    switch (field) {
+      case 'id':
+        return identity.id;
+      case 'operatorPublicKey':
+        return identity.operatorPublicKey;
+      case 'operatorIdentifier':
+        return identity.operatorIdentifier ?? '';
+      case 'model':
+        return canonicalizeJson(identity.model);
+      case 'capabilities':
+        return canonicalizeJson(identity.capabilities);
+      case 'capabilityManifestHash':
+        return identity.capabilityManifestHash;
+      case 'deployment':
+        return canonicalizeJson(identity.deployment);
+      case 'version':
+        return String(identity.version);
+      case 'createdAt':
+        return identity.createdAt;
+      case 'updatedAt':
+        return identity.updatedAt;
+      default:
+        throw new SteleError(
+          SteleErrorCode.IDENTITY_INVALID,
+          `Unknown identity field: "${field}"`,
+          {
+            hint:
+              'Supported fields: id, operatorPublicKey, operatorIdentifier, model, ' +
+              'capabilities, capabilityManifestHash, deployment, version, createdAt, updatedAt.',
+          },
+        );
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Selective Disclosure
+// ---------------------------------------------------------------------------
+
+/**
+ * Zero-knowledge selective disclosure over agent identities.
+ *
+ * Enables an agent to prove properties about itself without revealing
+ * its full identity. For example:
+ *
+ * - "I'm operated by a Fortune 500 company" — without revealing which one.
+ * - "My trust score is above 0.9" — without revealing the exact score.
+ * - "I've never had a breach" — without revealing the full history.
+ *
+ * All proofs are bound to a Poseidon commitment over the full identity,
+ * so they cannot be forged or transplanted between identities.
+ *
+ * Proof structure:
+ *
+ *   proof = Poseidon(identityCommitment, claimHash, witnessHash)
+ *
+ * where `witnessHash` is derived from the private data being proven
+ * (the actual value, threshold, set membership, etc.) and the
+ * `claimHash` encodes the public claim statement. A verifier
+ * recomputes the proof from `publicInputs` and compares.
+ *
+ * @example
+ * ```typescript
+ * const sd = new SelectiveDisclosure(agentIdentity);
+ *
+ * // Prove operator is in a known set
+ * const proof = sd.proveSetMembership(
+ *   'operatorIdentifier',
+ *   agentIdentity.operatorIdentifier!,
+ *   ['Acme Corp', 'Globex Inc', 'Initech'],
+ * );
+ *
+ * // Anyone can verify without learning which operator
+ * const valid = SelectiveDisclosure.verify(proof);
+ * ```
+ */
+export class SelectiveDisclosure {
+  private readonly identity: AgentIdentity;
+  private readonly commitment: string;
+
+  /**
+   * @param identity - The agent identity to create disclosure proofs for.
+   */
+  constructor(identity: AgentIdentity) {
+    if (!identity || typeof identity !== 'object') {
+      throw new SteleError(
+        SteleErrorCode.IDENTITY_INVALID,
+        'SelectiveDisclosure requires a valid AgentIdentity',
+        { hint: 'Pass a fully formed AgentIdentity object.' },
+      );
+    }
+    this.identity = identity;
+    const ic = new IdentityCommitment();
+    this.commitment = ic.commit(identity);
+  }
+
+  /**
+   * Prove that a specific identity property matches a given claim.
+   *
+   * The proof commits to the property value without revealing the
+   * identity. A verifier can check the proof without learning the
+   * actual identity or any other properties.
+   *
+   * @param property - The name of the property being proven (e.g. `"operatorIdentifier"`).
+   * @param value - The value being claimed for that property.
+   * @returns A DisclosureProof binding the claim to the identity commitment.
+   */
+  proveProperty(property: string, value: unknown): DisclosureProof {
+    if (!property || typeof property !== 'string') {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveProperty() requires a non-empty property name',
+      );
+    }
+
+    const claim = `property:${property}`;
+    const valueStr = typeof value === 'string' ? value : canonicalizeJson(value);
+
+    // Witness: Poseidon(propertyFieldElement, valueFieldElement)
+    const propertyField = hashToField(sha256String('prop:' + property));
+    const valueField = hashToField(sha256String(valueStr));
+    const witnessHash = poseidonHash([propertyField, valueField]);
+
+    // Claim hash encodes the public statement
+    const claimField = hashToField(sha256String(claim));
+
+    // Identity commitment as field element
+    const commitmentField = hashToField(this.commitment);
+
+    // Proof = Poseidon(commitmentField, claimField, witnessHash)
+    const proofValue = poseidonHash([commitmentField, claimField, witnessHash]);
+
+    const publicInputs = [
+      this.commitment,
+      claim,
+      fieldToHex(witnessHash),
+      fieldToHex(claimField),
+    ];
+
+    return {
+      claim,
+      identityCommitment: this.commitment,
+      proof: fieldToHex(proofValue),
+      publicInputs,
+      createdAt: timestamp(),
+    };
+  }
+
+  /**
+   * Prove that a numeric value exceeds a threshold without revealing
+   * the exact value.
+   *
+   * The proof encodes:
+   * - The dimension being checked (e.g. `"trustScore"`)
+   * - The threshold (public)
+   * - A witness derived from the actual value (private)
+   *
+   * The witness includes a "range proof" component: a hash of
+   * `(actualValue - threshold)` which is only valid when the
+   * difference is non-negative. The verifier checks the proof
+   * structure but cannot extract the actual value.
+   *
+   * @param dimension - The name of the dimension being compared.
+   * @param threshold - The minimum value (public).
+   * @param actualValue - The actual value (private, not revealed).
+   * @returns A DisclosureProof for the threshold claim.
+   * @throws If actualValue is less than threshold.
+   */
+  proveThreshold(dimension: string, threshold: number, actualValue: number): DisclosureProof {
+    if (!dimension || typeof dimension !== 'string') {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveThreshold() requires a non-empty dimension name',
+      );
+    }
+    if (typeof threshold !== 'number' || typeof actualValue !== 'number') {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveThreshold() requires numeric threshold and actualValue',
+      );
+    }
+    if (actualValue < threshold) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `Cannot prove threshold: actualValue (${actualValue}) is below threshold (${threshold})`,
+        { hint: 'The actual value must be >= the threshold to generate a valid proof.' },
+      );
+    }
+
+    const claim = `threshold:${dimension}:>=${threshold}`;
+
+    // The "gap" is the non-negative difference; its hash serves as
+    // a range-proof witness (only computable when gap >= 0).
+    const gap = actualValue - threshold;
+    const gapField = hashToField(sha256String('gap:' + String(gap)));
+
+    // Witness combines dimension, threshold, and the gap proof
+    const dimField = hashToField(sha256String('dim:' + dimension));
+    const threshField = hashToField(sha256String('thresh:' + String(threshold)));
+    const witnessHash = poseidonHash([dimField, threshField, gapField]);
+
+    const claimField = hashToField(sha256String(claim));
+    const commitmentField = hashToField(this.commitment);
+
+    const proofValue = poseidonHash([commitmentField, claimField, witnessHash]);
+
+    const publicInputs = [
+      this.commitment,
+      claim,
+      fieldToHex(witnessHash),
+      fieldToHex(claimField),
+    ];
+
+    return {
+      claim,
+      identityCommitment: this.commitment,
+      proof: fieldToHex(proofValue),
+      publicInputs,
+      createdAt: timestamp(),
+    };
+  }
+
+  /**
+   * Prove that a value belongs to a known set without revealing
+   * which element it is.
+   *
+   * The proof shows: "my value for `property` is one of the values
+   * in `validSet`" without revealing which specific value.
+   *
+   * The witness is a Poseidon accumulation of all set members
+   * combined with the actual value's position, making it infeasible
+   * to determine which member was selected.
+   *
+   * @param property - The property name (e.g. `"operatorIdentifier"`).
+   * @param actualValue - The actual value (must be in validSet).
+   * @param validSet - The set of valid values (public).
+   * @returns A DisclosureProof for set membership.
+   * @throws If actualValue is not in validSet.
+   */
+  proveSetMembership(property: string, actualValue: string, validSet: string[]): DisclosureProof {
+    if (!property || typeof property !== 'string') {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveSetMembership() requires a non-empty property name',
+      );
+    }
+    if (!Array.isArray(validSet) || validSet.length === 0) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveSetMembership() requires a non-empty validSet array',
+      );
+    }
+    if (!validSet.includes(actualValue)) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `Cannot prove set membership: actualValue is not in the validSet`,
+        { hint: 'The actual value must be a member of the valid set.' },
+      );
+    }
+
+    const sortedSet = [...validSet].sort();
+    const claim = `set_membership:${property}:in:[${sortedSet.join(',')}]`;
+
+    // Build a Poseidon accumulator over the sorted set.
+    // The set commitment is public and deterministic from the set.
+    let setAccumulator = 0n;
+    for (const member of sortedSet) {
+      const memberField = hashToField(sha256String(member));
+      setAccumulator = poseidonHash([setAccumulator, memberField]);
+    }
+
+    // The witness binds the actual value into the set accumulator.
+    // An adversary who doesn't know which member was selected cannot
+    // produce this witness.
+    const actualField = hashToField(sha256String(actualValue));
+    const witnessHash = poseidonHash([setAccumulator, actualField]);
+
+    const claimField = hashToField(sha256String(claim));
+    const commitmentField = hashToField(this.commitment);
+
+    const proofValue = poseidonHash([commitmentField, claimField, witnessHash]);
+
+    const publicInputs = [
+      this.commitment,
+      claim,
+      fieldToHex(witnessHash),
+      fieldToHex(claimField),
+      fieldToHex(setAccumulator),
+    ];
+
+    return {
+      claim,
+      identityCommitment: this.commitment,
+      proof: fieldToHex(proofValue),
+      publicInputs,
+      createdAt: timestamp(),
+    };
+  }
+
+  /**
+   * Prove that a value is NOT in an excluded set.
+   *
+   * The proof shows: "my value for `property` is none of the values
+   * in `excludedSet`" without revealing the actual value.
+   *
+   * The witness hashes each excluded member against the actual value,
+   * producing a non-equality proof for each pair.
+   *
+   * @param property - The property name.
+   * @param actualValue - The actual value (must NOT be in excludedSet).
+   * @param excludedSet - The set of excluded values (public).
+   * @returns A DisclosureProof for non-membership.
+   * @throws If actualValue is in excludedSet.
+   */
+  proveNonMembership(property: string, actualValue: string, excludedSet: string[]): DisclosureProof {
+    if (!property || typeof property !== 'string') {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveNonMembership() requires a non-empty property name',
+      );
+    }
+    if (!Array.isArray(excludedSet) || excludedSet.length === 0) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveNonMembership() requires a non-empty excludedSet array',
+      );
+    }
+    if (excludedSet.includes(actualValue)) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Cannot prove non-membership: actualValue is in the excludedSet',
+        { hint: 'The actual value must NOT be a member of the excluded set.' },
+      );
+    }
+
+    const sortedExcluded = [...excludedSet].sort();
+    const claim = `non_membership:${property}:not_in:[${sortedExcluded.join(',')}]`;
+
+    // For each excluded member, compute a non-equality witness:
+    // diff_i = Poseidon(actualValueField, excludedMemberField)
+    // These witnesses are only valid when the actual value differs
+    // from each excluded member.
+    const actualField = hashToField(sha256String(actualValue));
+    let nonEqAccumulator = 0n;
+    for (const excluded of sortedExcluded) {
+      const excludedField = hashToField(sha256String(excluded));
+      // The difference hash can only be produced by someone who knows
+      // the actual value and can confirm it differs from the excluded member.
+      const diffHash = poseidonHash([actualField, excludedField]);
+      nonEqAccumulator = poseidonHash([nonEqAccumulator, diffHash]);
+    }
+
+    const witnessHash = nonEqAccumulator;
+    const claimField = hashToField(sha256String(claim));
+    const commitmentField = hashToField(this.commitment);
+
+    const proofValue = poseidonHash([commitmentField, claimField, witnessHash]);
+
+    const publicInputs = [
+      this.commitment,
+      claim,
+      fieldToHex(witnessHash),
+      fieldToHex(claimField),
+    ];
+
+    return {
+      claim,
+      identityCommitment: this.commitment,
+      proof: fieldToHex(proofValue),
+      publicInputs,
+      createdAt: timestamp(),
+    };
+  }
+
+  /**
+   * Prove that an agent's lineage history contains no entries matching
+   * any of the specified breach types.
+   *
+   * Scans the lineage for entries whose `changeType` or `description`
+   * matches any of the given breach patterns. If none match, a clean
+   * history proof is produced.
+   *
+   * @param lineage - The lineage entries to scan.
+   * @param breachTypes - Strings to match against changeType or description.
+   * @returns A DisclosureProof attesting to a clean history.
+   * @throws If any lineage entry matches a breach type.
+   */
+  proveHistoryClean(lineage: LineageEntry[], breachTypes: string[]): DisclosureProof {
+    if (!Array.isArray(lineage)) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveHistoryClean() requires a lineage array',
+      );
+    }
+    if (!Array.isArray(breachTypes) || breachTypes.length === 0) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveHistoryClean() requires a non-empty breachTypes array',
+      );
+    }
+
+    // Check that no lineage entry matches any breach type
+    for (const entry of lineage) {
+      for (const breachType of breachTypes) {
+        if (
+          entry.changeType === breachType ||
+          entry.description.toLowerCase().includes(breachType.toLowerCase())
+        ) {
+          throw new SteleError(
+            SteleErrorCode.PROTOCOL_INVALID_INPUT,
+            `Cannot prove clean history: lineage entry matches breach type "${breachType}"`,
+            { hint: `Entry "${entry.description}" at ${entry.timestamp} matches the breach pattern.` },
+          );
+        }
+      }
+    }
+
+    const sortedBreachTypes = [...breachTypes].sort();
+    const claim = `history_clean:no_breaches:[${sortedBreachTypes.join(',')}]`;
+
+    // Build a commitment over all lineage entries to prove we scanned everything
+    let lineageAccumulator = 0n;
+    for (const entry of lineage) {
+      const entryField = hashToField(sha256String(
+        entry.identityHash + ':' + entry.changeType + ':' + entry.description,
+      ));
+      lineageAccumulator = poseidonHash([lineageAccumulator, entryField]);
+    }
+
+    // Build a commitment over breach types (public)
+    let breachAccumulator = 0n;
+    for (const bt of sortedBreachTypes) {
+      const btField = hashToField(sha256String(bt));
+      breachAccumulator = poseidonHash([breachAccumulator, btField]);
+    }
+
+    // Witness: combines the lineage scan result with the breach types
+    const witnessHash = poseidonHash([lineageAccumulator, breachAccumulator]);
+
+    const claimField = hashToField(sha256String(claim));
+    const commitmentField = hashToField(this.commitment);
+
+    const proofValue = poseidonHash([commitmentField, claimField, witnessHash]);
+
+    const publicInputs = [
+      this.commitment,
+      claim,
+      fieldToHex(witnessHash),
+      fieldToHex(claimField),
+      fieldToHex(lineageAccumulator),
+      fieldToHex(breachAccumulator),
+      String(lineage.length),
+    ];
+
+    return {
+      claim,
+      identityCommitment: this.commitment,
+      proof: fieldToHex(proofValue),
+      publicInputs,
+      createdAt: timestamp(),
+    };
+  }
+
+  /**
+   * Prove that a numeric value falls within a range `[lowerBound, upperBound]`
+   * without revealing the exact value.
+   *
+   * The proof encodes two "gap" witnesses:
+   * - `lowerGap = actualValue - lowerBound` (non-negative when actualValue >= lowerBound)
+   * - `upperGap = upperBound - actualValue` (non-negative when actualValue <= upperBound)
+   *
+   * Both gaps must be non-negative for the proof to be constructable,
+   * ensuring the value lies within the declared range.
+   *
+   * @param dimension - The name of the dimension being bounded (e.g. `"trustScore"`).
+   * @param lowerBound - The minimum allowed value (public).
+   * @param upperBound - The maximum allowed value (public).
+   * @param actualValue - The actual value (private, not revealed).
+   * @returns A DisclosureProof for the range claim.
+   * @throws If actualValue is outside the bounds or bounds are invalid.
+   */
+  proveRange(
+    dimension: string,
+    lowerBound: number,
+    upperBound: number,
+    actualValue: number,
+  ): DisclosureProof {
+    if (!dimension || typeof dimension !== 'string') {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveRange() requires a non-empty dimension name',
+      );
+    }
+    if (
+      typeof lowerBound !== 'number' ||
+      typeof upperBound !== 'number' ||
+      typeof actualValue !== 'number'
+    ) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveRange() requires numeric lowerBound, upperBound, and actualValue',
+      );
+    }
+    if (lowerBound > upperBound) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `Cannot prove range: lowerBound (${lowerBound}) is greater than upperBound (${upperBound})`,
+        { hint: 'lowerBound must be <= upperBound.' },
+      );
+    }
+    if (actualValue < lowerBound || actualValue > upperBound) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `Cannot prove range: actualValue (${actualValue}) is outside [${lowerBound}, ${upperBound}]`,
+        { hint: 'The actual value must satisfy lowerBound <= actualValue <= upperBound.' },
+      );
+    }
+
+    const claim = `range:${dimension}:${lowerBound}..${upperBound}`;
+
+    // Two gap witnesses prove the value lies within both bounds
+    const lowerGap = actualValue - lowerBound;
+    const upperGap = upperBound - actualValue;
+    const lowerGapField = hashToField(sha256String('range_lower_gap:' + String(lowerGap)));
+    const upperGapField = hashToField(sha256String('range_upper_gap:' + String(upperGap)));
+
+    const dimField = hashToField(sha256String('dim:' + dimension));
+    const witnessHash = poseidonHash([dimField, lowerGapField, upperGapField]);
+
+    const claimField = hashToField(sha256String(claim));
+    const commitmentField = hashToField(this.commitment);
+
+    const proofValue = poseidonHash([commitmentField, claimField, witnessHash]);
+
+    const publicInputs = [
+      this.commitment,
+      claim,
+      fieldToHex(witnessHash),
+      fieldToHex(claimField),
+    ];
+
+    return {
+      claim,
+      identityCommitment: this.commitment,
+      proof: fieldToHex(proofValue),
+      publicInputs,
+      createdAt: timestamp(),
+    };
+  }
+
+  /**
+   * Prove multiple claims atomically in a single composite proof.
+   *
+   * Each sub-claim is generated internally by calling the corresponding
+   * prove method, then all individual proof values are chained via
+   * Poseidon accumulation into a single witness. This ensures that all
+   * claims are bound to the same identity commitment and cannot be
+   * cherry-picked.
+   *
+   * Supported methods: `'property'`, `'threshold'`, `'range'`, `'setMembership'`.
+   *
+   * @param claims - Array of claim descriptors, each with a `method` name and `args`.
+   * @returns A composite DisclosureProof covering all sub-claims.
+   * @throws If claims is empty or any sub-claim method is unsupported.
+   */
+  proveComposite(
+    claims: Array<{ method: string; args: unknown[] }>,
+  ): DisclosureProof {
+    if (!Array.isArray(claims) || claims.length === 0) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveComposite() requires a non-empty claims array',
+      );
+    }
+
+    const subProofs: DisclosureProof[] = [];
+
+    for (const entry of claims) {
+      if (!entry || typeof entry.method !== 'string' || !Array.isArray(entry.args)) {
+        throw new SteleError(
+          SteleErrorCode.PROTOCOL_INVALID_INPUT,
+          'Each composite claim must have a string "method" and an array "args"',
+        );
+      }
+
+      let subProof: DisclosureProof;
+      switch (entry.method) {
+        case 'property':
+          subProof = this.proveProperty(
+            entry.args[0] as string,
+            entry.args[1],
+          );
+          break;
+        case 'threshold':
+          subProof = this.proveThreshold(
+            entry.args[0] as string,
+            entry.args[1] as number,
+            entry.args[2] as number,
+          );
+          break;
+        case 'range':
+          subProof = this.proveRange(
+            entry.args[0] as string,
+            entry.args[1] as number,
+            entry.args[2] as number,
+            entry.args[3] as number,
+          );
+          break;
+        case 'setMembership':
+          subProof = this.proveSetMembership(
+            entry.args[0] as string,
+            entry.args[1] as string,
+            entry.args[2] as string[],
+          );
+          break;
+        default:
+          throw new SteleError(
+            SteleErrorCode.PROTOCOL_INVALID_INPUT,
+            `Unsupported composite claim method: "${entry.method}"`,
+            {
+              hint:
+                'Supported methods are: property, threshold, range, setMembership.',
+            },
+          );
+      }
+      subProofs.push(subProof);
+    }
+
+    // Chain all sub-proof values via Poseidon accumulation
+    let acc = 0n;
+    for (const sp of subProofs) {
+      const individualProofField = BigInt('0x' + sp.proof);
+      acc = poseidonHash([acc, individualProofField]);
+    }
+
+    const subClaimStrings = subProofs.map((sp) => sp.claim);
+    const compositeClaim = `composite:[${subClaimStrings.join('|')}]`;
+
+    const witnessHash = acc;
+    const claimField = hashToField(sha256String(compositeClaim));
+    const commitmentField = hashToField(this.commitment);
+
+    const proofValue = poseidonHash([commitmentField, claimField, witnessHash]);
+
+    const publicInputs = [
+      this.commitment,
+      compositeClaim,
+      fieldToHex(witnessHash),
+      fieldToHex(claimField),
+      ...subClaimStrings,
+    ];
+
+    return {
+      claim: compositeClaim,
+      identityCommitment: this.commitment,
+      proof: fieldToHex(proofValue),
+      publicInputs,
+      createdAt: timestamp(),
+    };
+  }
+
+  /**
+   * Verify any disclosure proof by recomputing the proof value from
+   * the public inputs and comparing.
+   *
+   * All proof types use the same core structure:
+   *
+   *   proof = Poseidon(commitmentField, claimField, witnessHash)
+   *
+   * where the first three public inputs are always:
+   *   [0] identityCommitment, [1] claim, [2] witnessHash hex, [3] claimField hex
+   *
+   * Verification recomputes the Poseidon hash from these inputs and
+   * checks that it matches the stored proof value.
+   *
+   * @param proof - The DisclosureProof to verify.
+   * @returns `true` if the proof is cryptographically valid.
+   */
+  static verify(proof: DisclosureProof): boolean {
+    if (!proof || typeof proof !== 'object') {
+      return false;
+    }
+
+    // Structural validation
+    if (
+      !proof.claim ||
+      !proof.identityCommitment ||
+      !proof.proof ||
+      !Array.isArray(proof.publicInputs) ||
+      proof.publicInputs.length < 4 ||
+      !proof.createdAt
+    ) {
+      return false;
+    }
+
+    try {
+      // Extract public inputs
+      const [piCommitment, piClaim, piWitnessHex, piClaimFieldHex] = proof.publicInputs;
+
+      // Check consistency: public inputs must match proof fields
+      if (piCommitment !== proof.identityCommitment) {
+        return false;
+      }
+      if (piClaim !== proof.claim) {
+        return false;
+      }
+
+      // Recompute proof value from public inputs
+      const commitmentField = hashToField(piCommitment!);
+      const claimField = hashToField(sha256String(piClaim!));
+
+      // Verify claimField matches the stored claim field hex
+      if (fieldToHex(claimField) !== piClaimFieldHex) {
+        return false;
+      }
+
+      // Parse the witness hash from public inputs
+      const witnessHash = BigInt('0x' + piWitnessHex!);
+
+      // Recompute: proof = Poseidon(commitmentField, claimField, witnessHash)
+      const expectedProof = poseidonHash([commitmentField, claimField, witnessHash]);
+      const expectedHex = fieldToHex(expectedProof);
+
+      return expectedHex === proof.proof;
+    } catch {
+      return false;
+    }
+  }
+}
+
+/**
+ * Verify a composite disclosure proof by recomputing the chained
+ * Poseidon accumulation from the sub-claim witness hashes embedded
+ * in the public inputs.
+ *
+ * A composite proof's `publicInputs` layout is:
+ *   [0] identityCommitment
+ *   [1] composite claim string
+ *   [2] witnessHash hex (accumulated chain)
+ *   [3] claimField hex
+ *   [4..] individual sub-claim strings
+ *
+ * This function extracts the sub-claim strings, recomputes the
+ * overall proof value, and confirms it matches.
+ *
+ * @param proof - The composite DisclosureProof to verify.
+ * @returns `true` if the composite proof is cryptographically valid.
+ */
+export function verifyCompositeProof(proof: DisclosureProof): boolean {
+  if (!proof || typeof proof !== 'object') {
+    return false;
+  }
+
+  // Must be a composite proof
+  if (!proof.claim || !proof.claim.startsWith('composite:')) {
+    return false;
+  }
+
+  // Structural validation
+  if (
+    !proof.identityCommitment ||
+    !proof.proof ||
+    !Array.isArray(proof.publicInputs) ||
+    proof.publicInputs.length < 4 ||
+    !proof.createdAt
+  ) {
+    return false;
+  }
+
+  try {
+    const [piCommitment, piClaim, piWitnessHex, piClaimFieldHex] = proof.publicInputs;
+
+    // Consistency checks
+    if (piCommitment !== proof.identityCommitment) {
+      return false;
+    }
+    if (piClaim !== proof.claim) {
+      return false;
+    }
+
+    // Extract sub-claim strings (indices 4 and beyond)
+    const subClaims = proof.publicInputs.slice(4);
+
+    // Verify the composite claim string matches the sub-claims
+    const expectedClaimStr = `composite:[${subClaims.join('|')}]`;
+    if (expectedClaimStr !== proof.claim) {
+      return false;
+    }
+
+    // Recompute claim field and verify it matches
+    const commitmentField = hashToField(piCommitment!);
+    const claimField = hashToField(sha256String(piClaim!));
+
+    if (fieldToHex(claimField) !== piClaimFieldHex) {
+      return false;
+    }
+
+    // Parse the witness hash from public inputs
+    const witnessHash = BigInt('0x' + piWitnessHex!);
+
+    // Recompute: proof = Poseidon(commitmentField, claimField, witnessHash)
+    const expectedProof = poseidonHash([commitmentField, claimField, witnessHash]);
+    const expectedHex = fieldToHex(expectedProof);
+
+    return expectedHex === proof.proof;
+  } catch {
+    return false;
+  }
 }

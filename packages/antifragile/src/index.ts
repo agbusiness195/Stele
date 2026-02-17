@@ -49,11 +49,13 @@ const CATEGORY_KEYWORDS: Array<{ category: string; keywords: string[] }> = [
  */
 function validateBreach(breach: BreachSummary): void {
   if (!breach.violatedConstraint || breach.violatedConstraint.trim().length === 0) {
-    throw new Error('BreachSummary.violatedConstraint must be a non-empty string');
+    throw new SteleError(SteleErrorCode.BREACH_INVALID_ATTESTATION, 'BreachSummary.violatedConstraint must be a non-empty string', { hint: 'Ensure the BreachSummary has a non-empty violatedConstraint field.' });
   }
   if (!VALID_SEVERITIES.has(breach.severity)) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.BREACH_INVALID_SEVERITY,
       `BreachSummary.severity must be one of: ${[...VALID_SEVERITIES].join(', ')}. Got: "${breach.severity}"`,
+      { hint: 'Set severity to one of: critical, high, medium, or low.' },
     );
   }
 }
@@ -63,7 +65,7 @@ function validateBreach(breach: BreachSummary): void {
  */
 function validateAntibody(antibody: BreachAntibody): void {
   if (antibody.adoptionVotes < 0) {
-    throw new Error('BreachAntibody.adoptionVotes must be non-negative');
+    throw new SteleError(SteleErrorCode.BREACH_INVALID_ATTESTATION, 'BreachAntibody.adoptionVotes must be non-negative', { hint: 'Ensure adoptionVotes is zero or greater.' });
   }
 }
 
@@ -178,7 +180,7 @@ export function generateAntibody(breach: BreachSummary, adoptionThreshold = 3): 
   validateBreach(breach);
 
   if (adoptionThreshold < 0) {
-    throw new Error('adoptionThreshold must be non-negative');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'adoptionThreshold must be non-negative', { hint: 'Set adoptionThreshold to zero or a positive integer.' });
   }
 
   const category = breach.category ?? deriveCategory(breach.violatedConstraint);
@@ -263,9 +265,11 @@ export function networkHealth(
 export function adoptAntibody(antibody: BreachAntibody): BreachAntibody {
   validateAntibody(antibody);
   if (antibody.adoptionVotes < antibody.adoptionThreshold) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.BREACH_INVALID_ATTESTATION,
       `Cannot adopt antibody: ${antibody.adoptionVotes} votes < threshold ${antibody.adoptionThreshold}. ` +
       `Use forceAdopt() for governance override.`,
+      { hint: 'Accumulate enough votes or use forceAdopt() to bypass the threshold.' },
     );
   }
   return { ...antibody, status: 'adopted' };
@@ -327,10 +331,10 @@ export function stressTest(
   intensityMultiplier = 2,
 ): StressTestResult {
   if (rounds < 1) {
-    throw new Error('rounds must be at least 1');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'rounds must be at least 1', { hint: 'Set rounds to 1 or higher for the stress test.' });
   }
   if (intensityMultiplier < 1) {
-    throw new Error('intensityMultiplier must be at least 1');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'intensityMultiplier must be at least 1', { hint: 'Set intensityMultiplier to 1 or higher.' });
   }
 
   const severityProgression: Array<BreachSummary['severity']> = ['low', 'medium', 'high', 'critical'];
@@ -407,7 +411,7 @@ export function antifragilityIndex(
   waves = 5,
 ): AntifragilityIndexResult {
   if (waves < 2) {
-    throw new Error('waves must be at least 2 to measure trend');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'waves must be at least 2 to measure trend', { hint: 'Set waves to 2 or higher to enable trend measurement.' });
   }
 
   const result = stressTest(breaches, waves, 2);

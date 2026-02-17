@@ -186,8 +186,10 @@ describe('API Surface Tests', () => {
     expect(exports).toEqual([
       'AdaptiveCarryForward',
       'DEFAULT_EVOLUTION_POLICY',
+      'IdentityCommitment',
       'IdentitySimilarity',
       'LineageCompactor',
+      'SelectiveDisclosure',
       'SemanticVersion',
       'completeReverification',
       'computeCapabilityManifestHash',
@@ -201,6 +203,7 @@ describe('API Surface Tests', () => {
       'serializeIdentity',
       'shareAncestor',
       'triggerReverification',
+      'verifyCompositeProof',
       'verifyIdentity',
     ].sort());
   });
