@@ -3,6 +3,7 @@ export type {
   HonestyProof,
 } from './types';
 
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 import type { HonestyParameters, HonestyProof } from './types';
 
 /**
@@ -19,23 +20,23 @@ import type { HonestyParameters, HonestyProof } from './types';
  */
 export function validateParameters(params: Partial<HonestyParameters>): void {
   if (params.stakeAmount !== undefined && params.stakeAmount < 0) {
-    throw new Error(`stakeAmount must be >= 0, got ${params.stakeAmount}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `stakeAmount must be >= 0, got ${params.stakeAmount}`);
   }
   if (params.detectionProbability !== undefined) {
     if (params.detectionProbability < 0 || params.detectionProbability > 1) {
-      throw new Error(
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
         `detectionProbability must be in [0, 1], got ${params.detectionProbability}`,
       );
     }
   }
   if (params.reputationValue !== undefined && params.reputationValue < 0) {
-    throw new Error(`reputationValue must be >= 0, got ${params.reputationValue}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `reputationValue must be >= 0, got ${params.reputationValue}`);
   }
   if (params.maxViolationGain !== undefined && params.maxViolationGain < 0) {
-    throw new Error(`maxViolationGain must be >= 0, got ${params.maxViolationGain}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `maxViolationGain must be >= 0, got ${params.maxViolationGain}`);
   }
   if (params.coburn !== undefined && params.coburn < 0) {
-    throw new Error(`coburn must be >= 0, got ${params.coburn}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `coburn must be >= 0, got ${params.coburn}`);
   }
 }
 
@@ -294,24 +295,24 @@ export function repeatedGameEquilibrium(params: RepeatedGameParams): RepeatedGam
 
   // Validate payoff ordering: T > R > P > S (Prisoner's Dilemma structure)
   if (T <= R) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `temptationPayoff (${T}) must be > cooperatePayoff (${R}) for a valid dilemma`,
     );
   }
   if (R <= P) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `cooperatePayoff (${R}) must be > defectPayoff (${P}) for a valid dilemma`,
     );
   }
   if (P <= S) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `defectPayoff (${P}) must be > suckerPayoff (${S}) for a valid dilemma`,
     );
   }
 
   // Validate discount factor is in (0, 1)
   if (delta <= 0 || delta >= 1) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `discountFactor must be in (0, 1), got ${delta}`,
     );
   }
@@ -407,10 +408,10 @@ export function coalitionStability(
   coalitionValues: CoalitionValue[],
 ): CoalitionStabilityResult {
   if (agentCount < 1) {
-    throw new Error(`agentCount must be >= 1, got ${agentCount}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `agentCount must be >= 1, got ${agentCount}`);
   }
   if (allocation.length !== agentCount) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `allocation length (${allocation.length}) must equal agentCount (${agentCount})`,
     );
   }
@@ -427,7 +428,7 @@ export function coalitionStability(
   const grandKey = grandCoalition.join(',');
   const grandCoalitionValue = valueMap.get(grandKey);
   if (grandCoalitionValue === undefined) {
-    throw new Error('coalitionValues must include the grand coalition (all agents)');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'coalitionValues must include the grand coalition (all agents)');
   }
 
   // Efficiency check: sum of allocation vs grand coalition value
@@ -550,15 +551,15 @@ export function mechanismDesign(params: MechanismDesignParams): MechanismDesignR
   const { dishonestGain, detectionProbability, intrinsicHonestyCost = 0 } = params;
 
   if (dishonestGain < 0) {
-    throw new Error(`dishonestGain must be >= 0, got ${dishonestGain}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `dishonestGain must be >= 0, got ${dishonestGain}`);
   }
   if (detectionProbability < 0 || detectionProbability > 1) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `detectionProbability must be in [0, 1], got ${detectionProbability}`,
     );
   }
   if (intrinsicHonestyCost < 0) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `intrinsicHonestyCost must be >= 0, got ${intrinsicHonestyCost}`,
     );
   }
@@ -662,16 +663,16 @@ export function modelPrincipalAgent(params: {
   const { operator, agentBreachRate, detectionRate, breachCost, monitoringCostPerUnit } = params;
 
   if (agentBreachRate < 0 || agentBreachRate > 1) {
-    throw new Error(`agentBreachRate must be in [0, 1], got ${agentBreachRate}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `agentBreachRate must be in [0, 1], got ${agentBreachRate}`);
   }
   if (detectionRate < 0 || detectionRate > 1) {
-    throw new Error(`detectionRate must be in [0, 1], got ${detectionRate}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `detectionRate must be in [0, 1], got ${detectionRate}`);
   }
   if (breachCost < 0) {
-    throw new Error(`breachCost must be >= 0, got ${breachCost}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `breachCost must be >= 0, got ${breachCost}`);
   }
   if (monitoringCostPerUnit < 0) {
-    throw new Error(`monitoringCostPerUnit must be >= 0, got ${monitoringCostPerUnit}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `monitoringCostPerUnit must be >= 0, got ${monitoringCostPerUnit}`);
   }
 
   const monitoringEffectiveness = detectionRate;
@@ -763,16 +764,16 @@ export function analyzeTier(params: {
   const { tier, baseDetectionRate, participantCount, stake, breachGain } = params;
 
   if (baseDetectionRate < 0 || baseDetectionRate > 1) {
-    throw new Error(`baseDetectionRate must be in [0, 1], got ${baseDetectionRate}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `baseDetectionRate must be in [0, 1], got ${baseDetectionRate}`);
   }
   if (participantCount < 1) {
-    throw new Error(`participantCount must be >= 1, got ${participantCount}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `participantCount must be >= 1, got ${participantCount}`);
   }
   if (stake < 0) {
-    throw new Error(`stake must be >= 0, got ${stake}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `stake must be >= 0, got ${stake}`);
   }
   if (breachGain < 0) {
-    throw new Error(`breachGain must be >= 0, got ${breachGain}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `breachGain must be >= 0, got ${breachGain}`);
   }
 
   const { floor, ceiling } = TIER_PARAMS[tier];
@@ -856,19 +857,19 @@ export function defineConjecture(params: {
   const confidence = params.confidence ?? 0.5;
 
   if (confidence < 0 || confidence > 1) {
-    throw new Error(`confidence must be in [0, 1], got ${confidence}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `confidence must be in [0, 1], got ${confidence}`);
   }
   if (!params.id) {
-    throw new Error('id must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'id must be a non-empty string');
   }
   if (!params.name) {
-    throw new Error('name must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'name must be a non-empty string');
   }
   if (!params.statement) {
-    throw new Error('statement must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'statement must be a non-empty string');
   }
   if (!params.informalArgument) {
-    throw new Error('informalArgument must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'informalArgument must be a non-empty string');
   }
 
   return {
@@ -1025,19 +1026,19 @@ export function analyzeImpossibilityBounds(params: {
   const { actionSpaceSize, observationBudget, privacyRequirement, chainLength, collateral } = params;
 
   if (actionSpaceSize < 0) {
-    throw new Error(`actionSpaceSize must be >= 0, got ${actionSpaceSize}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `actionSpaceSize must be >= 0, got ${actionSpaceSize}`);
   }
   if (observationBudget <= 0) {
-    throw new Error(`observationBudget must be > 0, got ${observationBudget}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `observationBudget must be > 0, got ${observationBudget}`);
   }
   if (privacyRequirement < 0 || privacyRequirement > 1) {
-    throw new Error(`privacyRequirement must be in [0, 1], got ${privacyRequirement}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `privacyRequirement must be in [0, 1], got ${privacyRequirement}`);
   }
   if (chainLength < 1) {
-    throw new Error(`chainLength must be >= 1, got ${chainLength}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `chainLength must be >= 1, got ${chainLength}`);
   }
   if (collateral < 0) {
-    throw new Error(`collateral must be >= 0, got ${collateral}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `collateral must be >= 0, got ${collateral}`);
   }
 
   const conjectures = getStandardConjectures();
@@ -1166,10 +1167,10 @@ export function analyzeESS(params: ESSParameters): ESSResult {
   const { populationSize, mutantFraction, payoffMatrix } = params;
 
   if (populationSize < 2) {
-    throw new Error(`populationSize must be >= 2, got ${populationSize}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `populationSize must be >= 2, got ${populationSize}`);
   }
   if (mutantFraction <= 0 || mutantFraction >= 1) {
-    throw new Error(`mutantFraction must be in (0, 1), got ${mutantFraction}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `mutantFraction must be in (0, 1), got ${mutantFraction}`);
   }
 
   // Extract payoffs: payoffMatrix[strategy_row][opponent_col]
@@ -1321,7 +1322,7 @@ export function simulateEvolution(params: EvolutionSimulationParams): EvolutionS
   const { initialHonestFraction, payoffMatrix, generations } = params;
 
   if (initialHonestFraction <= 0 || initialHonestFraction >= 1) {
-    throw new Error(`initialHonestFraction must be in (0, 1), got ${initialHonestFraction}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `initialHonestFraction must be in (0, 1), got ${initialHonestFraction}`);
   }
   if (generations < 1) {
     throw new Error(`generations must be >= 1, got ${generations}`);

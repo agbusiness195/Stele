@@ -246,10 +246,10 @@ export function createPolicy(
   config?: PricingConfig,
 ): AgentInsurancePolicy {
   if (coverage <= 0) {
-    throw new Error(`coverage must be > 0, got ${coverage}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `coverage must be > 0, got ${coverage}`);
   }
   if (term <= 0) {
-    throw new Error(`term must be > 0, got ${term}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `term must be > 0, got ${term}`);
   }
 
   const premium = priceInsurance(assessment, coverage, term, config);
@@ -279,7 +279,7 @@ export function createFuture(
   holder: string,
 ): TrustFuture {
   if (premium <= 0) {
-    throw new Error(`premium must be > 0, got ${premium}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `premium must be > 0, got ${premium}`);
   }
 
   return {
@@ -373,15 +373,17 @@ export function claimPolicy(
   lossAmount: number,
 ): { policy: AgentInsurancePolicy; payout: number } {
   if (lossAmount <= 0) {
-    throw new Error(`lossAmount must be > 0, got ${lossAmount}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `lossAmount must be > 0, got ${lossAmount}`);
   }
   if (lossAmount > policy.coverage) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `lossAmount (${lossAmount}) must be <= coverage (${policy.coverage})`,
     );
   }
   if (policy.status !== 'active') {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `Policy must be active to claim, current status: '${policy.status}'`,
     );
   }
@@ -452,7 +454,7 @@ function normalCDF(x: number): number {
  */
 function normalInverseCDF(p: number): number {
   if (p <= 0 || p >= 1) {
-    throw new Error(`Probability must be in (0, 1), got ${p}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Probability must be in (0, 1), got ${p}`);
   }
 
   // Rational approximation for the central region
@@ -570,16 +572,16 @@ export function blackScholesPrice(params: BlackScholesParams): BlackScholesResul
   const { spotPrice: S, strikePrice: K, timeToMaturity: T, riskFreeRate: r, volatility: sigma, optionType } = params;
 
   if (S <= 0) {
-    throw new Error(`spotPrice must be > 0, got ${S}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `spotPrice must be > 0, got ${S}`);
   }
   if (K <= 0) {
-    throw new Error(`strikePrice must be > 0, got ${K}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `strikePrice must be > 0, got ${K}`);
   }
   if (T <= 0) {
-    throw new Error(`timeToMaturity must be > 0, got ${T}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `timeToMaturity must be > 0, got ${T}`);
   }
   if (sigma <= 0) {
-    throw new Error(`volatility must be > 0, got ${sigma}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `volatility must be > 0, got ${sigma}`);
   }
 
   // d1 = [ln(S/K) + (r + sigma^2/2) * T] / (sigma * sqrt(T))
@@ -683,18 +685,19 @@ export function valueAtRisk(params: VaRParams): VaRResult {
   } = params;
 
   if (portfolioValue <= 0) {
-    throw new Error(`portfolioValue must be > 0, got ${portfolioValue}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `portfolioValue must be > 0, got ${portfolioValue}`);
   }
   if (volatility < 0) {
-    throw new Error(`volatility must be >= 0, got ${volatility}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `volatility must be >= 0, got ${volatility}`);
   }
   if (confidenceLevel <= 0 || confidenceLevel >= 1) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `confidenceLevel must be in (0, 1), got ${confidenceLevel}`,
     );
   }
   if (timeHorizonDays <= 0) {
-    throw new Error(`timeHorizonDays must be > 0, got ${timeHorizonDays}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `timeHorizonDays must be > 0, got ${timeHorizonDays}`);
   }
 
   // z-score for the confidence level (left tail)
@@ -785,16 +788,16 @@ export function hedgeRatio(params: HedgeRatioParams): HedgeRatioResult {
   const { assetVolatility, hedgeVolatility, correlation, positionSize } = params;
 
   if (assetVolatility < 0) {
-    throw new Error(`assetVolatility must be >= 0, got ${assetVolatility}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `assetVolatility must be >= 0, got ${assetVolatility}`);
   }
   if (hedgeVolatility <= 0) {
-    throw new Error(`hedgeVolatility must be > 0, got ${hedgeVolatility}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `hedgeVolatility must be > 0, got ${hedgeVolatility}`);
   }
   if (correlation < -1 || correlation > 1) {
-    throw new Error(`correlation must be in [-1, 1], got ${correlation}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `correlation must be in [-1, 1], got ${correlation}`);
   }
   if (positionSize !== undefined && positionSize <= 0) {
-    throw new Error(`positionSize must be > 0, got ${positionSize}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `positionSize must be > 0, got ${positionSize}`);
   }
 
   // h* = rho * (sigma_a / sigma_h)

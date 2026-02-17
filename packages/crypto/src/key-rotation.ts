@@ -15,6 +15,7 @@ import {
   generateId,
   timestamp,
 } from './index';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 import type { KeyPair } from './types';
 
@@ -67,13 +68,13 @@ export class KeyManager {
 
   constructor(policy: KeyRotationPolicy) {
     if (policy.maxAgeMs <= 0) {
-      throw new Error('maxAgeMs must be positive');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'maxAgeMs must be positive');
     }
     if (policy.overlapPeriodMs < 0) {
-      throw new Error('overlapPeriodMs must be non-negative');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'overlapPeriodMs must be non-negative');
     }
     if (policy.overlapPeriodMs >= policy.maxAgeMs) {
-      throw new Error('overlapPeriodMs must be less than maxAgeMs');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'overlapPeriodMs must be less than maxAgeMs');
     }
     this.policy = policy;
   }
@@ -86,7 +87,7 @@ export class KeyManager {
    */
   async initialize(): Promise<ManagedKeyPair> {
     if (this.initialized) {
-      throw new Error('KeyManager is already initialized');
+      throw new SteleError(SteleErrorCode.KEY_ROTATION_REQUIRED, 'KeyManager is already initialized');
     }
 
     const keyPair = await generateKeyPair();
@@ -133,7 +134,7 @@ export class KeyManager {
 
     const previous = this.findActive();
     if (!previous) {
-      throw new Error('No active key to rotate');
+      throw new SteleError(SteleErrorCode.NO_PRIVATE_KEY, 'No active key to rotate');
     }
 
     // Move the current active key to rotating status
@@ -172,7 +173,7 @@ export class KeyManager {
 
     const active = this.findActive();
     if (!active) {
-      throw new Error('No active key available');
+      throw new SteleError(SteleErrorCode.NO_PRIVATE_KEY, 'No active key available');
     }
 
     return active;
@@ -248,7 +249,7 @@ export class KeyManager {
 
   private ensureInitialized(): void {
     if (!this.initialized) {
-      throw new Error('KeyManager is not initialized. Call initialize() first.');
+      throw new SteleError(SteleErrorCode.KEY_ROTATION_REQUIRED, 'KeyManager is not initialized. Call initialize() first.');
     }
   }
 

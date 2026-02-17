@@ -26,16 +26,16 @@ import type {
  */
 function validateProposal(proposal: Proposal): void {
   if (!proposal.from || typeof proposal.from !== 'string') {
-    throw new Error('Proposal must have a non-empty "from" field');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Proposal must have a non-empty "from" field');
   }
   if (!Array.isArray(proposal.constraints)) {
-    throw new Error('Proposal constraints must be an array');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Proposal constraints must be an array');
   }
   if (!Array.isArray(proposal.requirements)) {
-    throw new Error('Proposal requirements must be an array');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Proposal requirements must be an array');
   }
   if (typeof proposal.timestamp !== 'number' || proposal.timestamp < 0) {
-    throw new Error('Proposal timestamp must be a non-negative number');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Proposal timestamp must be a non-negative number');
   }
 }
 
@@ -44,10 +44,10 @@ function validateProposal(proposal: Proposal): void {
  */
 function assertNotTerminal(session: NegotiationSession): void {
   if (session.status === 'agreed') {
-    throw new Error('Cannot modify an agreed session');
+    throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, 'Cannot modify an agreed session');
   }
   if (session.status === 'failed') {
-    throw new Error('Cannot modify a failed session');
+    throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, 'Cannot modify a failed session');
   }
 }
 
@@ -101,16 +101,16 @@ export function initiate(
   policy: NegotiationPolicy,
 ): NegotiationSession {
   if (!initiatorId || typeof initiatorId !== 'string') {
-    throw new Error('initiatorId must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'initiatorId must be a non-empty string');
   }
   if (!responderId || typeof responderId !== 'string') {
-    throw new Error('responderId must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'responderId must be a non-empty string');
   }
   if (policy.maxRounds < 1) {
-    throw new Error('maxRounds must be at least 1');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'maxRounds must be at least 1');
   }
   if (policy.timeoutMs < 0) {
-    throw new Error('timeoutMs must be non-negative');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'timeoutMs must be non-negative');
   }
 
   const now = Date.now();
@@ -166,7 +166,8 @@ export function counter(
   validateProposal(counterProposal);
 
   if (session.proposals.length >= session.maxRounds) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
       `Maximum rounds (${session.maxRounds}) exceeded. Cannot add counter-proposal.`,
     );
   }

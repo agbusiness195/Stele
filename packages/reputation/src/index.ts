@@ -792,7 +792,7 @@ export async function createEndorsement(
 
   // Validate weight
   if (weight < 0 || weight > 1) {
-    throw new Error('Endorsement weight must be between 0 and 1');
+    throw new SteleError(SteleErrorCode.REPUTATION_INVALID_RECEIPT, 'Endorsement weight must be between 0 and 1');
   }
 
   const content = buildEndorsementContent({

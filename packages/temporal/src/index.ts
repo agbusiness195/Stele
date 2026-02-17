@@ -171,16 +171,16 @@ export function evaluateTriggers(
 
   // Validate agentState fields
   if (typeof agentState.reputationScore !== 'number') {
-    throw new Error('agentState.reputationScore must be a number');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'agentState.reputationScore must be a number');
   }
   if (!Array.isArray(agentState.capabilities)) {
-    throw new Error('agentState.capabilities must be an array');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'agentState.capabilities must be an array');
   }
   if (typeof agentState.breachCount !== 'number') {
-    throw new Error('agentState.breachCount must be a number');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'agentState.breachCount must be a number');
   }
   if (typeof agentState.currentTime !== 'number') {
-    throw new Error('agentState.currentTime must be a number');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'agentState.currentTime must be a number');
   }
 
   const fired: EvolutionTrigger[] = [];
@@ -190,7 +190,8 @@ export function evaluateTriggers(
       case 'time_elapsed': {
         const conditionMs = parseFloat(trigger.condition);
         if (isNaN(conditionMs)) {
-          throw new Error(
+          throw new SteleError(
+            SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
             `Malformed time_elapsed condition: "${trigger.condition}". Expected a number.`,
           );
         }
@@ -203,7 +204,8 @@ export function evaluateTriggers(
       case 'reputation_threshold': {
         const match = trigger.condition.match(/^([><]=?)(\d+(?:\.\d+)?)$/);
         if (!match) {
-          throw new Error(
+          throw new SteleError(
+            SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
             `Malformed reputation_threshold condition: "${trigger.condition}". Expected ">N", "<N", ">=N", or "<=N".`,
           );
         }
@@ -251,7 +253,7 @@ export function evaluateTriggers(
         break;
       }
       default: {
-        throw new Error(`Unknown trigger type: ${(trigger as EvolutionTrigger).type}`);
+        throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Unknown trigger type: ${(trigger as EvolutionTrigger).type}`);
       }
     }
   }
@@ -455,16 +457,16 @@ export function computeDecaySchedule(
   steps: number,
 ): DecayPoint[] {
   if (initialWeight <= 0) {
-    throw new Error('initialWeight must be positive');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'initialWeight must be positive');
   }
   if (decayRate < 0) {
-    throw new Error('decayRate must be non-negative');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'decayRate must be non-negative');
   }
   if (lifetimeMs <= 0) {
-    throw new Error('lifetimeMs must be positive');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'lifetimeMs must be positive');
   }
   if (steps < 2) {
-    throw new Error('steps must be at least 2');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'steps must be at least 2');
   }
 
   const schedule: DecayPoint[] = [];
@@ -511,16 +513,16 @@ export function expirationForecast(
   violationImpact: number = 0.05,
 ): ExpirationForecastResult {
   if (initialWeight <= 0) {
-    throw new Error('initialWeight must be positive');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'initialWeight must be positive');
   }
   if (decayRate < 0) {
-    throw new Error('decayRate must be non-negative');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'decayRate must be non-negative');
   }
   if (threshold < 0 || threshold >= initialWeight) {
-    throw new Error('threshold must be in [0, initialWeight)');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'threshold must be in [0, initialWeight)');
   }
   if (violationImpact < 0) {
-    throw new Error('violationImpact must be non-negative');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'violationImpact must be non-negative');
   }
 
   // Sort violations by timestamp

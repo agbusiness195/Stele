@@ -7,6 +7,7 @@
  */
 
 import { generateNonce, timestamp, toHex } from '@stele/crypto';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 import type { KeyPair } from '@stele/crypto';
 
 import type {
@@ -75,7 +76,7 @@ export class DiscoveryClient {
     this._fetchFn = options?.fetchFn ?? (
       typeof globalThis.fetch === 'function'
         ? globalThis.fetch.bind(globalThis)
-        : async () => { throw new Error('No fetch implementation available. Provide a fetchFn in options.'); }
+        : async () => { throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'No fetch implementation available. Provide a fetchFn in options.'); }
     );
   }
 
@@ -110,7 +111,8 @@ export class DiscoveryClient {
     });
 
     if (!validation.valid) {
-      throw new Error(
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         `Invalid discovery document from ${platformUrl}: ${validation.errors.join('; ')}`,
       );
     }
@@ -220,7 +222,7 @@ export class DiscoveryClient {
     const discovery = await this.discover(platformUrl, options);
 
     if (!discovery.verification_endpoint) {
-      throw new Error(`Platform ${platformUrl} does not support cross-platform verification`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Platform ${platformUrl} does not support cross-platform verification`);
     }
 
     const nonce = toHex(generateNonce());
@@ -243,7 +245,7 @@ export class DiscoveryClient {
     });
 
     if (!response.ok) {
-      throw new Error(`Cross-platform verification failed: ${response.status} ${response.statusText}`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Cross-platform verification failed: ${response.status} ${response.statusText}`);
     }
 
     return response.json() as Promise<CrossPlatformVerificationResponse>;
@@ -329,7 +331,7 @@ export class DiscoveryClient {
     });
 
     if (!response.ok) {
-      throw new Error(`Discovery fetch failed: ${response.status} ${response.statusText} (${url})`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Discovery fetch failed: ${response.status} ${response.statusText} (${url})`);
     }
 
     return response;
