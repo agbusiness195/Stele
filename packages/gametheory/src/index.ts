@@ -8,6 +8,14 @@ import type { HonestyParameters, HonestyProof } from './types';
 /**
  * Validate that all HonestyParameters are within acceptable ranges.
  * Throws descriptive errors on any violation.
+ *
+ * @param params - A partial set of honesty parameters to validate.
+ * @throws {Error} If any parameter is out of its acceptable range.
+ *
+ * @example
+ * ```ts
+ * validateParameters({ stakeAmount: 100, detectionProbability: 0.8 });
+ * ```
  */
 export function validateParameters(params: Partial<HonestyParameters>): void {
   if (params.stakeAmount !== undefined && params.stakeAmount < 0) {
@@ -41,6 +49,19 @@ function validateFull(params: HonestyParameters): void {
  *
  * Prove (or disprove) that honesty is the dominant strategy for the given parameters.
  * Returns a structured proof with step-by-step derivation.
+ *
+ * @param params - The full set of honesty parameters (stake, detection, reputation, gain, coburn).
+ * @returns A structured proof indicating whether honesty dominates and by what margin.
+ * @throws {Error} If any parameter is out of its acceptable range.
+ *
+ * @example
+ * ```ts
+ * const proof = proveHonesty({
+ *   stakeAmount: 1000, detectionProbability: 0.9,
+ *   reputationValue: 200, maxViolationGain: 500, coburn: 50,
+ * });
+ * console.log(proof.isDominantStrategy); // true
+ * ```
  */
 export function proveHonesty(params: HonestyParameters): HonestyProof {
   validateFull(params);
@@ -208,6 +229,19 @@ export interface RepeatedGameResult {
  * Intuition: A sufficiently patient agent (high delta) values future cooperation
  * payoffs enough that the one-shot temptation gain is not worth the punishment
  * of perpetual defection.
+ *
+ * @param params - Repeated game parameters including payoffs and discount factor.
+ * @returns Analysis result with sustainability verdict, threshold, and margin.
+ * @throws {Error} If the payoff ordering does not satisfy T > R > P > S or discountFactor is not in (0, 1).
+ *
+ * @example
+ * ```ts
+ * const result = repeatedGameEquilibrium({
+ *   cooperatePayoff: 3, defectPayoff: 1,
+ *   temptationPayoff: 5, suckerPayoff: 0, discountFactor: 0.9,
+ * });
+ * console.log(result.cooperationSustainable); // true
+ * ```
  */
 export function repeatedGameEquilibrium(params: RepeatedGameParams): RepeatedGameResult {
   const { cooperatePayoff: R, defectPayoff: P, temptationPayoff: T, suckerPayoff: S, discountFactor: delta } = params;

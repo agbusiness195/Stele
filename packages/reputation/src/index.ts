@@ -70,6 +70,55 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
 };
 
 // ---------------------------------------------------------------------------
+// Named scoring constants
+// ---------------------------------------------------------------------------
+
+/**
+ * Outcome score values assigned to each execution result type.
+ * Used when computing weighted reputation scores from execution receipts.
+ */
+const OUTCOME_SCORES = {
+  /** A fully fulfilled covenant earns the maximum score. */
+  FULFILLED: 1.0,
+  /** A partially fulfilled covenant earns half credit. */
+  PARTIAL: 0.5,
+  /** A failed covenant earns zero credit. */
+  FAILED: 0.0,
+  /** Fallback breach penalty when no severity-specific penalty is configured. */
+  DEFAULT_BREACH_PENALTY: 0.15,
+} as const;
+
+/**
+ * Base severity scores for the graduated burn penalty curve.
+ * Maps breach severity to a normalised [0, 1] score used as input
+ * to the burn-fraction calculation.
+ */
+const SEVERITY_SCORES = {
+  /** Critical breaches receive the maximum severity score. */
+  CRITICAL: 1.0,
+  /** High-severity breaches. */
+  HIGH: 0.75,
+  /** Medium-severity breaches. */
+  MEDIUM: 0.5,
+  /** Low-severity breaches. */
+  LOW: 0.25,
+  /** Default for unknown severity levels. */
+  DEFAULT: 0.5,
+} as const;
+
+/**
+ * Blending weights for DAG reputation propagation at merge points.
+ * When a DAG node has parents, its score is a blend of its own
+ * receipt score and the average of its parents' scores.
+ */
+const DAG_BLEND_WEIGHTS = {
+  /** Weight given to the current node's own receipt score. */
+  SELF: 0.6,
+  /** Weight given to the averaged parent scores. */
+  PARENT: 0.4,
+} as const;
+
+// ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
 
@@ -452,17 +501,17 @@ export function computeReputationScore(
     let outcomeScore: number;
     switch (r.outcome) {
       case 'fulfilled':
-        outcomeScore = 1.0;
+        outcomeScore = OUTCOME_SCORES.FULFILLED;
         break;
       case 'partial':
-        outcomeScore = 0.5;
+        outcomeScore = OUTCOME_SCORES.PARTIAL;
         break;
       case 'failed':
-        outcomeScore = 0.0;
+        outcomeScore = OUTCOME_SCORES.FAILED;
         break;
       case 'breached': {
         const severity: Severity = r.breachSeverity ?? 'medium';
-        outcomeScore = -(cfg.breachPenalty[severity] ?? 0.15);
+        outcomeScore = -(cfg.breachPenalty[severity] ?? OUTCOME_SCORES.DEFAULT_BREACH_PENALTY);
         break;
       }
     }
@@ -1071,17 +1120,17 @@ export class ReceiptDAG {
       let outcomeScore: number;
       switch (receipt.outcome) {
         case 'fulfilled':
-          outcomeScore = 1.0;
+          outcomeScore = OUTCOME_SCORES.FULFILLED;
           break;
         case 'partial':
-          outcomeScore = 0.5;
+          outcomeScore = OUTCOME_SCORES.PARTIAL;
           break;
         case 'failed':
-          outcomeScore = 0.0;
+          outcomeScore = OUTCOME_SCORES.FAILED;
           break;
         case 'breached': {
           const sev: Severity = receipt.breachSeverity ?? 'medium';
-          outcomeScore = -(cfg.breachPenalty[sev] ?? 0.15);
+          outcomeScore = -(cfg.breachPenalty[sev] ?? OUTCOME_SCORES.DEFAULT_BREACH_PENALTY);
           break;
         }
       }
@@ -1101,8 +1150,7 @@ export class ReceiptDAG {
         }
         if (parentCount > 0) {
           const parentAvg = parentSum / parentCount;
-          // Blend: 60% this node's score, 40% inherited from parents
-          score = 0.6 * score + 0.4 * parentAvg;
+          score = DAG_BLEND_WEIGHTS.SELF * score + DAG_BLEND_WEIGHTS.PARENT * parentAvg;
         }
       }
 
@@ -1492,15 +1540,15 @@ export class GraduatedBurner {
   private severityScore(severity: Severity): number {
     switch (severity) {
       case 'critical':
-        return 1.0;
+        return SEVERITY_SCORES.CRITICAL;
       case 'high':
-        return 0.75;
+        return SEVERITY_SCORES.HIGH;
       case 'medium':
-        return 0.5;
+        return SEVERITY_SCORES.MEDIUM;
       case 'low':
-        return 0.25;
+        return SEVERITY_SCORES.LOW;
       default:
-        return 0.5;
+        return SEVERITY_SCORES.DEFAULT;
     }
   }
 }
