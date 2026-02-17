@@ -383,14 +383,14 @@ export function proveRobustness(
 ): RobustnessProof {
   // ── Input validation ────────────────────────────────────────────────────
   if (!constraint || constraint.trim().length === 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Constraint must be a non-empty string');
+    throw new SteleError('Constraint must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   for (const dim of bounds.dimensions) {
     const range = bounds.ranges[dim];
     if (range && range.min > range.max) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         `Invalid bound for dimension '${dim}': min (${range.min}) > max (${range.max})`,
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
   }
@@ -523,7 +523,7 @@ export function fuzz(
   options?: RobustnessOptions,
 ): RobustnessReport {
   if (iterations < 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Iteration count must be non-negative');
+    throw new SteleError('Iteration count must be non-negative', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const vulnerabilities: Vulnerability[] = [];
@@ -620,7 +620,7 @@ export function generateAdversarialInputs(
   if (count <= 0) return [];
 
   if (!constraint || constraint.trim().length === 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Constraint must be a non-empty string');
+    throw new SteleError('Constraint must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Try to parse constraint as CCL
@@ -802,7 +802,7 @@ function generateGenericAdversarialInputs(
  */
 export function formalVerification(covenant: CovenantSpec): FormalVerificationResult {
   if (!covenant || typeof covenant !== 'object') {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'covenant must be a non-null object');
+    throw new SteleError('covenant must be a non-null object', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (!covenant.constraints || covenant.constraints.length === 0) {
     return {
@@ -925,7 +925,7 @@ export function robustnessScore(
   fuzzIterations = 50,
 ): RobustnessScoreResult {
   if (!covenant || typeof covenant !== 'object') {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'covenant must be a non-null object');
+    throw new SteleError('covenant must be a non-null object', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const recommendations: string[] = [];

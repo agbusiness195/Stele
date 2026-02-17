@@ -449,11 +449,11 @@ export function byzantineFaultTolerance(
   requestedFaults?: number,
 ): BFTResult {
   if (!Number.isInteger(totalNodes) || totalNodes < 1) {
-    throw new Error(`totalNodes must be a positive integer, got ${totalNodes}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `totalNodes must be a positive integer, got ${totalNodes}`);
   }
   if (requestedFaults !== undefined) {
     if (!Number.isInteger(requestedFaults) || requestedFaults < 0) {
-      throw new Error(`requestedFaults must be a non-negative integer, got ${requestedFaults}`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `requestedFaults must be a non-negative integer, got ${requestedFaults}`);
     }
   }
 
@@ -533,7 +533,7 @@ export function quorumSize(
   protocol: ConsensusProtocol,
 ): QuorumResult {
   if (!Number.isInteger(totalNodes) || totalNodes < 1) {
-    throw new Error(`totalNodes must be a positive integer, got ${totalNodes}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `totalNodes must be a positive integer, got ${totalNodes}`);
   }
 
   let q: number;
@@ -560,7 +560,7 @@ export function quorumSize(
       formulaDetail = `Unanimous: quorum = ${totalNodes} (all nodes required)`;
       break;
     default:
-      throw new Error(`Unknown protocol: ${protocol}`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Unknown protocol: ${protocol}`);
   }
 
   // Ensure quorum does not exceed total nodes
@@ -648,21 +648,21 @@ export function consensusLatency(params: ConsensusLatencyParams): ConsensusLaten
   } = params;
 
   if (!Number.isInteger(nodeCount) || nodeCount < 1) {
-    throw new Error(`nodeCount must be a positive integer, got ${nodeCount}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `nodeCount must be a positive integer, got ${nodeCount}`);
   }
   if (averageLatencyMs < 0) {
-    throw new Error(`averageLatencyMs must be >= 0, got ${averageLatencyMs}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `averageLatencyMs must be >= 0, got ${averageLatencyMs}`);
   }
   if (!Number.isInteger(messageRounds) || messageRounds < 1) {
-    throw new Error(`messageRounds must be a positive integer, got ${messageRounds}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `messageRounds must be a positive integer, got ${messageRounds}`);
   }
   if (messageLossProbability < 0 || messageLossProbability >= 1) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `messageLossProbability must be in [0, 1), got ${messageLossProbability}`,
     );
   }
   if (processingTimeMs < 0) {
-    throw new Error(`processingTimeMs must be >= 0, got ${processingTimeMs}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `processingTimeMs must be >= 0, got ${processingTimeMs}`);
   }
 
   // Network latency: each round requires one RTT

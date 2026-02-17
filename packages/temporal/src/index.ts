@@ -707,23 +707,23 @@ export class DecayModel {
     }
     if (model.type === 'step') {
       if (!model.steps || model.steps.length === 0) {
-        throw new SteleError('Step decay requires at least one breakpoint', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Step decay requires at least one breakpoint');
       }
       for (const [t, v] of model.steps) {
         if (t < 0 || t > 1) {
-          throw new SteleError(`Step time fraction must be in [0, 1], got ${t}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+          throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Step time fraction must be in [0, 1], got ${t}`);
         }
         if (v < 0) {
-          throw new SteleError(`Step value must be >= 0, got ${v}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+          throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Step value must be >= 0, got ${v}`);
         }
       }
     }
     if (model.type === 'seasonal') {
       if (model.rate <= 0) {
-        throw new SteleError('Seasonal frequency (rate) must be > 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Seasonal frequency (rate) must be > 0');
       }
       if (model.amplitude !== undefined && (model.amplitude < 0 || model.amplitude > 1)) {
-        throw new SteleError(`Seasonal amplitude must be in [0, 1], got ${model.amplitude}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Seasonal amplitude must be in [0, 1], got ${model.amplitude}`);
       }
     }
   }
@@ -761,7 +761,7 @@ export class DecayModel {
       }
 
       default:
-        throw new SteleError(`Unknown decay model type: ${model.type}`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+        throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Unknown decay model type: ${model.type}`);
     }
   }
 
@@ -775,7 +775,7 @@ export class DecayModel {
    */
   evaluate(t: number, initialWeight: number = 1.0): number {
     if (initialWeight < 0) {
-      throw new SteleError('initialWeight must be >= 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'initialWeight must be >= 0');
     }
 
     let composedFactor = 1.0;
@@ -791,7 +791,7 @@ export class DecayModel {
    */
   schedule(initialWeight: number, steps: number): DecayPoint[] {
     if (steps < 2) {
-      throw new SteleError('steps must be >= 2', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'steps must be >= 2');
     }
 
     const points: DecayPoint[] = [];
@@ -878,17 +878,17 @@ export class ContinuousTrigger {
 
   constructor(triggers: ContinuousTriggerConfig[], activationThreshold: number = 0.5) {
     if (triggers.length === 0) {
-      throw new SteleError('At least one trigger is required', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'At least one trigger is required');
     }
     if (activationThreshold < 0 || activationThreshold > 1) {
-      throw new SteleError('activationThreshold must be in [0, 1]', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'activationThreshold must be in [0, 1]');
     }
     for (const t of triggers) {
       if (t.steepness !== undefined && t.steepness <= 0) {
-        throw new SteleError('steepness must be > 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'steepness must be > 0');
       }
       if (t.weight !== undefined && t.weight < 0) {
-        throw new SteleError('weight must be >= 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'weight must be >= 0');
       }
     }
     this.triggers = triggers;
@@ -1023,17 +1023,17 @@ export class ViolationForecaster {
 
   constructor(config: ForecastConfig) {
     if (config.alpha <= 0 || config.alpha >= 1) {
-      throw new SteleError('alpha must be in (0, 1)', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'alpha must be in (0, 1)');
     }
     if (config.beta <= 0 || config.beta >= 1) {
-      throw new SteleError('beta must be in (0, 1)', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'beta must be in (0, 1)');
     }
     if (config.forecastPeriods < 1) {
-      throw new SteleError('forecastPeriods must be >= 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'forecastPeriods must be >= 1');
     }
     if (config.confidenceLevel !== undefined) {
       if (config.confidenceLevel <= 0 || config.confidenceLevel >= 1) {
-        throw new SteleError('confidenceLevel must be in (0, 1)', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'confidenceLevel must be in (0, 1)');
       }
     }
     this.config = config;
@@ -1048,12 +1048,12 @@ export class ViolationForecaster {
    */
   forecast(historicalRates: number[]): ForecastResult {
     if (historicalRates.length < 2) {
-      throw new SteleError('At least 2 historical data points required', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'At least 2 historical data points required');
     }
 
     for (let i = 0; i < historicalRates.length; i++) {
       if (typeof historicalRates[i] !== 'number' || isNaN(historicalRates[i]!)) {
-        throw new SteleError(`historicalRates[${i}] must be a valid number`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `historicalRates[${i}] must be a valid number`);
       }
     }
 
@@ -1198,16 +1198,16 @@ export class TemporalConstraintAlgebra {
    */
   private validate(constraint: TemporalConstraint): void {
     if (constraint.start < 0 || constraint.start > 1) {
-      throw new SteleError(`start must be in [0, 1], got ${constraint.start}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `start must be in [0, 1], got ${constraint.start}`);
     }
     if (constraint.end < 0 || constraint.end > 1) {
-      throw new SteleError(`end must be in [0, 1], got ${constraint.end}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `end must be in [0, 1], got ${constraint.end}`);
     }
     if (constraint.start > constraint.end) {
-      throw new SteleError(`start (${constraint.start}) must be <= end (${constraint.end})`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `start (${constraint.start}) must be <= end (${constraint.end})`);
     }
     if (constraint.weight < 0 || constraint.weight > 1) {
-      throw new SteleError(`weight must be in [0, 1], got ${constraint.weight}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `weight must be in [0, 1], got ${constraint.weight}`);
     }
   }
 

@@ -487,21 +487,21 @@ export function computeNPartyNash(
   config?: NPartyNashConfig,
 ): NPartyNashResult | null {
   if (outcomes.length === 0) {
-    throw new SteleError('outcomes array must not be empty', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'outcomes array must not be empty');
   }
   if (utilities.length < 2) {
-    throw new SteleError('At least 2 utility functions required for Nash bargaining', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'At least 2 utility functions required for Nash bargaining');
   }
 
   const n = utilities.length;
   const powers = bargainingPowers ?? utilities.map(() => 1.0);
 
   if (powers.length !== n) {
-    throw new SteleError(`bargainingPowers length (${powers.length}) must match utilities length (${n})`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `bargainingPowers length (${powers.length}) must match utilities length (${n})`);
   }
   for (let i = 0; i < powers.length; i++) {
     if (powers[i]! <= 0) {
-      throw new SteleError(`bargainingPowers[${i}] must be positive, got ${powers[i]}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `bargainingPowers[${i}] must be positive, got ${powers[i]}`);
     }
   }
 
@@ -610,7 +610,7 @@ export class ConcessionProtocol {
 
   constructor(config: ConcessionConfig) {
     if (config.concessionRate < 0 || config.concessionRate > 1) {
-      throw new SteleError('concessionRate must be in [0, 1]', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'concessionRate must be in [0, 1]');
     }
     if (config.maxRounds < 1) {
       throw new SteleError('maxRounds must be >= 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);

@@ -581,7 +581,7 @@ export async function createStake(
   agentKeyPair: KeyPair,
 ): Promise<ReputationStake> {
   if (amount < 0 || amount > 1) {
-    throw new SteleError(SteleErrorCode.REPUTATION_INVALID_RECEIPT, 'Stake amount must be between 0 and 1');
+    throw new SteleError('Stake amount must be between 0 and 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const stakedAt = timestamp();
@@ -672,10 +672,10 @@ export async function createDelegation(
   protégéKeyPair: KeyPair,
 ): Promise<ReputationDelegation> {
   if (riskAmount < 0 || riskAmount > 1) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Delegation riskAmount must be between 0 and 1');
+    throw new SteleError('Delegation riskAmount must be between 0 and 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (scopes.length === 0) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Delegation must have at least one scope');
+    throw new SteleError('Delegation must have at least one scope', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const content = buildDelegationContent({
@@ -779,20 +779,20 @@ export async function createEndorsement(
 
   // Validate basis
   if (typeof basis.covenantsCompleted !== 'number' || basis.covenantsCompleted < 0) {
-    throw new SteleError(SteleErrorCode.REPUTATION_INVALID_RECEIPT, 'Endorsement basis.covenantsCompleted must be a non-negative number');
+    throw new SteleError('Endorsement basis.covenantsCompleted must be a non-negative number', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (typeof basis.breachRate !== 'number' || basis.breachRate < 0 || basis.breachRate > 1) {
-    throw new SteleError(SteleErrorCode.REPUTATION_INVALID_RECEIPT, 'Endorsement basis.breachRate must be a number between 0 and 1');
+    throw new SteleError('Endorsement basis.breachRate must be a number between 0 and 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (basis.averageOutcomeScore !== undefined) {
     if (typeof basis.averageOutcomeScore !== 'number' || basis.averageOutcomeScore < 0 || basis.averageOutcomeScore > 1) {
-      throw new SteleError(SteleErrorCode.REPUTATION_INVALID_RECEIPT, 'Endorsement basis.averageOutcomeScore must be a number between 0 and 1');
+      throw new SteleError('Endorsement basis.averageOutcomeScore must be a number between 0 and 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
   }
 
   // Validate weight
   if (weight < 0 || weight > 1) {
-    throw new SteleError(SteleErrorCode.REPUTATION_INVALID_RECEIPT, 'Endorsement weight must be between 0 and 1');
+    throw new SteleError('Endorsement weight must be between 0 and 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const content = buildEndorsementContent({
