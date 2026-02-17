@@ -70,7 +70,7 @@ export function defineAlignment(
   verificationMethod: 'behavioral' | 'compositional' | 'adversarial' = 'behavioral',
 ): AlignmentCovenant {
   if (!agentId || agentId.trim() === '') {
-    throw new Error('agentId must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'agentId must be a non-empty string', { hint: 'Provide a non-empty agentId string when calling defineAlignment.' });
   }
 
   // Build the union of all constraints from all properties
@@ -118,7 +118,7 @@ export function assessAlignment(
   history: ExecutionRecord[],
 ): AlignmentReport {
   if (!agentId || agentId.trim() === '') {
-    throw new Error('agentId must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'agentId must be a non-empty string', { hint: 'Provide a non-empty agentId string when calling assessAlignment.' });
   }
 
   if (covenant.alignmentProperties.length === 0) {
@@ -247,13 +247,13 @@ export function alignmentDrift(
   driftThreshold = 0.1,
 ): AlignmentDriftResult {
   if (!agentId || agentId.trim() === '') {
-    throw new Error('agentId must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'agentId must be a non-empty string', { hint: 'Provide a non-empty agentId string when calling alignmentDrift.' });
   }
   if (windowCount < 2) {
-    throw new Error('windowCount must be at least 2');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'windowCount must be at least 2', { hint: 'Set windowCount to 2 or higher to enable drift comparison between windows.' });
   }
   if (history.length === 0) {
-    throw new Error('history must not be empty');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'history must not be empty', { hint: 'Provide at least one ExecutionRecord in the history array.' });
   }
 
   // Sort by timestamp
@@ -330,7 +330,7 @@ export function alignmentDecomposition(
   history: ExecutionRecord[],
 ): AlignmentDecompositionResult {
   if (!agentId || agentId.trim() === '') {
-    throw new Error('agentId must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'agentId must be a non-empty string', { hint: 'Provide a non-empty agentId string when calling alignmentDecomposition.' });
   }
 
   const report = assessAlignment(agentId, covenant, history);
