@@ -1538,3 +1538,615 @@ export function validateDetectionRates(params: DetectionValidationParams): Detec
     formula,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Helper: Cholesky Decomposition
+// ---------------------------------------------------------------------------
+
+/**
+ * Cholesky decomposition of a symmetric positive-definite matrix.
+ *
+ * Given a symmetric positive-definite matrix A, returns the lower-triangular
+ * matrix L such that A = L * L^T.
+ *
+ * Used by the Gaussian copula model to generate correlated random variables
+ * from independent standard normals.
+ *
+ * @param matrix - A symmetric positive-definite matrix (n x n)
+ * @returns The lower-triangular Cholesky factor L
+ * @throws If the matrix is not positive-definite
+ */
+export function choleskyDecompose(matrix: number[][]): number[][] {
+  const n = matrix.length;
+  const L: number[][] = Array.from({ length: n }, () => new Array<number>(n).fill(0));
+
+  for (let i = 0; i < n; i++) {
+    const Li = L[i]!;
+    const Mi = matrix[i]!;
+    for (let j = 0; j <= i; j++) {
+      const Lj = L[j]!;
+      let sum = 0;
+      for (let k = 0; k < j; k++) {
+        sum += Li[k]! * Lj[k]!;
+      }
+
+      if (i === j) {
+        const diag = Mi[i]! - sum;
+        if (diag <= 0) {
+          throw new Error(
+            `Matrix is not positive-definite: diagonal element ${i} became ${diag} during decomposition`,
+          );
+        }
+        Li[j] = Math.sqrt(diag);
+      } else {
+        Li[j] = (Mi[j]! - sum) / Lj[j]!;
+      }
+    }
+  }
+
+  return L;
+}
+
+// ---------------------------------------------------------------------------
+// Helper: Standard Normal CDF
+// ---------------------------------------------------------------------------
+
+/**
+ * Standard normal cumulative distribution function (CDF).
+ *
+ * Uses the approximation: Phi(x) = 0.5 * (1 + erf(x / sqrt(2)))
+ * where erf is approximated using Abramowitz and Stegun formula 7.1.26:
+ *   erf(x) ≈ 1 - (a1*t + a2*t^2 + a3*t^3) * exp(-x^2)
+ *   where t = 1 / (1 + 0.47047 * |x|)
+ *
+ * Accuracy: max error < 2.5e-5
+ *
+ * @param x - The value at which to evaluate the CDF
+ * @returns Phi(x), the probability that a standard normal RV is <= x
+ */
+export function normalCDF(x: number): number {
+  // erf approximation using Abramowitz & Stegun 7.1.26
+  const a1 = 0.254829592;
+  const a2 = -0.284496736;
+  const a3 = 1.421413741;
+  const a4 = -1.453152027;
+  const a5 = 1.061405429;
+  const p = 0.3275911;
+
+  const sign = x < 0 ? -1 : 1;
+  const absX = Math.abs(x) / Math.sqrt(2);
+
+  const t = 1 / (1 + p * absX);
+  const t2 = t * t;
+  const t3 = t2 * t;
+  const t4 = t3 * t;
+  const t5 = t4 * t;
+
+  const erfApprox = 1 - (a1 * t + a2 * t2 + a3 * t3 + a4 * t4 + a5 * t5) * Math.exp(-absX * absX);
+  const erf = sign * erfApprox;
+
+  return 0.5 * (1 + erf);
+}
+
+// ---------------------------------------------------------------------------
+// Correlated Detection Layers (Gaussian Copula Model)
+// ---------------------------------------------------------------------------
+
+/**
+ * Parameters for correlated detection rate validation.
+ */
+export interface CorrelatedDetectionParams {
+  /** Number of agents to simulate */
+  agentCount: number;
+  /** Number of interactions per agent */
+  interactionsPerAgent: number;
+  /** Probability of a violation in each interaction, in [0, 1] */
+  violationProbability: number;
+  /** Number of simulation runs (higher = tighter confidence intervals) */
+  simulationRuns: number;
+  /**
+   * 3x3 matrix of pairwise layer correlations (runtime, attestation, network).
+   * Values in [0, 1] where 0 = independent, 1 = perfectly correlated.
+   * Diagonal is always 1. Must be symmetric and positive-definite.
+   */
+  correlationMatrix: number[][];
+  /**
+   * Optional random seed for reproducibility.
+   * Uses the same seeded PRNG as validateDetectionRates.
+   */
+  randomSeed?: number;
+}
+
+/**
+ * Result of correlated detection rate validation, extending the base result
+ * with information about how correlation between detection layers impacts
+ * overall detection rates.
+ */
+export interface CorrelatedDetectionResult extends DetectionValidationResult {
+  /**
+   * Per-tier comparison of independent vs correlated detection rates.
+   * Shows how much detection effectiveness decreases when layers are correlated.
+   */
+  correlationImpact: {
+    tier: AdoptionTier;
+    independentRate: number;
+    correlatedRate: number;
+    difference: number;
+  }[];
+}
+
+/**
+ * Validate detection rates using a Gaussian copula model for correlated
+ * detection layers, and compare against the independent-layer model.
+ *
+ * Instead of treating each detection layer (runtime, attestation, network)
+ * as independent, this function models their correlations using a Gaussian
+ * copula. This is more realistic: if a violation is hard to detect at
+ * the runtime level, it may also be harder to detect at the attestation level.
+ *
+ * Gaussian Copula Model:
+ * 1. Generate 3 independent standard normal random variables Z1, Z2, Z3
+ *    using the Box-Muller transform
+ * 2. Apply Cholesky decomposition L of the correlation matrix R
+ *    to get correlated normals: Y = L * Z
+ * 3. Transform to uniform [0, 1] via the standard normal CDF:
+ *    U_i = Phi(Y_i)
+ * 4. Use U_i as the random draw for each detection layer
+ *
+ * The function runs both the correlated and independent models and reports
+ * the difference in detection rates (the "correlation impact").
+ *
+ * @param params - Correlated detection parameters
+ * @returns Detection validation results with correlation impact analysis
+ */
+export function validateCorrelatedDetection(params: CorrelatedDetectionParams): CorrelatedDetectionResult {
+  const { agentCount, interactionsPerAgent, violationProbability, simulationRuns, correlationMatrix, randomSeed } = params;
+
+  if (agentCount < 1) {
+    throw new Error(`agentCount must be >= 1, got ${agentCount}`);
+  }
+  if (interactionsPerAgent < 1) {
+    throw new Error(`interactionsPerAgent must be >= 1, got ${interactionsPerAgent}`);
+  }
+  if (violationProbability < 0 || violationProbability > 1) {
+    throw new Error(`violationProbability must be in [0, 1], got ${violationProbability}`);
+  }
+  if (simulationRuns < 1) {
+    throw new Error(`simulationRuns must be >= 1, got ${simulationRuns}`);
+  }
+
+  // Validate correlation matrix dimensions and symmetry
+  if (correlationMatrix.length !== 3 || correlationMatrix.some(row => row.length !== 3)) {
+    throw new Error('correlationMatrix must be a 3x3 matrix');
+  }
+  for (let i = 0; i < 3; i++) {
+    const row_i = correlationMatrix[i]!;
+    if (Math.abs(row_i[i]! - 1) > 1e-12) {
+      throw new Error(`correlationMatrix diagonal must be 1, got ${row_i[i]!} at [${i}][${i}]`);
+    }
+    for (let j = 0; j < 3; j++) {
+      const row_j = correlationMatrix[j]!;
+      if (row_i[j]! < 0 || row_i[j]! > 1) {
+        throw new Error(`correlationMatrix values must be in [0, 1], got ${row_i[j]!} at [${i}][${j}]`);
+      }
+      if (Math.abs(row_i[j]! - row_j[i]!) > 1e-12) {
+        throw new Error(`correlationMatrix must be symmetric, mismatch at [${i}][${j}] and [${j}][${i}]`);
+      }
+    }
+  }
+
+  // Cholesky decomposition (will throw if not positive-definite)
+  const L = choleskyDecompose(correlationMatrix);
+
+  // --- Run independent model first ---
+  const independentResult = validateDetectionRates({
+    agentCount,
+    interactionsPerAgent,
+    violationProbability,
+    simulationRuns,
+    randomSeed: randomSeed ?? 42,
+  });
+
+  // --- Run correlated model ---
+  const rng = createSeededRng(randomSeed ?? 42);
+
+  // Detection layer parameters (same as validateDetectionRates)
+  const tierDetectionConfig: Record<AdoptionTier, { runtimeProb: number; attestationProb: number; networkVerifiers: number; perVerifierProb: number }> = {
+    solo: { runtimeProb: 0.65, attestationProb: 0, networkVerifiers: 0, perVerifierProb: 0 },
+    bilateral: { runtimeProb: 0.50, attestationProb: 0.70, networkVerifiers: 0, perVerifierProb: 0 },
+    network: { runtimeProb: 0.50, attestationProb: 0.60, networkVerifiers: 5, perVerifierProb: 0.50 },
+  };
+
+  const claimedRanges: Record<AdoptionTier, [number, number]> = {
+    solo: [0.60, 0.70],
+    bilateral: [0.85, 0.95],
+    network: [0.99, 0.999],
+  };
+
+  const totalInteractions = agentCount * interactionsPerAgent;
+  const correlatedTiers: DetectionValidation[] = [];
+  let overallViolations = 0;
+  let overallDetected = 0;
+
+  /**
+   * Generate 3 correlated uniform random variables using the Gaussian copula.
+   * 1. Generate 3 independent standard normals via Box-Muller
+   * 2. Multiply by Cholesky factor L to get correlated normals
+   * 3. Apply normal CDF to get correlated uniforms
+   */
+  function generateCorrelatedUniforms(): [number, number, number] {
+    // Box-Muller transform: generate pairs of independent standard normals
+    const u1 = rng();
+    const u2 = rng();
+    const u3 = rng();
+    const u4 = rng();
+
+    // Avoid log(0)
+    const r1 = Math.sqrt(-2 * Math.log(Math.max(1e-15, u1)));
+    const r2 = Math.sqrt(-2 * Math.log(Math.max(1e-15, u3)));
+
+    const z0 = r1 * Math.cos(2 * Math.PI * u2);
+    const z1 = r1 * Math.sin(2 * Math.PI * u2);
+    const z2 = r2 * Math.cos(2 * Math.PI * u4);
+
+    // Apply Cholesky factor: Y = L * Z (correlated normals)
+    const L0 = L[0]!;
+    const L1 = L[1]!;
+    const L2 = L[2]!;
+    const y0 = L0[0]! * z0 + L0[1]! * z1 + L0[2]! * z2;
+    const y1 = L1[0]! * z0 + L1[1]! * z1 + L1[2]! * z2;
+    const y2 = L2[0]! * z0 + L2[1]! * z1 + L2[2]! * z2;
+
+    // Transform to uniform [0, 1] via the normal CDF
+    return [normalCDF(y0), normalCDF(y1), normalCDF(y2)];
+  }
+
+  for (const tier of ['solo', 'bilateral', 'network'] as AdoptionTier[]) {
+    const config = tierDetectionConfig[tier];
+    let totalViolationsForTier = 0;
+    let detectedViolationsForTier = 0;
+
+    for (let run = 0; run < simulationRuns; run++) {
+      for (let i = 0; i < totalInteractions; i++) {
+        // Determine if this interaction is a violation
+        if (rng() < violationProbability) {
+          totalViolationsForTier++;
+
+          // Generate correlated uniform draws for the 3 detection layers
+          const [uRuntime, uAttestation, uNetwork] = generateCorrelatedUniforms();
+
+          // Layer 1: Runtime detection
+          let detected = uRuntime < config.runtimeProb;
+
+          // Layer 2: Attestation detection (bilateral and network tiers)
+          if (!detected && config.attestationProb > 0) {
+            detected = uAttestation < config.attestationProb;
+          }
+
+          // Layer 3: Network verification (network tier only)
+          if (!detected && config.networkVerifiers > 0) {
+            // For correlated network layer, use the network uniform as the
+            // base and simulate verifiers with correlated detection
+            // Combined network detection: 1 - (1 - perVerifierProb)^n
+            // Using the correlated uniform: detect if uNetwork < combined prob
+            const combinedNetworkProb = 1 - Math.pow(1 - config.perVerifierProb, config.networkVerifiers);
+            detected = uNetwork < combinedNetworkProb;
+          }
+
+          if (detected) {
+            detectedViolationsForTier++;
+          }
+        }
+      }
+    }
+
+    // Compute empirical detection rate
+    const empiricalRate = totalViolationsForTier > 0
+      ? detectedViolationsForTier / totalViolationsForTier
+      : 0;
+
+    // Wilson score confidence interval
+    const n = totalViolationsForTier;
+    let ci: [number, number];
+    if (n === 0) {
+      ci = [0, 1];
+    } else {
+      const z = 1.96;
+      const pHat = empiricalRate;
+      const denominator = 1 + z * z / n;
+      const center = (pHat + z * z / (2 * n)) / denominator;
+      const halfWidth = (z / denominator) * Math.sqrt(pHat * (1 - pHat) / n + z * z / (4 * n * n));
+      ci = [
+        Math.max(0, center - halfWidth),
+        Math.min(1, center + halfWidth),
+      ];
+    }
+
+    const claimed = claimedRanges[tier];
+    const withinClaimedRange = ci[1] >= claimed[0] && ci[0] <= claimed[1];
+
+    correlatedTiers.push({
+      tier,
+      simulatedInteractions: totalInteractions * simulationRuns,
+      totalViolations: totalViolationsForTier,
+      detectedViolations: detectedViolationsForTier,
+      empiricalDetectionRate: empiricalRate,
+      confidenceInterval: ci,
+      withinClaimedRange,
+      claimedRange: claimed,
+    });
+
+    overallViolations += totalViolationsForTier;
+    overallDetected += detectedViolationsForTier;
+  }
+
+  // --- Compute correlation impact ---
+  const correlationImpact = correlatedTiers.map((correlatedTier, idx) => {
+    const independentTier = independentResult.tiers[idx]!;
+    return {
+      tier: correlatedTier.tier,
+      independentRate: independentTier.empiricalDetectionRate,
+      correlatedRate: correlatedTier.empiricalDetectionRate,
+      difference: independentTier.empiricalDetectionRate - correlatedTier.empiricalDetectionRate,
+    };
+  });
+
+  const formula =
+    `Correlated Detection Rate Validation (Gaussian Copula, ${simulationRuns} runs, ${totalInteractions} interactions/run):\n` +
+    `  Violation probability: ${violationProbability}\n` +
+    `  Correlation matrix:\n` +
+    correlationMatrix.map(row => `    [${row.map(v => v.toFixed(3)).join(', ')}]`).join('\n') + '\n' +
+    correlatedTiers.map(t =>
+      `  ${t.tier}: correlated=${(t.empiricalDetectionRate * 100).toFixed(2)}% ` +
+      `CI=[${(t.confidenceInterval[0] * 100).toFixed(2)}%, ${(t.confidenceInterval[1] * 100).toFixed(2)}%] ` +
+      `claimed=[${(t.claimedRange[0] * 100).toFixed(1)}%, ${(t.claimedRange[1] * 100).toFixed(1)}%] ` +
+      `${t.withinClaimedRange ? 'PASS' : 'FAIL'}`
+    ).join('\n') +
+    `\n  Correlation impact:\n` +
+    correlationImpact.map(ci =>
+      `    ${ci.tier}: independent=${(ci.independentRate * 100).toFixed(2)}% ` +
+      `correlated=${(ci.correlatedRate * 100).toFixed(2)}% ` +
+      `difference=${(ci.difference * 100).toFixed(2)}pp`
+    ).join('\n') +
+    `\n  Overall: ${overallDetected}/${overallViolations} violations detected`;
+
+  return {
+    tiers: correlatedTiers,
+    overallViolations,
+    overallDetected,
+    formula,
+    correlationImpact,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Byzantine Adversary Modeling
+// ---------------------------------------------------------------------------
+
+/**
+ * Parameters for Byzantine adversary analysis.
+ */
+export interface ByzantineAdversaryParams {
+  /** Total population size (honest + Byzantine agents) */
+  populationSize: number;
+  /** Fraction of adversarial (Byzantine) agents in the population, in (0, 1) */
+  byzantineFraction: number;
+  /**
+   * Adversary strategy type:
+   * - 'random': constant evasion capability
+   * - 'strategic': evasion scales with Byzantine fraction (more resources)
+   * - 'adaptive': evasion starts low and increases each generation (learning)
+   */
+  adversaryStrategy: 'random' | 'strategic' | 'adaptive';
+  /**
+   * Payoff matrix: honest vs dishonest.
+   * payoffMatrix[0][0] = honest vs honest, payoffMatrix[0][1] = honest vs dishonest
+   * payoffMatrix[1][0] = dishonest vs honest, payoffMatrix[1][1] = dishonest vs dishonest
+   */
+  payoffMatrix: [[number, number], [number, number]];
+  /**
+   * Base probability that an adversary can evade a single detection layer, in [0, 1].
+   * Actual evasion may be modified by the adversary strategy.
+   */
+  evasionCapability: number;
+  /** Number of generations to simulate */
+  generations: number;
+}
+
+/**
+ * Result of Byzantine adversary analysis.
+ */
+export interface ByzantineAdversaryResult {
+  /** Final fraction of honest agents in the population */
+  honestFinalFraction: number;
+  /** Whether all Byzantine agents were eliminated */
+  byzantineExtinct: boolean;
+  /** Effective detection rate accounting for adversary evasion */
+  effectiveDetectionRate: number;
+  /** Generation-by-generation trajectory of population fractions */
+  trajectory: Array<{
+    generation: number;
+    honestFraction: number;
+    byzantineFraction: number;
+  }>;
+  /**
+   * Nash equilibrium fraction: the population fraction at which honest and
+   * Byzantine agents have equal fitness. If < 0 or > 1, no interior
+   * equilibrium exists (one strategy dominates).
+   */
+  nashEquilibriumFraction: number;
+}
+
+/**
+ * Analyze the impact of Byzantine (adversarial) agents on protocol stability
+ * using modified replicator dynamics that account for detection evasion.
+ *
+ * Byzantine adversaries differ from simple "dishonest" agents: they actively
+ * attempt to evade detection mechanisms, reducing the effective detection rate.
+ *
+ * Modified payoff model:
+ *   - Honest agents receive standard payoffs from the payoff matrix
+ *   - Byzantine agents' effective payoff accounts for detection evasion:
+ *     E_byzantine = E_dishonest * (1 - effectiveDetection) + E_penalty * effectiveDetection
+ *     where effectiveDetection = baseDetectionRate * (1 - currentEvasion)
+ *
+ * Adversary strategy effects on evasion:
+ *   - 'random': evasion = evasionCapability (constant)
+ *   - 'strategic': evasion = evasionCapability * (1 + byzantineFraction)
+ *     (more Byzantines = more resources to invest in evasion, capped at 1)
+ *   - 'adaptive': evasion starts at evasionCapability * 0.1 and increases
+ *     by evasionCapability * 0.02 each generation (learning), capped at evasionCapability
+ *
+ * Nash equilibrium computation:
+ *   At equilibrium, fitness_honest = fitness_byzantine.
+ *   Let x = honest fraction, base detection = d, evasion = e.
+ *   Effective detection = d * (1 - e).
+ *   fitness_honest = x * E_hh + (1 - x) * E_hd
+ *   fitness_byzantine = [x * E_dh + (1 - x) * E_dd] * (1 - d*(1-e)) + penalty * d*(1-e)
+ *   Solving for x gives the Nash equilibrium fraction.
+ *
+ * @param params - Byzantine adversary parameters
+ * @returns Analysis results including trajectory, equilibrium, and extinction status
+ */
+export function analyzeByzantineAdversary(params: ByzantineAdversaryParams): ByzantineAdversaryResult {
+  const { populationSize, byzantineFraction, adversaryStrategy, payoffMatrix, evasionCapability, generations } = params;
+
+  if (populationSize < 2) {
+    throw new Error(`populationSize must be >= 2, got ${populationSize}`);
+  }
+  if (byzantineFraction <= 0 || byzantineFraction >= 1) {
+    throw new Error(`byzantineFraction must be in (0, 1), got ${byzantineFraction}`);
+  }
+  if (evasionCapability < 0 || evasionCapability > 1) {
+    throw new Error(`evasionCapability must be in [0, 1], got ${evasionCapability}`);
+  }
+  if (generations < 1) {
+    throw new Error(`generations must be >= 1, got ${generations}`);
+  }
+
+  const E_hh = payoffMatrix[0][0];
+  const E_hd = payoffMatrix[0][1];
+  const E_dh = payoffMatrix[1][0];
+  const E_dd = payoffMatrix[1][1];
+
+  // Base detection rate: use the bilateral tier midpoint as a reasonable default
+  // (reflects a system with cross-verification between parties)
+  const baseDetectionRate = 0.90;
+
+  // Penalty for detected dishonesty: the dishonest agent loses their payoff
+  // and incurs an additional cost (modeled as the negative of the honest payoff)
+  const penalty = -Math.abs(E_dh);
+
+  // Shift payoffs to ensure positive fitness for replicator dynamics
+  const allPayoffs = [E_hh, E_hd, E_dh, E_dd, penalty];
+  const minPayoff = Math.min(...allPayoffs);
+  const shift = minPayoff < 1 ? 1 - minPayoff : 0;
+
+  let xH = 1 - byzantineFraction; // honest fraction
+  let xB = byzantineFraction;      // Byzantine fraction
+  const EXTINCTION_THRESHOLD = 1e-6;
+
+  const trajectory: Array<{ generation: number; honestFraction: number; byzantineFraction: number }> = [];
+
+  /**
+   * Compute the current evasion capability based on adversary strategy,
+   * current Byzantine fraction, and generation number.
+   */
+  function getCurrentEvasion(gen: number, currentByzFraction: number): number {
+    switch (adversaryStrategy) {
+      case 'random':
+        return evasionCapability;
+      case 'strategic':
+        // More Byzantines = more resources pooled for evasion
+        return Math.min(1, evasionCapability * (1 + currentByzFraction));
+      case 'adaptive':
+        // Learning: starts low and increases over generations
+        const learningRate = 0.02;
+        const initialFraction = 0.1;
+        return Math.min(
+          evasionCapability,
+          evasionCapability * (initialFraction + learningRate * gen),
+        );
+    }
+  }
+
+  let lastEffectiveDetection = baseDetectionRate * (1 - getCurrentEvasion(0, xB));
+
+  for (let gen = 0; gen <= generations; gen++) {
+    trajectory.push({
+      generation: gen,
+      honestFraction: xH,
+      byzantineFraction: xB,
+    });
+
+    if (gen === generations) break;
+
+    // Compute current evasion and effective detection
+    const currentEvasion = getCurrentEvasion(gen, xB);
+    const effectiveDetection = baseDetectionRate * (1 - currentEvasion);
+    lastEffectiveDetection = effectiveDetection;
+
+    // Fitness of honest strategy (standard payoffs)
+    const fH = (xH * (E_hh + shift)) + (xB * (E_hd + shift));
+
+    // Fitness of Byzantine strategy (modified by detection and evasion)
+    // When detected: receive penalty. When not detected: receive dishonest payoff.
+    const rawByzPayoffVsH = (E_dh + shift) * (1 - effectiveDetection) + (penalty + shift) * effectiveDetection;
+    const rawByzPayoffVsD = (E_dd + shift) * (1 - effectiveDetection) + (penalty + shift) * effectiveDetection;
+    const fB = xH * rawByzPayoffVsH + xB * rawByzPayoffVsD;
+
+    // Average fitness
+    const avgF = xH * fH + xB * fB;
+
+    // Replicator dynamics update
+    if (avgF > 0) {
+      xH = xH * fH / avgF;
+      xB = xB * fB / avgF;
+
+      // Normalize
+      const total = xH + xB;
+      xH = xH / total;
+      xB = xB / total;
+
+      // Clamp near-zero values
+      if (xH < EXTINCTION_THRESHOLD) { xH = 0; xB = 1; }
+      if (xB < EXTINCTION_THRESHOLD) { xB = 0; xH = 1; }
+    }
+  }
+
+  const byzantineExtinct = xB < EXTINCTION_THRESHOLD;
+
+  // --- Compute Nash equilibrium fraction ---
+  // At equilibrium: fitness_honest(x) = fitness_byzantine(x)
+  // Let x = honest fraction, d_eff = effectiveDetection at initial conditions
+  // fH = x * (E_hh + shift) + (1-x) * (E_hd + shift)
+  // fB = x * byz_vs_h + (1-x) * byz_vs_d
+  // where byz_vs_h = (E_dh + shift)*(1-d_eff) + (penalty + shift)*d_eff
+  //       byz_vs_d = (E_dd + shift)*(1-d_eff) + (penalty + shift)*d_eff
+  //
+  // Setting fH = fB and solving for x:
+  // x * (E_hh+s) + (1-x) * (E_hd+s) = x * byz_vs_h + (1-x) * byz_vs_d
+  // x * [(E_hh+s) - (E_hd+s) - byz_vs_h + byz_vs_d] = byz_vs_d - (E_hd+s)
+  const initialEvasion = getCurrentEvasion(0, byzantineFraction);
+  const eqDetection = baseDetectionRate * (1 - initialEvasion);
+  const byzVsH = (E_dh + shift) * (1 - eqDetection) + (penalty + shift) * eqDetection;
+  const byzVsD = (E_dd + shift) * (1 - eqDetection) + (penalty + shift) * eqDetection;
+  const eqNumerator = byzVsD - (E_hd + shift);
+  const eqDenominator = (E_hh + shift) - (E_hd + shift) - byzVsH + byzVsD;
+
+  let nashEquilibriumFraction: number;
+  if (Math.abs(eqDenominator) < 1e-12) {
+    // No interior equilibrium: one strategy dominates
+    nashEquilibriumFraction = eqNumerator > 0 ? 1 : 0;
+  } else {
+    nashEquilibriumFraction = Math.max(0, Math.min(1, eqNumerator / eqDenominator));
+  }
+
+  return {
+    honestFinalFraction: xH,
+    byzantineExtinct,
+    effectiveDetectionRate: lastEffectiveDetection,
+    trajectory,
+    nashEquilibriumFraction,
+  };
+}

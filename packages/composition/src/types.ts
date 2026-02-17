@@ -112,3 +112,46 @@ export interface ImprovementResult {
   /** The new envelope state after evaluation */
   newEnvelope: SafetyEnvelope;
 }
+
+// ---------------------------------------------------------------------------
+// Trust Lattice & Delegation types
+// ---------------------------------------------------------------------------
+
+export interface PartialTrust {
+  /** The trust assessment */
+  value: TrustValue;
+  /** Dimensions this trust applies to (e.g., ['integrity', 'competence']) */
+  scope: string[];
+  /** Who issued this trust assessment */
+  source: string;
+  /** Timestamp: when this trust becomes valid */
+  validFrom: number;
+  /** Timestamp: when this trust expires */
+  validUntil: number;
+}
+
+export interface AttenuatedDelegation {
+  /** Who is delegating */
+  delegator: string;
+  /** Who receives delegation */
+  delegate: string;
+  /** The trust being delegated */
+  trust: TrustValue;
+  /** Factor in [0,1] reducing trust through delegation */
+  attenuation: number;
+  /** Maximum delegation chain depth */
+  maxDepth: number;
+}
+
+export interface TrustLatticeResult {
+  /** Result of meet operation on the first two samples */
+  meetResult: TrustValue;
+  /** Result of join operation on the first two samples */
+  joinResult: TrustValue;
+  /** Whether meet and join satisfy lattice axioms for the sample */
+  isLattice: boolean;
+  /** Whether absorption holds: a ∨ (a ∧ b) = a */
+  absorptionHolds: boolean;
+  /** Whether idempotent holds: a ∨ a = a, a ∧ a = a */
+  idempotentHolds: boolean;
+}

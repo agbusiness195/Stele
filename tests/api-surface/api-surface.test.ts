@@ -203,6 +203,7 @@ describe('API Surface Tests', () => {
       'serializeIdentity',
       'shareAncestor',
       'triggerReverification',
+      'verifyCompositeProof',
       'verifyIdentity',
     ].sort());
   });

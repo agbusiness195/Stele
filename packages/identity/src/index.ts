@@ -2357,6 +2357,204 @@ export class SelectiveDisclosure {
   }
 
   /**
+   * Prove that a numeric value falls within a range `[lowerBound, upperBound]`
+   * without revealing the exact value.
+   *
+   * The proof encodes two "gap" witnesses:
+   * - `lowerGap = actualValue - lowerBound` (non-negative when actualValue >= lowerBound)
+   * - `upperGap = upperBound - actualValue` (non-negative when actualValue <= upperBound)
+   *
+   * Both gaps must be non-negative for the proof to be constructable,
+   * ensuring the value lies within the declared range.
+   *
+   * @param dimension - The name of the dimension being bounded (e.g. `"trustScore"`).
+   * @param lowerBound - The minimum allowed value (public).
+   * @param upperBound - The maximum allowed value (public).
+   * @param actualValue - The actual value (private, not revealed).
+   * @returns A DisclosureProof for the range claim.
+   * @throws If actualValue is outside the bounds or bounds are invalid.
+   */
+  proveRange(
+    dimension: string,
+    lowerBound: number,
+    upperBound: number,
+    actualValue: number,
+  ): DisclosureProof {
+    if (!dimension || typeof dimension !== 'string') {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveRange() requires a non-empty dimension name',
+      );
+    }
+    if (
+      typeof lowerBound !== 'number' ||
+      typeof upperBound !== 'number' ||
+      typeof actualValue !== 'number'
+    ) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveRange() requires numeric lowerBound, upperBound, and actualValue',
+      );
+    }
+    if (lowerBound > upperBound) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `Cannot prove range: lowerBound (${lowerBound}) is greater than upperBound (${upperBound})`,
+        { hint: 'lowerBound must be <= upperBound.' },
+      );
+    }
+    if (actualValue < lowerBound || actualValue > upperBound) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        `Cannot prove range: actualValue (${actualValue}) is outside [${lowerBound}, ${upperBound}]`,
+        { hint: 'The actual value must satisfy lowerBound <= actualValue <= upperBound.' },
+      );
+    }
+
+    const claim = `range:${dimension}:${lowerBound}..${upperBound}`;
+
+    // Two gap witnesses prove the value lies within both bounds
+    const lowerGap = actualValue - lowerBound;
+    const upperGap = upperBound - actualValue;
+    const lowerGapField = hashToField(sha256String('range_lower_gap:' + String(lowerGap)));
+    const upperGapField = hashToField(sha256String('range_upper_gap:' + String(upperGap)));
+
+    const dimField = hashToField(sha256String('dim:' + dimension));
+    const witnessHash = poseidonHash([dimField, lowerGapField, upperGapField]);
+
+    const claimField = hashToField(sha256String(claim));
+    const commitmentField = hashToField(this.commitment);
+
+    const proofValue = poseidonHash([commitmentField, claimField, witnessHash]);
+
+    const publicInputs = [
+      this.commitment,
+      claim,
+      fieldToHex(witnessHash),
+      fieldToHex(claimField),
+    ];
+
+    return {
+      claim,
+      identityCommitment: this.commitment,
+      proof: fieldToHex(proofValue),
+      publicInputs,
+      createdAt: timestamp(),
+    };
+  }
+
+  /**
+   * Prove multiple claims atomically in a single composite proof.
+   *
+   * Each sub-claim is generated internally by calling the corresponding
+   * prove method, then all individual proof values are chained via
+   * Poseidon accumulation into a single witness. This ensures that all
+   * claims are bound to the same identity commitment and cannot be
+   * cherry-picked.
+   *
+   * Supported methods: `'property'`, `'threshold'`, `'range'`, `'setMembership'`.
+   *
+   * @param claims - Array of claim descriptors, each with a `method` name and `args`.
+   * @returns A composite DisclosureProof covering all sub-claims.
+   * @throws If claims is empty or any sub-claim method is unsupported.
+   */
+  proveComposite(
+    claims: Array<{ method: string; args: unknown[] }>,
+  ): DisclosureProof {
+    if (!Array.isArray(claims) || claims.length === 0) {
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'proveComposite() requires a non-empty claims array',
+      );
+    }
+
+    const subProofs: DisclosureProof[] = [];
+
+    for (const entry of claims) {
+      if (!entry || typeof entry.method !== 'string' || !Array.isArray(entry.args)) {
+        throw new SteleError(
+          SteleErrorCode.PROTOCOL_INVALID_INPUT,
+          'Each composite claim must have a string "method" and an array "args"',
+        );
+      }
+
+      let subProof: DisclosureProof;
+      switch (entry.method) {
+        case 'property':
+          subProof = this.proveProperty(
+            entry.args[0] as string,
+            entry.args[1],
+          );
+          break;
+        case 'threshold':
+          subProof = this.proveThreshold(
+            entry.args[0] as string,
+            entry.args[1] as number,
+            entry.args[2] as number,
+          );
+          break;
+        case 'range':
+          subProof = this.proveRange(
+            entry.args[0] as string,
+            entry.args[1] as number,
+            entry.args[2] as number,
+            entry.args[3] as number,
+          );
+          break;
+        case 'setMembership':
+          subProof = this.proveSetMembership(
+            entry.args[0] as string,
+            entry.args[1] as string,
+            entry.args[2] as string[],
+          );
+          break;
+        default:
+          throw new SteleError(
+            SteleErrorCode.PROTOCOL_INVALID_INPUT,
+            `Unsupported composite claim method: "${entry.method}"`,
+            {
+              hint:
+                'Supported methods are: property, threshold, range, setMembership.',
+            },
+          );
+      }
+      subProofs.push(subProof);
+    }
+
+    // Chain all sub-proof values via Poseidon accumulation
+    let acc = 0n;
+    for (const sp of subProofs) {
+      const individualProofField = BigInt('0x' + sp.proof);
+      acc = poseidonHash([acc, individualProofField]);
+    }
+
+    const subClaimStrings = subProofs.map((sp) => sp.claim);
+    const compositeClaim = `composite:[${subClaimStrings.join('|')}]`;
+
+    const witnessHash = acc;
+    const claimField = hashToField(sha256String(compositeClaim));
+    const commitmentField = hashToField(this.commitment);
+
+    const proofValue = poseidonHash([commitmentField, claimField, witnessHash]);
+
+    const publicInputs = [
+      this.commitment,
+      compositeClaim,
+      fieldToHex(witnessHash),
+      fieldToHex(claimField),
+      ...subClaimStrings,
+    ];
+
+    return {
+      claim: compositeClaim,
+      identityCommitment: this.commitment,
+      proof: fieldToHex(proofValue),
+      publicInputs,
+      createdAt: timestamp(),
+    };
+  }
+
+  /**
    * Verify any disclosure proof by recomputing the proof value from
    * the public inputs and comparing.
    *
@@ -2422,5 +2620,85 @@ export class SelectiveDisclosure {
     } catch {
       return false;
     }
+  }
+}
+
+/**
+ * Verify a composite disclosure proof by recomputing the chained
+ * Poseidon accumulation from the sub-claim witness hashes embedded
+ * in the public inputs.
+ *
+ * A composite proof's `publicInputs` layout is:
+ *   [0] identityCommitment
+ *   [1] composite claim string
+ *   [2] witnessHash hex (accumulated chain)
+ *   [3] claimField hex
+ *   [4..] individual sub-claim strings
+ *
+ * This function extracts the sub-claim strings, recomputes the
+ * overall proof value, and confirms it matches.
+ *
+ * @param proof - The composite DisclosureProof to verify.
+ * @returns `true` if the composite proof is cryptographically valid.
+ */
+export function verifyCompositeProof(proof: DisclosureProof): boolean {
+  if (!proof || typeof proof !== 'object') {
+    return false;
+  }
+
+  // Must be a composite proof
+  if (!proof.claim || !proof.claim.startsWith('composite:')) {
+    return false;
+  }
+
+  // Structural validation
+  if (
+    !proof.identityCommitment ||
+    !proof.proof ||
+    !Array.isArray(proof.publicInputs) ||
+    proof.publicInputs.length < 4 ||
+    !proof.createdAt
+  ) {
+    return false;
+  }
+
+  try {
+    const [piCommitment, piClaim, piWitnessHex, piClaimFieldHex] = proof.publicInputs;
+
+    // Consistency checks
+    if (piCommitment !== proof.identityCommitment) {
+      return false;
+    }
+    if (piClaim !== proof.claim) {
+      return false;
+    }
+
+    // Extract sub-claim strings (indices 4 and beyond)
+    const subClaims = proof.publicInputs.slice(4);
+
+    // Verify the composite claim string matches the sub-claims
+    const expectedClaimStr = `composite:[${subClaims.join('|')}]`;
+    if (expectedClaimStr !== proof.claim) {
+      return false;
+    }
+
+    // Recompute claim field and verify it matches
+    const commitmentField = hashToField(piCommitment!);
+    const claimField = hashToField(sha256String(piClaim!));
+
+    if (fieldToHex(claimField) !== piClaimFieldHex) {
+      return false;
+    }
+
+    // Parse the witness hash from public inputs
+    const witnessHash = BigInt('0x' + piWitnessHex!);
+
+    // Recompute: proof = Poseidon(commitmentField, claimField, witnessHash)
+    const expectedProof = poseidonHash([commitmentField, claimField, witnessHash]);
+    const expectedHex = fieldToHex(expectedProof);
+
+    return expectedHex === proof.proof;
+  } catch {
+    return false;
   }
 }

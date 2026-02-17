@@ -67,6 +67,29 @@ function parseConstraint(constraint: string): { type: string; resource: string }
 }
 
 /**
+ * Match a glob-style wildcard pattern against a value string.
+ *
+ * Supports `*` as a wildcard that matches any sequence of characters:
+ * - `deny:*` matches any string starting with `deny:`
+ * - `permit:read-*` matches `permit:read-public`, `permit:read-private`, etc.
+ * - `deny:*-data` matches `deny:exfiltrate-data`, `deny:modify-data`, etc.
+ *
+ * The pattern is converted to a regex: special regex characters are escaped,
+ * `*` is replaced with `.*`, and the result is anchored with `^` and `$`.
+ */
+export function matchesPattern(pattern: string, value: string): boolean {
+  // If no wildcard, do exact match for performance
+  if (!pattern.includes('*')) {
+    return pattern === value;
+  }
+  // Escape regex special characters except `*`, then replace `*` with `.*`
+  const escaped = pattern.replace(/([.+?^${}()|[\]\\])/g, '\\$1');
+  const regexStr = '^' + escaped.replace(/\*/g, '.*') + '$';
+  const regex = new RegExp(regexStr);
+  return regex.test(value);
+}
+
+/**
  * Initiate a new negotiation session between two parties.
  *
  * Creates a NegotiationSession with status 'proposing' and an initial proposal
@@ -225,36 +248,21 @@ export function evaluate(
   proposal: Proposal,
   policy: NegotiationPolicy,
 ): 'accept' | 'reject' | 'counter' {
-  const constraintSet = new Set(proposal.constraints);
-
-  // Parse proposal constraints for pattern matching
-  const proposalParsed = proposal.constraints.map(parseConstraint);
-
-  // Check for dealbreakers: exact match or resource pattern match
+  // Check for dealbreakers using glob pattern matching
   for (const dealbreaker of policy.dealbreakers) {
-    // Exact match
-    if (constraintSet.has(dealbreaker)) {
-      return 'reject';
-    }
-    // Pattern match: check if any proposal constraint's resource matches the dealbreaker's resource
-    const dbParsed = parseConstraint(dealbreaker);
-    for (const pc of proposalParsed) {
-      if (pc.type === dbParsed.type && pc.resource === dbParsed.resource) {
+    for (const constraint of proposal.constraints) {
+      if (matchesPattern(dealbreaker, constraint)) {
         return 'reject';
       }
     }
   }
 
-  // Check if all required constraints are present (exact or type-compatible match)
+  // Check if all required constraints are present using glob pattern matching
+  // Wildcards can appear on either side: the required pattern or the constraint
   let allRequiredPresent = true;
   for (const required of policy.requiredConstraints) {
-    if (constraintSet.has(required)) {
-      continue;
-    }
-    // Try type-aware matching
-    const reqParsed = parseConstraint(required);
-    const found = proposalParsed.some(
-      pc => pc.type === reqParsed.type && pc.resource === reqParsed.resource,
+    const found = proposal.constraints.some(
+      constraint => matchesPattern(required, constraint) || matchesPattern(constraint, required),
     );
     if (!found) {
       allRequiredPresent = false;
@@ -1366,21 +1374,60 @@ export function optimizedNegotiate(
   }
 
   // Step 2: Intersect non-deny constraints (both must agree)
-  const responderNonDenySet = new Set(nonDenyResponder);
+  // Use pattern matching to find compatible constraints between parties
   const intersectedNonDeny: string[] = [];
-  for (const c of nonDenyInitiator) {
-    if (responderNonDenySet.has(c)) {
-      intersectedNonDeny.push(c);
+  const addedToIntersection = new Set<string>();
+  for (const ic of nonDenyInitiator) {
+    for (const rc of nonDenyResponder) {
+      if (matchesPattern(ic, rc) || matchesPattern(rc, ic)) {
+        // Add the more specific (non-wildcard) constraint, or the first match
+        const toAdd = ic.includes('*') ? rc : ic;
+        if (!addedToIntersection.has(toAdd)) {
+          intersectedNonDeny.push(toAdd);
+          addedToIntersection.add(toAdd);
+        }
+        break;
+      }
     }
   }
 
   // Combine: all denies + intersected non-denies
   const resultConstraints = [...denyConstraints, ...intersectedNonDeny];
 
-  // Step 3: Check dealbreakers
-  const resultSet = new Set(resultConstraints);
+  // Step 3: Check dealbreakers using pattern matching
   for (const c of resultConstraints) {
-    if (initiatorDealbreakers.has(c) || responderDealbreakers.has(c)) {
+    for (const db of initiatorPolicy.dealbreakers) {
+      if (matchesPattern(db, c)) {
+        const elapsed = performance.now() - start;
+        return {
+          agreed: false,
+          constraints: null,
+          elapsedMs: elapsed,
+          denyCount: denyConstraints.size,
+          permitCount: 0,
+        };
+      }
+    }
+    for (const db of responderPolicy.dealbreakers) {
+      if (matchesPattern(db, c)) {
+        const elapsed = performance.now() - start;
+        return {
+          agreed: false,
+          constraints: null,
+          elapsedMs: elapsed,
+          denyCount: denyConstraints.size,
+          permitCount: 0,
+        };
+      }
+    }
+  }
+
+  // Step 4: Verify required constraints are satisfied using pattern matching
+  for (const req of initiatorPolicy.requiredConstraints) {
+    const covered = resultConstraints.some(
+      c => matchesPattern(req, c) || matchesPattern(c, req),
+    );
+    if (!covered) {
       const elapsed = performance.now() - start;
       return {
         agreed: false,
@@ -1392,45 +1439,19 @@ export function optimizedNegotiate(
     }
   }
 
-  // Step 4: Verify required constraints are satisfied
-  for (const req of initiatorPolicy.requiredConstraints) {
-    if (!resultSet.has(req)) {
-      // Check if the requirement is semantically covered
-      const parsed = parseConstraint(req);
-      const covered = resultConstraints.some(c => {
-        const p = parseConstraint(c);
-        return p.type === parsed.type && p.resource === parsed.resource;
-      });
-      if (!covered) {
-        const elapsed = performance.now() - start;
-        return {
-          agreed: false,
-          constraints: null,
-          elapsedMs: elapsed,
-          denyCount: denyConstraints.size,
-          permitCount: 0,
-        };
-      }
-    }
-  }
-
   for (const req of responderPolicy.requiredConstraints) {
-    if (!resultSet.has(req)) {
-      const parsed = parseConstraint(req);
-      const covered = resultConstraints.some(c => {
-        const p = parseConstraint(c);
-        return p.type === parsed.type && p.resource === parsed.resource;
-      });
-      if (!covered) {
-        const elapsed = performance.now() - start;
-        return {
-          agreed: false,
-          constraints: null,
-          elapsedMs: elapsed,
-          denyCount: denyConstraints.size,
-          permitCount: 0,
-        };
-      }
+    const covered = resultConstraints.some(
+      c => matchesPattern(req, c) || matchesPattern(c, req),
+    );
+    if (!covered) {
+      const elapsed = performance.now() - start;
+      return {
+        agreed: false,
+        constraints: null,
+        elapsedMs: elapsed,
+        denyCount: denyConstraints.size,
+        permitCount: 0,
+      };
     }
   }
 
@@ -1448,5 +1469,162 @@ export function optimizedNegotiate(
     elapsedMs: elapsed,
     denyCount: denyConstraints.size,
     permitCount,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Negotiation Explanation
+// ---------------------------------------------------------------------------
+
+/**
+ * Detailed explanation of why a negotiation succeeded or failed.
+ */
+export interface NegotiationExplanation {
+  /** Whether agreement was reached */
+  agreed: boolean;
+  /** Which dealbreakers were triggered (pattern -> constraint that matched) */
+  dealbreakers: string[];
+  /** Which requirements couldn't be satisfied */
+  missingRequirements: string[];
+  /** Conflicting constraints between the two parties */
+  constraintConflicts: Array<{ initiator: string; responder: string; reason: string }>;
+}
+
+/**
+ * Run the same logic as `optimizedNegotiate` but record WHY it failed.
+ *
+ * Instead of returning early on the first failure, this function collects
+ * all triggered dealbreakers, all unsatisfied requirements, and all
+ * conflicting constraints between the two parties.
+ *
+ * @param initiatorPolicy - The initiator's negotiation policy.
+ * @param responderPolicy - The responder's negotiation policy.
+ * @returns A NegotiationExplanation describing the negotiation outcome.
+ */
+export function explainNegotiationFailure(
+  initiatorPolicy: NegotiationPolicy,
+  responderPolicy: NegotiationPolicy,
+): NegotiationExplanation {
+  const triggeredDealbreakers: string[] = [];
+  const missingRequirements: string[] = [];
+  const constraintConflicts: Array<{ initiator: string; responder: string; reason: string }> = [];
+
+  // Gather all constraints from both policies
+  const initiatorAll = [
+    ...initiatorPolicy.requiredConstraints,
+    ...initiatorPolicy.preferredConstraints,
+  ];
+  const responderAll = [
+    ...responderPolicy.requiredConstraints,
+    ...responderPolicy.preferredConstraints,
+  ];
+
+  // Step 1: Collect all deny constraints from both sides (deny-wins: union)
+  const denyConstraints = new Set<string>();
+  const nonDenyInitiator: string[] = [];
+  const nonDenyResponder: string[] = [];
+
+  for (const c of initiatorAll) {
+    if (c.startsWith('deny:')) {
+      denyConstraints.add(c);
+    } else {
+      nonDenyInitiator.push(c);
+    }
+  }
+  for (const c of responderAll) {
+    if (c.startsWith('deny:')) {
+      denyConstraints.add(c);
+    } else {
+      nonDenyResponder.push(c);
+    }
+  }
+
+  // Step 2: Intersect non-deny constraints using pattern matching
+  const intersectedNonDeny: string[] = [];
+  const addedToIntersection = new Set<string>();
+  for (const ic of nonDenyInitiator) {
+    for (const rc of nonDenyResponder) {
+      if (matchesPattern(ic, rc) || matchesPattern(rc, ic)) {
+        const toAdd = ic.includes('*') ? rc : ic;
+        if (!addedToIntersection.has(toAdd)) {
+          intersectedNonDeny.push(toAdd);
+          addedToIntersection.add(toAdd);
+        }
+        break;
+      }
+    }
+  }
+
+  // Combine: all denies + intersected non-denies
+  const resultConstraints = [...denyConstraints, ...intersectedNonDeny];
+
+  // Step 3: Check dealbreakers using pattern matching -- record all triggers
+  for (const c of resultConstraints) {
+    for (const db of initiatorPolicy.dealbreakers) {
+      if (matchesPattern(db, c)) {
+        triggeredDealbreakers.push(`Initiator dealbreaker "${db}" triggered by constraint "${c}"`);
+      }
+    }
+    for (const db of responderPolicy.dealbreakers) {
+      if (matchesPattern(db, c)) {
+        triggeredDealbreakers.push(`Responder dealbreaker "${db}" triggered by constraint "${c}"`);
+      }
+    }
+  }
+
+  // Step 4: Verify required constraints are satisfied -- record all misses
+  for (const req of initiatorPolicy.requiredConstraints) {
+    const covered = resultConstraints.some(
+      c => matchesPattern(req, c) || matchesPattern(c, req),
+    );
+    if (!covered) {
+      missingRequirements.push(`Initiator required constraint "${req}" not satisfied`);
+    }
+  }
+
+  for (const req of responderPolicy.requiredConstraints) {
+    const covered = resultConstraints.some(
+      c => matchesPattern(req, c) || matchesPattern(c, req),
+    );
+    if (!covered) {
+      missingRequirements.push(`Responder required constraint "${req}" not satisfied`);
+    }
+  }
+
+  // Detect conflicting constraints: one party permits what the other denies
+  for (const ic of initiatorAll) {
+    const icParsed = parseConstraint(ic);
+    for (const rc of responderAll) {
+      const rcParsed = parseConstraint(rc);
+      // Check if one is a permit and the other is a deny on the same resource
+      if (
+        icParsed.type === 'permit' && rcParsed.type === 'deny' &&
+        matchesPattern(icParsed.resource, rcParsed.resource)
+      ) {
+        constraintConflicts.push({
+          initiator: ic,
+          responder: rc,
+          reason: `Initiator permits "${icParsed.resource}" but responder denies "${rcParsed.resource}"`,
+        });
+      } else if (
+        icParsed.type === 'deny' && rcParsed.type === 'permit' &&
+        matchesPattern(rcParsed.resource, icParsed.resource)
+      ) {
+        constraintConflicts.push({
+          initiator: ic,
+          responder: rc,
+          reason: `Initiator denies "${icParsed.resource}" but responder permits "${rcParsed.resource}"`,
+        });
+      }
+    }
+  }
+
+  const agreed = triggeredDealbreakers.length === 0 && missingRequirements.length === 0;
+
+  return {
+    agreed,
+    dealbreakers: triggeredDealbreakers,
+    missingRequirements,
+    constraintConflicts,
   };
 }

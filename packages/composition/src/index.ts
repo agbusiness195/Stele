@@ -30,6 +30,9 @@ export type {
   SafetyEnvelope,
   ImprovementProposal,
   ImprovementResult,
+  PartialTrust,
+  AttenuatedDelegation,
+  TrustLatticeResult,
 } from './types.js';
 
 import type {
@@ -44,6 +47,9 @@ import type {
   SafetyEnvelope,
   ImprovementProposal,
   ImprovementResult,
+  PartialTrust,
+  AttenuatedDelegation,
+  TrustLatticeResult,
 } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -990,6 +996,271 @@ export function verifyEnvelopeIntegrity(envelope: SafetyEnvelope): {
 }
 
 // ---------------------------------------------------------------------------
+// Trust Lattice Operations
+// ---------------------------------------------------------------------------
+
+/**
+ * Lattice meet (greatest lower bound) of two trust values.
+ *
+ * Takes the minimum of each dimension (union of all dimension keys;
+ * missing dimensions default to 0). Confidence is the minimum of both.
+ * This is the most conservative way to combine two trust assessments.
+ */
+export function trustMeet(a: TrustValue, b: TrustValue): TrustValue {
+  const allKeys = new Set([
+    ...Object.keys(a.dimensions),
+    ...Object.keys(b.dimensions),
+  ]);
+
+  const dimensions: Record<string, number> = {};
+  for (const key of allKeys) {
+    const valA = key in a.dimensions ? a.dimensions[key]! : 0;
+    const valB = key in b.dimensions ? b.dimensions[key]! : 0;
+    dimensions[key] = Math.min(valA, valB);
+  }
+
+  return {
+    dimensions,
+    confidence: Math.min(a.confidence, b.confidence),
+  };
+}
+
+/**
+ * Lattice join (least upper bound) of two trust values.
+ *
+ * Takes the maximum of each dimension (union of all dimension keys;
+ * missing dimensions default to 0). Confidence is the maximum of both.
+ * This is the most optimistic way to combine two trust assessments.
+ */
+export function trustJoin(a: TrustValue, b: TrustValue): TrustValue {
+  const allKeys = new Set([
+    ...Object.keys(a.dimensions),
+    ...Object.keys(b.dimensions),
+  ]);
+
+  const dimensions: Record<string, number> = {};
+  for (const key of allKeys) {
+    const valA = key in a.dimensions ? a.dimensions[key]! : 0;
+    const valB = key in b.dimensions ? b.dimensions[key]! : 0;
+    dimensions[key] = Math.max(valA, valB);
+  }
+
+  return {
+    dimensions,
+    confidence: Math.max(a.confidence, b.confidence),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Partial Trust Composition
+// ---------------------------------------------------------------------------
+
+/**
+ * Compose multiple partial trust assessments that may cover different scopes.
+ *
+ * For each dimension, collects all assessments that include it in scope and
+ * computes a weighted average by confidence. The final confidence is the
+ * product of all unique source confidences (or min if from the same source).
+ * Dimensions not covered by any assessment get value 0 with confidence 0.
+ */
+export function partialTrustCompose(assessments: PartialTrust[]): TrustValue {
+  if (assessments.length === 0) {
+    return { ...TRUST_ZERO };
+  }
+
+  // Collect all dimensions across all scopes
+  const allDims = new Set<string>();
+  for (const assessment of assessments) {
+    for (const dim of assessment.scope) {
+      allDims.add(dim);
+    }
+  }
+
+  const dimensions: Record<string, number> = {};
+  for (const dim of allDims) {
+    // Find assessments that cover this dimension
+    const covering = assessments.filter(a => a.scope.includes(dim));
+    if (covering.length === 0) {
+      dimensions[dim] = 0;
+      continue;
+    }
+
+    // Weighted average by confidence
+    let totalWeight = 0;
+    let weightedSum = 0;
+    for (const a of covering) {
+      const dimValue = dim in a.value.dimensions ? a.value.dimensions[dim]! : 0;
+      weightedSum += dimValue * a.value.confidence;
+      totalWeight += a.value.confidence;
+    }
+    dimensions[dim] = totalWeight > 0 ? weightedSum / totalWeight : 0;
+  }
+
+  // Final confidence: product of unique source confidences,
+  // min if same source appears multiple times
+  const sourceConfidences = new Map<string, number>();
+  for (const a of assessments) {
+    const existing = sourceConfidences.get(a.source);
+    if (existing !== undefined) {
+      sourceConfidences.set(a.source, Math.min(existing, a.value.confidence));
+    } else {
+      sourceConfidences.set(a.source, a.value.confidence);
+    }
+  }
+
+  let confidence = 1;
+  for (const c of sourceConfidences.values()) {
+    confidence *= c;
+  }
+
+  return { dimensions, confidence };
+}
+
+// ---------------------------------------------------------------------------
+// Attenuated Delegation
+// ---------------------------------------------------------------------------
+
+/**
+ * Compute effective trust through a delegation chain.
+ *
+ * At each step, all trust dimensions and confidence are multiplied by
+ * the attenuation factor. If the chain length exceeds any link's maxDepth,
+ * TRUST_ZERO is returned. The attenuated trusts are composed along the
+ * chain using `trustCompose`.
+ */
+export function delegateTrust(chain: AttenuatedDelegation[]): TrustValue {
+  if (chain.length === 0) {
+    return { ...TRUST_IDENTITY };
+  }
+
+  // If chain length exceeds any link's maxDepth, return TRUST_ZERO
+  for (const link of chain) {
+    if (chain.length > link.maxDepth) {
+      return { ...TRUST_ZERO };
+    }
+  }
+
+  // Attenuate each link's trust by its attenuation factor, then compose
+  let result: TrustValue | null = null;
+
+  for (const link of chain) {
+    // Attenuate dimensions
+    const attenuatedDimensions: Record<string, number> = {};
+    for (const key of Object.keys(link.trust.dimensions)) {
+      attenuatedDimensions[key] = link.trust.dimensions[key]! * link.attenuation;
+    }
+
+    const attenuatedTrust: TrustValue = {
+      dimensions: attenuatedDimensions,
+      confidence: link.trust.confidence * link.attenuation,
+    };
+
+    if (result === null) {
+      result = attenuatedTrust;
+    } else {
+      result = trustCompose(result, attenuatedTrust);
+    }
+  }
+
+  return result!;
+}
+
+// ---------------------------------------------------------------------------
+// Lattice Property Proofs
+// ---------------------------------------------------------------------------
+
+/**
+ * Test lattice axioms (idempotent, commutative, associative, absorption)
+ * on the given samples or 3 randomly generated ones.
+ *
+ * Uses tolerance 1e-10 for floating-point comparison via the same
+ * trustApproxEqual pattern used by proveAlgebraicProperties.
+ */
+export function proveLatticeProperties(samples?: TrustValue[]): TrustLatticeResult {
+  const tolerance = 1e-10;
+  const dims = ['integrity', 'competence', 'reliability'];
+  const testSamples = samples && samples.length >= 3
+    ? samples
+    : [randomTrustValue(dims), randomTrustValue(dims), randomTrustValue(dims)];
+
+  const a = testSamples[0]!;
+  const b = testSamples[1]!;
+  const c = testSamples[2]!;
+
+  const meetResult = trustMeet(a, b);
+  const joinResult = trustJoin(a, b);
+
+  // 1. Idempotent: meet(a,a) = a, join(a,a) = a
+  let idempotentHolds = true;
+  for (const s of testSamples) {
+    if (!trustApproxEqual(trustMeet(s, s), s, tolerance)) {
+      idempotentHolds = false;
+    }
+    if (!trustApproxEqual(trustJoin(s, s), s, tolerance)) {
+      idempotentHolds = false;
+    }
+  }
+
+  // 2. Commutative: meet(a,b) = meet(b,a), join(a,b) = join(b,a)
+  let commutativeHolds = true;
+  for (let i = 0; i < testSamples.length; i++) {
+    for (let j = 0; j < testSamples.length; j++) {
+      const x = testSamples[i]!;
+      const y = testSamples[j]!;
+      if (!trustApproxEqual(trustMeet(x, y), trustMeet(y, x), tolerance)) {
+        commutativeHolds = false;
+      }
+      if (!trustApproxEqual(trustJoin(x, y), trustJoin(y, x), tolerance)) {
+        commutativeHolds = false;
+      }
+    }
+  }
+
+  // 3. Associative: meet(a, meet(b,c)) = meet(meet(a,b), c)
+  let associativeHolds = true;
+  for (let i = 0; i < testSamples.length; i++) {
+    for (let j = 0; j < testSamples.length; j++) {
+      for (let k = 0; k < testSamples.length; k++) {
+        const x = testSamples[i]!;
+        const y = testSamples[j]!;
+        const z = testSamples[k]!;
+        if (!trustApproxEqual(trustMeet(x, trustMeet(y, z)), trustMeet(trustMeet(x, y), z), tolerance)) {
+          associativeHolds = false;
+        }
+        if (!trustApproxEqual(trustJoin(x, trustJoin(y, z)), trustJoin(trustJoin(x, y), z), tolerance)) {
+          associativeHolds = false;
+        }
+      }
+    }
+  }
+
+  // 4. Absorption: join(a, meet(a,b)) = a, meet(a, join(a,b)) = a
+  let absorptionHolds = true;
+  for (let i = 0; i < testSamples.length; i++) {
+    for (let j = 0; j < testSamples.length; j++) {
+      const x = testSamples[i]!;
+      const y = testSamples[j]!;
+      if (!trustApproxEqual(trustJoin(x, trustMeet(x, y)), x, tolerance)) {
+        absorptionHolds = false;
+      }
+      if (!trustApproxEqual(trustMeet(x, trustJoin(x, y)), x, tolerance)) {
+        absorptionHolds = false;
+      }
+    }
+  }
+
+  const isLattice = idempotentHolds && commutativeHolds && associativeHolds && absorptionHolds;
+
+  return {
+    meetResult,
+    joinResult,
+    isLattice,
+    absorptionHolds,
+    idempotentHolds,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Formal Verification
 // ---------------------------------------------------------------------------
 
@@ -998,9 +1269,11 @@ export {
   verifyInvariant,
   verifyAllInvariants,
   generateCounterexampleSearch,
+  checkConstraintSatisfiability,
 } from './formal-verification.js';
 
 export type {
   KernelInvariant,
   KernelVerificationResult,
+  ConstraintSatisfiabilityResult,
 } from './formal-verification.js';

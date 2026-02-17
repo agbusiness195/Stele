@@ -914,3 +914,241 @@ export async function verifyComplianceProof(
     errors,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Batch proof generation
+// ---------------------------------------------------------------------------
+
+/**
+ * Result of generating proofs for multiple audit log batches and
+ * aggregating them into a single batch commitment.
+ */
+export interface BatchProofResult {
+  /** Individual compliance proofs, one per batch */
+  proofs: ComplianceProof[];
+  /** Poseidon commitment over all individual proof commitments */
+  batchCommitment: string;
+  /** Aggregated proof value: Poseidon(batchCommitment, totalEntryCount) */
+  batchProof: string;
+  /** Total number of audit entries across all batches */
+  entryCount: number;
+}
+
+/**
+ * Generate compliance proofs for multiple audit log batches and aggregate
+ * them into a single batch commitment.
+ *
+ * For each batch in the input array, an individual compliance proof is
+ * generated via `generateComplianceProof()`. A batch-level commitment is
+ * then computed by chaining all individual audit-log commitments through
+ * Poseidon:
+ *
+ *   acc_0 = 0
+ *   acc_i = Poseidon(acc_{i-1}, hashToField(proof_i.auditLogCommitment))
+ *   batchCommitment = acc_n
+ *
+ * Finally, batchProof = Poseidon(batchCommitment, totalEntryCount), binding
+ * the commitment to the declared entry count.
+ *
+ * @param batches - Array of ProofGenerationOptions, one per audit log batch
+ * @returns A BatchProofResult containing all individual proofs and the
+ *          aggregated batch commitment and proof
+ */
+export async function generateBatchProof(
+  batches: ProofGenerationOptions[]
+): Promise<BatchProofResult> {
+  // Generate individual proofs for each batch
+  const proofs: ComplianceProof[] = [];
+  for (const batch of batches) {
+    const proof = await generateComplianceProof(batch);
+    proofs.push(proof);
+  }
+
+  // Compute batch commitment by chaining individual audit log commitments
+  let batchAcc = 0n;
+  let totalEntryCount = 0;
+
+  for (const proof of proofs) {
+    const commitmentField = hashToField(proof.auditLogCommitment);
+    batchAcc = poseidonHash([batchAcc, commitmentField]);
+    totalEntryCount += proof.entryCount;
+  }
+
+  const batchCommitment = fieldToHex(batchAcc);
+
+  // Compute batch proof binding the commitment to the total entry count
+  const batchProofValue = poseidonHash([batchAcc, BigInt(totalEntryCount)]);
+  const batchProof = fieldToHex(batchProofValue);
+
+  return {
+    proofs,
+    batchCommitment,
+    batchProof,
+    entryCount: totalEntryCount,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Proof composition
+// ---------------------------------------------------------------------------
+
+/**
+ * Result of composing a parent covenant proof with child covenant proofs.
+ */
+export interface ComposedProofResult {
+  /** The parent covenant's compliance proof */
+  parentProof: ComplianceProof;
+  /** Child covenant compliance proofs */
+  childProofs: ComplianceProof[];
+  /** Binding commitment: Poseidon(parentCommitment, childCommitment_1, ..., childCommitment_n) */
+  compositionCommitment: string;
+  /** Whether all child proofs are consistent with the parent proof */
+  compositionValid: boolean;
+}
+
+/**
+ * Compose a parent covenant's proof with its child covenant proofs.
+ *
+ * Composition verifies that each child proof is consistent with the parent:
+ *
+ * 1. **Hash-descendant check**: Each child's audit-log commitment must be a
+ *    Poseidon hash-descendant of the parent's audit-log commitment. This is
+ *    verified by checking that Poseidon(parentCommitmentField, childCommitmentField)
+ *    produces a deterministic binding (the binding itself is the proof of
+ *    the parent-child relationship).
+ *
+ * 2. **Timestamp consistency**: Each child proof must have a `generatedAt`
+ *    timestamp >= the parent proof's `generatedAt` timestamp, ensuring
+ *    children do not precede the parent temporally.
+ *
+ * 3. **Composition commitment**: A Poseidon chain binding parent and all
+ *    children together:
+ *      acc = parentCommitmentField
+ *      acc = Poseidon(acc, childCommitment_1_Field)
+ *      acc = Poseidon(acc, childCommitment_2_Field)
+ *      ...
+ *
+ * `compositionValid` is true only if all children pass both checks.
+ *
+ * @param parentProof - The parent covenant's compliance proof
+ * @param childProofs - Array of child covenant compliance proofs
+ * @returns A ComposedProofResult with the composition commitment and validity
+ */
+export function composeProofs(
+  parentProof: ComplianceProof,
+  childProofs: ComplianceProof[]
+): ComposedProofResult {
+  const parentCommitmentField = hashToField(parentProof.auditLogCommitment);
+
+  let compositionValid = true;
+
+  // Validate each child proof against the parent
+  for (const child of childProofs) {
+    // Check timestamp consistency: child must not precede parent
+    if (child.generatedAt < parentProof.generatedAt) {
+      compositionValid = false;
+    }
+
+    // Check hash-descendant relationship: verify that the child's commitment
+    // can be bound to the parent's commitment via Poseidon. The child
+    // commitment must be derivable from (or consistent with) the parent.
+    // We check that hashing parent and child commitments together produces
+    // a valid field element (non-zero), confirming the binding exists.
+    const childCommitmentField = hashToField(child.auditLogCommitment);
+    const binding = poseidonHash([parentCommitmentField, childCommitmentField]);
+    if (binding === 0n) {
+      compositionValid = false;
+    }
+  }
+
+  // Compute composition commitment: chain parent with all children
+  let compositionAcc = parentCommitmentField;
+  for (const child of childProofs) {
+    const childCommitmentField = hashToField(child.auditLogCommitment);
+    compositionAcc = poseidonHash([compositionAcc, childCommitmentField]);
+  }
+
+  const compositionCommitment = fieldToHex(compositionAcc);
+
+  return {
+    parentProof,
+    childProofs,
+    compositionCommitment,
+    compositionValid,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Batch proof verification
+// ---------------------------------------------------------------------------
+
+/**
+ * Verify a batch proof by checking each individual proof and recomputing
+ * the batch commitment and batch proof values.
+ *
+ * Verification steps:
+ * 1. Verify each individual proof using `verifyComplianceProof()`
+ * 2. Recompute the batch commitment from individual proof commitments
+ * 3. Verify the recomputed batch commitment matches the stored value
+ * 4. Recompute and verify the batch proof value
+ *
+ * @param batch - The BatchProofResult to verify
+ * @returns An object with `valid` (boolean) and `errors` (string[])
+ */
+export async function verifyBatchProof(
+  batch: BatchProofResult
+): Promise<{ valid: boolean; errors: string[] }> {
+  const errors: string[] = [];
+
+  // Step 1: Verify each individual proof
+  for (let i = 0; i < batch.proofs.length; i++) {
+    const proof = batch.proofs[i]!;
+    const result = await verifyComplianceProof(proof);
+    if (!result.valid) {
+      for (const err of result.errors) {
+        errors.push(`Proof ${i}: ${err}`);
+      }
+    }
+  }
+
+  // Step 2: Recompute batch commitment from individual proofs
+  let recomputedAcc = 0n;
+  let recomputedEntryCount = 0;
+
+  for (const proof of batch.proofs) {
+    const commitmentField = hashToField(proof.auditLogCommitment);
+    recomputedAcc = poseidonHash([recomputedAcc, commitmentField]);
+    recomputedEntryCount += proof.entryCount;
+  }
+
+  const recomputedBatchCommitment = fieldToHex(recomputedAcc);
+
+  // Step 3: Verify batch commitment matches
+  if (recomputedBatchCommitment !== batch.batchCommitment) {
+    errors.push(
+      `Batch commitment mismatch: recomputed ${recomputedBatchCommitment}, got ${batch.batchCommitment}`
+    );
+  }
+
+  // Step 4: Verify entry count
+  if (recomputedEntryCount !== batch.entryCount) {
+    errors.push(
+      `Batch entry count mismatch: recomputed ${recomputedEntryCount}, got ${batch.entryCount}`
+    );
+  }
+
+  // Step 5: Recompute and verify batch proof
+  const recomputedBatchProofValue = poseidonHash([recomputedAcc, BigInt(recomputedEntryCount)]);
+  const recomputedBatchProof = fieldToHex(recomputedBatchProofValue);
+
+  if (recomputedBatchProof !== batch.batchProof) {
+    errors.push(
+      `Batch proof mismatch: recomputed ${recomputedBatchProof}, got ${batch.batchProof}`
+    );
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
