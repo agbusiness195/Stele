@@ -732,6 +732,18 @@ export interface TierAnalysis {
   honestEquilibrium: boolean;
 }
 
+/** Z-score for the 95% confidence interval (Wilson score). */
+const Z_95_CONFIDENCE = 1.96;
+
+/** Base detection rate for Byzantine fault simulation (bilateral midpoint). */
+const BASE_DETECTION_RATE = 0.90;
+
+/** Adaptive evasion learning rate per generation. */
+const ADAPTIVE_LEARNING_RATE = 0.02;
+
+/** Adaptive evasion initial fraction of capability. */
+const ADAPTIVE_INITIAL_FRACTION = 0.1;
+
 /** Floor/ceiling parameters for each adoption tier */
 const TIER_PARAMS: Record<AdoptionTier, { floor: number; ceiling: number }> = {
   solo: { floor: 0.60, ceiling: 0.70 },
@@ -1595,7 +1607,7 @@ export function validateDetectionRates(params: DetectionValidationParams): Detec
     if (n === 0) {
       ci = [0, 1]; // No violations observed, cannot determine rate
     } else {
-      const z = 1.96; // 95% confidence
+      const z = Z_95_CONFIDENCE;
       const pHat = empiricalRate;
       const denominator = 1 + z * z / n;
       const center = (pHat + z * z / (2 * n)) / denominator;
@@ -1967,7 +1979,7 @@ export function validateCorrelatedDetection(params: CorrelatedDetectionParams): 
     if (n === 0) {
       ci = [0, 1];
     } else {
-      const z = 1.96;
+      const z = Z_95_CONFIDENCE;
       const pHat = empiricalRate;
       const denominator = 1 + z * z / n;
       const center = (pHat + z * z / (2 * n)) / denominator;
@@ -2159,7 +2171,7 @@ export function analyzeByzantineAdversary(params: ByzantineAdversaryParams): Byz
 
   // Base detection rate: use the bilateral tier midpoint as a reasonable default
   // (reflects a system with cross-verification between parties)
-  const baseDetectionRate = 0.90;
+  const baseDetectionRate = BASE_DETECTION_RATE;
 
   // Penalty for detected dishonesty: the dishonest agent loses their payoff
   // and incurs an additional cost (modeled as the negative of the honest payoff)
@@ -2189,8 +2201,8 @@ export function analyzeByzantineAdversary(params: ByzantineAdversaryParams): Byz
         return Math.min(1, evasionCapability * (1 + currentByzFraction));
       case 'adaptive':
         // Learning: starts low and increases over generations
-        const learningRate = 0.02;
-        const initialFraction = 0.1;
+        const learningRate = ADAPTIVE_LEARNING_RATE;
+        const initialFraction = ADAPTIVE_INITIAL_FRACTION;
         return Math.min(
           evasionCapability,
           evasionCapability * (initialFraction + learningRate * gen),

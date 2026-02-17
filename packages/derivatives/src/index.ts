@@ -48,6 +48,9 @@ const DEFAULT_PREMIUM_MULTIPLIER = 1.5;
 const DEFAULT_MINIMUM_PREMIUM_RATE = 0.01;
 const DEFAULT_MATURITY_HALF_LIFE = 365;
 
+/** Tolerance for validating that risk weights sum to 1.0. */
+const WEIGHT_SUM_TOLERANCE = 0.001;
+
 function resolveConfig(config?: PricingConfig) {
   const weights = { ...DEFAULT_RISK_WEIGHTS, ...config?.riskWeights };
   const premiumMultiplier = config?.premiumMultiplier ?? DEFAULT_PREMIUM_MULTIPLIER;
@@ -76,7 +79,7 @@ export function validatePricingConfig(config: PricingConfig): void {
       }
     }
     const sum = Object.values(w).reduce((s, v) => s + v, 0);
-    if (Math.abs(sum - 1.0) > 0.001) {
+    if (Math.abs(sum - 1.0) > WEIGHT_SUM_TOLERANCE) {
       throw new SteleError(
         `Risk weights must sum to approximately 1.0, got ${sum}`,
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
