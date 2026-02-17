@@ -11,6 +11,8 @@ import {
 
 import type { KeyPair, HashHex } from '@stele/crypto';
 
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
+
 import {
   parse as cclParse,
   merge as cclMerge,
@@ -761,6 +763,25 @@ export async function resolveChain(
   resolver: ChainResolver,
   maxDepth: number = MAX_CHAIN_DEPTH,
 ): Promise<CovenantDocument[]> {
+  if (doc == null) {
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      'doc must not be null or undefined',
+      { hint: 'Provide a valid CovenantDocument to resolveChain.' }
+    );
+  }
+
+  if (typeof maxDepth !== 'number' || !Number.isFinite(maxDepth) || maxDepth < 0) {
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
+      'maxDepth must be a non-negative number',
+      { hint: 'Provide a non-negative number for maxDepth.' }
+    );
+  }
+
+  const visited = new Set<string>();
+  visited.add(doc.id);
+
   const ancestors: CovenantDocument[] = [];
   let current = doc;
 
@@ -769,11 +790,16 @@ export async function resolveChain(
       break;
     }
 
+    if (visited.has(current.chain.parentId)) {
+      break;
+    }
+
     const parent = await resolver.resolve(current.chain.parentId);
     if (!parent) {
       break;
     }
 
+    visited.add(parent.id);
     ancestors.push(parent);
     current = parent;
   }

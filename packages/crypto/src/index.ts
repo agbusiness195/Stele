@@ -118,7 +118,29 @@ export async function keyPairFromPrivateKeyHex(hex: string): Promise<KeyPair> {
  * ```
  */
 export async function sign(message: Uint8Array, privateKey: PrivateKey): Promise<Signature> {
-  return ed.signAsync(message, privateKey);
+  if (!(message instanceof Uint8Array)) {
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_SIGNATURE_FAILED,
+      `sign() expects message to be a Uint8Array, got ${typeof message}`,
+      { hint: 'Use new TextEncoder().encode(str) to convert strings, or use signString() instead.' }
+    );
+  }
+  if (!(privateKey instanceof Uint8Array) || privateKey.length !== 32) {
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_INVALID_KEY,
+      `sign() expects privateKey to be a 32-byte Uint8Array, got ${privateKey instanceof Uint8Array ? `${privateKey.length} bytes` : typeof privateKey}`,
+      { hint: 'Provide a 32-byte Uint8Array as the Ed25519 private key.' }
+    );
+  }
+  try {
+    return await ed.signAsync(message, privateKey);
+  } catch (err) {
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_SIGNATURE_FAILED,
+      `Ed25519 signing operation failed: ${err instanceof Error ? err.message : String(err)}`,
+      { hint: 'Ensure the private key is a valid 32-byte Ed25519 key.' }
+    );
+  }
 }
 
 /**
@@ -134,6 +156,20 @@ export async function sign(message: Uint8Array, privateKey: PrivateKey): Promise
  * ```
  */
 export async function signString(message: string, privateKey: PrivateKey): Promise<Signature> {
+  if (typeof message !== 'string') {
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_SIGNATURE_FAILED,
+      `signString() expects message to be a string, got ${typeof message}`,
+      { hint: 'Pass a string message, or use sign() for Uint8Array messages.' }
+    );
+  }
+  if (!(privateKey instanceof Uint8Array) || privateKey.length !== 32) {
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_INVALID_KEY,
+      `signString() expects privateKey to be a 32-byte Uint8Array, got ${privateKey instanceof Uint8Array ? `${privateKey.length} bytes` : typeof privateKey}`,
+      { hint: 'Provide a 32-byte Uint8Array as the Ed25519 private key.' }
+    );
+  }
   return sign(new TextEncoder().encode(message), privateKey);
 }
 
@@ -294,9 +330,25 @@ export function base64urlEncode(data: Uint8Array): Base64Url {
  * ```
  */
 export function base64urlDecode(encoded: Base64Url): Uint8Array {
+  if (typeof encoded !== 'string') {
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_INVALID_HEX,
+      `base64urlDecode() expects a string, got ${typeof encoded}`,
+      { hint: 'Pass a base64url-encoded string to base64urlDecode().' }
+    );
+  }
   const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
   const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
-  const binary = atob(padded);
+  let binary: string;
+  try {
+    binary = atob(padded);
+  } catch (err) {
+    throw new SteleError(
+      SteleErrorCode.CRYPTO_INVALID_HEX,
+      `Invalid base64url string: ${err instanceof Error ? err.message : String(err)}`,
+      { hint: 'Ensure the input is a valid base64url-encoded string (characters A-Z, a-z, 0-9, -, _).' }
+    );
+  }
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);
