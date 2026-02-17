@@ -9,6 +9,7 @@
 
 import { keccak_256 } from '@noble/hashes/sha3';
 import { sha256String } from '@stele/crypto';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
@@ -34,7 +35,7 @@ function utf8ToHex(value: string): string {
 
 /**
  * Compute the Keccak-256 hash of a hex string input.
- * This is the real EVM hash function, not a SHA-256 placeholder.
+ * Uses the native EVM hash function (Keccak-256), not SHA-256.
  * @param input - String to hash
  * @returns 64-character lowercase hex hash string
  */
@@ -75,10 +76,10 @@ function keccak256Hex(hexData: string): string {
  */
 export function encodeUint256(value: bigint): string {
   if (value < 0n) {
-    throw new Error('uint256 cannot be negative');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'uint256 cannot be negative');
   }
   if (value > MAX_UINT256) {
-    throw new Error('uint256 overflow');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'uint256 overflow');
   }
   return value.toString(16).padStart(64, '0');
 }
@@ -91,10 +92,10 @@ export function encodeUint256(value: bigint): string {
 export function encodeBytes32(hex: string): string {
   const clean = strip0x(hex);
   if (clean.length > 64) {
-    throw new Error('bytes32 value exceeds 32 bytes');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'bytes32 value exceeds 32 bytes');
   }
   if (clean.length > 0 && !/^[0-9a-fA-F]+$/.test(clean)) {
-    throw new Error('Invalid hex string');
+    throw new SteleError(SteleErrorCode.CRYPTO_INVALID_HEX, 'Invalid hex string');
   }
   return clean.toLowerCase().padEnd(64, '0');
 }
@@ -107,10 +108,10 @@ export function encodeBytes32(hex: string): string {
 export function encodeAddress(address: string): string {
   const clean = strip0x(address).toLowerCase();
   if (clean.length !== 40) {
-    throw new Error('Invalid address: must be 20 bytes (40 hex chars)');
+    throw new SteleError(SteleErrorCode.CRYPTO_INVALID_HEX, 'Invalid address: must be 20 bytes (40 hex chars)');
   }
   if (!/^[0-9a-f]{40}$/.test(clean)) {
-    throw new Error('Invalid address: not valid hex');
+    throw new SteleError(SteleErrorCode.CRYPTO_INVALID_HEX, 'Invalid address: not valid hex');
   }
   return clean.padStart(64, '0');
 }
@@ -149,7 +150,7 @@ export function encodeString(value: string): string {
 export function decodeUint256(hex: string): bigint {
   const clean = strip0x(hex);
   if (clean.length !== 64) {
-    throw new Error('Expected 64-character hex string for uint256');
+    throw new SteleError(SteleErrorCode.CRYPTO_INVALID_HEX, 'Expected 64-character hex string for uint256');
   }
   return BigInt('0x' + clean);
 }
@@ -162,7 +163,7 @@ export function decodeUint256(hex: string): bigint {
 export function decodeBytes32(hex: string): string {
   const clean = strip0x(hex);
   if (clean.length !== 64) {
-    throw new Error('Expected 64-character hex string for bytes32');
+    throw new SteleError(SteleErrorCode.CRYPTO_INVALID_HEX, 'Expected 64-character hex string for bytes32');
   }
   return clean.toLowerCase();
 }
@@ -176,7 +177,7 @@ export function decodeBytes32(hex: string): string {
 export function decodeAddress(hex: string): string {
   const clean = strip0x(hex);
   if (clean.length !== 64) {
-    throw new Error('Expected 64-character hex string for address');
+    throw new SteleError(SteleErrorCode.CRYPTO_INVALID_HEX, 'Expected 64-character hex string for address');
   }
   const addrHex = clean.slice(24);
   return checksumAddress('0x' + addrHex);
@@ -193,7 +194,7 @@ export function decodeAddress(hex: string): string {
 export function encodeFunctionCall(selector: string, ...params: string[]): string {
   const cleanSelector = strip0x(selector);
   if (cleanSelector.length !== 8) {
-    throw new Error('Function selector must be 4 bytes (8 hex chars)');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Function selector must be 4 bytes (8 hex chars)');
   }
   return '0x' + cleanSelector + params.join('');
 }
@@ -263,11 +264,12 @@ export function parseAnchorFromCalldata(calldata: string): CovenantAnchor {
   const data = strip0x(calldata);
   // 8 chars selector + 5 × 64 chars params = 328 chars minimum
   if (data.length < 328) {
-    throw new Error('Calldata too short for anchor function');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Calldata too short for anchor function');
   }
   const selector = data.slice(0, 8);
   if (selector !== ANCHOR_SELECTOR) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `Invalid function selector: expected ${ANCHOR_SELECTOR}, got ${selector}`,
     );
   }
@@ -395,7 +397,7 @@ export function isValidAddress(address: string): boolean {
  */
 export function checksumAddress(address: string): string {
   if (!isValidAddress(address)) {
-    throw new Error('Invalid EVM address');
+    throw new SteleError(SteleErrorCode.CRYPTO_INVALID_HEX, 'Invalid EVM address');
   }
   const lower = address.slice(2).toLowerCase();
   const hash = keccak256String(lower);
@@ -421,10 +423,10 @@ export function checksumAddress(address: string): string {
 export function covenantIdToBytes32(id: string): string {
   const clean = strip0x(id);
   if (clean.length !== 64) {
-    throw new Error('Covenant ID must be 32 bytes (64 hex chars)');
+    throw new SteleError(SteleErrorCode.CRYPTO_INVALID_HEX, 'Covenant ID must be 32 bytes (64 hex chars)');
   }
   if (!/^[0-9a-fA-F]{64}$/.test(clean)) {
-    throw new Error('Invalid hex string');
+    throw new SteleError(SteleErrorCode.CRYPTO_INVALID_HEX, 'Invalid hex string');
   }
   return '0x' + clean.toLowerCase();
 }
@@ -492,7 +494,7 @@ export class EVMClient {
 
   constructor(provider: EVMProvider, registryAddress: string) {
     if (!isValidAddress(registryAddress)) {
-      throw new Error('Invalid registry address');
+      throw new SteleError(SteleErrorCode.CRYPTO_INVALID_HEX, 'Invalid registry address');
     }
     this.provider = provider;
     this.registryAddress = registryAddress;

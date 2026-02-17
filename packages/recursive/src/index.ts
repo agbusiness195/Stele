@@ -1,4 +1,5 @@
 import { sha256Object, generateId } from '@stele/crypto';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 export type {
   MetaTargetType,
@@ -371,13 +372,13 @@ export function computeTrustTransitivity(
   attenuationFactor: number = 0.9,
 ): TransitiveTrustResult {
   if (attenuationFactor <= 0 || attenuationFactor > 1) {
-    throw new Error('attenuationFactor must be in (0, 1]');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'attenuationFactor must be in (0, 1]');
   }
 
   // Validate trust scores
   for (const edge of edges) {
     if (edge.trustScore < 0 || edge.trustScore > 1) {
-      throw new Error(`Invalid trustScore ${edge.trustScore} for edge ${edge.from} -> ${edge.to}`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Invalid trustScore ${edge.trustScore} for edge ${edge.from} -> ${edge.to}`);
     }
   }
 

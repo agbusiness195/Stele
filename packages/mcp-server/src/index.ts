@@ -49,6 +49,19 @@ export { JSON_RPC_ERRORS } from './types';
 export { createAuthMiddleware } from './auth';
 export type { MCPAuthOptions, AuthenticatedRequest } from './auth';
 
+export {
+  createServerProfile,
+  evaluateServer,
+  generateTrustReport,
+  renewCertification,
+} from './certification';
+export type {
+  BadgeLevel,
+  MCPServerProfile,
+  CertificationCriteria,
+  ServerCertification,
+} from './certification';
+
 // ─── Tool definitions ───────────────────────────────────────────────────────────
 
 const TOOL_DEFINITIONS: ToolDefinition[] = [

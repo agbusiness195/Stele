@@ -15,6 +15,7 @@ import {
   generateId,
   timestamp,
 } from './index';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 import type { KeyPair } from './types';
 
@@ -33,6 +34,18 @@ export interface KeyRotationPolicy {
 /**
  * A key pair with lifecycle metadata.
  */
+/**
+ * An entry in the key revocation list.
+ */
+export interface RevocationEntry {
+  /** Hex-encoded public key that was revoked. */
+  publicKeyHex: string;
+  /** ISO 8601 timestamp when the key was revoked. */
+  revokedAt: string;
+  /** Human-readable reason for revocation. */
+  reason: string;
+}
+
 export interface ManagedKeyPair {
   /** The underlying Ed25519 key pair. */
   keyPair: KeyPair;
@@ -63,17 +76,18 @@ export interface ManagedKeyPair {
 export class KeyManager {
   private readonly policy: KeyRotationPolicy;
   private keys: ManagedKeyPair[] = [];
+  private readonly revocationList: RevocationEntry[] = [];
   private initialized = false;
 
   constructor(policy: KeyRotationPolicy) {
     if (policy.maxAgeMs <= 0) {
-      throw new Error('maxAgeMs must be positive');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'maxAgeMs must be positive');
     }
     if (policy.overlapPeriodMs < 0) {
-      throw new Error('overlapPeriodMs must be non-negative');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'overlapPeriodMs must be non-negative');
     }
     if (policy.overlapPeriodMs >= policy.maxAgeMs) {
-      throw new Error('overlapPeriodMs must be less than maxAgeMs');
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'overlapPeriodMs must be less than maxAgeMs');
     }
     this.policy = policy;
   }
@@ -86,7 +100,7 @@ export class KeyManager {
    */
   async initialize(): Promise<ManagedKeyPair> {
     if (this.initialized) {
-      throw new Error('KeyManager is already initialized');
+      throw new SteleError(SteleErrorCode.KEY_ROTATION_REQUIRED, 'KeyManager is already initialized');
     }
 
     const keyPair = await generateKeyPair();
@@ -133,7 +147,7 @@ export class KeyManager {
 
     const previous = this.findActive();
     if (!previous) {
-      throw new Error('No active key to rotate');
+      throw new SteleError(SteleErrorCode.NO_PRIVATE_KEY, 'No active key to rotate');
     }
 
     // Move the current active key to rotating status
@@ -172,7 +186,7 @@ export class KeyManager {
 
     const active = this.findActive();
     if (!active) {
-      throw new Error('No active key available');
+      throw new SteleError(SteleErrorCode.NO_PRIVATE_KEY, 'No active key available');
     }
 
     return active;
@@ -248,7 +262,7 @@ export class KeyManager {
 
   private ensureInitialized(): void {
     if (!this.initialized) {
-      throw new Error('KeyManager is not initialized. Call initialize() first.');
+      throw new SteleError(SteleErrorCode.KEY_ROTATION_REQUIRED, 'KeyManager is not initialized. Call initialize() first.');
     }
   }
 
@@ -257,13 +271,63 @@ export class KeyManager {
   }
 
   /**
+   * Explicitly revoke a key by its public key hex, adding it to the
+   * revocation list. Revoked keys are immediately moved to 'retired'
+   * status and will no longer pass verification via {@link verifyWithAnyKey}.
+   *
+   * @param publicKeyHex - The hex-encoded public key to revoke.
+   * @param reason - Human-readable reason for revocation.
+   * @returns The revocation entry, or undefined if the key was not found.
+   */
+  revoke(publicKeyHex: string, reason: string): RevocationEntry | undefined {
+    this.ensureInitialized();
+
+    const managed = this.keys.find((k) => k.keyPair.publicKeyHex === publicKeyHex);
+    if (!managed) return undefined;
+
+    managed.status = 'retired';
+    managed.rotatedAt = managed.rotatedAt ?? timestamp();
+
+    const entry: RevocationEntry = {
+      publicKeyHex,
+      revokedAt: timestamp(),
+      reason,
+    };
+    this.revocationList.push(entry);
+
+    return entry;
+  }
+
+  /**
+   * Check whether a key has been explicitly revoked.
+   *
+   * @param publicKeyHex - The hex-encoded public key to check.
+   * @returns true if the key is on the revocation list.
+   */
+  isRevoked(publicKeyHex: string): boolean {
+    return this.revocationList.some((e) => e.publicKeyHex === publicKeyHex);
+  }
+
+  /**
+   * Get the full revocation list.
+   *
+   * @returns A copy of all revocation entries.
+   */
+  getRevocationList(): RevocationEntry[] {
+    return [...this.revocationList];
+  }
+
+  /**
    * Get all keys eligible for signature verification:
-   * - Active keys
-   * - Rotating keys still within the overlap period
+   * - Active keys (not revoked)
+   * - Rotating keys still within the overlap period (not revoked)
    */
   private getEligibleKeys(): ManagedKeyPair[] {
     const now = Date.now();
     return this.keys.filter((k) => {
+      // Revoked keys are never eligible
+      if (this.isRevoked(k.keyPair.publicKeyHex)) return false;
+
       if (k.status === 'active') return true;
       if (k.status === 'rotating' && k.rotatedAt) {
         const timeSinceRotation = now - new Date(k.rotatedAt).getTime();

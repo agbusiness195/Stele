@@ -1,5 +1,5 @@
 import { generateId } from '@stele/crypto';
-import { SteleError, SteleErrorCode } from '@stele/types';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 export type {
   NegotiationSession,
@@ -26,16 +26,16 @@ import type {
  */
 function validateProposal(proposal: Proposal): void {
   if (!proposal.from || typeof proposal.from !== 'string') {
-    throw new Error('Proposal must have a non-empty "from" field');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Proposal must have a non-empty "from" field');
   }
   if (!Array.isArray(proposal.constraints)) {
-    throw new Error('Proposal constraints must be an array');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Proposal constraints must be an array');
   }
   if (!Array.isArray(proposal.requirements)) {
-    throw new Error('Proposal requirements must be an array');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Proposal requirements must be an array');
   }
   if (typeof proposal.timestamp !== 'number' || proposal.timestamp < 0) {
-    throw new Error('Proposal timestamp must be a non-negative number');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Proposal timestamp must be a non-negative number');
   }
 }
 
@@ -44,10 +44,10 @@ function validateProposal(proposal: Proposal): void {
  */
 function assertNotTerminal(session: NegotiationSession): void {
   if (session.status === 'agreed') {
-    throw new Error('Cannot modify an agreed session');
+    throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, 'Cannot modify an agreed session');
   }
   if (session.status === 'failed') {
-    throw new Error('Cannot modify a failed session');
+    throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, 'Cannot modify a failed session');
   }
 }
 
@@ -101,16 +101,16 @@ export function initiate(
   policy: NegotiationPolicy,
 ): NegotiationSession {
   if (!initiatorId || typeof initiatorId !== 'string') {
-    throw new Error('initiatorId must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'initiatorId must be a non-empty string');
   }
   if (!responderId || typeof responderId !== 'string') {
-    throw new Error('responderId must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'responderId must be a non-empty string');
   }
   if (policy.maxRounds < 1) {
-    throw new Error('maxRounds must be at least 1');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'maxRounds must be at least 1');
   }
   if (policy.timeoutMs < 0) {
-    throw new Error('timeoutMs must be non-negative');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'timeoutMs must be non-negative');
   }
 
   const now = Date.now();
@@ -166,7 +166,8 @@ export function counter(
   validateProposal(counterProposal);
 
   if (session.proposals.length >= session.maxRounds) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
       `Maximum rounds (${session.maxRounds}) exceeded. Cannot add counter-proposal.`,
     );
   }
@@ -486,21 +487,21 @@ export function computeNPartyNash(
   config?: NPartyNashConfig,
 ): NPartyNashResult | null {
   if (outcomes.length === 0) {
-    throw new SteleError('outcomes array must not be empty', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'outcomes array must not be empty');
   }
   if (utilities.length < 2) {
-    throw new SteleError('At least 2 utility functions required for Nash bargaining', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'At least 2 utility functions required for Nash bargaining');
   }
 
   const n = utilities.length;
   const powers = bargainingPowers ?? utilities.map(() => 1.0);
 
   if (powers.length !== n) {
-    throw new SteleError(`bargainingPowers length (${powers.length}) must match utilities length (${n})`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `bargainingPowers length (${powers.length}) must match utilities length (${n})`);
   }
   for (let i = 0; i < powers.length; i++) {
     if (powers[i]! <= 0) {
-      throw new SteleError(`bargainingPowers[${i}] must be positive, got ${powers[i]}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `bargainingPowers[${i}] must be positive, got ${powers[i]}`);
     }
   }
 
@@ -609,13 +610,13 @@ export class ConcessionProtocol {
 
   constructor(config: ConcessionConfig) {
     if (config.concessionRate < 0 || config.concessionRate > 1) {
-      throw new SteleError('concessionRate must be in [0, 1]', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'concessionRate must be in [0, 1]');
     }
     if (config.maxRounds < 1) {
-      throw new SteleError('maxRounds must be >= 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'maxRounds must be >= 1');
     }
     if (config.deadline <= 0) {
-      throw new SteleError('deadline must be positive', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'deadline must be positive');
     }
     this.config = config;
     this.startTime = Date.now();
@@ -677,7 +678,7 @@ export class ConcessionProtocol {
     }
 
     if (this.state === 'ACCEPT' || this.state === 'REJECT' || this.state === 'TIMEOUT') {
-      throw new SteleError(`Cannot propose in terminal state: ${this.state}`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Cannot propose in terminal state: ${this.state}`);
     }
 
     this.log.push({
@@ -704,7 +705,7 @@ export class ConcessionProtocol {
     }
 
     if (this.state !== 'PROPOSE' && this.state !== 'CONCEDE') {
-      throw new SteleError(`Cannot counter in state: ${this.state}. Must be PROPOSE or CONCEDE.`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Cannot counter in state: ${this.state}. Must be PROPOSE or CONCEDE.`);
     }
 
     if (this.round >= this.config.maxRounds) {
@@ -740,7 +741,7 @@ export class ConcessionProtocol {
     }
 
     if (this.state !== 'COUNTER' && this.state !== 'PROPOSE') {
-      throw new SteleError(`Cannot concede in state: ${this.state}. Must be COUNTER or PROPOSE.`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Cannot concede in state: ${this.state}. Must be COUNTER or PROPOSE.`);
     }
 
     const concessionAmount = this.calculateConcession(remainingGap, now);
@@ -762,7 +763,7 @@ export class ConcessionProtocol {
    */
   accept(from: string, proposal: Proposal): ConcessionState {
     if (this.state === 'ACCEPT' || this.state === 'REJECT' || this.state === 'TIMEOUT') {
-      throw new SteleError(`Cannot accept in terminal state: ${this.state}`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Cannot accept in terminal state: ${this.state}`);
     }
 
     this.log.push({
@@ -781,7 +782,7 @@ export class ConcessionProtocol {
    */
   reject(from: string, proposal: Proposal): ConcessionState {
     if (this.state === 'ACCEPT' || this.state === 'REJECT' || this.state === 'TIMEOUT') {
-      throw new SteleError(`Cannot reject in terminal state: ${this.state}`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Cannot reject in terminal state: ${this.state}`);
     }
 
     this.log.push({
@@ -818,7 +819,7 @@ export class IncrementalParetoFrontier {
 
   constructor(dimensions: number) {
     if (dimensions < 2) {
-      throw new SteleError('Pareto frontier requires at least 2 dimensions', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Pareto frontier requires at least 2 dimensions');
     }
     this.dimensions = dimensions;
   }
@@ -859,7 +860,7 @@ export class IncrementalParetoFrontier {
    */
   insert(outcome: Outcome, utilities: number[]): boolean {
     if (utilities.length !== this.dimensions) {
-      throw new SteleError(`Expected ${this.dimensions} utility values, got ${utilities.length}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Expected ${this.dimensions} utility values, got ${utilities.length}`);
     }
 
     const newPoint: ParetoOutcome = {
@@ -1028,10 +1029,10 @@ export function runZeuthenNegotiation(
   maxRounds: number = 100,
 ): { rounds: ZeuthenResult[]; agreedOutcome: Outcome | null } {
   if (outcomes.length === 0) {
-    throw new SteleError('outcomes array must not be empty', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'outcomes array must not be empty');
   }
   if (maxRounds < 1) {
-    throw new SteleError('maxRounds must be >= 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'maxRounds must be >= 1');
   }
 
   // Each party starts with their most preferred outcome

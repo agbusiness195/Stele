@@ -12,8 +12,8 @@ import {
   evaluateServer,
   generateTrustReport,
   renewCertification,
-} from '../packages/mcp-server/src/certification';
-import type { CertificationCriteria } from '../packages/mcp-server/src/certification';
+} from '@stele/mcp-server';
+import type { CertificationCriteria } from '@stele/mcp-server';
 
 function main() {
   console.log('========================================');

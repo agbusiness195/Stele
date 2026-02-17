@@ -3,6 +3,8 @@
  * Use these at system boundaries (API inputs, deserialization, user-facing functions).
  */
 
+import { SteleError, SteleErrorCode } from './errors';
+
 // ─── Type Guards ────────────────────────────────────────────────────────────────
 
 /**
@@ -180,7 +182,8 @@ function assertNoDangerousKeys(obj: unknown): void {
 
   for (const key of Object.keys(obj)) {
     if (DANGEROUS_KEYS.has(key)) {
-      throw new Error(
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         `Potentially dangerous key "${key}" detected in JSON input`,
       );
     }
@@ -271,5 +274,5 @@ export function freezeDeep<T>(obj: T): Readonly<T> {
  * ```
  */
 export function assertNever(value: never): never {
-  throw new Error(`Unexpected value: ${String(value)}`);
+  throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Unexpected value: ${String(value)}`);
 }

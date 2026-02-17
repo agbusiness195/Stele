@@ -17,23 +17,41 @@
 // Types
 // ---------------------------------------------------------------------------
 
+/**
+ * A kernel invariant representing a formal property of the Accountability Kernel.
+ *
+ * Each invariant is a named predicate that can be verified against test cases
+ * or searched for counterexamples via property-based testing.
+ */
 export interface KernelInvariant {
+  /** Unique identifier (e.g. "INV-001"). */
   id: string;
+  /** Short human-readable name for the invariant. */
   name: string;
   /** Human-readable description */
   description: string;
-  /** The invariant as a predicate function */
-  predicate: (...args: any[]) => boolean;
+  /** The invariant as a predicate function. Accepts unknown args; callers spread test-case tuples. */
+  predicate: (...args: unknown[]) => boolean;
   /** Proof status */
   status: 'verified' | 'tested' | 'conjectured';
   /** Number of test cases that have validated this */
   testCount: number;
 }
 
+/**
+ * The result of verifying a single kernel invariant against test cases.
+ *
+ * Contains the invariant that was tested, whether it held for all inputs,
+ * an optional counterexample if it failed, and timing information.
+ */
 export interface KernelVerificationResult {
+  /** The invariant that was verified. */
   invariant: KernelInvariant;
+  /** Whether the invariant held for all test cases. */
   holds: boolean;
+  /** The first failing test case, if any. */
   counterexample?: unknown;
+  /** Wall-clock time in milliseconds for the verification run. */
   executionTimeMs: number;
 }
 
@@ -153,11 +171,30 @@ function computeIdentityHash(binding: IdentityBinding): string {
 // ---------------------------------------------------------------------------
 
 /**
- * Returns all kernel invariants (at least 12) that describe the formal
+ * Helper to cast a typed predicate function to the `(...args: unknown[]) => boolean`
+ * signature required by KernelInvariant. This preserves type safety at the
+ * definition site while allowing heterogeneous predicate storage.
+ */
+function predicate(fn: (...args: never[]) => boolean): (...args: unknown[]) => boolean {
+  return fn as unknown as (...args: unknown[]) => boolean;
+}
+
+/**
+ * Returns all kernel invariants (at least 16) that describe the formal
  * properties of the Accountability Kernel.
  *
  * Each invariant is a predicate function that accepts test inputs and
  * returns true if the invariant holds for those inputs.
+ *
+ * @returns An array of KernelInvariant objects covering identity binding,
+ *   covenant narrowing, proof determinism, trust boundedness, and more.
+ *
+ * @example
+ * ```ts
+ * const invariants = defineKernelInvariants();
+ * console.log(invariants.length); // >= 16
+ * console.log(invariants[0].id);  // "INV-001"
+ * ```
  */
 export function defineKernelInvariants(): KernelInvariant[] {
   return [
@@ -171,7 +208,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
         'Changing any field of an identity binding invalidates its signature. ' +
         'For any valid binding b with signature s = sign(b), mutating any field ' +
         'of b to produce b\' implies sign(b\') !== s.',
-      predicate: (binding: IdentityBinding): boolean => {
+      predicate: predicate((binding: IdentityBinding): boolean => {
         const originalSig = computeBindingSignature(binding);
 
         // Mutate agentId
@@ -190,7 +227,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
         if (computeBindingSignature(mutatedMeta) === originalSig) return false;
 
         return true;
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -206,7 +243,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
         'For any parent covenant P and child covenant C derived from P, every constraint ' +
         'in C must also appear in P, the child set must be strictly smaller, and the child ' +
         'must not introduce deny constraints that the parent does not have.',
-      predicate: (parent: SignedCovenant, child: SignedCovenant): boolean => {
+      predicate: predicate((parent: SignedCovenant, child: SignedCovenant): boolean => {
         if (child.parentId !== parent.id) return true; // not related, vacuously true
 
         const parentSet = new Set(parent.constraints);
@@ -234,7 +271,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
         }
 
         return true;
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -248,12 +285,12 @@ export function defineKernelInvariants(): KernelInvariant[] {
       description:
         'The same inputs always produce the same proof. Given identical audit entries, ' +
         'the computed commitment hash must be identical across invocations.',
-      predicate: (entries: AuditEntry[]): boolean => {
+      predicate: predicate((entries: AuditEntry[]): boolean => {
         const payload = entries.map(e => `${e.id}:${e.action}:${e.timestamp}:${e.hash}`).join('|');
         const hash1 = simpleHash(payload);
         const hash2 = simpleHash(payload);
         return hash1 === hash2;
-      },
+      }),
       status: 'verified',
       testCount: 0,
     },
@@ -267,9 +304,9 @@ export function defineKernelInvariants(): KernelInvariant[] {
       description:
         'An agent\'s trust level must never exceed their posted collateral. ' +
         'For any trust account A, A.trust <= A.collateral.',
-      predicate: (account: TrustAccount): boolean => {
+      predicate: predicate((account: TrustAccount): boolean => {
         return account.trust <= account.collateral;
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -283,13 +320,13 @@ export function defineKernelInvariants(): KernelInvariant[] {
       description:
         'Covenant versions only increase over time. For any lineage sequence ' +
         'L = [l_0, l_1, ..., l_n] of the same covenant, l_i.version < l_{i+1}.version.',
-      predicate: (lineage: LineageRecord[]): boolean => {
+      predicate: predicate((lineage: LineageRecord[]): boolean => {
         if (lineage.length <= 1) return true;
         for (let i = 1; i < lineage.length; i++) {
           if (lineage[i]!.version <= lineage[i - 1]!.version) return false;
         }
         return true;
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -304,7 +341,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
         'A deny constraint always overrides a permit constraint on the same resource. ' +
         'For any set of constraints S and evaluation results E, if both "deny:R" and ' +
         '"permit:R" appear in S, the evaluation decision for R must be "deny".',
-      predicate: (
+      predicate: predicate((
         constraints: string[],
         evaluationResults: Array<{ resource: string; decision: 'permit' | 'deny' }>,
       ): boolean => {
@@ -343,7 +380,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
         }
 
         return true;
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -358,7 +395,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
         'A signed covenant cannot be modified without invalidating its signature. ' +
         'For a signed covenant C with signature S, changing C.constraints produces C\' ' +
         'where sign(C\') !== S.',
-      predicate: (covenant: SignedCovenant): boolean => {
+      predicate: predicate((covenant: SignedCovenant): boolean => {
         const originalPayload = `${covenant.id}|${covenant.constraints.join(',')}|${covenant.version}`;
         const originalSig = simpleHash(originalPayload);
 
@@ -374,7 +411,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
         const mutatedSig = simpleHash(mutatedPayload);
 
         return mutatedSig !== originalSig;
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -389,14 +426,14 @@ export function defineKernelInvariants(): KernelInvariant[] {
         'Different identities produce different hashes. For any two identity bindings ' +
         'A and B where A.agentId !== B.agentId or A.publicKey !== B.publicKey, ' +
         'hash(A) !== hash(B).',
-      predicate: (a: IdentityBinding, b: IdentityBinding): boolean => {
+      predicate: predicate((a: IdentityBinding, b: IdentityBinding): boolean => {
         // If they are structurally identical, they should hash identically
         if (a.agentId === b.agentId && a.publicKey === b.publicKey) {
           return computeIdentityHash(a) === computeIdentityHash(b);
         }
         // If they differ, their hashes should differ
         return computeIdentityHash(a) !== computeIdentityHash(b);
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -410,13 +447,13 @@ export function defineKernelInvariants(): KernelInvariant[] {
       description:
         'Lineage timestamps are monotonically non-decreasing. For any lineage ' +
         'sequence L, l_i.timestamp <= l_{i+1}.timestamp for all consecutive pairs.',
-      predicate: (lineage: LineageRecord[]): boolean => {
+      predicate: predicate((lineage: LineageRecord[]): boolean => {
         if (lineage.length <= 1) return true;
         for (let i = 1; i < lineage.length; i++) {
           if (lineage[i]!.timestamp < lineage[i - 1]!.timestamp) return false;
         }
         return true;
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -430,9 +467,9 @@ export function defineKernelInvariants(): KernelInvariant[] {
       description:
         'Carry-forward rates must be in the interval [0, 1]. For any trust account A, ' +
         '0 <= A.carryForwardRate <= 1.',
-      predicate: (account: TrustAccount): boolean => {
+      predicate: predicate((account: TrustAccount): boolean => {
         return account.carryForwardRate >= 0 && account.carryForwardRate <= 1;
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -446,10 +483,10 @@ export function defineKernelInvariants(): KernelInvariant[] {
       description:
         'Every audit entry is included in the proof commitment. For a proof commitment ' +
         'P built from entries E, P.includedIds must contain every e.id in E.',
-      predicate: (commitment: ProofCommitment): boolean => {
+      predicate: predicate((commitment: ProofCommitment): boolean => {
         const includedSet = new Set(commitment.includedIds);
         return commitment.entries.every(e => includedSet.has(e.id));
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -464,11 +501,11 @@ export function defineKernelInvariants(): KernelInvariant[] {
         'Composed trust through a chain of agents never exceeds the minimum trust ' +
         'in any link. For a trust path [t_0, t_1, ..., t_n], ' +
         'composedTrust <= min(t_0, t_1, ..., t_n).',
-      predicate: (composition: TrustComposition): boolean => {
+      predicate: predicate((composition: TrustComposition): boolean => {
         if (composition.trustValues.length === 0) return true;
         const minTrust = Math.min(...composition.trustValues);
         return composition.composedTrust <= minTrust;
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -483,7 +520,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
         'A set of constraints is satisfiable if there exists at least one action that ' +
         'is permitted. If all resources have deny constraints and no resource has a permit ' +
         'without a matching deny, the constraint set is unsatisfiable.',
-      predicate: (constraints: string[]): boolean => {
+      predicate: predicate((constraints: string[]): boolean => {
         const denyResources = new Set<string>();
         const permitResources = new Set<string>();
 
@@ -515,7 +552,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
 
         // All permitted resources are also denied: unsatisfiable
         return false;
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -530,7 +567,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
         'When a key is rotated, all covenants signed with the old key must be re-signed ' +
         'or invalidated. For a key rotation from oldKey to newKey, every covenant whose ' +
         'signature was produced with oldKey must appear in the resignedCovenantIds set.',
-      predicate: (input: {
+      predicate: predicate((input: {
         oldKey: string;
         newKey: string;
         covenants: SignedCovenant[];
@@ -556,7 +593,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
         }
 
         return true;
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -570,7 +607,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
       description:
         'Trust composition is associative: compose(a, compose(b, c)) is approximately ' +
         'equal to compose(compose(a, b), c) within a tolerance of 1e-10.',
-      predicate: (
+      predicate: predicate((
         a: { dimensions: Record<string, number>; confidence: number },
         b: { dimensions: Record<string, number>; confidence: number },
         c: { dimensions: Record<string, number>; confidence: number },
@@ -617,7 +654,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
         const rhs = compose(compose(a, b), c);
 
         return approxEqual(lhs, rhs);
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -632,7 +669,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
         'Old proofs remain valid within their time-to-live period. If the current time ' +
         'is within the TTL window (currentTime - createdAt <= ttlMs), the proof ' +
         'commitment must still match the entries.',
-      predicate: (input: {
+      predicate: predicate((input: {
         proof: ProofCommitment;
         createdAt: number;
         ttlMs: number;
@@ -658,7 +695,7 @@ export function defineKernelInvariants(): KernelInvariant[] {
 
         // If outside TTL, no validity requirement
         return true;
-      },
+      }),
       status: 'tested',
       testCount: 0,
     },
@@ -680,6 +717,13 @@ export function defineKernelInvariants(): KernelInvariant[] {
  * @param invariant - The kernel invariant to verify.
  * @param testCases - An array of argument tuples for the predicate.
  * @returns A KernelVerificationResult with timing and pass/fail information.
+ *
+ * @example
+ * ```ts
+ * const invariants = defineKernelInvariants();
+ * const result = verifyInvariant(invariants[0], [[testBinding]]);
+ * console.log(result.holds); // true
+ * ```
  */
 export function verifyInvariant(
   invariant: KernelInvariant,
@@ -725,6 +769,15 @@ export function verifyInvariant(
  *   argument tuples. Invariants with no matching key are verified with zero
  *   test cases (trivially passing).
  * @returns An array of KernelVerificationResult, one per invariant.
+ *
+ * @example
+ * ```ts
+ * const results = verifyAllInvariants({
+ *   'INV-001': [[binding1], [binding2]],
+ *   'INV-004': [[account1]],
+ * });
+ * const allPassed = results.every(r => r.holds);
+ * ```
  */
 export function verifyAllInvariants(
   testCases: Record<string, unknown[][]>,
@@ -1036,6 +1089,13 @@ function generateRandomInput(invariantId: string): unknown[] {
  * @param iterations - Number of random inputs to generate and test.
  * @returns A KernelVerificationResult. If a counterexample is found,
  *   `holds` is false and `counterexample` contains the failing input.
+ *
+ * @example
+ * ```ts
+ * const invariants = defineKernelInvariants();
+ * const result = generateCounterexampleSearch(invariants[0], 1000);
+ * if (!result.holds) console.log('Counterexample:', result.counterexample);
+ * ```
  */
 export function generateCounterexampleSearch(
   invariant: KernelInvariant,
@@ -1090,6 +1150,15 @@ export function generateCounterexampleSearch(
  *
  * @param constraints - Array of constraint strings (e.g., "deny:foo", "permit:bar").
  * @returns A ConstraintSatisfiabilityResult with analysis details.
+ *
+ * @example
+ * ```ts
+ * const result = checkConstraintSatisfiability([
+ *   'permit:read', 'deny:write', 'permit:write',
+ * ]);
+ * console.log(result.satisfiable);          // true (read is permitted)
+ * console.log(result.conflictingResources); // ['write']
+ * ```
  */
 export function checkConstraintSatisfiability(constraints: string[]): ConstraintSatisfiabilityResult {
   const denyResources = new Set<string>();

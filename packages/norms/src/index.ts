@@ -1,4 +1,5 @@
 import { sha256Object } from '@stele/crypto';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 import { parse, serialize } from '@stele/ccl';
 import type { CCLDocument, Statement } from '@stele/ccl';
 
@@ -119,7 +120,8 @@ export function analyzeNorms(covenants: CovenantData[]): NormAnalysis {
   // Validate trust scores
   for (const cov of covenants) {
     if (cov.trustScore < 0 || cov.trustScore > 1) {
-      throw new Error(
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         `Invalid trustScore ${cov.trustScore} for agent "${cov.agentId}": must be in [0, 1]`,
       );
     }

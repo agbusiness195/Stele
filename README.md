@@ -2,8 +2,8 @@
 
 **The accountability primitive for AI agents.**
 
-![Tests](https://img.shields.io/badge/tests-5%2C163%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-85%20suites-blue)
+![Tests](https://img.shields.io/badge/tests-6%2C097%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-93%20suites-blue)
 ![Packages](https://img.shields.io/badge/packages-34-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
@@ -219,7 +219,7 @@ npm install
 # Build all packages (declarations + bundles)
 npm run build
 
-# Run the full test suite -- 5,158 tests across 85 suites
+# Run the full test suite -- 6,097 tests across 93 suites
 npx vitest run
 
 # Type-check the entire project
@@ -247,9 +247,12 @@ Runnable examples live in the `examples/` directory:
 | 01 | `basic-covenant.ts` | Create, sign, verify, and evaluate a covenant |
 | 02 | `delegation-chain.ts` | Chain delegation with narrowing constraints |
 | 03 | `identity-lifecycle.ts` | Agent identity creation, evolution & lineage |
-| 04 | `ccl-patterns.ts` | CCL patterns: conditions, rate limits, wildcards, merging |
-| 05 | `store-and-query.ts` | Storage backends, filtering, batch ops, events |
-| 06 | `multi-party-audit.ts` | Countersignatures and third-party verification |
+| 04a | `ccl-patterns.ts` | CCL patterns: conditions, rate limits, wildcards, merging |
+| 04b | `trust-gate-quickstart.ts` | Trust-gated API access with tiered permissions |
+| 05a | `store-and-query.ts` | Storage backends, filtering, batch ops, events |
+| 05b | `compliance-audit.ts` | MCP server certification and trust reports |
+| 06a | `multi-party-audit.ts` | Countersignatures and third-party verification |
+| 06b | `marketplace-listing.ts` | Agent discovery and trust-gated marketplace |
 | 07 | `advanced-enforcement.ts` | Enforcement, reputation, and breach tracking |
 
 ```bash

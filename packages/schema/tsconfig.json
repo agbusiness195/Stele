@@ -6,8 +6,12 @@
     "composite": true,
     "emitDeclarationOnly": true
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*"
+  ],
   "references": [
-    { "path": "../types" }
+    {
+      "path": "../types"
+    }
   ]
 }

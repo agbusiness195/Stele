@@ -383,3 +383,8 @@ export type { Transaction } from './transaction';
 // ─── IndexedStore ───────────────────────────────────────────────────────────────
 
 export { IndexedStore } from './indexed-store';
+
+// ─── EncryptedStore ─────────────────────────────────────────────────────────────
+
+export { EncryptedStore } from './encrypted-store';
+export type { EncryptedStoreOptions } from './encrypted-store';

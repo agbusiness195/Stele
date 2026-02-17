@@ -51,7 +51,7 @@ npx vitest run --coverage
 
 ```
 stele/
-  packages/           # All 30+ packages live here
+  packages/           # All 34 packages live here
     types/            # Shared types, error classes, validation
     crypto/           # Ed25519 signing, SHA-256, encoding
     ccl/              # Covenant Constraint Language parser/evaluator
@@ -81,6 +81,8 @@ stele/
     substrate/        # Cross-substrate constraint translation
     derivatives/      # Trust futures and insurance
     legal/            # Legal compliance and audit trails
+    discovery/        # .well-known/stele/ discovery protocol
+    schema/           # JSON Schema validation
     react/            # Reactive UI primitives
     evm/              # EVM anchoring utilities
     mcp-server/       # JSON-RPC 2.0 MCP server

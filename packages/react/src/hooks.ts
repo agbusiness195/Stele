@@ -9,6 +9,7 @@
  * @packageDocumentation
  */
 
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 import type { CovenantDocument, VerificationResult } from '@stele/core';
 import type { AgentIdentity } from '@stele/identity';
 import type { CovenantStore, StoreFilter } from '@stele/store';
@@ -24,7 +25,7 @@ interface ReactModule {
   useState<T>(initial: T | (() => T)): [T, (v: T | ((prev: T) => T)) => void];
   useEffect(effect: () => void | (() => void), deps?: unknown[]): void;
   useRef<T>(initial: T): { current: T };
-  useCallback<T extends (...args: unknown[]) => unknown>(fn: T, deps: unknown[]): T;
+  useCallback<T extends (...args: never[]) => unknown>(fn: T, deps: unknown[]): T;
   useSyncExternalStore<T>(subscribe: (cb: () => void) => () => void, getSnapshot: () => T): T;
 }
 
@@ -38,7 +39,8 @@ function getReact(): ReactModule {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       _react = require('react') as ReactModule;
     } catch {
-      throw new Error(
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         '@stele/react hooks require React >= 18 as a peer dependency. ' +
         'Install it with: npm install react',
       );

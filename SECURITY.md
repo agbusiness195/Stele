@@ -86,17 +86,23 @@ Web3 ecosystem and have undergone independent security reviews.
 
 - **No formal security audit**: The codebase has not yet undergone a formal
   third-party security audit. Use in production at your own risk.
-- **MemoryStore and FileStore are not encrypted at rest**: Covenant documents stored
-  via these backends are written as plaintext JSON. Use disk encryption or an
-  encrypted storage backend for sensitive deployments.
-- **No key rotation protocol**: While `resignCovenant()` supports re-signing with a
-  new key, there is no built-in key rotation ceremony or revocation list.
 - **Poseidon proofs are not full ZK-SNARKs**: The `@stele/proof` package uses
   Poseidon hashing for commitment schemes, but does not generate or verify
   zero-knowledge proofs in the formal cryptographic sense.
 - **EVM anchoring is offline**: The `@stele/evm` package produces ABI-encoded
   calldata but does not submit transactions. On-chain verification requires a
   deployed smart contract (not included).
+
+## Addressed in v0.2.1
+
+The following limitations from previous releases have been resolved:
+
+- **Encrypted-at-rest storage**: `EncryptedStore` in `@stele/store` wraps any
+  store backend with AES-256-GCM encryption. See
+  [docs/deployment.md](./docs/deployment.md) for usage.
+- **Key rotation and revocation**: `KeyManager` in `@stele/crypto` provides
+  automated key rotation with configurable overlap periods, plus an explicit
+  key revocation list. See [docs/deployment.md](./docs/deployment.md).
 
 ## Dependency Security
 

@@ -3,13 +3,24 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "composite": true
+    "composite": true,
+    "emitDeclarationOnly": true
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
-    { "path": "../types" },
-    { "path": "../crypto" },
-    { "path": "../ccl" },
-    { "path": "../core" }
+    {
+      "path": "../types"
+    },
+    {
+      "path": "../crypto"
+    },
+    {
+      "path": "../ccl"
+    },
+    {
+      "path": "../core"
+    }
   ]
 }

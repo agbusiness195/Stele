@@ -11,13 +11,13 @@ import {
   createTrustGate,
   evaluateAccess,
   calculateRevenueLift,
-} from '../packages/sdk/src/trust-gate';
+} from '@stele/sdk';
 import {
   createServerProfile,
   evaluateServer,
   generateTrustReport,
-} from '../packages/mcp-server/src/certification';
-import type { CertificationCriteria } from '../packages/mcp-server/src/certification';
+} from '@stele/mcp-server';
+import type { CertificationCriteria } from '@stele/mcp-server';
 
 // ── Simulated agent registry ──────────────────────────────────────────────
 

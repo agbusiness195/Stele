@@ -13,6 +13,7 @@
  */
 
 import { generateNonce, toHex } from '@stele/crypto';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 import { PROTOCOL_VERSION } from './types.js';
 
 // ─── Public types ────────────────────────────────────────────────────────────────
@@ -119,7 +120,8 @@ export class DocumentMigrator {
     const startVersion = docVersion ?? this.findEarliestVersion();
 
     if (startVersion === undefined) {
-      throw new Error(
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
         `No migrations registered; cannot migrate document with version "${docVersion ?? '(none)'}"`,
       );
     }
@@ -127,7 +129,8 @@ export class DocumentMigrator {
     // Find the migration path
     const path = this.getMigrationPath(startVersion, current);
     if (path.length === 0 && startVersion !== current) {
-      throw new Error(
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
         `No migration path from version "${startVersion}" to "${current}"`,
       );
     }
@@ -300,12 +303,12 @@ const migration_0_3_to_1_0: Migration = {
       result.createdAt = new Date().toISOString();
     }
 
-    // Ensure signature placeholder is present
+    // Ensure signature field is present (empty until signing)
     if (!result.signature || typeof result.signature !== 'string') {
       result.signature = '';
     }
 
-    // Ensure id placeholder is present
+    // Ensure id field is present (empty until hashing)
     if (!result.id || typeof result.id !== 'string') {
       result.id = '';
     }
