@@ -440,8 +440,8 @@ describe('Edge Cases: @stele/negotiation', () => {
 
   it('computeNashBargainingSolution with empty outcomes returns null', async () => {
     const { computeNashBargainingSolution } = await import('@stele/negotiation');
-    const utilityA = { evaluate: () => 0, disagreementValue: 0 };
-    const utilityB = { evaluate: () => 0, disagreementValue: 0 };
+    const utilityA = { partyId: 'a', evaluate: () => 0, disagreementValue: 0 };
+    const utilityB = { partyId: 'b', evaluate: () => 0, disagreementValue: 0 };
     expect(computeNashBargainingSolution([], utilityA, utilityB)).toBeNull();
   });
 
@@ -728,8 +728,8 @@ describe('Edge Cases: @stele/composition', () => {
     const b = { dimensions: { integrity: 0.5, competence: 0.9 }, confidence: 0.7 };
     const ab = trustMeet(a, b);
     const ba = trustMeet(b, a);
-    expect(ab.dimensions.integrity).toBeCloseTo(ba.dimensions.integrity, 10);
-    expect(ab.dimensions.competence).toBeCloseTo(ba.dimensions.competence, 10);
+    expect(ab.dimensions.integrity!).toBeCloseTo(ba.dimensions.integrity!, 10);
+    expect(ab.dimensions.competence!).toBeCloseTo(ba.dimensions.competence!, 10);
     expect(ab.confidence).toBeCloseTo(ba.confidence, 10);
   });
 
@@ -739,8 +739,8 @@ describe('Edge Cases: @stele/composition', () => {
     const b = { dimensions: { integrity: 0.5, competence: 0.9 }, confidence: 0.7 };
     const ab = trustJoin(a, b);
     const ba = trustJoin(b, a);
-    expect(ab.dimensions.integrity).toBeCloseTo(ba.dimensions.integrity, 10);
-    expect(ab.dimensions.competence).toBeCloseTo(ba.dimensions.competence, 10);
+    expect(ab.dimensions.integrity!).toBeCloseTo(ba.dimensions.integrity!, 10);
+    expect(ab.dimensions.competence!).toBeCloseTo(ba.dimensions.competence!, 10);
     expect(ab.confidence).toBeCloseTo(ba.confidence, 10);
   });
 });
