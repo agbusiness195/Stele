@@ -9,7 +9,7 @@
 
 import { keccak_256 } from '@noble/hashes/sha3';
 import { sha256String } from '@stele/crypto';
-import { SteleError, SteleErrorCode } from '@stele/types';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 

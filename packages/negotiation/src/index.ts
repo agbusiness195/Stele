@@ -1,5 +1,5 @@
 import { generateId } from '@stele/crypto';
-import { SteleError, SteleErrorCode } from '@stele/types';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 export type {
   NegotiationSession,
