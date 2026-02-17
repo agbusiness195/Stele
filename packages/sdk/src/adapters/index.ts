@@ -4,10 +4,12 @@
  * Re-exports all adapter factories and their associated types for
  * Express/HTTP, Vercel AI SDK, and LangChain integrations.
  *
+ * All adapters are **stable** as of v1.0.0.
+ *
  * @packageDocumentation
  */
 
-// ─── Express / HTTP adapter ──────────────────────────────────────────────────
+// ─── Express / HTTP adapter (stable) ─────────────────────────────────────────
 
 export {
   steleMiddleware,
@@ -26,7 +28,7 @@ export type {
   AsyncHandler,
 } from './express.js';
 
-// ─── Vercel AI SDK adapter ───────────────────────────────────────────────────
+// ─── Vercel AI SDK adapter (stable) ──────────────────────────────────────────
 
 export {
   SteleAccessDeniedError,
@@ -40,7 +42,7 @@ export type {
   SteleToolOptions,
 } from './vercel-ai.js';
 
-// ─── LangChain adapter ──────────────────────────────────────────────────────
+// ─── LangChain adapter (stable) ──────────────────────────────────────────────
 
 export {
   SteleCallbackHandler,

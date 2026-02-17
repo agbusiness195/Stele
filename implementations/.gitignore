@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+.pytest_cache/
+.venv/
+
+# Rust
+target/
+Cargo.lock
+
+# Go
+vendor/

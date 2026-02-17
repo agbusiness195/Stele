@@ -5,6 +5,8 @@
  * audit trail, and tool/chain wrappers that enforce covenant constraints
  * before execution.
  *
+ * **Status: Stable** (promoted from beta in v1.0.0)
+ *
  * @packageDocumentation
  *
  * @example

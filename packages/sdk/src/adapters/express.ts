@@ -5,6 +5,8 @@
  * handler with Stele covenant enforcement. Uses generic request/response types
  * so it works with Express, Koa, Hono, Fastify, and any Connect-compatible server.
  *
+ * **Status: Stable** (promoted from beta in v1.0.0)
+ *
  * @packageDocumentation
  */
 
