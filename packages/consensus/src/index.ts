@@ -1,5 +1,5 @@
 import { sha256Object, generateId } from '@stele/crypto';
-import { SteleError, SteleErrorCode } from '@stele/types';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 
 export type {
   AccountabilityTier,
@@ -77,13 +77,13 @@ export function validateConfig(config: AccountabilityConfig): void {
     const t = { ...DEFAULT_TIER_THRESHOLDS, ...config.tierThresholds };
     for (const [name, val] of Object.entries(t)) {
       if (val < 0 || val > 1) {
-        throw new Error(`Tier threshold '${name}' must be in [0, 1], got ${val}`);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Tier threshold '${name}' must be in [0, 1], got ${val}`, { hint: 'Ensure all tier thresholds are between 0 and 1 inclusive.' });
       }
     }
     if (t.exemplary <= t.trusted || t.trusted <= t.verified || t.verified <= t.basic) {
-      throw new Error(
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
         `Tier thresholds must be strictly ordered: exemplary(${t.exemplary}) > trusted(${t.trusted}) > verified(${t.verified}) > basic(${t.basic})`,
-      );
+        { hint: 'Set thresholds in descending order: exemplary > trusted > verified > basic.' });
     }
   }
 
@@ -91,21 +91,21 @@ export function validateConfig(config: AccountabilityConfig): void {
     const w = { ...DEFAULT_COMPONENT_WEIGHTS, ...config.componentWeights };
     for (const [name, val] of Object.entries(w)) {
       if (val < 0) {
-        throw new Error(`Component weight '${name}' must be >= 0, got ${val}`);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Component weight '${name}' must be >= 0, got ${val}`, { hint: 'Set all component weights to non-negative values.' });
       }
     }
     const sum = Object.values(w).reduce((s, v) => s + v, 0);
     if (Math.abs(sum - 1.0) > 0.001) {
-      throw new Error(
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
         `Component weights must sum to approximately 1.0, got ${sum}`,
-      );
+        { hint: 'Adjust component weights so they sum to 1.0.' });
     }
   }
 
   if (config.minimumCovenants !== undefined && config.minimumCovenants < 1) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `minimumCovenants must be >= 1, got ${config.minimumCovenants}`,
-    );
+      { hint: 'Set minimumCovenants to at least 1.' });
   }
 }
 
@@ -114,38 +114,38 @@ export function validateConfig(config: AccountabilityConfig): void {
  */
 export function validateProtocolData(data: ProtocolData): void {
   if (data.covenantCount < 0) {
-    throw new Error(`covenantCount must be >= 0, got ${data.covenantCount}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `covenantCount must be >= 0, got ${data.covenantCount}`, { hint: 'Provide a non-negative covenantCount value.' });
   }
   if (data.totalInteractions < 0) {
-    throw new Error(`totalInteractions must be >= 0, got ${data.totalInteractions}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `totalInteractions must be >= 0, got ${data.totalInteractions}`, { hint: 'Provide a non-negative totalInteractions value.' });
   }
   if (data.compliantInteractions < 0) {
-    throw new Error(`compliantInteractions must be >= 0, got ${data.compliantInteractions}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `compliantInteractions must be >= 0, got ${data.compliantInteractions}`, { hint: 'Provide a non-negative compliantInteractions value.' });
   }
   if (data.compliantInteractions > data.totalInteractions) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `compliantInteractions (${data.compliantInteractions}) must be <= totalInteractions (${data.totalInteractions})`,
-    );
+      { hint: 'Ensure compliantInteractions does not exceed totalInteractions.' });
   }
   if (data.stakeAmount < 0) {
-    throw new Error(`stakeAmount must be >= 0, got ${data.stakeAmount}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `stakeAmount must be >= 0, got ${data.stakeAmount}`, { hint: 'Provide a non-negative stakeAmount value.' });
   }
   if (data.maxStake < 0) {
-    throw new Error(`maxStake must be >= 0, got ${data.maxStake}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `maxStake must be >= 0, got ${data.maxStake}`, { hint: 'Provide a non-negative maxStake value.' });
   }
   if (data.attestedInteractions < 0) {
-    throw new Error(`attestedInteractions must be >= 0, got ${data.attestedInteractions}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `attestedInteractions must be >= 0, got ${data.attestedInteractions}`, { hint: 'Provide a non-negative attestedInteractions value.' });
   }
   if (data.canaryTests < 0) {
-    throw new Error(`canaryTests must be >= 0, got ${data.canaryTests}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `canaryTests must be >= 0, got ${data.canaryTests}`, { hint: 'Provide a non-negative canaryTests value.' });
   }
   if (data.canaryPasses < 0) {
-    throw new Error(`canaryPasses must be >= 0, got ${data.canaryPasses}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `canaryPasses must be >= 0, got ${data.canaryPasses}`, { hint: 'Provide a non-negative canaryPasses value.' });
   }
   if (data.canaryPasses > data.canaryTests) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `canaryPasses (${data.canaryPasses}) must be <= canaryTests (${data.canaryTests})`,
-    );
+      { hint: 'Ensure canaryPasses does not exceed canaryTests.' });
   }
 }
 
@@ -154,9 +154,9 @@ export function validateProtocolData(data: ProtocolData): void {
  */
 export function validatePolicy(policy: InteractionPolicy): void {
   if (policy.minimumScore < 0 || policy.minimumScore > 1) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `minimumScore must be in [0, 1], got ${policy.minimumScore}`,
-    );
+      { hint: 'Set minimumScore to a value between 0 and 1 inclusive.' });
   }
 }
 
@@ -165,9 +165,9 @@ export function validatePolicy(policy: InteractionPolicy): void {
  */
 function validateScore(score: AccountabilityScore): void {
   if (score.score < 0 || score.score > 1) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `AccountabilityScore.score must be in [0, 1], got ${score.score}`,
-    );
+      { hint: 'Ensure the accountability score is between 0 and 1 inclusive.' });
   }
 }
 
@@ -408,11 +408,11 @@ export function byzantineFaultTolerance(
   requestedFaults?: number,
 ): BFTResult {
   if (!Number.isInteger(totalNodes) || totalNodes < 1) {
-    throw new Error(`totalNodes must be a positive integer, got ${totalNodes}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `totalNodes must be a positive integer, got ${totalNodes}`, { hint: 'Provide a positive integer for totalNodes.' });
   }
   if (requestedFaults !== undefined) {
     if (!Number.isInteger(requestedFaults) || requestedFaults < 0) {
-      throw new Error(`requestedFaults must be a non-negative integer, got ${requestedFaults}`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `requestedFaults must be a non-negative integer, got ${requestedFaults}`, { hint: 'Provide a non-negative integer for requestedFaults.' });
     }
   }
 
@@ -492,7 +492,7 @@ export function quorumSize(
   protocol: ConsensusProtocol,
 ): QuorumResult {
   if (!Number.isInteger(totalNodes) || totalNodes < 1) {
-    throw new Error(`totalNodes must be a positive integer, got ${totalNodes}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `totalNodes must be a positive integer, got ${totalNodes}`, { hint: 'Provide a positive integer for totalNodes.' });
   }
 
   let q: number;
@@ -519,7 +519,7 @@ export function quorumSize(
       formulaDetail = `Unanimous: quorum = ${totalNodes} (all nodes required)`;
       break;
     default:
-      throw new Error(`Unknown protocol: ${protocol}`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Unknown protocol: ${protocol}`, { hint: 'Use one of: simple_majority, bft, two_thirds, or unanimous.' });
   }
 
   // Ensure quorum does not exceed total nodes
@@ -607,21 +607,21 @@ export function consensusLatency(params: ConsensusLatencyParams): ConsensusLaten
   } = params;
 
   if (!Number.isInteger(nodeCount) || nodeCount < 1) {
-    throw new Error(`nodeCount must be a positive integer, got ${nodeCount}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `nodeCount must be a positive integer, got ${nodeCount}`, { hint: 'Provide a positive integer for nodeCount.' });
   }
   if (averageLatencyMs < 0) {
-    throw new Error(`averageLatencyMs must be >= 0, got ${averageLatencyMs}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `averageLatencyMs must be >= 0, got ${averageLatencyMs}`, { hint: 'Set averageLatencyMs to a non-negative number.' });
   }
   if (!Number.isInteger(messageRounds) || messageRounds < 1) {
-    throw new Error(`messageRounds must be a positive integer, got ${messageRounds}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `messageRounds must be a positive integer, got ${messageRounds}`, { hint: 'Provide a positive integer for messageRounds.' });
   }
   if (messageLossProbability < 0 || messageLossProbability >= 1) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `messageLossProbability must be in [0, 1), got ${messageLossProbability}`,
-    );
+      { hint: 'Set messageLossProbability to a value between 0 (inclusive) and 1 (exclusive).' });
   }
   if (processingTimeMs < 0) {
-    throw new Error(`processingTimeMs must be >= 0, got ${processingTimeMs}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `processingTimeMs must be >= 0, got ${processingTimeMs}`, { hint: 'Set processingTimeMs to a non-negative number.' });
   }
 
   // Network latency: each round requires one RTT
@@ -720,11 +720,11 @@ export class StreamlinedBFT {
 
   constructor(nodeIds: string[]) {
     if (nodeIds.length < 4) {
-      throw new SteleError('StreamlinedBFT requires at least 4 nodes (n >= 3f+1, f >= 1)', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'StreamlinedBFT requires at least 4 nodes (n >= 3f+1, f >= 1)', { hint: 'Provide at least 4 unique node IDs to satisfy BFT requirements.' });
     }
     const uniqueNodes = [...new Set(nodeIds)];
     if (uniqueNodes.length !== nodeIds.length) {
-      throw new SteleError('Node IDs must be unique', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Node IDs must be unique', { hint: 'Remove duplicate entries from the node ID list.' });
     }
 
     this.nodes = uniqueNodes;
@@ -780,7 +780,7 @@ export class StreamlinedBFT {
    */
   propose(proposer: string, payload: unknown, parentHash: string): BFTBlock {
     if (proposer !== this.viewState.leader) {
-      throw new SteleError(`Only the leader (${this.viewState.leader}) can propose, not ${proposer}`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Only the leader (${this.viewState.leader}) can propose, not ${proposer}`, { hint: 'Wait for your turn as leader or check the current view leader.' });
     }
 
     const block: BFTBlock = {
@@ -805,10 +805,10 @@ export class StreamlinedBFT {
    */
   vote(nodeId: string): QuorumCertificate | null {
     if (!this.nodes.includes(nodeId)) {
-      throw new SteleError(`Unknown node: ${nodeId}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Unknown node: ${nodeId}`, { hint: 'Ensure the node ID is registered in the BFT network.' });
     }
     if (!this.viewState.block) {
-      throw new SteleError('No block to vote on', SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, 'No block to vote on', { hint: 'A block must be proposed before votes can be cast.' });
     }
     if (this.viewState.votes.has(nodeId)) {
       return null; // Already voted
@@ -924,7 +924,7 @@ export class DynamicQuorum {
 
   constructor(initialMembers: string[]) {
     if (initialMembers.length < 1) {
-      throw new SteleError('Must have at least 1 initial member', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Must have at least 1 initial member', { hint: 'Provide at least one member ID to initialize the quorum.' });
     }
     const unique = [...new Set(initialMembers)];
     this.epochs.push({
@@ -967,11 +967,11 @@ export class DynamicQuorum {
    */
   requestJoin(nodeId: string): ReconfigRequest {
     if (!nodeId || typeof nodeId !== 'string') {
-      throw new SteleError('nodeId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'nodeId must be a non-empty string', { hint: 'Provide a valid, non-empty string as the node ID.' });
     }
     const current = this.currentEpoch();
     if (current.members.includes(nodeId)) {
-      throw new SteleError(`Node ${nodeId} is already a member`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Node ${nodeId} is already a member`, { hint: 'Check membership before requesting a join.' });
     }
 
     const req: ReconfigRequest = { type: 'join', nodeId, requestedAt: Date.now() };
@@ -985,11 +985,11 @@ export class DynamicQuorum {
    */
   requestLeave(nodeId: string): ReconfigRequest {
     if (!nodeId || typeof nodeId !== 'string') {
-      throw new SteleError('nodeId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'nodeId must be a non-empty string', { hint: 'Provide a valid, non-empty string as the node ID.' });
     }
     const current = this.currentEpoch();
     if (!current.members.includes(nodeId)) {
-      throw new SteleError(`Node ${nodeId} is not a member`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, `Node ${nodeId} is not a member`, { hint: 'Verify the node is a current member before requesting leave.' });
     }
 
     const req: ReconfigRequest = { type: 'leave', nodeId, requestedAt: Date.now() };
@@ -1059,7 +1059,7 @@ export class DynamicQuorum {
     // Ensure we don't drop below minimum viable size
     if (newMembers.length < 1) {
       this.transitioning = false;
-      throw new SteleError('Cannot remove all members', SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED, 'Cannot remove all members', { hint: 'Ensure at least one member remains after processing leave requests.' });
     }
 
     const newEpoch: Epoch = {
@@ -1125,16 +1125,16 @@ export class PipelineSimulator {
 
   constructor(condition: NetworkCondition) {
     if (condition.baseLatencyMs < 0) {
-      throw new SteleError('baseLatencyMs must be >= 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'baseLatencyMs must be >= 0', { hint: 'Set baseLatencyMs to a non-negative number.' });
     }
     if (condition.jitterMs < 0) {
-      throw new SteleError('jitterMs must be >= 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'jitterMs must be >= 0', { hint: 'Set jitterMs to a non-negative number.' });
     }
     if (condition.lossProbability < 0 || condition.lossProbability >= 1) {
-      throw new SteleError('lossProbability must be in [0, 1)', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'lossProbability must be in [0, 1)', { hint: 'Set lossProbability to a value between 0 (inclusive) and 1 (exclusive).' });
     }
     if (condition.processingTimeMs < 0) {
-      throw new SteleError('processingTimeMs must be >= 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'processingTimeMs must be >= 0', { hint: 'Set processingTimeMs to a non-negative number.' });
     }
     this.condition = condition;
   }
@@ -1164,10 +1164,10 @@ export class PipelineSimulator {
     seed: number = 42,
   ): PipelineSimulationResult {
     if (rounds < 1) {
-      throw new SteleError('rounds must be >= 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'rounds must be >= 1', { hint: 'Specify at least 1 simulation round.' });
     }
     if (nodesPerRound < 1) {
-      throw new SteleError('nodesPerRound must be >= 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'nodesPerRound must be >= 1', { hint: 'Specify at least 1 node per round.' });
     }
 
     let totalTime = 0;
@@ -1295,13 +1295,13 @@ export class QuorumIntersectionVerifier {
     byzantineFaults: number,
   ): QuorumIntersectionResult {
     if (allNodes.length < 1) {
-      throw new SteleError('allNodes must not be empty', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'allNodes must not be empty', { hint: 'Provide at least one node ID in the allNodes array.' });
     }
     if (byzantineFaults < 0) {
-      throw new SteleError('byzantineFaults must be >= 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'byzantineFaults must be >= 0', { hint: 'Set byzantineFaults to a non-negative integer.' });
     }
     if (quorumSets.length < 2) {
-      throw new SteleError('At least 2 quorum sets required for intersection analysis', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'At least 2 quorum sets required for intersection analysis', { hint: 'Provide at least 2 quorum sets to verify intersection properties.' });
     }
 
     const n = allNodes.length;

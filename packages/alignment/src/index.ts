@@ -596,14 +596,14 @@ export class PropertyAnomalyDetector {
   check(propertyName: string, value: number): AnomalyResult {
     if (!propertyName || propertyName.trim() === '') {
       throw new SteleError(
-        'propertyName must be a non-empty string',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'propertyName must be a non-empty string',
       );
     }
     if (!Number.isFinite(value)) {
       throw new SteleError(
-        'value must be a finite number',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'value must be a finite number',
       );
     }
 
@@ -643,8 +643,8 @@ export class PropertyAnomalyDetector {
   statistics(propertyName: string): PropertyStatistics {
     if (!propertyName || propertyName.trim() === '') {
       throw new SteleError(
-        'propertyName must be a non-empty string',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'propertyName must be a non-empty string',
       );
     }
 
@@ -731,8 +731,8 @@ export class DriftForecaster {
   addScore(score: number): void {
     if (!Number.isFinite(score)) {
       throw new SteleError(
-        'score must be a finite number',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'score must be a finite number',
       );
     }
     this.scores.push(score);
@@ -760,14 +760,14 @@ export class DriftForecaster {
   forecastLinear(horizon = 5, breachThreshold = 0.5): DriftForecast {
     if (horizon < 1) {
       throw new SteleError(
-        'horizon must be at least 1',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'horizon must be at least 1',
       );
     }
     if (this.scores.length < 2) {
       throw new SteleError(
-        'Need at least 2 scores for linear regression',
         SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
+        'Need at least 2 scores for linear regression',
       );
     }
 
@@ -818,24 +818,24 @@ export class DriftForecaster {
     trendBeta = 0.1,
   ): DriftForecast {
     if (horizon < 1) {
-      throw new SteleError('horizon must be at least 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'horizon must be at least 1');
     }
     if (this.scores.length < 2) {
       throw new SteleError(
-        'Need at least 2 scores for Holt smoothing',
         SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
+        'Need at least 2 scores for Holt smoothing',
       );
     }
     if (levelAlpha <= 0 || levelAlpha >= 1) {
       throw new SteleError(
-        'levelAlpha must be between 0 and 1 (exclusive)',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'levelAlpha must be between 0 and 1 (exclusive)',
       );
     }
     if (trendBeta <= 0 || trendBeta >= 1) {
       throw new SteleError(
-        'trendBeta must be between 0 and 1 (exclusive)',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'trendBeta must be between 0 and 1 (exclusive)',
       );
     }
 
@@ -939,15 +939,15 @@ export class AlignmentSurface {
   constructor(propertyNames: string[]) {
     if (propertyNames.length === 0) {
       throw new SteleError(
-        'Must provide at least one property dimension',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Must provide at least one property dimension',
       );
     }
     const unique = new Set(propertyNames);
     if (unique.size !== propertyNames.length) {
       throw new SteleError(
-        'Property names must be unique',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Property names must be unique',
       );
     }
     this.propertyNames = [...propertyNames];
@@ -961,14 +961,14 @@ export class AlignmentSurface {
     for (const name of this.propertyNames) {
       if (!(name in scores)) {
         throw new SteleError(
-          `Missing score for property "${name}"`,
           SteleErrorCode.PROTOCOL_INVALID_INPUT,
+          `Missing score for property "${name}"`,
         );
       }
       if (!Number.isFinite(scores[name])) {
         throw new SteleError(
-          `Score for "${name}" must be a finite number`,
           SteleErrorCode.PROTOCOL_INVALID_INPUT,
+          `Score for "${name}" must be a finite number`,
         );
       }
     }
@@ -994,8 +994,8 @@ export class AlignmentSurface {
   analyze(weakThreshold = 0.5): AlignmentSurfaceResult {
     if (this.history.length < 2) {
       throw new SteleError(
-        'Need at least 2 data points for surface analysis',
         SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
+        'Need at least 2 data points for surface analysis',
       );
     }
 
@@ -1119,14 +1119,14 @@ export class AlignmentFeedbackLoop {
   ) {
     if (properties.length === 0) {
       throw new SteleError(
-        'Must provide at least one alignment property',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'Must provide at least one alignment property',
       );
     }
     if (initialThreshold < 0 || initialThreshold > 1) {
       throw new SteleError(
-        'initialThreshold must be between 0 and 1',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'initialThreshold must be between 0 and 1',
       );
     }
 
@@ -1138,8 +1138,8 @@ export class AlignmentFeedbackLoop {
 
     if (this.config.learningRate <= 0 || this.config.learningRate >= 1) {
       throw new SteleError(
-        'learningRate must be between 0 and 1 (exclusive)',
         SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        'learningRate must be between 0 and 1 (exclusive)',
       );
     }
 

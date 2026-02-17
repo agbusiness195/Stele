@@ -7,7 +7,7 @@ export type {
 
 import type { KeyPair, HashHex } from '@stele/crypto';
 import type { Severity } from '@stele/ccl';
-import { SteleError, SteleErrorCode } from '@stele/types';
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 import {
   sha256Object,
   canonicalizeJson,
@@ -42,7 +42,7 @@ function recommendedActionForSeverity(
       return 'notify';
     default: {
       const _exhaustive: never = severity;
-      throw new Error(`Unknown severity: ${_exhaustive}`);
+      throw new SteleError(SteleErrorCode.BREACH_INVALID_SEVERITY, `Unknown severity: ${_exhaustive}`, { hint: 'Use one of: critical, high, medium, or low.' });
     }
   }
 }
@@ -62,7 +62,7 @@ function statusForSeverity(severity: Severity): TrustStatus {
       return 'trusted';
     default: {
       const _exhaustive: never = severity;
-      throw new Error(`Unknown severity: ${_exhaustive}`);
+      throw new SteleError(SteleErrorCode.BREACH_INVALID_SEVERITY, `Unknown severity: ${_exhaustive}`, { hint: 'Use one of: critical, high, medium, or low.' });
     }
   }
 }
@@ -272,7 +272,7 @@ export class TrustGraph {
     // Step 1: Verify attestation
     const valid = await verifyBreachAttestation(attestation);
     if (!valid) {
-      throw new Error('Invalid breach attestation: verification failed');
+      throw new SteleError(SteleErrorCode.BREACH_INVALID_ATTESTATION, 'Invalid breach attestation: verification failed', { hint: 'Ensure the attestation was signed correctly and has not been tampered with.' });
     }
 
     const events: BreachEvent[] = [];
@@ -938,21 +938,40 @@ export class RecoveryModel {
 }
 
 /**
+ * Recovery ceiling multipliers by breach severity.
+ * These control the maximum fraction of trust/reputation an agent can recover
+ * after a breach. Critical breaches allow only 40% recovery, while low-severity
+ * breaches allow up to 95%.
+ */
+const RECOVERY_CEILING = {
+  /** Critical breaches cap recovery at 40% of pre-breach trust. */
+  CRITICAL: 0.4,
+  /** High-severity breaches cap recovery at 60%. */
+  HIGH: 0.6,
+  /** Medium-severity breaches cap recovery at 80%. */
+  MEDIUM: 0.8,
+  /** Low-severity breaches cap recovery at 95%. */
+  LOW: 0.95,
+  /** Default recovery ceiling for unknown severity levels. */
+  DEFAULT: 0.5,
+} as const;
+
+/**
  * Map breach severity to a recovery ceiling multiplier.
  * Critical breaches allow less total recovery; low breaches allow near-full.
  */
 function severityToRecoveryMultiplier(severity: Severity): number {
   switch (severity) {
     case 'critical':
-      return 0.4;
+      return RECOVERY_CEILING.CRITICAL;
     case 'high':
-      return 0.6;
+      return RECOVERY_CEILING.HIGH;
     case 'medium':
-      return 0.8;
+      return RECOVERY_CEILING.MEDIUM;
     case 'low':
-      return 0.95;
+      return RECOVERY_CEILING.LOW;
     default:
-      return 0.5;
+      return RECOVERY_CEILING.DEFAULT;
   }
 }
 

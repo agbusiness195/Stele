@@ -113,6 +113,17 @@ export function proveHonesty(params: HonestyParameters): HonestyProof {
  *
  * minimumStake = (maxViolationGain - reputationValue - coburn) / detectionProbability
  * Clamped to max(0, result). If detectionProbability is 0, returns Infinity.
+ *
+ * @param params - All honesty parameters except stakeAmount.
+ * @returns The minimum stake amount needed for honesty to be the dominant strategy.
+ *
+ * @example
+ * ```ts
+ * const stake = minimumStake({
+ *   detectionProbability: 0.9, reputationValue: 100,
+ *   maxViolationGain: 500, coburn: 50,
+ * });
+ * ```
  */
 export function minimumStake(
   params: Omit<HonestyParameters, 'stakeAmount'>,
@@ -135,6 +146,17 @@ export function minimumStake(
  *
  * minimumDetection = (maxViolationGain - reputationValue - coburn) / stakeAmount
  * Clamped to [0, 1]. If stakeAmount is 0, returns 1 (need 100% detection).
+ *
+ * @param params - All honesty parameters except detectionProbability.
+ * @returns The minimum detection probability needed, clamped to [0, 1].
+ *
+ * @example
+ * ```ts
+ * const detection = minimumDetection({
+ *   stakeAmount: 1000, reputationValue: 100,
+ *   maxViolationGain: 500, coburn: 50,
+ * });
+ * ```
  */
 export function minimumDetection(
   params: Omit<HonestyParameters, 'detectionProbability'>,
@@ -154,6 +176,18 @@ export function minimumDetection(
 /**
  * Compute the expected cost an agent would incur from a breach:
  *   stakeAmount * detectionProbability + coburn
+ *
+ * @param params - The full set of honesty parameters.
+ * @returns The expected monetary cost of a breach attempt.
+ *
+ * @example
+ * ```ts
+ * const cost = expectedCostOfBreach({
+ *   stakeAmount: 1000, detectionProbability: 0.9,
+ *   reputationValue: 200, maxViolationGain: 500, coburn: 50,
+ * });
+ * // cost = 1000 * 0.9 + 50 = 950
+ * ```
  */
 export function expectedCostOfBreach(params: HonestyParameters): number {
   validateFull(params);
@@ -165,6 +199,18 @@ export function expectedCostOfBreach(params: HonestyParameters): number {
  *   (stake * detection + reputation + coburn) - maxViolationGain
  *
  * Positive margin means honesty dominates.
+ *
+ * @param params - The full set of honesty parameters.
+ * @returns The margin by which honesty dominates (positive) or is dominated (negative).
+ *
+ * @example
+ * ```ts
+ * const margin = honestyMargin({
+ *   stakeAmount: 1000, detectionProbability: 0.9,
+ *   reputationValue: 200, maxViolationGain: 500, coburn: 50,
+ * });
+ * // margin = (900 + 200 + 50) - 500 = 650
+ * ```
  */
 export function honestyMargin(params: HonestyParameters): number {
   validateFull(params);
@@ -338,10 +384,22 @@ export interface CoalitionStabilityResult {
  * If any coalition S has sum(x_i for i in S) < v(S), that coalition is a
  * "blocking coalition" -- its members could do better by deviating.
  *
- * @param agentCount Number of agents (indexed 0 to agentCount-1)
- * @param allocation Array of payoffs allocated to each agent. Length must equal agentCount.
- * @param coalitionValues Array of CoalitionValue entries defining v(S) for subsets S.
+ * @param agentCount - Number of agents (indexed 0 to agentCount-1).
+ * @param allocation - Array of payoffs allocated to each agent. Length must equal agentCount.
+ * @param coalitionValues - Array of CoalitionValue entries defining v(S) for subsets S.
  *        Must include the grand coalition (all agents). Unspecified coalitions default to v(S) = 0.
+ * @returns Stability result including blocking coalitions, efficiency, and a human-readable formula.
+ * @throws {Error} If agentCount < 1, allocation length mismatches, or grand coalition is missing.
+ *
+ * @example
+ * ```ts
+ * const result = coalitionStability(2, [5, 5], [
+ *   { coalition: [0], value: 3 },
+ *   { coalition: [1], value: 4 },
+ *   { coalition: [0, 1], value: 10 },
+ * ]);
+ * console.log(result.isStable); // true
+ * ```
  */
 export function coalitionStability(
   agentCount: number,
@@ -475,6 +533,18 @@ export interface MechanismDesignResult {
  *
  * When detectionProbability = 0 and dishonestGain > intrinsicHonestyCost,
  * no finite penalty can enforce honesty (enforceable = false).
+ *
+ * @param params - Mechanism design parameters (gain, detection probability, intrinsic cost).
+ * @returns Result with minimum penalty, enforceability, expected penalty, and derivation formula.
+ * @throws {Error} If dishonestGain < 0, detectionProbability outside [0, 1], or intrinsicHonestyCost < 0.
+ *
+ * @example
+ * ```ts
+ * const result = mechanismDesign({
+ *   dishonestGain: 100, detectionProbability: 0.8,
+ * });
+ * console.log(result.minimumPenalty); // 125
+ * ```
  */
 export function mechanismDesign(params: MechanismDesignParams): MechanismDesignResult {
   const { dishonestGain, detectionProbability, intrinsicHonestyCost = 0 } = params;
@@ -1730,8 +1800,19 @@ export interface CorrelatedDetectionResult extends DetectionValidationResult {
  * The function runs both the correlated and independent models and reports
  * the difference in detection rates (the "correlation impact").
  *
- * @param params - Correlated detection parameters
- * @returns Detection validation results with correlation impact analysis
+ * @param params - Correlated detection parameters including correlation matrix and simulation settings.
+ * @returns Detection validation results with correlation impact analysis for all three tiers.
+ * @throws {Error} If the correlation matrix is not 3x3, not symmetric, not positive-definite, or if any parameter is out of range.
+ *
+ * @example
+ * ```ts
+ * const result = validateCorrelatedDetection({
+ *   agentCount: 10, interactionsPerAgent: 100,
+ *   violationProbability: 0.1, simulationRuns: 5,
+ *   correlationMatrix: [[1, 0.3, 0.1], [0.3, 1, 0.2], [0.1, 0.2, 1]],
+ * });
+ * console.log(result.correlationImpact);
+ * ```
  */
 export function validateCorrelatedDetection(params: CorrelatedDetectionParams): CorrelatedDetectionResult {
   const { agentCount, interactionsPerAgent, violationProbability, simulationRuns, correlationMatrix, randomSeed } = params;
@@ -2039,8 +2120,20 @@ export interface ByzantineAdversaryResult {
  *   fitness_byzantine = [x * E_dh + (1 - x) * E_dd] * (1 - d*(1-e)) + penalty * d*(1-e)
  *   Solving for x gives the Nash equilibrium fraction.
  *
- * @param params - Byzantine adversary parameters
- * @returns Analysis results including trajectory, equilibrium, and extinction status
+ * @param params - Byzantine adversary parameters including population, strategy, payoffs, and evasion capability.
+ * @returns Analysis results including population trajectory, Nash equilibrium fraction, and extinction status.
+ * @throws {Error} If populationSize < 2, byzantineFraction not in (0, 1), evasionCapability not in [0, 1], or generations < 1.
+ *
+ * @example
+ * ```ts
+ * const result = analyzeByzantineAdversary({
+ *   populationSize: 100, byzantineFraction: 0.1,
+ *   adversaryStrategy: 'random',
+ *   payoffMatrix: [[3, 0], [5, 1]], evasionCapability: 0.2,
+ *   generations: 50,
+ * });
+ * console.log(result.byzantineExtinct); // true
+ * ```
  */
 export function analyzeByzantineAdversary(params: ByzantineAdversaryParams): ByzantineAdversaryResult {
   const { populationSize, byzantineFraction, adversaryStrategy, payoffMatrix, evasionCapability, generations } = params;
