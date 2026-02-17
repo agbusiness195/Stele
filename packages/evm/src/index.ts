@@ -35,7 +35,7 @@ function utf8ToHex(value: string): string {
 
 /**
  * Compute the Keccak-256 hash of a hex string input.
- * This is the real EVM hash function, not a SHA-256 placeholder.
+ * Uses the native EVM hash function (Keccak-256), not SHA-256.
  * @param input - String to hash
  * @returns 64-character lowercase hex hash string
  */

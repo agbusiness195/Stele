@@ -303,12 +303,12 @@ const migration_0_3_to_1_0: Migration = {
       result.createdAt = new Date().toISOString();
     }
 
-    // Ensure signature placeholder is present
+    // Ensure signature field is present (empty until signing)
     if (!result.signature || typeof result.signature !== 'string') {
       result.signature = '';
     }
 
-    // Ensure id placeholder is present
+    // Ensure id field is present (empty until hashing)
     if (!result.id || typeof result.id !== 'string') {
       result.id = '';
     }

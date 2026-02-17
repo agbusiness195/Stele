@@ -219,7 +219,7 @@ npm install
 # Build all packages (declarations + bundles)
 npm run build
 
-# Run the full test suite -- 5,158 tests across 85 suites
+# Run the full test suite -- 5,163+ tests across 85 suites
 npx vitest run
 
 # Type-check the entire project

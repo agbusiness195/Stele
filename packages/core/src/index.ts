@@ -294,7 +294,7 @@ export async function buildCovenant(
   const nonce = toHex(generateNonce());
   const createdAt = timestamp();
 
-  // ── Construct the document (id and signature are placeholders) ────────
+  // ── Construct the document (id and signature filled after hashing/signing) ──
   const doc: CovenantDocument = {
     id: '' as HashHex,
     version: PROTOCOL_VERSION,

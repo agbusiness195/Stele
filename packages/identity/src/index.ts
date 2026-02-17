@@ -198,7 +198,7 @@ export async function createIdentity(
     capabilities: [...capabilities].sort(),
     capabilityManifestHash,
     deployment,
-    lineage: [], // placeholder – will be replaced after lineage entry is built
+    lineage: [], // empty initially; replaced below after lineage entry is built
     version: 1,
     createdAt: now,
     updatedAt: now,
@@ -317,7 +317,7 @@ export async function evolveIdentity(
     capabilities: newCapabilities,
     capabilityManifestHash,
     deployment: newDeployment,
-    lineage: current.lineage, // placeholder – will be extended
+    lineage: current.lineage, // carried forward; extended below with new entry
     version: newVersion,
     createdAt: current.createdAt,
     updatedAt: now,
