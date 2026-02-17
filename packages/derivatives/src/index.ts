@@ -1,4 +1,5 @@
 import { sha256Object, generateId } from '@stele/crypto';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 export type {
   TrustFuture,
@@ -71,31 +72,35 @@ export function validatePricingConfig(config: PricingConfig): void {
     const w = { ...DEFAULT_RISK_WEIGHTS, ...config.riskWeights };
     for (const [name, val] of Object.entries(w)) {
       if (val < 0) {
-        throw new Error(`Risk weight '${name}' must be >= 0, got ${val}`);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Risk weight '${name}' must be >= 0, got ${val}`);
       }
     }
     const sum = Object.values(w).reduce((s, v) => s + v, 0);
     if (Math.abs(sum - 1.0) > 0.001) {
-      throw new Error(
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         `Risk weights must sum to approximately 1.0, got ${sum}`,
       );
     }
   }
 
   if (config.premiumMultiplier !== undefined && config.premiumMultiplier <= 0) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `premiumMultiplier must be > 0, got ${config.premiumMultiplier}`,
     );
   }
 
   if (config.minimumPremiumRate !== undefined && config.minimumPremiumRate < 0) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `minimumPremiumRate must be >= 0, got ${config.minimumPremiumRate}`,
     );
   }
 
   if (config.maturityHalfLife !== undefined && config.maturityHalfLife <= 0) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `maturityHalfLife must be > 0, got ${config.maturityHalfLife}`,
     );
   }
@@ -106,35 +111,40 @@ export function validatePricingConfig(config: PricingConfig): void {
  */
 export function validateReputationData(reputation: ReputationData): void {
   if (reputation.trustScore < 0 || reputation.trustScore > 1) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `trustScore must be in [0, 1], got ${reputation.trustScore}`,
     );
   }
   if (reputation.complianceRate < 0 || reputation.complianceRate > 1) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `complianceRate must be in [0, 1], got ${reputation.complianceRate}`,
     );
   }
   if (reputation.breachCount < 0) {
-    throw new Error(`breachCount must be >= 0, got ${reputation.breachCount}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `breachCount must be >= 0, got ${reputation.breachCount}`);
   }
   if (reputation.totalInteractions < 0) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `totalInteractions must be >= 0, got ${reputation.totalInteractions}`,
     );
   }
   if (reputation.breachCount > reputation.totalInteractions) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `breachCount (${reputation.breachCount}) must be <= totalInteractions (${reputation.totalInteractions})`,
     );
   }
   if (reputation.stakeAmount < 0) {
-    throw new Error(
+    throw new SteleError(
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `stakeAmount must be >= 0, got ${reputation.stakeAmount}`,
     );
   }
   if (reputation.age < 0) {
-    throw new Error(`age must be >= 0, got ${reputation.age}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `age must be >= 0, got ${reputation.age}`);
   }
 }
 
@@ -210,10 +220,10 @@ export function priceInsurance(
   if (config) validatePricingConfig(config);
 
   if (coverage <= 0) {
-    throw new Error(`coverage must be > 0, got ${coverage}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `coverage must be > 0, got ${coverage}`);
   }
   if (term <= 0) {
-    throw new Error(`term must be > 0, got ${term}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `term must be > 0, got ${term}`);
   }
 
   const { premiumMultiplier, minimumPremiumRate } = resolveConfig(config);

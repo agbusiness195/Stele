@@ -49,20 +49,21 @@ const VALID_TRIGGER_ACTIONS: TriggerAction[] = [
  */
 function validateTriggerCondition(trigger: EvolutionTrigger): void {
   if (!trigger.type || !VALID_TRIGGER_TYPES.includes(trigger.type)) {
-    throw new Error(`Invalid trigger type: ${trigger.type}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Invalid trigger type: ${trigger.type}`);
   }
   if (!trigger.action || !VALID_TRIGGER_ACTIONS.includes(trigger.action)) {
-    throw new Error(`Invalid trigger action: ${trigger.action}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Invalid trigger action: ${trigger.action}`);
   }
   if (typeof trigger.condition !== 'string') {
-    throw new Error('Trigger condition must be a string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Trigger condition must be a string');
   }
 
   switch (trigger.type) {
     case 'time_elapsed': {
       const conditionMs = parseFloat(trigger.condition);
       if (isNaN(conditionMs) || conditionMs < 0) {
-        throw new Error(
+        throw new SteleError(
+          SteleErrorCode.PROTOCOL_INVALID_INPUT,
           `Invalid time_elapsed condition: "${trigger.condition}". Must be a non-negative number (milliseconds).`,
         );
       }
@@ -71,7 +72,8 @@ function validateTriggerCondition(trigger: EvolutionTrigger): void {
     case 'reputation_threshold': {
       const match = trigger.condition.match(/^([><]=?)(\d+(?:\.\d+)?)$/);
       if (!match) {
-        throw new Error(
+        throw new SteleError(
+          SteleErrorCode.PROTOCOL_INVALID_INPUT,
           `Invalid reputation_threshold condition: "${trigger.condition}". Must be ">N", "<N", ">=N", or "<=N".`,
         );
       }
@@ -80,7 +82,7 @@ function validateTriggerCondition(trigger: EvolutionTrigger): void {
     case 'breach_event': {
       // breach_event accepts any condition string (e.g. 'any')
       if (trigger.condition.length === 0) {
-        throw new Error('breach_event condition must not be empty');
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'breach_event condition must not be empty');
       }
       break;
     }
@@ -88,13 +90,13 @@ function validateTriggerCondition(trigger: EvolutionTrigger): void {
       // Must be a comma-separated list, possibly empty (meaning "no capabilities expected")
       // but the string itself must be present
       if (typeof trigger.condition !== 'string') {
-        throw new Error('capability_change condition must be a string');
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'capability_change condition must be a string');
       }
       break;
     }
     case 'governance_vote': {
       if (trigger.condition.length === 0) {
-        throw new Error('governance_vote condition must not be empty (should be proposal ID)');
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'governance_vote condition must not be empty (should be proposal ID)');
       }
       break;
     }
@@ -106,13 +108,13 @@ function validateTriggerCondition(trigger: EvolutionTrigger): void {
  */
 function validateTransition(transition: TransitionFunction): void {
   if (!transition.fromConstraint || typeof transition.fromConstraint !== 'string') {
-    throw new Error('Transition fromConstraint must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Transition fromConstraint must be a non-empty string');
   }
   if (!transition.toConstraint || typeof transition.toConstraint !== 'string') {
-    throw new Error('Transition toConstraint must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Transition toConstraint must be a non-empty string');
   }
   if (typeof transition.cooldown !== 'number' || transition.cooldown < 0) {
-    throw new Error(`Transition cooldown must be a non-negative number, got: ${transition.cooldown}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `Transition cooldown must be a non-negative number, got: ${transition.cooldown}`);
   }
 }
 
@@ -127,7 +129,7 @@ export function defineEvolution(
   governanceApproval: boolean = false,
 ): EvolutionPolicy {
   if (!covenantId || typeof covenantId !== 'string') {
-    throw new Error('covenantId must be a non-empty string');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'covenantId must be a non-empty string');
   }
 
   for (const trigger of triggers) {
