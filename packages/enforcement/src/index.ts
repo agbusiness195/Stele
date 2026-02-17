@@ -134,6 +134,16 @@ export interface MerkleProof {
  * Walks from the leaf hash up through the sibling hashes in the proof,
  * combining pairs with SHA-256 until reaching the root. Returns true
  * if the computed root matches the expected root in the proof.
+ *
+ * @param proof - The Merkle inclusion proof to verify.
+ * @returns True if the proof is valid (computed root matches expected root).
+ *
+ * @example
+ * ```ts
+ * const proof = monitor.generateMerkleProof(0);
+ * const valid = verifyMerkleProof(proof);
+ * console.log(valid); // true
+ * ```
  */
 export function verifyMerkleProof(proof: MerkleProof): boolean {
   let currentHash = proof.entryHash;
@@ -213,6 +223,13 @@ export class Monitor {
    * @param resource - The resource being acted upon (e.g. "/data/users").
    * @param context - Optional evaluation context for condition matching.
    * @returns The CCL evaluation result.
+   * @throws {MonitorDeniedError} If the action is denied and the monitor is in 'enforce' mode.
+   *
+   * @example
+   * ```ts
+   * const result = await monitor.evaluate('file.read', '/data/users');
+   * console.log(result.permitted); // true or false
+   * ```
    */
   async evaluate(
     action: string,
@@ -300,6 +317,14 @@ export class Monitor {
    * @param handler - The handler function to execute if permitted.
    * @param context - Optional evaluation context.
    * @returns The result of the handler.
+   * @throws {MonitorDeniedError} If the action is denied and the monitor is in 'enforce' mode.
+   *
+   * @example
+   * ```ts
+   * const data = await monitor.execute('file.read', '/data/users', async (res) => {
+   *   return readFile(res);
+   * });
+   * ```
    */
   async execute<T>(
     action: string,
@@ -393,6 +418,17 @@ export class Monitor {
 
   /**
    * Get the full audit log for this monitor.
+   *
+   * Returns a snapshot of all audit entries, the current Merkle root,
+   * and the total entry count.
+   *
+   * @returns A copy of the audit log with entries, Merkle root, and count.
+   *
+   * @example
+   * ```ts
+   * const log = monitor.getAuditLog();
+   * console.log(log.count, log.merkleRoot);
+   * ```
    */
   getAuditLog(): AuditLog {
     return {
@@ -405,6 +441,15 @@ export class Monitor {
 
   /**
    * Get a specific audit entry by index.
+   *
+   * @param index - The zero-based index of the audit entry to retrieve.
+   * @returns The audit entry at the given index, or undefined if out of range.
+   *
+   * @example
+   * ```ts
+   * const entry = monitor.getAuditEntry(0);
+   * if (entry) console.log(entry.action, entry.outcome);
+   * ```
    */
   getAuditEntry(index: number): AuditEntry | undefined {
     return this.entries[index];
@@ -415,6 +460,14 @@ export class Monitor {
    *
    * Recomputes every entry hash from its content and the previous hash,
    * checking that the stored hash matches the recomputed one.
+   *
+   * @returns True if the hash chain is intact and no entries have been tampered with.
+   *
+   * @example
+   * ```ts
+   * const intact = monitor.verifyAuditLogIntegrity();
+   * if (!intact) console.error('Audit log has been tampered with');
+   * ```
    */
   verifyAuditLogIntegrity(): boolean {
     if (this.entries.length === 0) {
@@ -448,6 +501,14 @@ export class Monitor {
    *
    * Builds a balanced binary Merkle tree from the entry hashes.
    * If the number of leaves is odd, the last leaf is duplicated.
+   *
+   * @returns The Merkle root hash, or the genesis hash if the log is empty.
+   *
+   * @example
+   * ```ts
+   * const root = monitor.computeMerkleRoot();
+   * console.log('Merkle root:', root);
+   * ```
    */
   computeMerkleRoot(): HashHex {
     if (this.entries.length === 0) {
@@ -462,6 +523,13 @@ export class Monitor {
    *
    * @param entryIndex - The index of the audit entry.
    * @returns A MerkleProof that can be verified with verifyMerkleProof().
+   * @throws {SteleError} If the entry index is out of range.
+   *
+   * @example
+   * ```ts
+   * const proof = monitor.generateMerkleProof(0);
+   * console.log(verifyMerkleProof(proof)); // true
+   * ```
    */
   generateMerkleProof(entryIndex: number): MerkleProof {
     if (entryIndex < 0 || entryIndex >= this.entries.length) {
@@ -512,7 +580,14 @@ export class Monitor {
   /**
    * Check whether a rate limit is exceeded for the given action.
    *
-   * @returns An object with `exceeded` and `remaining` counts.
+   * @param action - The action string to check rate limits for.
+   * @returns An object with `exceeded` (boolean) and `remaining` (number of allowed calls left).
+   *
+   * @example
+   * ```ts
+   * const { exceeded, remaining } = monitor.checkRateLimit('api.call');
+   * if (exceeded) console.log('Rate limit exceeded');
+   * ```
    */
   checkRateLimit(action: string): { exceeded: boolean; remaining: number } {
     return this.checkRateLimitInternal(action);
@@ -520,6 +595,14 @@ export class Monitor {
 
   /**
    * Get the current rate limit state for all tracked actions.
+   *
+   * @returns An array of rate limit states, one per tracked action pattern.
+   *
+   * @example
+   * ```ts
+   * const states = monitor.getRateLimitState();
+   * states.forEach(s => console.log(s.action, s.count, s.limit));
+   * ```
    */
   getRateLimitState(): RateLimitState[] {
     return Array.from(this.rateLimits.values());
@@ -527,6 +610,15 @@ export class Monitor {
 
   /**
    * Reset the monitor, clearing all audit entries and rate limit state.
+   *
+   * After calling this method the audit log is empty and all rate limit
+   * counters are zeroed.
+   *
+   * @example
+   * ```ts
+   * monitor.reset();
+   * console.log(monitor.getAuditLog().count); // 0
+   * ```
    */
   reset(): void {
     this.entries.length = 0;
@@ -716,6 +808,14 @@ export class CapabilityGate {
    * @param constraints - CCL constraint source text.
    * @param runtimeKeyPair - The key pair identifying this runtime instance.
    * @param runtimeType - A label for the type of runtime (default: "node").
+   * @returns A new CapabilityGate instance with capabilities derived from permit statements.
+   *
+   * @example
+   * ```ts
+   * const gate = await CapabilityGate.fromConstraints(
+   *   covenantId, 'permit file.read on /data/**', keyPair,
+   * );
+   * ```
    */
   static async fromConstraints(
     covenantId: HashHex,
@@ -728,9 +828,18 @@ export class CapabilityGate {
   }
 
   /**
-   * Register an action handler.
+   * Register an action handler for a permitted action.
    *
-   * @throws CapabilityError if the action is not in the permitted set.
+   * @param action - The action string to register a handler for.
+   * @param handler - The handler function to execute when this action is invoked.
+   * @throws {CapabilityError} If the action is not in the permitted set.
+   *
+   * @example
+   * ```ts
+   * gate.register('file.read', async (resource) => {
+   *   return readFile(resource);
+   * });
+   * ```
    */
   register(action: string, handler: ActionHandler<unknown>): void {
     // Check if any permit statement's pattern matches this action
@@ -759,7 +868,17 @@ export class CapabilityGate {
    * - If constraints deny the action: outcome is DENIED.
    * - Otherwise: the handler is executed with outcome EXECUTED.
    *
+   * @param action - The action to execute.
+   * @param resource - The resource being acted upon.
+   * @param context - Optional evaluation context for condition matching.
    * @returns The result of the handler execution.
+   * @throws {CapabilityError} If no capability permits the action or no handler is registered.
+   * @throws {MonitorDeniedError} If the action is denied by runtime constraint evaluation.
+   *
+   * @example
+   * ```ts
+   * const result = await gate.execute<string>('file.read', '/data/users');
+   * ```
    */
   async execute<T>(
     action: string,
@@ -852,6 +971,16 @@ export class CapabilityGate {
 
   /**
    * Check if a capability exists for the given action.
+   *
+   * @param action - The action string to check (e.g. "file.read").
+   * @returns True if at least one permit pattern matches the action.
+   *
+   * @example
+   * ```ts
+   * if (gate.hasCapability('file.read')) {
+   *   console.log('file.read is permitted');
+   * }
+   * ```
    */
   hasCapability(action: string): boolean {
     for (const permitAction of this.permittedActions) {
@@ -864,6 +993,14 @@ export class CapabilityGate {
 
   /**
    * List all permitted action patterns.
+   *
+   * @returns An array of action pattern strings extracted from permit statements.
+   *
+   * @example
+   * ```ts
+   * const caps = gate.listCapabilities();
+   * // e.g. ['file.read', 'data.**']
+   * ```
    */
   listCapabilities(): string[] {
     return Array.from(this.permittedActions);
@@ -982,6 +1119,14 @@ export class CapabilityGate {
 
   /**
    * Get the execution log of all actions attempted through this gate.
+   *
+   * @returns A copy of all execution log entries recorded by this gate.
+   *
+   * @example
+   * ```ts
+   * const log = gate.getExecutionLog();
+   * log.forEach(e => console.log(e.action, e.outcome));
+   * ```
    */
   getExecutionLog(): ExecutionLogEntry[] {
     return [...this.executionLog];
