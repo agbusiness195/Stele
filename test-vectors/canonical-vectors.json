@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "generated_at": "2026-02-17T16:50:35.432Z",
+    "generated_at": "2026-02-17T19:41:32.550Z",
     "protocol_version": "1.0",
     "generator": "@stele/test-vectors",
     "description": "Canonical test vectors for the Stele protocol. Any conformant implementation MUST produce identical results for these inputs.",
@@ -150,11 +150,11 @@
         "description": "Ed25519 sign/verify of \"hello world\"",
         "input": {
           "message": "hello world",
-          "publicKey": "94dc6c0f99a553eb14689d3073450e3ae1af4144772f68900ecae4c6355293a3",
-          "privateKey": "829094b80246534e333bcb5080b26dac63877d40c1cbb8de9ba7db0bd5158294"
+          "publicKey": "f0ba6dc82a6c7e867c1b16589de591107e8f922dbdbccc9f5a92b7ebdf899026",
+          "privateKey": "a47ee338833358dee1e3661b0ad1f03af95107819908e8b9325033af7eea6996"
         },
         "expected": {
-          "signature": "fdc8d650974139225a14fe69651eb3e126087094581e371846da2e9a483e02968e12f5f6901a55d47b3a0c7a27f8e0dc30092b12f627e0d528492108df870404",
+          "signature": "b459bb7c49f0e24cace85cfde11e5f2de7224db20b01517f3faff3b40ffaaf51472ac0d1147d1f366ca867d9fce1d7504c37677be8b4de23ad35471bffde740c",
           "valid": true
         }
       },
@@ -164,11 +164,11 @@
         "description": "Ed25519 sign/verify of \"The Stele Protocol\"",
         "input": {
           "message": "The Stele Protocol",
-          "publicKey": "94dc6c0f99a553eb14689d3073450e3ae1af4144772f68900ecae4c6355293a3",
-          "privateKey": "829094b80246534e333bcb5080b26dac63877d40c1cbb8de9ba7db0bd5158294"
+          "publicKey": "f0ba6dc82a6c7e867c1b16589de591107e8f922dbdbccc9f5a92b7ebdf899026",
+          "privateKey": "a47ee338833358dee1e3661b0ad1f03af95107819908e8b9325033af7eea6996"
         },
         "expected": {
-          "signature": "b6a03e2caa5e44b58fef3309e22cccef9e5c8611f6e2092390122ca7129717c56d028352f881520588a4a4e48c486110e2b6dab10f81ca1248e4f1f476803308",
+          "signature": "94a501c5bccab389fcb55853dd9fe8d52286abddff5716e3ec17f36fd4b0a8033b47325f55ed944fa082e41f974893118872ef0b117b59cb4f7ccf6f573d6904",
           "valid": true
         }
       },
@@ -178,11 +178,11 @@
         "description": "Ed25519 sign/verify of \"{\"action\":\"read\",\"resource\":\"/data\"}\"",
         "input": {
           "message": "{\"action\":\"read\",\"resource\":\"/data\"}",
-          "publicKey": "94dc6c0f99a553eb14689d3073450e3ae1af4144772f68900ecae4c6355293a3",
-          "privateKey": "829094b80246534e333bcb5080b26dac63877d40c1cbb8de9ba7db0bd5158294"
+          "publicKey": "f0ba6dc82a6c7e867c1b16589de591107e8f922dbdbccc9f5a92b7ebdf899026",
+          "privateKey": "a47ee338833358dee1e3661b0ad1f03af95107819908e8b9325033af7eea6996"
         },
         "expected": {
-          "signature": "98196d105479b4d57422b68df51c8b0a72965118fd93dff70a8a66974c2b884d59a6f5eb5e62fccd69b4ac473113ffd535f8b81ff16b59021cea24a969adf703",
+          "signature": "c169c348db5fc43625d0dcab9d2cf0591598169faf58dc59d1d9cb6fbd22d202d8defe1cb0532da5d506607aca08fd46d7925112b1b139ef8d12d1fa705ec701",
           "valid": true
         }
       }
@@ -534,8 +534,8 @@
           "source": "limit api.call 100 per 1 hours",
           "action": "api.call",
           "currentCount": 50,
-          "periodStartMs": 1771347034390,
-          "nowMs": 1771347035390
+          "periodStartMs": 1771357291514,
+          "nowMs": 1771357292514
         },
         "expected": {
           "exceeded": false,
@@ -550,8 +550,8 @@
           "source": "limit api.call 100 per 1 hours",
           "action": "api.call",
           "currentCount": 100,
-          "periodStartMs": 1771347034390,
-          "nowMs": 1771347035390
+          "periodStartMs": 1771357291514,
+          "nowMs": 1771357292514
         },
         "expected": {
           "exceeded": true,
@@ -566,8 +566,8 @@
           "source": "limit api.call 100 per 1 hours",
           "action": "api.call",
           "currentCount": 150,
-          "periodStartMs": 1771347034390,
-          "nowMs": 1771347035390
+          "periodStartMs": 1771357291514,
+          "nowMs": 1771357292514
         },
         "expected": {
           "exceeded": true,
@@ -582,8 +582,8 @@
           "source": "limit api.call 100 per 1 hours",
           "action": "api.call",
           "currentCount": 150,
-          "periodStartMs": 1771343435389,
-          "nowMs": 1771347035390
+          "periodStartMs": 1771353692513,
+          "nowMs": 1771357292514
         },
         "expected": {
           "exceeded": false,
@@ -654,26 +654,26 @@
         "input": {
           "issuer": {
             "id": "test-issuer",
-            "publicKey": "94dc6c0f99a553eb14689d3073450e3ae1af4144772f68900ecae4c6355293a3",
+            "publicKey": "f0ba6dc82a6c7e867c1b16589de591107e8f922dbdbccc9f5a92b7ebdf899026",
             "role": "issuer"
           },
           "beneficiary": {
             "id": "test-beneficiary",
-            "publicKey": "62622c688df1d9ffa3732176c27b7e4b1077391c03e228f1605f8fc607e2a731",
+            "publicKey": "6ccc96e3e87a27549743947bfa699f9fe9d5b427273782c627a3deda89464e4c",
             "role": "beneficiary"
           },
           "constraints": "permit read on '/data/**'\ndeny delete on '/system/**'",
-          "signerPrivateKey": "829094b80246534e333bcb5080b26dac63877d40c1cbb8de9ba7db0bd5158294"
+          "signerPrivateKey": "a47ee338833358dee1e3661b0ad1f03af95107819908e8b9325033af7eea6996"
         },
         "expected": {
           "version": "1.0",
-          "id": "66769d0767deebbe7c883192895c0c0ff5a648dfa336df1d8bedd4bc2d2b9d5c",
-          "canonical_form": "{\"beneficiary\":{\"id\":\"test-beneficiary\",\"publicKey\":\"62622c688df1d9ffa3732176c27b7e4b1077391c03e228f1605f8fc607e2a731\",\"role\":\"beneficiary\"},\"constraints\":\"permit read on '/data/**'\\ndeny delete on '/system/**'\",\"createdAt\":\"2026-02-17T16:50:35.391Z\",\"issuer\":{\"id\":\"test-issuer\",\"publicKey\":\"94dc6c0f99a553eb14689d3073450e3ae1af4144772f68900ecae4c6355293a3\",\"role\":\"issuer\"},\"nonce\":\"6558687428c3b61fb1a3bd9bf2e87f55d38d813960866267f6956923eec6276f\",\"version\":\"1.0\"}",
+          "id": "8055e4353e1236c6049f0a66306dfc899e8b08dc2f19adce8f9c3542ce9fa436",
+          "canonical_form": "{\"beneficiary\":{\"id\":\"test-beneficiary\",\"publicKey\":\"6ccc96e3e87a27549743947bfa699f9fe9d5b427273782c627a3deda89464e4c\",\"role\":\"beneficiary\"},\"constraints\":\"permit read on '/data/**'\\ndeny delete on '/system/**'\",\"createdAt\":\"2026-02-17T19:41:32.516Z\",\"issuer\":{\"id\":\"test-issuer\",\"publicKey\":\"f0ba6dc82a6c7e867c1b16589de591107e8f922dbdbccc9f5a92b7ebdf899026\",\"role\":\"issuer\"},\"nonce\":\"e15663f3b2c8d9c2a2db6c621fcb93e2ba8c8b317fc680ff78dd7972bf0ab407\",\"version\":\"1.0\"}",
           "canonical_hash_matches_id": true,
-          "nonce": "6558687428c3b61fb1a3bd9bf2e87f55d38d813960866267f6956923eec6276f",
+          "nonce": "e15663f3b2c8d9c2a2db6c621fcb93e2ba8c8b317fc680ff78dd7972bf0ab407",
           "nonce_length": 64,
-          "signature": "cce6dc41767a4b40950b5817b53aa6aee939d6a5a330714ba6ed7ec568adce86757bc9c77d7d898ece9a26e4301996c55463bea424d3eabd8fd279b625b39903",
-          "createdAt": "2026-02-17T16:50:35.391Z"
+          "signature": "82b2dcaae184b3a17299d362b64579a143f1b05a3e4dbb1e76dc7654a8e6e38da7a52bff3aa8d68cf2b5595dabe5a35ec6418a53ee378a5136be25cb1d564a09",
+          "createdAt": "2026-02-17T19:41:32.516Z"
         }
       },
       {
@@ -682,22 +682,22 @@
         "description": "Verify a valid covenant document -- all 11 checks should pass",
         "input": {
           "document": {
-            "id": "66769d0767deebbe7c883192895c0c0ff5a648dfa336df1d8bedd4bc2d2b9d5c",
+            "id": "8055e4353e1236c6049f0a66306dfc899e8b08dc2f19adce8f9c3542ce9fa436",
             "version": "1.0",
             "issuer": {
               "id": "test-issuer",
-              "publicKey": "94dc6c0f99a553eb14689d3073450e3ae1af4144772f68900ecae4c6355293a3",
+              "publicKey": "f0ba6dc82a6c7e867c1b16589de591107e8f922dbdbccc9f5a92b7ebdf899026",
               "role": "issuer"
             },
             "beneficiary": {
               "id": "test-beneficiary",
-              "publicKey": "62622c688df1d9ffa3732176c27b7e4b1077391c03e228f1605f8fc607e2a731",
+              "publicKey": "6ccc96e3e87a27549743947bfa699f9fe9d5b427273782c627a3deda89464e4c",
               "role": "beneficiary"
             },
             "constraints": "permit read on '/data/**'\ndeny delete on '/system/**'",
-            "nonce": "6558687428c3b61fb1a3bd9bf2e87f55d38d813960866267f6956923eec6276f",
-            "createdAt": "2026-02-17T16:50:35.391Z",
-            "signature": "cce6dc41767a4b40950b5817b53aa6aee939d6a5a330714ba6ed7ec568adce86757bc9c77d7d898ece9a26e4301996c55463bea424d3eabd8fd279b625b39903"
+            "nonce": "e15663f3b2c8d9c2a2db6c621fcb93e2ba8c8b317fc680ff78dd7972bf0ab407",
+            "createdAt": "2026-02-17T19:41:32.516Z",
+            "signature": "82b2dcaae184b3a17299d362b64579a143f1b05a3e4dbb1e76dc7654a8e6e38da7a52bff3aa8d68cf2b5595dabe5a35ec6418a53ee378a5136be25cb1d564a09"
           }
         },
         "expected": {
@@ -756,22 +756,22 @@
         "description": "Verify a covenant with tampered signature (should fail)",
         "input": {
           "document": {
-            "id": "66769d0767deebbe7c883192895c0c0ff5a648dfa336df1d8bedd4bc2d2b9d5c",
+            "id": "8055e4353e1236c6049f0a66306dfc899e8b08dc2f19adce8f9c3542ce9fa436",
             "version": "1.0",
             "issuer": {
               "id": "test-issuer",
-              "publicKey": "94dc6c0f99a553eb14689d3073450e3ae1af4144772f68900ecae4c6355293a3",
+              "publicKey": "f0ba6dc82a6c7e867c1b16589de591107e8f922dbdbccc9f5a92b7ebdf899026",
               "role": "issuer"
             },
             "beneficiary": {
               "id": "test-beneficiary",
-              "publicKey": "62622c688df1d9ffa3732176c27b7e4b1077391c03e228f1605f8fc607e2a731",
+              "publicKey": "6ccc96e3e87a27549743947bfa699f9fe9d5b427273782c627a3deda89464e4c",
               "role": "beneficiary"
             },
             "constraints": "permit read on '/data/**'\ndeny delete on '/system/**'",
-            "nonce": "6558687428c3b61fb1a3bd9bf2e87f55d38d813960866267f6956923eec6276f",
-            "createdAt": "2026-02-17T16:50:35.391Z",
-            "signature": "0ce6dc41767a4b40950b5817b53aa6aee939d6a5a330714ba6ed7ec568adce86757bc9c77d7d898ece9a26e4301996c55463bea424d3eabd8fd279b625b39903"
+            "nonce": "e15663f3b2c8d9c2a2db6c621fcb93e2ba8c8b317fc680ff78dd7972bf0ab407",
+            "createdAt": "2026-02-17T19:41:32.516Z",
+            "signature": "02b2dcaae184b3a17299d362b64579a143f1b05a3e4dbb1e76dc7654a8e6e38da7a52bff3aa8d68cf2b5595dabe5a35ec6418a53ee378a5136be25cb1d564a09"
           },
           "tamper": "first character of signature modified"
         },
@@ -788,22 +788,22 @@
         "description": "Verify a covenant with tampered constraints (should fail id_match and signature)",
         "input": {
           "document": {
-            "id": "66769d0767deebbe7c883192895c0c0ff5a648dfa336df1d8bedd4bc2d2b9d5c",
+            "id": "8055e4353e1236c6049f0a66306dfc899e8b08dc2f19adce8f9c3542ce9fa436",
             "version": "1.0",
             "issuer": {
               "id": "test-issuer",
-              "publicKey": "94dc6c0f99a553eb14689d3073450e3ae1af4144772f68900ecae4c6355293a3",
+              "publicKey": "f0ba6dc82a6c7e867c1b16589de591107e8f922dbdbccc9f5a92b7ebdf899026",
               "role": "issuer"
             },
             "beneficiary": {
               "id": "test-beneficiary",
-              "publicKey": "62622c688df1d9ffa3732176c27b7e4b1077391c03e228f1605f8fc607e2a731",
+              "publicKey": "6ccc96e3e87a27549743947bfa699f9fe9d5b427273782c627a3deda89464e4c",
               "role": "beneficiary"
             },
             "constraints": "permit write on '/data/**'",
-            "nonce": "6558687428c3b61fb1a3bd9bf2e87f55d38d813960866267f6956923eec6276f",
-            "createdAt": "2026-02-17T16:50:35.391Z",
-            "signature": "cce6dc41767a4b40950b5817b53aa6aee939d6a5a330714ba6ed7ec568adce86757bc9c77d7d898ece9a26e4301996c55463bea424d3eabd8fd279b625b39903"
+            "nonce": "e15663f3b2c8d9c2a2db6c621fcb93e2ba8c8b317fc680ff78dd7972bf0ab407",
+            "createdAt": "2026-02-17T19:41:32.516Z",
+            "signature": "82b2dcaae184b3a17299d362b64579a143f1b05a3e4dbb1e76dc7654a8e6e38da7a52bff3aa8d68cf2b5595dabe5a35ec6418a53ee378a5136be25cb1d564a09"
           },
           "tamper": "constraints modified after signing"
         },
@@ -820,16 +820,16 @@
         "name": "countersign",
         "description": "Countersign a covenant document with an auditor",
         "input": {
-          "document_id": "66769d0767deebbe7c883192895c0c0ff5a648dfa336df1d8bedd4bc2d2b9d5c",
-          "signerPublicKey": "f16b63fde25eba5b0c8dd8ddd3c291d2cf22f16b639b57f61abcf34f41816869",
-          "signerPrivateKey": "931f489b736776daf365bffa556aa2e5e55576e962b0fa9141f01306c1c5664c",
+          "document_id": "8055e4353e1236c6049f0a66306dfc899e8b08dc2f19adce8f9c3542ce9fa436",
+          "signerPublicKey": "10bb4c7eb132943bd6f9ca60a15dc493db4e76b5b9795af60104507d624a3aa5",
+          "signerPrivateKey": "aadee24a5a1daf1f07963c494ac4f1ac688170c2d5e27b0b12ad3943ce7a6d33",
           "signerRole": "auditor"
         },
         "expected": {
           "countersignature_count": 1,
           "countersigner_role": "auditor",
-          "countersigner_publicKey": "f16b63fde25eba5b0c8dd8ddd3c291d2cf22f16b639b57f61abcf34f41816869",
-          "countersignature_signature": "42d1d1f86e0f53a6f25ddac2390a41132fe78326376d1f2274aef56a0450dc2be89aab2a6dc530ac56336d18f80e08c5ec25d0afb2d1cdad5b804f4ab101b108"
+          "countersigner_publicKey": "10bb4c7eb132943bd6f9ca60a15dc493db4e76b5b9795af60104507d624a3aa5",
+          "countersignature_signature": "41c5ce46276c55170361406043e0fb4125e61340c555e06420eb50a997147e315d0c75c9af62d4a677bd13b2a4610498df137aa7af866228e862a30137e71d0c"
         }
       },
       {
@@ -838,28 +838,28 @@
         "description": "Verify a countersigned covenant document",
         "input": {
           "document": {
-            "id": "66769d0767deebbe7c883192895c0c0ff5a648dfa336df1d8bedd4bc2d2b9d5c",
+            "id": "8055e4353e1236c6049f0a66306dfc899e8b08dc2f19adce8f9c3542ce9fa436",
             "version": "1.0",
             "issuer": {
               "id": "test-issuer",
-              "publicKey": "94dc6c0f99a553eb14689d3073450e3ae1af4144772f68900ecae4c6355293a3",
+              "publicKey": "f0ba6dc82a6c7e867c1b16589de591107e8f922dbdbccc9f5a92b7ebdf899026",
               "role": "issuer"
             },
             "beneficiary": {
               "id": "test-beneficiary",
-              "publicKey": "62622c688df1d9ffa3732176c27b7e4b1077391c03e228f1605f8fc607e2a731",
+              "publicKey": "6ccc96e3e87a27549743947bfa699f9fe9d5b427273782c627a3deda89464e4c",
               "role": "beneficiary"
             },
             "constraints": "permit read on '/data/**'\ndeny delete on '/system/**'",
-            "nonce": "6558687428c3b61fb1a3bd9bf2e87f55d38d813960866267f6956923eec6276f",
-            "createdAt": "2026-02-17T16:50:35.391Z",
-            "signature": "cce6dc41767a4b40950b5817b53aa6aee939d6a5a330714ba6ed7ec568adce86757bc9c77d7d898ece9a26e4301996c55463bea424d3eabd8fd279b625b39903",
+            "nonce": "e15663f3b2c8d9c2a2db6c621fcb93e2ba8c8b317fc680ff78dd7972bf0ab407",
+            "createdAt": "2026-02-17T19:41:32.516Z",
+            "signature": "82b2dcaae184b3a17299d362b64579a143f1b05a3e4dbb1e76dc7654a8e6e38da7a52bff3aa8d68cf2b5595dabe5a35ec6418a53ee378a5136be25cb1d564a09",
             "countersignatures": [
               {
-                "signerPublicKey": "f16b63fde25eba5b0c8dd8ddd3c291d2cf22f16b639b57f61abcf34f41816869",
+                "signerPublicKey": "10bb4c7eb132943bd6f9ca60a15dc493db4e76b5b9795af60104507d624a3aa5",
                 "signerRole": "auditor",
-                "signature": "42d1d1f86e0f53a6f25ddac2390a41132fe78326376d1f2274aef56a0450dc2be89aab2a6dc530ac56336d18f80e08c5ec25d0afb2d1cdad5b804f4ab101b108",
-                "timestamp": "2026-02-17T16:50:35.406Z"
+                "signature": "41c5ce46276c55170361406043e0fb4125e61340c555e06420eb50a997147e315d0c75c9af62d4a677bd13b2a4610498df137aa7af866228e862a30137e71d0c",
+                "timestamp": "2026-02-17T19:41:32.529Z"
               }
             ]
           }
@@ -921,8 +921,8 @@
         "name": "create-basic",
         "description": "Create a basic agent identity",
         "input": {
-          "operatorPublicKey": "94dc6c0f99a553eb14689d3073450e3ae1af4144772f68900ecae4c6355293a3",
-          "operatorPrivateKey": "829094b80246534e333bcb5080b26dac63877d40c1cbb8de9ba7db0bd5158294",
+          "operatorPublicKey": "f0ba6dc82a6c7e867c1b16589de591107e8f922dbdbccc9f5a92b7ebdf899026",
+          "operatorPrivateKey": "a47ee338833358dee1e3661b0ad1f03af95107819908e8b9325033af7eea6996",
           "operatorIdentifier": "test-operator",
           "model": {
             "provider": "anthropic",
@@ -938,7 +938,7 @@
           }
         },
         "expected": {
-          "id": "c83c989cd98cfa48e0cc6a5112b9505c8d4850dac13af83d782fcfbd09e48092",
+          "id": "928fd17d673eeb7ad64198cdadfa69eb26735a5ef7c0ee9151879fa4c974c7e1",
           "has_id": true,
           "model_provider": "anthropic",
           "model_modelId": "claude-3",
@@ -953,7 +953,7 @@
           "lineage_first_changeType": "created",
           "lineage_first_reputationCarryForward": 1,
           "version": 1,
-          "signature": "00c76658a1b13e6a8a0f6184e618363308fee431979bcf4648f922de381351340bd612f6ca6574e32c85a5b3dfc3438665679001d6ee55ff30140572b0283105"
+          "signature": "3574aac6e33dac36c35dbf2fc6fb9bf0f1d88cdb6f20c19a0d66b11df56ffe53dabb31707c850c4d01fcc6161b2f6aed426a254c9e84e4e481e19e3e4d298609"
         }
       },
       {
@@ -961,9 +961,9 @@
         "name": "evolve-model-update",
         "description": "Evolve an identity with a model update",
         "input": {
-          "originalIdentityId": "c83c989cd98cfa48e0cc6a5112b9505c8d4850dac13af83d782fcfbd09e48092",
-          "operatorPublicKey": "94dc6c0f99a553eb14689d3073450e3ae1af4144772f68900ecae4c6355293a3",
-          "operatorPrivateKey": "829094b80246534e333bcb5080b26dac63877d40c1cbb8de9ba7db0bd5158294",
+          "originalIdentityId": "928fd17d673eeb7ad64198cdadfa69eb26735a5ef7c0ee9151879fa4c974c7e1",
+          "operatorPublicKey": "f0ba6dc82a6c7e867c1b16589de591107e8f922dbdbccc9f5a92b7ebdf899026",
+          "operatorPrivateKey": "a47ee338833358dee1e3661b0ad1f03af95107819908e8b9325033af7eea6996",
           "changeType": "model_update",
           "description": "Upgraded to claude-4",
           "updates": {
@@ -974,16 +974,16 @@
           }
         },
         "expected": {
-          "new_id": "51131b4182b73de783ffd3f3f38f66a115344e487419dafe66958075fe9ac925",
+          "new_id": "a4460c01c3ac12655f02e643b1c579960bf6b7911c66d5eeb0b09d51d54169c4",
           "new_id_differs": true,
           "model_updated": true,
           "model_provider": "anthropic",
           "lineage_grew": true,
           "lineage_length": 2,
           "latest_changeType": "model_update",
-          "latest_parentHash": "c30de4b46f4c8a67c59ba58e8c56981c76677685cd6dd344dbb87721d70f051d",
+          "latest_parentHash": "49d297878ac80e0842609f2a6054a11ac8e0cd518c44389a824d1e0e55a0ae45",
           "version": 2,
-          "signature": "bbdb052cf90c4e6b92990ecdb50e7e17e3da273e0320cf67847542a24da9dbb955a7760305a6c07d05d594e3445173d6036345c57d0947cb1706de3e916a2e06"
+          "signature": "2f76fa1c4cfac2234aea82e0a2fcb393eb38e98ec6344a264f739f427e0adbae6ea49db882c78ba77f67db3a1d5c5273f464e0381304eea05a6b509820a3de02"
         }
       },
       {
@@ -991,7 +991,7 @@
         "name": "evolve-capability-change",
         "description": "Evolve an identity with a capability expansion",
         "input": {
-          "originalIdentityId": "c83c989cd98cfa48e0cc6a5112b9505c8d4850dac13af83d782fcfbd09e48092",
+          "originalIdentityId": "928fd17d673eeb7ad64198cdadfa69eb26735a5ef7c0ee9151879fa4c974c7e1",
           "changeType": "capability_change",
           "updates": {
             "capabilities": [
@@ -1003,7 +1003,7 @@
           }
         },
         "expected": {
-          "new_id": "a153861c38a561bcb4b96b2b222aab7fb5c47785c6c258bdfa3b480e52cb7e13",
+          "new_id": "21bfdd493ce6283d1edb0a355ac2802eedb9d57a538561de9a97d46170ad94bd",
           "capabilities_sorted": [
             "admin",
             "api.call",
@@ -1026,7 +1026,7 @@
           "parentConstraints": "permit read on '/data/**'\npermit write on '/data/**'",
           "childConstraints": "permit read on '/data/public/**'",
           "childChain": {
-            "parentId": "141c8a4153dc1d0a856d5736b8a9d58dad5308403788f04d0032d2916171d0a2",
+            "parentId": "f4f298a2ccc372bc109c04374b2bc99dcbe4743094aae0463b24baca63d9b9d4",
             "relation": "delegates",
             "depth": 1
           }
