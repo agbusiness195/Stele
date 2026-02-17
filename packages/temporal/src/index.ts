@@ -690,7 +690,7 @@ export class DecayModel {
 
   constructor(models: DecayModelConfig[]) {
     if (models.length === 0) {
-      throw new SteleError('At least one decay model is required', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'At least one decay model is required');
     }
     for (const m of models) {
       this.validateModel(m);
@@ -700,10 +700,10 @@ export class DecayModel {
 
   private validateModel(model: DecayModelConfig): void {
     if (model.type === 'exponential' && model.rate < 0) {
-      throw new SteleError('Exponential decay rate must be >= 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Exponential decay rate must be >= 0');
     }
     if (model.type === 'linear' && model.rate < 0) {
-      throw new SteleError('Linear decay rate must be >= 0', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Linear decay rate must be >= 0');
     }
     if (model.type === 'step') {
       if (!model.steps || model.steps.length === 0) {

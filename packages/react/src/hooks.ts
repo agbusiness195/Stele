@@ -9,6 +9,7 @@
  * @packageDocumentation
  */
 
+import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 import type { CovenantDocument, VerificationResult } from '@stele/core';
 import type { AgentIdentity } from '@stele/identity';
 import type { CovenantStore, StoreFilter } from '@stele/store';
@@ -38,7 +39,8 @@ function getReact(): ReactModule {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       _react = require('react') as ReactModule;
     } catch {
-      throw new Error(
+      throw new SteleError(
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         '@stele/react hooks require React >= 18 as a peer dependency. ' +
         'Install it with: npm install react',
       );

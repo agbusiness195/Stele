@@ -169,22 +169,22 @@ export function validateProtocolData(data: ProtocolData): void {
       { hint: 'Ensure compliantInteractions does not exceed totalInteractions.' });
   }
   if (data.stakeAmount < 0) {
-    throw new Error(`stakeAmount must be >= 0, got ${data.stakeAmount}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `stakeAmount must be >= 0, got ${data.stakeAmount}`);
   }
   if (data.maxStake < 0) {
-    throw new Error(`maxStake must be >= 0, got ${data.maxStake}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `maxStake must be >= 0, got ${data.maxStake}`);
   }
   if (data.attestedInteractions < 0) {
-    throw new Error(`attestedInteractions must be >= 0, got ${data.attestedInteractions}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `attestedInteractions must be >= 0, got ${data.attestedInteractions}`);
   }
   if (data.canaryTests < 0) {
-    throw new Error(`canaryTests must be >= 0, got ${data.canaryTests}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `canaryTests must be >= 0, got ${data.canaryTests}`);
   }
   if (data.canaryPasses < 0) {
-    throw new Error(`canaryPasses must be >= 0, got ${data.canaryPasses}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `canaryPasses must be >= 0, got ${data.canaryPasses}`);
   }
   if (data.canaryPasses > data.canaryTests) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `canaryPasses (${data.canaryPasses}) must be <= canaryTests (${data.canaryTests})`,
     );
   }
@@ -195,7 +195,7 @@ export function validateProtocolData(data: ProtocolData): void {
  */
 export function validatePolicy(policy: InteractionPolicy): void {
   if (policy.minimumScore < 0 || policy.minimumScore > 1) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `minimumScore must be in [0, 1], got ${policy.minimumScore}`,
     );
   }
@@ -206,7 +206,7 @@ export function validatePolicy(policy: InteractionPolicy): void {
  */
 function validateScore(score: AccountabilityScore): void {
   if (score.score < 0 || score.score > 1) {
-    throw new Error(
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT,
       `AccountabilityScore.score must be in [0, 1], got ${score.score}`,
     );
   }

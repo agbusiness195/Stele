@@ -423,10 +423,10 @@ export function checksumAddress(address: string): string {
 export function covenantIdToBytes32(id: string): string {
   const clean = strip0x(id);
   if (clean.length !== 64) {
-    throw new Error('Covenant ID must be 32 bytes (64 hex chars)');
+    throw new SteleError(SteleErrorCode.CRYPTO_INVALID_HEX, 'Covenant ID must be 32 bytes (64 hex chars)');
   }
   if (!/^[0-9a-fA-F]{64}$/.test(clean)) {
-    throw new Error('Invalid hex string');
+    throw new SteleError(SteleErrorCode.CRYPTO_INVALID_HEX, 'Invalid hex string');
   }
   return '0x' + clean.toLowerCase();
 }
@@ -494,7 +494,7 @@ export class EVMClient {
 
   constructor(provider: EVMProvider, registryAddress: string) {
     if (!isValidAddress(registryAddress)) {
-      throw new Error('Invalid registry address');
+      throw new SteleError(SteleErrorCode.CRYPTO_INVALID_HEX, 'Invalid registry address');
     }
     this.provider = provider;
     this.registryAddress = registryAddress;

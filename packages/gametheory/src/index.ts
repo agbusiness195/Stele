@@ -1325,7 +1325,7 @@ export function simulateEvolution(params: EvolutionSimulationParams): EvolutionS
     throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `initialHonestFraction must be in (0, 1), got ${initialHonestFraction}`);
   }
   if (generations < 1) {
-    throw new Error(`generations must be >= 1, got ${generations}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `generations must be >= 1, got ${generations}`);
   }
 
   const E_hh = payoffMatrix[0][0];
@@ -1505,16 +1505,16 @@ export function validateDetectionRates(params: DetectionValidationParams): Detec
   const { agentCount, interactionsPerAgent, violationProbability, simulationRuns, randomSeed } = params;
 
   if (agentCount < 1) {
-    throw new Error(`agentCount must be >= 1, got ${agentCount}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `agentCount must be >= 1, got ${agentCount}`);
   }
   if (interactionsPerAgent < 1) {
-    throw new Error(`interactionsPerAgent must be >= 1, got ${interactionsPerAgent}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `interactionsPerAgent must be >= 1, got ${interactionsPerAgent}`);
   }
   if (violationProbability < 0 || violationProbability > 1) {
-    throw new Error(`violationProbability must be in [0, 1], got ${violationProbability}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `violationProbability must be in [0, 1], got ${violationProbability}`);
   }
   if (simulationRuns < 1) {
-    throw new Error(`simulationRuns must be >= 1, got ${simulationRuns}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `simulationRuns must be >= 1, got ${simulationRuns}`);
   }
 
   const rng = createSeededRng(randomSeed ?? 42);
@@ -1678,7 +1678,7 @@ export function choleskyDecompose(matrix: number[][]): number[][] {
       if (i === j) {
         const diag = Mi[i]! - sum;
         if (diag <= 0) {
-          throw new Error(
+          throw new SteleError(SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
             `Matrix is not positive-definite: diagonal element ${i} became ${diag} during decomposition`,
           );
         }
@@ -1819,34 +1819,34 @@ export function validateCorrelatedDetection(params: CorrelatedDetectionParams): 
   const { agentCount, interactionsPerAgent, violationProbability, simulationRuns, correlationMatrix, randomSeed } = params;
 
   if (agentCount < 1) {
-    throw new Error(`agentCount must be >= 1, got ${agentCount}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `agentCount must be >= 1, got ${agentCount}`);
   }
   if (interactionsPerAgent < 1) {
-    throw new Error(`interactionsPerAgent must be >= 1, got ${interactionsPerAgent}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `interactionsPerAgent must be >= 1, got ${interactionsPerAgent}`);
   }
   if (violationProbability < 0 || violationProbability > 1) {
-    throw new Error(`violationProbability must be in [0, 1], got ${violationProbability}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `violationProbability must be in [0, 1], got ${violationProbability}`);
   }
   if (simulationRuns < 1) {
-    throw new Error(`simulationRuns must be >= 1, got ${simulationRuns}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `simulationRuns must be >= 1, got ${simulationRuns}`);
   }
 
   // Validate correlation matrix dimensions and symmetry
   if (correlationMatrix.length !== 3 || correlationMatrix.some(row => row.length !== 3)) {
-    throw new Error('correlationMatrix must be a 3x3 matrix');
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'correlationMatrix must be a 3x3 matrix');
   }
   for (let i = 0; i < 3; i++) {
     const row_i = correlationMatrix[i]!;
     if (Math.abs(row_i[i]! - 1) > 1e-12) {
-      throw new Error(`correlationMatrix diagonal must be 1, got ${row_i[i]!} at [${i}][${i}]`);
+      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `correlationMatrix diagonal must be 1, got ${row_i[i]!} at [${i}][${i}]`);
     }
     for (let j = 0; j < 3; j++) {
       const row_j = correlationMatrix[j]!;
       if (row_i[j]! < 0 || row_i[j]! > 1) {
-        throw new Error(`correlationMatrix values must be in [0, 1], got ${row_i[j]!} at [${i}][${j}]`);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `correlationMatrix values must be in [0, 1], got ${row_i[j]!} at [${i}][${j}]`);
       }
       if (Math.abs(row_i[j]! - row_j[i]!) > 1e-12) {
-        throw new Error(`correlationMatrix must be symmetric, mismatch at [${i}][${j}] and [${j}][${i}]`);
+        throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `correlationMatrix must be symmetric, mismatch at [${i}][${j}] and [${j}][${i}]`);
       }
     }
   }
@@ -2140,16 +2140,16 @@ export function analyzeByzantineAdversary(params: ByzantineAdversaryParams): Byz
   const { populationSize, byzantineFraction, adversaryStrategy, payoffMatrix, evasionCapability, generations } = params;
 
   if (populationSize < 2) {
-    throw new Error(`populationSize must be >= 2, got ${populationSize}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `populationSize must be >= 2, got ${populationSize}`);
   }
   if (byzantineFraction <= 0 || byzantineFraction >= 1) {
-    throw new Error(`byzantineFraction must be in (0, 1), got ${byzantineFraction}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `byzantineFraction must be in (0, 1), got ${byzantineFraction}`);
   }
   if (evasionCapability < 0 || evasionCapability > 1) {
-    throw new Error(`evasionCapability must be in [0, 1], got ${evasionCapability}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `evasionCapability must be in [0, 1], got ${evasionCapability}`);
   }
   if (generations < 1) {
-    throw new Error(`generations must be >= 1, got ${generations}`);
+    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, `generations must be >= 1, got ${generations}`);
   }
 
   const E_hh = payoffMatrix[0][0];
