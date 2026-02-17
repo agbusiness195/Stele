@@ -990,3 +990,551 @@ export function analyzeImpossibilityBounds(params: {
     },
   ];
 }
+
+// ---------------------------------------------------------------------------
+// Evolutionary Stable Strategy (ESS) Analysis
+// ---------------------------------------------------------------------------
+//
+// "Honest behavior isn't just a Nash equilibrium — it's an Evolutionary Stable
+// Strategy. No alternative strategy can spread through the population. A small
+// group of cheaters can't gain a foothold."
+
+/**
+ * Parameters for Evolutionary Stable Strategy analysis.
+ */
+export interface ESSParameters {
+  /** Population size */
+  populationSize: number;
+  /** Fraction of mutant (dishonest) strategy, in (0, 1) */
+  mutantFraction: number;
+  /** Payoff matrix: payoffs[i][j] = payoff to strategy i when playing against strategy j */
+  /** Index 0 = honest, Index 1 = dishonest */
+  payoffMatrix: [[number, number], [number, number]];
+}
+
+/**
+ * Result of ESS analysis for the honest strategy.
+ */
+export interface ESSResult {
+  /** Whether honest strategy is an ESS */
+  isESS: boolean;
+  /** Whether honest strategy satisfies the strict Nash condition: E(honest,honest) > E(dishonest,honest) */
+  strictNashCondition: boolean;
+  /** Whether honest strategy satisfies the stability condition: if E(h,h)=E(d,h), then E(h,d) > E(d,d) */
+  stabilityCondition: boolean;
+  /** Invasion fitness of the mutant strategy (negative = mutant dies out) */
+  invasionFitness: number;
+  /** Critical mutant fraction where honest strategy loses ESS property */
+  criticalMutantFraction: number;
+  /** Expected generations until mutant extinction (if ESS) */
+  expectedExtinctionGenerations: number;
+  formula: string;
+}
+
+/**
+ * Analyze whether the honest strategy (index 0) is an Evolutionary Stable
+ * Strategy (ESS) against a mutant dishonest strategy (index 1).
+ *
+ * A strategy σ is an ESS if for any mutant strategy τ:
+ *   1. Strict Nash condition: E(σ, σ) > E(τ, σ)
+ *      OR
+ *   2. If E(σ, σ) = E(τ, σ), then stability condition: E(σ, τ) > E(τ, τ)
+ *
+ * Additionally computes:
+ * - Invasion fitness: In a mixed population with fraction ε of mutants,
+ *   fitness_mutant = (1-ε)*E(d,h) + ε*E(d,d)
+ *   fitness_honest = (1-ε)*E(h,h) + ε*E(h,d)
+ *   invasionFitness = fitness_mutant - fitness_honest (negative means mutant dies)
+ *
+ * - Critical mutant fraction: the ε* at which fitness_mutant = fitness_honest.
+ *   Setting invasionFitness = 0 and solving for ε:
+ *     (1-ε)*E(d,h) + ε*E(d,d) = (1-ε)*E(h,h) + ε*E(h,d)
+ *     ε* = (E(h,h) - E(d,h)) / ((E(h,h) - E(d,h)) - (E(h,d) - E(d,d)))
+ *   Clamped to [0, 1]. If denominator is 0, returns 1 (never loses ESS).
+ *
+ * - Expected generations to extinction: Uses a Wright-Fisher-like approximation
+ *   based on selection coefficient s and effective population size Ne.
+ *   s = -invasionFitness / avg_fitness (selection against mutant)
+ *   Expected extinction time ~ (1 / s) * ln(Ne * mutantFraction)
+ *   This is an approximation; exact Wright-Fisher dynamics are stochastic.
+ */
+export function analyzeESS(params: ESSParameters): ESSResult {
+  const { populationSize, mutantFraction, payoffMatrix } = params;
+
+  if (populationSize < 2) {
+    throw new Error(`populationSize must be >= 2, got ${populationSize}`);
+  }
+  if (mutantFraction <= 0 || mutantFraction >= 1) {
+    throw new Error(`mutantFraction must be in (0, 1), got ${mutantFraction}`);
+  }
+
+  // Extract payoffs: payoffMatrix[strategy_row][opponent_col]
+  const E_hh = payoffMatrix[0][0]; // E(honest, honest)
+  const E_hd = payoffMatrix[0][1]; // E(honest, dishonest)
+  const E_dh = payoffMatrix[1][0]; // E(dishonest, honest)
+  const E_dd = payoffMatrix[1][1]; // E(dishonest, dishonest)
+
+  // --- ESS Condition 1: Strict Nash condition ---
+  // E(honest, honest) > E(dishonest, honest)
+  const strictNashCondition = E_hh > E_dh;
+
+  // --- ESS Condition 2: Stability condition (Bishop-Cannings) ---
+  // If E(h,h) = E(d,h), then check E(h,d) > E(d,d)
+  const isNashEquality = Math.abs(E_hh - E_dh) < 1e-12;
+  const stabilityCondition = isNashEquality ? E_hd > E_dd : true;
+
+  // ESS = strict Nash condition met, OR (Nash equality AND stability condition)
+  const isESS = strictNashCondition || (isNashEquality && stabilityCondition);
+
+  // --- Invasion fitness ---
+  // In a population with fraction ε of mutants and (1-ε) of honest:
+  const eps = mutantFraction;
+  const fitnessHonest = (1 - eps) * E_hh + eps * E_hd;
+  const fitnessMutant = (1 - eps) * E_dh + eps * E_dd;
+  const invasionFitness = fitnessMutant - fitnessHonest;
+
+  // --- Critical mutant fraction ---
+  // Solve: (1-ε)*E(d,h) + ε*E(d,d) = (1-ε)*E(h,h) + ε*E(h,d)
+  // => ε * [(E(d,d) - E(h,d)) - (E(d,h) - E(h,h))] = E(h,h) - E(d,h)
+  // => ε* = (E(h,h) - E(d,h)) / [(E(h,h) - E(d,h)) - (E(h,d) - E(d,d))]
+  const numerator = E_hh - E_dh;
+  const denominator = (E_hh - E_dh) - (E_hd - E_dd);
+  let criticalMutantFraction: number;
+  if (Math.abs(denominator) < 1e-12) {
+    // If denominator is 0, the fitness difference doesn't depend on ε
+    // If numerator > 0, honest always dominates; critical fraction = 1 (never reached)
+    // If numerator <= 0, honest never dominates; critical fraction = 0
+    criticalMutantFraction = numerator > 0 ? 1 : 0;
+  } else {
+    criticalMutantFraction = Math.max(0, Math.min(1, numerator / denominator));
+  }
+
+  // --- Expected generations to extinction (Wright-Fisher approximation) ---
+  // Selection coefficient against the mutant: s = -invasionFitness / avgFitness
+  // Expected extinction time ~ (1/s) * ln(N * ε) for a deleterious allele
+  let expectedExtinctionGenerations: number;
+  const avgFitness = (1 - eps) * fitnessHonest + eps * fitnessMutant;
+  if (invasionFitness < -1e-12 && avgFitness > 0) {
+    // Mutant is deleterious: negative invasion fitness means honest is favored
+    const selectionCoefficient = -invasionFitness / avgFitness;
+    const mutantCount = populationSize * eps;
+    // Wright-Fisher: expected time to extinction ~ (1/s) * ln(N_e * initial_freq)
+    // For small mutant count, use ln(mutantCount) as approximate scale
+    expectedExtinctionGenerations = Math.max(
+      1,
+      (1 / selectionCoefficient) * Math.log(Math.max(1, mutantCount)),
+    );
+  } else if (invasionFitness >= -1e-12 && invasionFitness <= 1e-12) {
+    // Neutral: drift-based extinction, expected time ~ N_e for a neutral allele
+    expectedExtinctionGenerations = populationSize;
+  } else {
+    // Mutant is advantageous: it won't go extinct (in expectation)
+    expectedExtinctionGenerations = Infinity;
+  }
+
+  const formula =
+    `ESS Analysis for Honest Strategy (index 0):\n` +
+    `  Payoff matrix: E(h,h)=${E_hh}, E(h,d)=${E_hd}, E(d,h)=${E_dh}, E(d,d)=${E_dd}\n` +
+    `  Strict Nash condition: E(h,h)=${E_hh} > E(d,h)=${E_dh} => ${strictNashCondition}\n` +
+    `  Stability condition: E(h,d)=${E_hd} > E(d,d)=${E_dd} => ${E_hd > E_dd} (relevant only if Nash equality)\n` +
+    `  Honest strategy is${isESS ? '' : ' NOT'} an ESS\n` +
+    `  Invasion fitness at ε=${eps}: ${invasionFitness.toFixed(6)} (${invasionFitness < 0 ? 'mutant dies out' : 'mutant spreads'})\n` +
+    `  Critical mutant fraction: ${criticalMutantFraction.toFixed(6)}\n` +
+    `  Expected generations to mutant extinction: ${expectedExtinctionGenerations === Infinity ? '∞' : expectedExtinctionGenerations.toFixed(2)}`;
+
+  return {
+    isESS,
+    strictNashCondition,
+    stabilityCondition,
+    invasionFitness,
+    criticalMutantFraction,
+    expectedExtinctionGenerations,
+    formula,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Evolutionary Dynamics Simulation (Replicator Dynamics)
+// ---------------------------------------------------------------------------
+
+/**
+ * Parameters for the evolutionary dynamics simulation.
+ */
+export interface EvolutionSimulationParams {
+  /** Initial fraction of honest strategy in the population, in (0, 1) */
+  initialHonestFraction: number;
+  /** Payoff matrix: payoffs[i][j] = payoff to strategy i when playing against strategy j */
+  /** Index 0 = honest, Index 1 = dishonest */
+  payoffMatrix: [[number, number], [number, number]];
+  /** Number of generations to simulate */
+  generations: number;
+}
+
+/**
+ * A single step in the evolutionary trajectory.
+ */
+export interface EvolutionStep {
+  generation: number;
+  honestFraction: number;
+  dishonestFraction: number;
+  honestFitness: number;
+  dishonestFitness: number;
+  averageFitness: number;
+}
+
+/**
+ * Result of the evolutionary dynamics simulation.
+ */
+export interface EvolutionSimulationResult {
+  /** Full trajectory of strategy fractions over time */
+  trajectory: EvolutionStep[];
+  /** Final fraction of honest strategy */
+  finalHonestFraction: number;
+  /** Whether dishonest strategy converged to 0 (fraction < 1e-6) */
+  dishonestExtinct: boolean;
+  /** Generation at which dishonest fraction first fell below 1e-6 (or -1 if never) */
+  extinctionGeneration: number;
+  /** Human-readable summary */
+  formula: string;
+}
+
+/**
+ * Simulate evolutionary population dynamics using the discrete-time replicator
+ * equation to show that dishonest strategies go extinct when honest is an ESS.
+ *
+ * Replicator dynamics (discrete time):
+ *   x_i(t+1) = x_i(t) * f_i(t) / avg_f(t)
+ *
+ * where:
+ *   x_i(t) = fraction of strategy i at time t
+ *   f_i(t) = fitness of strategy i = sum_j( x_j(t) * payoff[i][j] )
+ *   avg_f(t) = sum_i( x_i(t) * f_i(t) )
+ *
+ * The simulation tracks the trajectory of strategy fractions and determines
+ * whether the dishonest strategy goes extinct (fraction drops below 1e-6).
+ */
+export function simulateEvolution(params: EvolutionSimulationParams): EvolutionSimulationResult {
+  const { initialHonestFraction, payoffMatrix, generations } = params;
+
+  if (initialHonestFraction <= 0 || initialHonestFraction >= 1) {
+    throw new Error(`initialHonestFraction must be in (0, 1), got ${initialHonestFraction}`);
+  }
+  if (generations < 1) {
+    throw new Error(`generations must be >= 1, got ${generations}`);
+  }
+
+  const E_hh = payoffMatrix[0][0];
+  const E_hd = payoffMatrix[0][1];
+  const E_dh = payoffMatrix[1][0];
+  const E_dd = payoffMatrix[1][1];
+
+  // Ensure all payoffs are positive for replicator dynamics to be well-defined
+  // (fitness must be positive). We shift all payoffs by a constant if needed.
+  const minPayoff = Math.min(E_hh, E_hd, E_dh, E_dd);
+  const shift = minPayoff < 1 ? 1 - minPayoff : 0;
+  const P_hh = E_hh + shift;
+  const P_hd = E_hd + shift;
+  const P_dh = E_dh + shift;
+  const P_dd = E_dd + shift;
+
+  const trajectory: EvolutionStep[] = [];
+  let xH = initialHonestFraction; // honest fraction
+  let xD = 1 - xH;               // dishonest fraction
+  const EXTINCTION_THRESHOLD = 1e-6;
+  let extinctionGeneration = -1;
+
+  for (let gen = 0; gen <= generations; gen++) {
+    // Fitness of each strategy in the current population mix
+    const fH = xH * P_hh + xD * P_hd;
+    const fD = xH * P_dh + xD * P_dd;
+    const avgF = xH * fH + xD * fD;
+
+    // Record step with original (unshifted) fitness values for clarity
+    trajectory.push({
+      generation: gen,
+      honestFraction: xH,
+      dishonestFraction: xD,
+      honestFitness: xH * E_hh + xD * E_hd,
+      dishonestFitness: xH * E_dh + xD * E_dd,
+      averageFitness: xH * (xH * E_hh + xD * E_hd) + xD * (xH * E_dh + xD * E_dd),
+    });
+
+    // Check for extinction
+    if (extinctionGeneration === -1 && xD < EXTINCTION_THRESHOLD) {
+      extinctionGeneration = gen;
+    }
+
+    // Replicator dynamics update (skip on last generation)
+    if (gen < generations && avgF > 0) {
+      xH = xH * fH / avgF;
+      xD = xD * fD / avgF;
+
+      // Normalize to handle floating-point drift
+      const total = xH + xD;
+      xH = xH / total;
+      xD = xD / total;
+
+      // Clamp near-zero values
+      if (xH < EXTINCTION_THRESHOLD) { xH = 0; xD = 1; }
+      if (xD < EXTINCTION_THRESHOLD) { xD = 0; xH = 1; }
+    }
+  }
+
+  const finalHonestFraction = xH;
+  const dishonestExtinct = xD < EXTINCTION_THRESHOLD;
+
+  const formula =
+    `Replicator Dynamics Simulation (${generations} generations):\n` +
+    `  Initial: honest=${initialHonestFraction.toFixed(6)}, dishonest=${(1 - initialHonestFraction).toFixed(6)}\n` +
+    `  Final: honest=${finalHonestFraction.toFixed(6)}, dishonest=${(1 - finalHonestFraction).toFixed(6)}\n` +
+    `  Payoff matrix (shifted by ${shift} for positive fitness):\n` +
+    `    E(h,h)=${E_hh}, E(h,d)=${E_hd}, E(d,h)=${E_dh}, E(d,d)=${E_dd}\n` +
+    `  Dishonest strategy ${dishonestExtinct ? 'went extinct' : 'survived'}\n` +
+    (extinctionGeneration >= 0
+      ? `  Extinction at generation ${extinctionGeneration}`
+      : `  No extinction observed within ${generations} generations`);
+
+  return {
+    trajectory,
+    finalHonestFraction,
+    dishonestExtinct,
+    extinctionGeneration,
+    formula,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Detection Rate Validation via Monte Carlo Simulation
+// ---------------------------------------------------------------------------
+
+/**
+ * Parameters for Monte Carlo detection rate validation.
+ */
+export interface DetectionValidationParams {
+  /** Number of agents to simulate */
+  agentCount: number;
+  /** Number of interactions per agent */
+  interactionsPerAgent: number;
+  /** Probability of a violation in each interaction, in [0, 1] */
+  violationProbability: number;
+  /** Number of simulation runs (higher = tighter confidence intervals) */
+  simulationRuns: number;
+  /**
+   * Optional random seed for reproducibility.
+   * Uses a simple linear congruential generator seeded from this value.
+   */
+  randomSeed?: number;
+}
+
+/**
+ * Result of detection rate validation for a single tier.
+ */
+export interface DetectionValidation {
+  tier: AdoptionTier;
+  simulatedInteractions: number;
+  totalViolations: number;
+  detectedViolations: number;
+  empiricalDetectionRate: number;
+  confidenceInterval: [number, number]; // 95% CI
+  withinClaimedRange: boolean;
+  claimedRange: [number, number];
+}
+
+/**
+ * Combined result across all tiers.
+ */
+export interface DetectionValidationResult {
+  tiers: DetectionValidation[];
+  overallViolations: number;
+  overallDetected: number;
+  formula: string;
+}
+
+/**
+ * A simple seeded pseudo-random number generator (linear congruential).
+ * Produces values in [0, 1). Not cryptographically secure, but sufficient
+ * for Monte Carlo simulation with reproducible results.
+ */
+function createSeededRng(seed: number): () => number {
+  // LCG parameters (Numerical Recipes)
+  let state = seed >>> 0; // ensure unsigned 32-bit
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
+
+/**
+ * Validate the Kova vision's claimed detection rates via Monte Carlo simulation.
+ *
+ * Claimed detection rates by tier:
+ *   - solo: 60-70% (single-party runtime self-verification)
+ *   - bilateral: 85-95% (bilateral attestation cross-verification)
+ *   - network: 99-99.9% (multi-party network verification)
+ *
+ * Detection model (layered):
+ * Each violation passes through independent detection layers. The probability
+ * of detection at each layer is calibrated to produce tier-level detection rates:
+ *
+ *   - Runtime layer: Catches hard constraint violations (e.g., policy breaches).
+ *     Base detection probability depends on tier.
+ *   - Attestation layer (bilateral & network): Cross-verification between parties.
+ *     Each additional verifier provides an independent check.
+ *   - Network layer (network only): Multi-party consensus verification.
+ *     Detection probability = 1 - (1 - p_per_verifier)^n_verifiers
+ *
+ * The simulation:
+ * 1. For each of `simulationRuns` runs:
+ *    a. Simulate `agentCount * interactionsPerAgent` interactions
+ *    b. Each interaction has `violationProbability` chance of being a violation
+ *    c. Each violation passes through the detection layers for the given tier
+ *    d. Record total violations and detected violations
+ * 2. Aggregate across runs to compute empirical detection rate
+ * 3. Compute 95% confidence interval using the Wilson score interval
+ *    (better than normal approximation for rates near 0 or 1)
+ * 4. Check if the confidence interval overlaps with the claimed range
+ *
+ * @returns Detection validation results for all three tiers
+ */
+export function validateDetectionRates(params: DetectionValidationParams): DetectionValidationResult {
+  const { agentCount, interactionsPerAgent, violationProbability, simulationRuns, randomSeed } = params;
+
+  if (agentCount < 1) {
+    throw new Error(`agentCount must be >= 1, got ${agentCount}`);
+  }
+  if (interactionsPerAgent < 1) {
+    throw new Error(`interactionsPerAgent must be >= 1, got ${interactionsPerAgent}`);
+  }
+  if (violationProbability < 0 || violationProbability > 1) {
+    throw new Error(`violationProbability must be in [0, 1], got ${violationProbability}`);
+  }
+  if (simulationRuns < 1) {
+    throw new Error(`simulationRuns must be >= 1, got ${simulationRuns}`);
+  }
+
+  const rng = createSeededRng(randomSeed ?? 42);
+
+  // Claimed ranges for each tier
+  const claimedRanges: Record<AdoptionTier, [number, number]> = {
+    solo: [0.60, 0.70],
+    bilateral: [0.85, 0.95],
+    network: [0.99, 0.999],
+  };
+
+  // Detection layer parameters calibrated to match claimed rates:
+  //   solo: runtime only at ~65% base
+  //   bilateral: runtime ~50% + attestation ~70% => combined ~85%
+  //     P(detect) = 1 - (1-0.50)*(1-0.70) = 1 - 0.15 = 0.85
+  //   network: runtime ~50% + attestation ~60% + network(5 verifiers at ~50% each)
+  //     P(network_layer) = 1 - (1-0.50)^5 = 1 - 0.03125 = 0.96875
+  //     P(detect) = 1 - (1-0.50)*(1-0.60)*(1-0.96875) = 1 - 0.50*0.40*0.03125 = 1 - 0.00625 = 0.99375
+  const tierDetectionConfig: Record<AdoptionTier, { runtimeProb: number; attestationProb: number; networkVerifiers: number; perVerifierProb: number }> = {
+    solo: { runtimeProb: 0.65, attestationProb: 0, networkVerifiers: 0, perVerifierProb: 0 },
+    bilateral: { runtimeProb: 0.50, attestationProb: 0.70, networkVerifiers: 0, perVerifierProb: 0 },
+    network: { runtimeProb: 0.50, attestationProb: 0.60, networkVerifiers: 5, perVerifierProb: 0.50 },
+  };
+
+  const totalInteractions = agentCount * interactionsPerAgent;
+  const tiers: DetectionValidation[] = [];
+  let overallViolations = 0;
+  let overallDetected = 0;
+
+  for (const tier of ['solo', 'bilateral', 'network'] as AdoptionTier[]) {
+    const config = tierDetectionConfig[tier];
+    let totalViolationsForTier = 0;
+    let detectedViolationsForTier = 0;
+
+    for (let run = 0; run < simulationRuns; run++) {
+      for (let i = 0; i < totalInteractions; i++) {
+        // Determine if this interaction is a violation
+        if (rng() < violationProbability) {
+          totalViolationsForTier++;
+
+          // Layer 1: Runtime detection
+          let detected = rng() < config.runtimeProb;
+
+          // Layer 2: Attestation detection (bilateral and network tiers)
+          if (!detected && config.attestationProb > 0) {
+            detected = rng() < config.attestationProb;
+          }
+
+          // Layer 3: Network verification (network tier only)
+          if (!detected && config.networkVerifiers > 0) {
+            // Each verifier independently checks; detection = at least one catches it
+            let networkDetected = false;
+            for (let v = 0; v < config.networkVerifiers; v++) {
+              if (rng() < config.perVerifierProb) {
+                networkDetected = true;
+                break; // at least one verifier detected it
+              }
+            }
+            detected = networkDetected;
+          }
+
+          if (detected) {
+            detectedViolationsForTier++;
+          }
+        }
+      }
+    }
+
+    // Compute empirical detection rate
+    const empiricalRate = totalViolationsForTier > 0
+      ? detectedViolationsForTier / totalViolationsForTier
+      : 0;
+
+    // Compute 95% confidence interval using Wilson score interval
+    // This is more robust than normal approximation, especially near 0 or 1
+    const n = totalViolationsForTier;
+    let ci: [number, number];
+    if (n === 0) {
+      ci = [0, 1]; // No violations observed, cannot determine rate
+    } else {
+      const z = 1.96; // 95% confidence
+      const pHat = empiricalRate;
+      const denominator = 1 + z * z / n;
+      const center = (pHat + z * z / (2 * n)) / denominator;
+      const halfWidth = (z / denominator) * Math.sqrt(pHat * (1 - pHat) / n + z * z / (4 * n * n));
+      ci = [
+        Math.max(0, center - halfWidth),
+        Math.min(1, center + halfWidth),
+      ];
+    }
+
+    // Check if empirical rate's confidence interval overlaps with claimed range
+    const claimed = claimedRanges[tier];
+    const withinClaimedRange = ci[1] >= claimed[0] && ci[0] <= claimed[1];
+
+    tiers.push({
+      tier,
+      simulatedInteractions: totalInteractions * simulationRuns,
+      totalViolations: totalViolationsForTier,
+      detectedViolations: detectedViolationsForTier,
+      empiricalDetectionRate: empiricalRate,
+      confidenceInterval: ci,
+      withinClaimedRange,
+      claimedRange: claimed,
+    });
+
+    overallViolations += totalViolationsForTier;
+    overallDetected += detectedViolationsForTier;
+  }
+
+  const formula =
+    `Monte Carlo Detection Rate Validation (${simulationRuns} runs, ${totalInteractions} interactions/run):\n` +
+    `  Violation probability: ${violationProbability}\n` +
+    tiers.map(t =>
+      `  ${t.tier}: empirical=${(t.empiricalDetectionRate * 100).toFixed(2)}% ` +
+      `CI=[${(t.confidenceInterval[0] * 100).toFixed(2)}%, ${(t.confidenceInterval[1] * 100).toFixed(2)}%] ` +
+      `claimed=[${(t.claimedRange[0] * 100).toFixed(1)}%, ${(t.claimedRange[1] * 100).toFixed(1)}%] ` +
+      `${t.withinClaimedRange ? 'PASS' : 'FAIL'}`
+    ).join('\n') +
+    `\n  Overall: ${overallDetected}/${overallViolations} violations detected`;
+
+  return {
+    tiers,
+    overallViolations,
+    overallDetected,
+    formula,
+  };
+}

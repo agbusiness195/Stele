@@ -13,7 +13,7 @@ export interface ComplianceProof {
   auditLogCommitment: HashHex;
   /** Poseidon commitment over the constraint set */
   constraintCommitment: HashHex;
-  /** The proof value (Poseidon hash of commitments for v0.1) */
+  /** The proof value (Poseidon hash of commitments for v0.1, JSON-encoded Groth16Proof for groth16) */
   proof: string;
   /** Public inputs visible to any verifier */
   publicInputs: string[];
@@ -49,8 +49,8 @@ export interface ProofGenerationOptions {
   constraints: string;
   /** Audit log entries to prove compliance over */
   auditEntries: AuditEntryData[];
-  /** Proof system to use (only poseidon_hash in v0.1) */
-  proofSystem?: 'poseidon_hash';
+  /** Proof system to use */
+  proofSystem?: 'poseidon_hash' | 'groth16';
 }
 
 /**
@@ -67,4 +67,64 @@ export interface AuditEntryData {
   timestamp: string;
   /** SHA-256 hash of the full audit entry */
   hash: HashHex;
+}
+
+// ---------------------------------------------------------------------------
+// Groth16 ZK-SNARK types
+// ---------------------------------------------------------------------------
+
+/**
+ * A simulated Groth16 proof consisting of three elliptic curve points
+ * on the BN254 curve (represented as hex-encoded field elements) and
+ * a verification key hash.
+ *
+ * In a real Groth16 system:
+ * - `a` is a point on G1 (the "A" element of the proof)
+ * - `b` is a point on G2 (the "B" element of the proof)
+ * - `c` is a point on G1 (the "C" element of the proof)
+ * - The pairing check is: e(A, B) = e(alpha, beta) * e(sum(pubInput_i * vk_i), gamma) * e(C, delta)
+ */
+export interface Groth16Proof {
+  /** Proof element A — G1 point (hex-encoded field element) */
+  a: string;
+  /** Proof element B — G2 point (hex-encoded field element) */
+  b: string;
+  /** Proof element C — G1 point (hex-encoded field element) */
+  c: string;
+  /** Hash of the verification key, binds proof to a specific circuit */
+  vkHash: string;
+}
+
+/**
+ * Private witness data for a ZK circuit.
+ *
+ * The witness contains all private inputs that the prover knows
+ * but does not reveal to the verifier. In a compliance proof context,
+ * this includes the individual audit entry commitments and their
+ * relationship to the constraint set.
+ */
+export interface ZKWitness {
+  /** Per-entry private commitments (Poseidon hashes of entry data) */
+  privateCommitments: bigint[];
+  /** Blinding factors used to hide individual values */
+  blindingFactors: bigint[];
+  /** The accumulated private state (chained Poseidon of all commitments) */
+  accumulatedState: bigint;
+  /** Constraint satisfaction signals (one per entry, each is Poseidon(entry, constraint)) */
+  constraintSignals: bigint[];
+}
+
+/**
+ * A single R1CS-style constraint in the ZK circuit.
+ *
+ * Represents the relation: commitment is bound to auditValue
+ * via the constraint Poseidon(commitment, auditValue) = output.
+ */
+export interface CircuitConstraint {
+  /** The commitment value (public or private) */
+  commitment: bigint;
+  /** The audit value being constrained */
+  auditValue: bigint;
+  /** The constraint output: Poseidon(commitment, auditValue) */
+  output: bigint;
 }

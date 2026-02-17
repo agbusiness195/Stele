@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "@stele/crypto": "0.1.0",
+    "@stele/proof": "0.1.0",
     "@stele/types": "0.1.0"
   }
 }

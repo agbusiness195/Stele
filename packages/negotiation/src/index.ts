@@ -1094,3 +1094,359 @@ export function runZeuthenNegotiation(
   // No agreement after max rounds
   return { rounds, agreedOutcome: null };
 }
+
+// ---------------------------------------------------------------------------
+// Negotiation Latency Benchmarks
+// ---------------------------------------------------------------------------
+
+export interface NegotiationBenchmark {
+  /** Operation being benchmarked */
+  operation: string;
+  /** Number of iterations run */
+  iterations: number;
+  /** Mean latency in milliseconds */
+  meanLatencyMs: number;
+  /** P50 latency */
+  p50Ms: number;
+  /** P95 latency */
+  p95Ms: number;
+  /** P99 latency */
+  p99Ms: number;
+  /** Whether it meets the <100ms target */
+  meetsTarget: boolean;
+  targetMs: number;
+}
+
+/**
+ * Compute a percentile from a sorted array of numbers.
+ * Uses linear interpolation between closest ranks.
+ */
+function percentile(sorted: number[], p: number): number {
+  if (sorted.length === 0) return 0;
+  if (sorted.length === 1) return sorted[0]!;
+  const rank = (p / 100) * (sorted.length - 1);
+  const lower = Math.floor(rank);
+  const upper = Math.ceil(rank);
+  if (lower === upper) return sorted[lower]!;
+  const fraction = rank - lower;
+  return sorted[lower]! + fraction * (sorted[upper]! - sorted[lower]!);
+}
+
+/**
+ * Create a NegotiationBenchmark from an array of latency measurements.
+ */
+function buildBenchmark(
+  operation: string,
+  latencies: number[],
+  targetMs: number,
+): NegotiationBenchmark {
+  const sorted = [...latencies].sort((a, b) => a - b);
+  const mean = latencies.reduce((sum, v) => sum + v, 0) / latencies.length;
+  const p50 = percentile(sorted, 50);
+  const p95 = percentile(sorted, 95);
+  const p99 = percentile(sorted, 99);
+
+  return {
+    operation,
+    iterations: latencies.length,
+    meanLatencyMs: mean,
+    p50Ms: p50,
+    p95Ms: p95,
+    p99Ms: p99,
+    meetsTarget: p95 < targetMs,
+    targetMs,
+  };
+}
+
+/**
+ * Benchmark parameters for the negotiation flow.
+ */
+export interface BenchmarkParams {
+  /** Number of iterations to run (default: 1000) */
+  iterations?: number;
+  /** Target latency in milliseconds (default: 100) */
+  targetMs?: number;
+  /** Initiator's negotiation policy */
+  initiatorPolicy?: NegotiationPolicy;
+  /** Responder's negotiation policy */
+  responderPolicy?: NegotiationPolicy;
+}
+
+/**
+ * Run the full negotiation flow (initiate -> propose -> counter -> agree) N
+ * times and measure wall-clock time for each iteration. Computes percentile
+ * latencies and reports whether the <100ms covenant negotiation target is met.
+ *
+ * Includes sub-benchmarks for:
+ *   - Initiation
+ *   - Proposal evaluation
+ *   - Counter-proposal generation
+ *   - Agreement
+ *
+ * @param params - Benchmark configuration.
+ * @returns An object containing the overall benchmark and sub-benchmarks.
+ */
+export function benchmarkNegotiation(params?: BenchmarkParams): {
+  overall: NegotiationBenchmark;
+  subBenchmarks: NegotiationBenchmark[];
+} {
+  const iterations = params?.iterations ?? 1000;
+  const targetMs = params?.targetMs ?? 100;
+
+  const defaultInitiatorPolicy: NegotiationPolicy = params?.initiatorPolicy ?? {
+    requiredConstraints: ['deny:exfiltrate-data', 'require:audit-logging'],
+    preferredConstraints: ['permit:read-public', 'limit:api-rate-1000'],
+    dealbreakers: ['permit:unrestricted-access'],
+    maxRounds: 10,
+    timeoutMs: 30000,
+  };
+
+  const defaultResponderPolicy: NegotiationPolicy = params?.responderPolicy ?? {
+    requiredConstraints: ['deny:exfiltrate-data', 'deny:modify-system-config'],
+    preferredConstraints: ['permit:read-public', 'require:audit-logging'],
+    dealbreakers: ['permit:delete-all'],
+    maxRounds: 10,
+    timeoutMs: 30000,
+  };
+
+  const overallLatencies: number[] = [];
+  const initiationLatencies: number[] = [];
+  const evaluationLatencies: number[] = [];
+  const counterLatencies: number[] = [];
+  const agreementLatencies: number[] = [];
+
+  for (let i = 0; i < iterations; i++) {
+    const overallStart = performance.now();
+
+    // Sub-benchmark: Initiation
+    const initStart = performance.now();
+    const session = initiate('initiator-bench', 'responder-bench', defaultInitiatorPolicy);
+    const initEnd = performance.now();
+    initiationLatencies.push(initEnd - initStart);
+
+    // Sub-benchmark: Proposal evaluation
+    const evalStart = performance.now();
+    const lastProposal = session.proposals[session.proposals.length - 1]!;
+    const decision = evaluate(lastProposal, defaultResponderPolicy);
+    const evalEnd = performance.now();
+    evaluationLatencies.push(evalEnd - evalStart);
+
+    // Sub-benchmark: Counter-proposal generation
+    const counterStart = performance.now();
+    let updatedSession = session;
+    if (decision === 'counter') {
+      const counterProposal: Proposal = {
+        from: 'responder-bench',
+        constraints: [
+          ...defaultResponderPolicy.requiredConstraints,
+          ...defaultResponderPolicy.preferredConstraints,
+        ],
+        requirements: [...defaultResponderPolicy.requiredConstraints],
+        timestamp: Date.now(),
+      };
+      updatedSession = counter(session, counterProposal);
+    } else {
+      // Even if accept or reject, add a proposal so agree() has two proposals
+      const acceptProposal: Proposal = {
+        from: 'responder-bench',
+        constraints: [...lastProposal.constraints],
+        requirements: [...lastProposal.requirements],
+        timestamp: Date.now(),
+      };
+      updatedSession = propose(session, acceptProposal);
+    }
+    const counterEnd = performance.now();
+    counterLatencies.push(counterEnd - counterStart);
+
+    // Sub-benchmark: Agreement
+    const agreeStart = performance.now();
+    agree(updatedSession);
+    const agreeEnd = performance.now();
+    agreementLatencies.push(agreeEnd - agreeStart);
+
+    const overallEnd = performance.now();
+    overallLatencies.push(overallEnd - overallStart);
+  }
+
+  return {
+    overall: buildBenchmark('full-negotiation-flow', overallLatencies, targetMs),
+    subBenchmarks: [
+      buildBenchmark('initiation', initiationLatencies, targetMs),
+      buildBenchmark('proposal-evaluation', evaluationLatencies, targetMs),
+      buildBenchmark('counter-proposal', counterLatencies, targetMs),
+      buildBenchmark('agreement', agreementLatencies, targetMs),
+    ],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Optimized Negotiate ("Trust Handshake")
+// ---------------------------------------------------------------------------
+
+/**
+ * Constraint parsed into its type and resource for fast intersection.
+ */
+interface ParsedConstraintEntry {
+  raw: string;
+  type: string;
+  resource: string;
+}
+
+/**
+ * Result of an optimized negotiation.
+ */
+export interface OptimizedNegotiationResult {
+  /** Whether agreement was reached */
+  agreed: boolean;
+  /** The agreed-upon constraints (if agreed), or null */
+  constraints: string[] | null;
+  /** Time taken in milliseconds */
+  elapsedMs: number;
+  /** Number of deny constraints in the result (deny-wins) */
+  denyCount: number;
+  /** Number of permit constraints in the result */
+  permitCount: number;
+}
+
+/**
+ * A streamlined single-function negotiation that skips session overhead.
+ *
+ * Directly computes constraint intersection using deny-wins semantics:
+ *   1. Collect all deny constraints from both policies (union -- deny-wins)
+ *   2. Intersect permit/require/limit constraints (both parties must agree)
+ *   3. Check dealbreakers -- if any resulting constraint is a dealbreaker
+ *      for either party, negotiation fails
+ *   4. Verify all required constraints from both parties are satisfied
+ *
+ * This is the "trust handshake" described in the Kova vision as completing
+ * in <100ms. It avoids session creation, proposal objects, round tracking,
+ * and other overhead from the multi-step session approach.
+ *
+ * @param initiatorPolicy - The initiator's negotiation policy.
+ * @param responderPolicy - The responder's negotiation policy.
+ * @returns An OptimizedNegotiationResult with the agreed constraints or null.
+ */
+export function optimizedNegotiate(
+  initiatorPolicy: NegotiationPolicy,
+  responderPolicy: NegotiationPolicy,
+): OptimizedNegotiationResult {
+  const start = performance.now();
+
+  // Parse all constraints from both policies
+  const initiatorAll = [
+    ...initiatorPolicy.requiredConstraints,
+    ...initiatorPolicy.preferredConstraints,
+  ];
+  const responderAll = [
+    ...responderPolicy.requiredConstraints,
+    ...responderPolicy.preferredConstraints,
+  ];
+
+  const initiatorDealbreakers = new Set(initiatorPolicy.dealbreakers);
+  const responderDealbreakers = new Set(responderPolicy.dealbreakers);
+
+  // Step 1: Collect all deny constraints from both sides (deny-wins: union)
+  const denyConstraints = new Set<string>();
+  const nonDenyInitiator: string[] = [];
+  const nonDenyResponder: string[] = [];
+
+  for (const c of initiatorAll) {
+    if (c.startsWith('deny:')) {
+      denyConstraints.add(c);
+    } else {
+      nonDenyInitiator.push(c);
+    }
+  }
+  for (const c of responderAll) {
+    if (c.startsWith('deny:')) {
+      denyConstraints.add(c);
+    } else {
+      nonDenyResponder.push(c);
+    }
+  }
+
+  // Step 2: Intersect non-deny constraints (both must agree)
+  const responderNonDenySet = new Set(nonDenyResponder);
+  const intersectedNonDeny: string[] = [];
+  for (const c of nonDenyInitiator) {
+    if (responderNonDenySet.has(c)) {
+      intersectedNonDeny.push(c);
+    }
+  }
+
+  // Combine: all denies + intersected non-denies
+  const resultConstraints = [...denyConstraints, ...intersectedNonDeny];
+
+  // Step 3: Check dealbreakers
+  const resultSet = new Set(resultConstraints);
+  for (const c of resultConstraints) {
+    if (initiatorDealbreakers.has(c) || responderDealbreakers.has(c)) {
+      const elapsed = performance.now() - start;
+      return {
+        agreed: false,
+        constraints: null,
+        elapsedMs: elapsed,
+        denyCount: denyConstraints.size,
+        permitCount: 0,
+      };
+    }
+  }
+
+  // Step 4: Verify required constraints are satisfied
+  for (const req of initiatorPolicy.requiredConstraints) {
+    if (!resultSet.has(req)) {
+      // Check if the requirement is semantically covered
+      const parsed = parseConstraint(req);
+      const covered = resultConstraints.some(c => {
+        const p = parseConstraint(c);
+        return p.type === parsed.type && p.resource === parsed.resource;
+      });
+      if (!covered) {
+        const elapsed = performance.now() - start;
+        return {
+          agreed: false,
+          constraints: null,
+          elapsedMs: elapsed,
+          denyCount: denyConstraints.size,
+          permitCount: 0,
+        };
+      }
+    }
+  }
+
+  for (const req of responderPolicy.requiredConstraints) {
+    if (!resultSet.has(req)) {
+      const parsed = parseConstraint(req);
+      const covered = resultConstraints.some(c => {
+        const p = parseConstraint(c);
+        return p.type === parsed.type && p.resource === parsed.resource;
+      });
+      if (!covered) {
+        const elapsed = performance.now() - start;
+        return {
+          agreed: false,
+          constraints: null,
+          elapsedMs: elapsed,
+          denyCount: denyConstraints.size,
+          permitCount: 0,
+        };
+      }
+    }
+  }
+
+  const elapsed = performance.now() - start;
+
+  // Count permit constraints in result
+  let permitCount = 0;
+  for (const c of resultConstraints) {
+    if (c.startsWith('permit:')) permitCount++;
+  }
+
+  return {
+    agreed: true,
+    constraints: resultConstraints,
+    elapsedMs: elapsed,
+    denyCount: denyConstraints.size,
+    permitCount,
+  };
+}

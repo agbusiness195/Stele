@@ -988,3 +988,19 @@ export function verifyEnvelopeIntegrity(envelope: SafetyEnvelope): {
 
   return { valid: violations.length === 0, violations };
 }
+
+// ---------------------------------------------------------------------------
+// Formal Verification
+// ---------------------------------------------------------------------------
+
+export {
+  defineKernelInvariants,
+  verifyInvariant,
+  verifyAllInvariants,
+  generateCounterexampleSearch,
+} from './formal-verification.js';
+
+export type {
+  KernelInvariant,
+  KernelVerificationResult,
+} from './formal-verification.js';
