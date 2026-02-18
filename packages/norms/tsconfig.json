@@ -1,20 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src",
-    "composite": true,
-    "emitDeclarationOnly": true
-  },
-  "include": [
-    "src/**/*"
-  ],
-  "references": [
-    {
-      "path": "../ccl"
-    },
-    {
-      "path": "../crypto"
-    }
-  ]
+  "compilerOptions": { "outDir": "dist", "rootDir": "src", "composite": true, "emitDeclarationOnly": true },
+  "include": ["src/**/*"],
+  "references": [{ "path": "../ccl" }, { "path": "../crypto" }]
 }

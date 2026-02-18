@@ -6,12 +6,8 @@
     "composite": true,
     "emitDeclarationOnly": true
   },
-  "include": [
-    "src/**/*"
-  ],
+  "include": ["src/**/*"],
   "references": [
-    {
-      "path": "../crypto"
-    }
+    { "path": "../crypto" }
   ]
 }

@@ -6,15 +6,6 @@
     "composite": true,
     "emitDeclarationOnly": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "references": [
-    {
-      "path": "../crypto"
-    },
-    {
-      "path": "../ccl"
-    }
-  ]
+  "include": ["src/**/*"],
+  "references": [{ "path": "../crypto" }, { "path": "../ccl" }]
 }

@@ -10,7 +10,7 @@
 import {
   createTrustGate,
   evaluateAccess,
-} from '@stele/sdk';
+} from '../packages/sdk/src/trust-gate';
 
 function main() {
   console.log('========================================');

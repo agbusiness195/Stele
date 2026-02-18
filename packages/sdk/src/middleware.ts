@@ -6,7 +6,7 @@
  * logging, metrics, validation, caching, and rate limiting.
  */
 
-import { Logger, defaultLogger, DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
+import { Logger, defaultLogger } from '@stele/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -222,7 +222,7 @@ export function validationMiddleware(): SteleMiddleware {
       if ('constraints' in args) {
         const constraints = args.constraints;
         if (typeof constraints !== 'string' || constraints.trim().length === 0) {
-          throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Validation failed: constraints must be a non-empty string');
+          throw new Error('Validation failed: constraints must be a non-empty string');
         }
       }
 
@@ -231,8 +231,7 @@ export function validationMiddleware(): SteleMiddleware {
         const key = args.privateKey;
         if (key instanceof Uint8Array) {
           if (key.length !== 32 && key.length !== 64) {
-            throw new SteleError(
-              SteleErrorCode.INVALID_KEY_SIZE,
+            throw new Error(
               `Validation failed: privateKey must be 32 or 64 bytes, got ${key.length}`,
             );
           }
@@ -288,7 +287,7 @@ export function rateLimitMiddleware(options: { maxPerSecond: number }): SteleMid
       lastRefill = now;
 
       if (tokens < 1) {
-        throw new SteleError(SteleErrorCode.RATE_LIMIT_EXCEEDED, 'Rate limit exceeded');
+        throw new Error('Rate limit exceeded');
       }
 
       tokens -= 1;

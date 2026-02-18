@@ -1,5 +1,5 @@
 import { generateId } from '@stele/crypto';
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
+import { SteleError, SteleErrorCode } from '@stele/types';
 
 export type {
   BreachAntibody,
@@ -476,20 +476,20 @@ export class StressResponseCurve {
   constructor(config: StressResponseConfig) {
     if (!Number.isFinite(config.inflectionPoint)) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'inflectionPoint must be a finite number',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(config.steepness) || config.steepness <= 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'steepness must be a positive finite number',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(config.saturation) || config.saturation <= 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'saturation must be a positive finite number',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.config = { ...config };
@@ -501,7 +501,7 @@ export class StressResponseCurve {
    */
   logistic(stress: number): number {
     if (!Number.isFinite(stress)) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'stress must be a finite number');
+      throw new SteleError('stress must be a finite number', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const { saturation: L, steepness: k, inflectionPoint: x0 } = this.config;
     return L / (1 + Math.exp(-k * (stress - x0)));
@@ -513,7 +513,7 @@ export class StressResponseCurve {
    */
   exponential(stress: number): number {
     if (!Number.isFinite(stress)) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'stress must be a finite number');
+      throw new SteleError('stress must be a finite number', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const { saturation: L, steepness: k } = this.config;
     if (stress <= 0) return 0;
@@ -526,7 +526,7 @@ export class StressResponseCurve {
    */
   threshold(stress: number): number {
     if (!Number.isFinite(stress)) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'stress must be a finite number');
+      throw new SteleError('stress must be a finite number', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const { saturation: L, steepness: k, inflectionPoint: x0 } = this.config;
     // Use a steep sigmoid to approximate a step function
@@ -540,7 +540,7 @@ export class StressResponseCurve {
    */
   logisticDerivative(stress: number): number {
     if (!Number.isFinite(stress)) {
-      throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'stress must be a finite number');
+      throw new SteleError('stress must be a finite number', SteleErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const response = this.logistic(stress);
     const { saturation: L, steepness: k } = this.config;
@@ -600,8 +600,8 @@ export class PhaseTransitionDetector {
   constructor(windowSize = 10) {
     if (!Number.isInteger(windowSize) || windowSize < 3) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'windowSize must be an integer >= 3',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.windowSize = windowSize;
@@ -611,14 +611,14 @@ export class PhaseTransitionDetector {
   addObservation(obs: MetricObservation): void {
     if (!Number.isFinite(obs.value)) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'observation value must be a finite number',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(obs.timestamp)) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'observation timestamp must be a finite number',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.observations.push({ ...obs });
@@ -653,8 +653,8 @@ export class PhaseTransitionDetector {
   analyze(sensitivityThreshold = 2.0): PhaseTransitionResult {
     if (!Number.isFinite(sensitivityThreshold) || sensitivityThreshold <= 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'sensitivityThreshold must be a positive finite number',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -662,8 +662,8 @@ export class PhaseTransitionDetector {
     const minRequired = this.windowSize * 2;
     if (sorted.length < minRequired) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
         `Need at least ${minRequired} observations (windowSize * 2), got ${sorted.length}`,
+        SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
       );
     }
 
@@ -792,26 +792,26 @@ export class FitnessEvolution {
     this.config = { ...DEFAULT_FITNESS_CONFIG, ...config };
     if (this.config.maxPopulation < 2) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'maxPopulation must be at least 2',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.pruneThreshold < 0 || this.config.pruneThreshold > 1) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'pruneThreshold must be between 0 and 1',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.mutationRate < 0 || this.config.mutationRate > 1) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'mutationRate must be between 0 and 1',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.tournamentSize < 2) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'tournamentSize must be at least 2',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
   }
@@ -820,8 +820,8 @@ export class FitnessEvolution {
   seed(antibodies: BreachAntibody[]): void {
     if (antibodies.length === 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'Must seed with at least one antibody',
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     for (const ab of antibodies) {
@@ -883,8 +883,8 @@ export class FitnessEvolution {
   evolve(): void {
     if (this.population.length === 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
         'Cannot evolve an empty population; call seed() first',
+        SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
       );
     }
 
@@ -1040,14 +1040,14 @@ export function calibratedAntifragilityIndex(
 ): CalibratedAntifragilityResult {
   if (waves < 3) {
     throw new SteleError(
-      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       'waves must be at least 3 for statistical calibration',
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
     );
   }
   if (confidenceLevel <= 0 || confidenceLevel >= 1) {
     throw new SteleError(
-      SteleErrorCode.PROTOCOL_INVALID_INPUT,
       'confidenceLevel must be between 0 and 1 (exclusive)',
+      SteleErrorCode.PROTOCOL_INVALID_INPUT,
     );
   }
 
@@ -1062,8 +1062,8 @@ export function calibratedAntifragilityIndex(
 
   if (deltas.length === 0) {
     throw new SteleError(
-      SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
       'Insufficient data to compute deltas',
+      SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
     );
   }
 

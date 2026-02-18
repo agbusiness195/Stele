@@ -5,7 +5,6 @@
  * API keys or key pair credentials before allowing operations to proceed.
  */
 
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 import type { SteleMiddleware, MiddlewareContext } from '../middleware.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -57,8 +56,7 @@ export function authMiddleware(options: AuthOptions): SteleMiddleware {
   const { apiKey, keyPair, requiredFor } = options;
 
   if (!apiKey && !keyPair) {
-    throw new SteleError(
-      SteleErrorCode.AUTH_REQUIRED,
+    throw new Error(
       'authMiddleware requires at least one of apiKey or keyPair',
     );
   }
@@ -110,8 +108,7 @@ export function authMiddleware(options: AuthOptions): SteleMiddleware {
       }
 
       // No valid authentication found
-      throw new SteleError(
-        SteleErrorCode.AUTH_REQUIRED,
+      throw new Error(
         `Authentication required for operation "${ctx.operation}"`,
       );
     },

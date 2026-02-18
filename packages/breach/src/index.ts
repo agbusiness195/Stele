@@ -7,7 +7,7 @@ export type {
 
 import type { KeyPair, HashHex } from '@stele/crypto';
 import type { Severity } from '@stele/ccl';
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
+import { SteleError, SteleErrorCode } from '@stele/types';
 import {
   sha256Object,
   canonicalizeJson,
@@ -42,7 +42,7 @@ function recommendedActionForSeverity(
       return 'notify';
     default: {
       const _exhaustive: never = severity;
-      throw new SteleError(SteleErrorCode.BREACH_INVALID_SEVERITY, `Unknown severity: ${_exhaustive}`, { hint: 'Use one of: critical, high, medium, or low.' });
+      throw new Error(`Unknown severity: ${_exhaustive}`);
     }
   }
 }
@@ -62,7 +62,7 @@ function statusForSeverity(severity: Severity): TrustStatus {
       return 'trusted';
     default: {
       const _exhaustive: never = severity;
-      throw new SteleError(SteleErrorCode.BREACH_INVALID_SEVERITY, `Unknown severity: ${_exhaustive}`, { hint: 'Use one of: critical, high, medium, or low.' });
+      throw new Error(`Unknown severity: ${_exhaustive}`);
     }
   }
 }
@@ -272,7 +272,7 @@ export class TrustGraph {
     // Step 1: Verify attestation
     const valid = await verifyBreachAttestation(attestation);
     if (!valid) {
-      throw new SteleError(SteleErrorCode.BREACH_INVALID_ATTESTATION, 'Invalid breach attestation: verification failed', { hint: 'Ensure the attestation was signed correctly and has not been tampered with.' });
+      throw new Error('Invalid breach attestation: verification failed');
     }
 
     const events: BreachEvent[] = [];
@@ -534,16 +534,14 @@ export class ExponentialDegradation {
   constructor(config: ExponentialDegradationConfig) {
     if (config.baseLoss <= 0 || config.baseLoss > 1) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'ExponentialDegradation baseLoss must be in (0, 1]',
-        { hint: 'Set baseLoss to a value greater than 0 and at most 1.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (config.lambda <= 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'ExponentialDegradation lambda must be > 0',
-        { hint: 'Set lambda to a positive number to control decay rate.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.baseLoss = config.baseLoss;
@@ -558,9 +556,8 @@ export class ExponentialDegradation {
   computeLoss(hopDistance: number): number {
     if (hopDistance < 0 || !Number.isFinite(hopDistance)) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'hopDistance must be a non-negative finite number',
-        { hint: 'Provide a non-negative finite number for hopDistance.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     return this.baseLoss * Math.exp(-this.lambda * hopDistance);
@@ -575,9 +572,8 @@ export class ExponentialDegradation {
   degrade(currentTrust: number, hopDistance: number): number {
     if (currentTrust < 0 || currentTrust > 1) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'currentTrust must be in [0, 1]',
-        { hint: 'Set currentTrust to a value between 0 and 1 inclusive.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     const loss = this.computeLoss(hopDistance);
@@ -591,9 +587,8 @@ export class ExponentialDegradation {
   profile(maxHops: number): number[] {
     if (maxHops < 0 || !Number.isInteger(maxHops)) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'maxHops must be a non-negative integer',
-        { hint: 'Provide a non-negative integer for maxHops.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     const result: number[] = [];
@@ -612,9 +607,8 @@ export class ExponentialDegradation {
   effectiveRadius(threshold: number): number {
     if (threshold <= 0 || threshold > 1) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'threshold must be in (0, 1]',
-        { hint: 'Set threshold to a value greater than 0 and at most 1.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.baseLoss < threshold) {
@@ -687,9 +681,8 @@ export class BreachStateMachine {
   constructor(breachId: string, config?: Partial<BreachStateMachineConfig>) {
     if (!breachId || breachId.trim().length === 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'breachId must be a non-empty string',
-        { hint: 'Provide a non-empty string as the breach identifier.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.breachId = breachId;
@@ -739,16 +732,14 @@ export class BreachStateMachine {
     const allowedTargets = VALID_TRANSITIONS[this._state];
     if (!allowedTargets.includes(to)) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         `Invalid breach state transition: ${this._state} -> ${to}. Allowed: [${allowedTargets.join(', ')}]`,
-        { hint: 'Only transition to one of the allowed target states for the current state.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!actor || actor.trim().length === 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'actor must be a non-empty string',
-        { hint: 'Provide a non-empty string identifying the actor performing the transition.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -842,23 +833,20 @@ export class RecoveryModel {
   constructor(config: RecoveryModelConfig) {
     if (config.maxRecovery <= 0 || config.maxRecovery > 1) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'maxRecovery must be in (0, 1]',
-        { hint: 'Set maxRecovery to a value greater than 0 and at most 1.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (config.steepness <= 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'steepness must be > 0',
-        { hint: 'Set steepness to a positive number.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (config.midpointMs <= 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'midpointMs must be > 0',
-        { hint: 'Set midpointMs to a positive number of milliseconds.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.config = { ...config };
@@ -872,9 +860,8 @@ export class RecoveryModel {
   recoveryFraction(elapsedMs: number): number {
     if (elapsedMs < 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'elapsedMs must be non-negative',
-        { hint: 'Provide a non-negative value for elapsed milliseconds.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     const { maxRecovery, steepness, midpointMs } = this.config;
@@ -900,23 +887,20 @@ export class RecoveryModel {
   ): number {
     if (preBreachTrust < 0 || preBreachTrust > 1) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'preBreachTrust must be in [0, 1]',
-        { hint: 'Set preBreachTrust to a value between 0 and 1 inclusive.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (historicalReliability < 0 || historicalReliability > 1) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'historicalReliability must be in [0, 1]',
-        { hint: 'Set historicalReliability to a value between 0 and 1 inclusive.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (elapsedMs < 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'elapsedMs must be non-negative',
-        { hint: 'Provide a non-negative value for elapsed milliseconds.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -954,40 +938,21 @@ export class RecoveryModel {
 }
 
 /**
- * Recovery ceiling multipliers by breach severity.
- * These control the maximum fraction of trust/reputation an agent can recover
- * after a breach. Critical breaches allow only 40% recovery, while low-severity
- * breaches allow up to 95%.
- */
-const RECOVERY_CEILING = {
-  /** Critical breaches cap recovery at 40% of pre-breach trust. */
-  CRITICAL: 0.4,
-  /** High-severity breaches cap recovery at 60%. */
-  HIGH: 0.6,
-  /** Medium-severity breaches cap recovery at 80%. */
-  MEDIUM: 0.8,
-  /** Low-severity breaches cap recovery at 95%. */
-  LOW: 0.95,
-  /** Default recovery ceiling for unknown severity levels. */
-  DEFAULT: 0.5,
-} as const;
-
-/**
  * Map breach severity to a recovery ceiling multiplier.
  * Critical breaches allow less total recovery; low breaches allow near-full.
  */
 function severityToRecoveryMultiplier(severity: Severity): number {
   switch (severity) {
     case 'critical':
-      return RECOVERY_CEILING.CRITICAL;
+      return 0.4;
     case 'high':
-      return RECOVERY_CEILING.HIGH;
+      return 0.6;
     case 'medium':
-      return RECOVERY_CEILING.MEDIUM;
+      return 0.8;
     case 'low':
-      return RECOVERY_CEILING.LOW;
+      return 0.95;
     default:
-      return RECOVERY_CEILING.DEFAULT;
+      return 0.5;
   }
 }
 
@@ -1070,23 +1035,20 @@ export class RepeatOffenderDetector {
     this.config = { ...DEFAULT_OFFENDER_CONFIG, ...config };
     if (this.config.warningThreshold <= 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'warningThreshold must be > 0',
-        { hint: 'Set warningThreshold to a positive number.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.restrictionThreshold <= this.config.warningThreshold) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'restrictionThreshold must be > warningThreshold',
-        { hint: 'Set restrictionThreshold to a value greater than warningThreshold.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.revocationThreshold <= this.config.restrictionThreshold) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'revocationThreshold must be > restrictionThreshold',
-        { hint: 'Set revocationThreshold to a value greater than restrictionThreshold.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
   }
@@ -1097,9 +1059,8 @@ export class RepeatOffenderDetector {
   recordBreach(agentId: string, record: BreachRecord): void {
     if (!agentId || agentId.trim().length === 0) {
       throw new SteleError(
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
         'agentId must be a non-empty string',
-        { hint: 'Provide a non-empty string as the agent identifier.' },
+        SteleErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     let records = this.history.get(agentId);

@@ -1,5 +1,4 @@
 import { sha256Object } from '@stele/crypto';
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
 import {
   parse,
   evaluate,
@@ -181,16 +180,16 @@ function concretizeResource(pattern: string): string {
 function validateCovenant(c: unknown): asserts c is CovenantSummary {
   const cov = c as Record<string, unknown>;
   if (!cov || typeof cov !== 'object') {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Each covenant must be a non-null object', { hint: 'Pass a valid CovenantSummary object with id, agentId, and constraints fields.' });
+    throw new Error('Each covenant must be a non-null object');
   }
   if (typeof cov.id !== 'string' || cov.id === '') {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Covenant id must be a non-empty string', { hint: 'Provide a non-empty string for the covenant id field.' });
+    throw new Error('Covenant id must be a non-empty string');
   }
   if (typeof cov.agentId !== 'string' || cov.agentId === '') {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Covenant agentId must be a non-empty string', { hint: 'Provide a non-empty string for the covenant agentId field.' });
+    throw new Error('Covenant agentId must be a non-empty string');
   }
   if (!Array.isArray(cov.constraints)) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Covenant constraints must be an array', { hint: 'Provide an array of CCL constraint strings for the constraints field.' });
+    throw new Error('Covenant constraints must be an array');
   }
 }
 
@@ -204,22 +203,10 @@ function validateCovenant(c: unknown): asserts c is CovenantSummary {
  * Parses each covenant's constraints as CCL using `parse()`, then uses
  * `merge()` to combine them with proper deny-wins semantics. Permits that
  * overlap with any deny are removed from the composed result.
- *
- * @param covenants - An array of covenant summaries to compose.
- * @returns A CompositionProof containing composed constraints and integrity hash.
- * @throws {Error} If covenants is not an array or any covenant is invalid.
- *
- * @example
- * ```ts
- * const proof = compose([
- *   { id: 'cov1', agentId: 'a1', constraints: ['permit file.read on /data/**'] },
- *   { id: 'cov2', agentId: 'a2', constraints: ['deny file.read on /data/secret'] },
- * ]);
- * ```
  */
 export function compose(covenants: CovenantSummary[]): CompositionProof {
   if (!Array.isArray(covenants)) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'covenants must be an array', { hint: 'Pass an array of CovenantSummary objects to compose.' });
+    throw new Error('covenants must be an array');
   }
   for (const c of covenants) validateCovenant(c);
 
@@ -280,27 +267,16 @@ export function compose(covenants: CovenantSummary[]): CompositionProof {
  * relevant to the property, evaluates a probe action against the merged
  * document using `evaluate()`. If at least one relevant deny fires, the
  * property holds.
- *
- * @param covenants - An array of covenant summaries to check.
- * @param property - A human-readable property description (e.g. "no unauthorized data access").
- * @returns A SystemProperty indicating whether the property holds and which covenants contribute.
- * @throws {Error} If covenants is not an array or property is not a non-empty string.
- *
- * @example
- * ```ts
- * const prop = proveSystemProperty(covenants, 'no unauthorized data access');
- * console.log(prop.holds); // true or false
- * ```
  */
 export function proveSystemProperty(
   covenants: CovenantSummary[],
   property: string,
 ): SystemProperty {
   if (!Array.isArray(covenants)) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'covenants must be an array', { hint: 'Pass an array of CovenantSummary objects.' });
+    throw new Error('covenants must be an array');
   }
   if (typeof property !== 'string' || property.trim() === '') {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'property must be a non-empty string', { hint: 'Provide a non-empty string describing the system property to prove.' });
+    throw new Error('property must be a non-empty string');
   }
 
   const propKeywords = extractKeywords(property);
@@ -354,27 +330,16 @@ export function proveSystemProperty(
  *   1. The integrity hash matches the composed constraints.
  *   2. All constraints are valid, parseable CCL.
  *   3. Deny-wins consistency: no permit overlaps with any deny.
- *
- * @param proof - The composition proof to validate.
- * @returns True if the proof passes all integrity and consistency checks.
- * @throws {Error} If the proof object is malformed.
- *
- * @example
- * ```ts
- * const proof = compose(covenants);
- * const valid = validateComposition(proof);
- * console.log(valid); // true
- * ```
  */
 export function validateComposition(proof: CompositionProof): boolean {
   if (!proof || typeof proof !== 'object') {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'proof must be a CompositionProof object', { hint: 'Pass a valid CompositionProof object returned by compose().' });
+    throw new Error('proof must be a CompositionProof object');
   }
   if (!Array.isArray(proof.composedConstraints)) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'proof.composedConstraints must be an array', { hint: 'Ensure the proof contains a composedConstraints array.' });
+    throw new Error('proof.composedConstraints must be an array');
   }
   if (typeof proof.proof !== 'string') {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'proof.proof must be a string', { hint: 'Ensure the proof contains a proof hash string.' });
+    throw new Error('proof.proof must be a string');
   }
 
   // 1. Hash integrity
@@ -409,24 +374,10 @@ export function validateComposition(proof: CompositionProof): boolean {
 
 /**
  * Return constraints present in both arrays (simple string equality).
- *
- * @param a - The first array of constraint strings.
- * @param b - The second array of constraint strings.
- * @returns An array of constraint strings that appear in both inputs.
- * @throws {Error} If either argument is not an array.
- *
- * @example
- * ```ts
- * const common = intersectConstraints(
- *   ['permit file.read on /data/**', 'deny file.write on /data/**'],
- *   ['permit file.read on /data/**'],
- * );
- * // common === ['permit file.read on /data/**']
- * ```
  */
 export function intersectConstraints(a: string[], b: string[]): string[] {
   if (!Array.isArray(a) || !Array.isArray(b)) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'Arguments must be arrays', { hint: 'Pass two arrays of constraint strings to intersect.' });
+    throw new Error('Arguments must be arrays');
   }
   const setB = new Set(b);
   return a.filter(c => setB.has(c));
@@ -435,22 +386,12 @@ export function intersectConstraints(a: string[], b: string[]): string[] {
 /**
  * Find pairs of constraints that conflict: a permit and deny in the
  * covenants whose action/resource patterns overlap.
- *
- * @param covenants - An array of covenant summaries to check for conflicts.
- * @returns An array of [permit, deny] string pairs that overlap.
- * @throws {Error} If covenants is not an array.
- *
- * @example
- * ```ts
- * const conflicts = findConflicts(covenants);
- * // e.g. [['permit file.read on /data/**', 'deny file.read on /data/secret']]
- * ```
  */
 export function findConflicts(
   covenants: CovenantSummary[],
 ): Array<[string, string]> {
   if (!Array.isArray(covenants)) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'covenants must be an array', { hint: 'Pass an array of CovenantSummary objects to findConflicts.' });
+    throw new Error('covenants must be an array');
   }
 
   interface Entry { constraint: string; stmt: PermitDenyStatement }
@@ -529,7 +470,7 @@ function conditionDepth(cond?: Condition | CompoundCondition): number {
  */
 export function decomposeCovenants(covenants: CovenantSummary[]): DecomposedCovenant[] {
   if (!Array.isArray(covenants)) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'covenants must be an array', { hint: 'Pass an array of CovenantSummary objects to decomposeCovenants.' });
+    throw new Error('covenants must be an array');
   }
   for (const c of covenants) validateCovenant(c);
 
@@ -575,7 +516,7 @@ export function decomposeCovenants(covenants: CovenantSummary[]): DecomposedCove
  */
 export function compositionComplexity(covenants: CovenantSummary[]): CompositionComplexityResult {
   if (!Array.isArray(covenants)) {
-    throw new SteleError(SteleErrorCode.PROTOCOL_INVALID_INPUT, 'covenants must be an array', { hint: 'Pass an array of CovenantSummary objects to compositionComplexity.' });
+    throw new Error('covenants must be an array');
   }
   for (const c of covenants) validateCovenant(c);
 
@@ -651,19 +592,6 @@ export const TRUST_ZERO: TrustValue = {
  *
  * Multiplies each dimension present in both values and multiplies confidence.
  * Result dimensions are the intersection of keys from both values.
- *
- * @param a - The first trust value.
- * @param b - The second trust value.
- * @returns A new TrustValue with dimensions multiplied pairwise.
- *
- * @example
- * ```ts
- * const result = trustCompose(
- *   { dimensions: { integrity: 0.9 }, confidence: 0.8 },
- *   { dimensions: { integrity: 0.7 }, confidence: 0.6 },
- * );
- * // result.dimensions.integrity === 0.63, result.confidence === 0.48
- * ```
  */
 export function trustCompose(a: TrustValue, b: TrustValue): TrustValue {
   const keysA = Object.keys(a.dimensions);
@@ -686,19 +614,6 @@ export function trustCompose(a: TrustValue, b: TrustValue): TrustValue {
  *
  * Takes the minimum of each dimension and the minimum of confidence.
  * Result dimensions are the union of keys from both values.
- *
- * @param a - The first trust value.
- * @param b - The second trust value.
- * @returns A new TrustValue with per-dimension minimums across all keys.
- *
- * @example
- * ```ts
- * const result = trustIntersect(
- *   { dimensions: { integrity: 0.9 }, confidence: 0.8 },
- *   { dimensions: { integrity: 0.7 }, confidence: 0.6 },
- * );
- * // result.dimensions.integrity === 0.7, result.confidence === 0.6
- * ```
  */
 export function trustIntersect(a: TrustValue, b: TrustValue): TrustValue {
   const allKeys = new Set([
@@ -723,15 +638,6 @@ export function trustIntersect(a: TrustValue, b: TrustValue): TrustValue {
  * Negate a trust value.
  *
  * Computes 1 - each dimension value. Confidence is preserved.
- *
- * @param a - The trust value to negate.
- * @returns A new TrustValue with each dimension inverted (1 - value).
- *
- * @example
- * ```ts
- * const negated = trustNegate({ dimensions: { integrity: 0.8 }, confidence: 0.9 });
- * // negated.dimensions.integrity === 0.2, negated.confidence === 0.9
- * ```
  */
 export function trustNegate(a: TrustValue): TrustValue {
   const dimensions: Record<string, number> = {};
@@ -750,19 +656,6 @@ export function trustNegate(a: TrustValue): TrustValue {
  *
  * Creates all cross-products of dimensions, combining dimension names
  * (e.g. "a.integrity×b.competence"). Confidence is multiplied.
- *
- * @param a - The first trust value.
- * @param b - The second trust value.
- * @returns A new TrustValue with cross-product dimensions and multiplied confidence.
- *
- * @example
- * ```ts
- * const result = trustTensorProduct(
- *   { dimensions: { x: 0.5 }, confidence: 0.8 },
- *   { dimensions: { y: 0.6 }, confidence: 0.9 },
- * );
- * // result.dimensions['x\u00D7y'] === 0.3, result.confidence === 0.72
- * ```
  */
 export function trustTensorProduct(a: TrustValue, b: TrustValue): TrustValue {
   const keysA = Object.keys(a.dimensions);
@@ -787,15 +680,6 @@ export function trustTensorProduct(a: TrustValue, b: TrustValue): TrustValue {
  *
  * Each dimension becomes 1/value. Returns null if any dimension is 0
  * (no inverse exists). Confidence is preserved.
- *
- * @param a - The trust value to invert.
- * @returns A new TrustValue with reciprocal dimensions, or null if any dimension is 0.
- *
- * @example
- * ```ts
- * const inv = trustInverse({ dimensions: { integrity: 0.5 }, confidence: 0.9 });
- * // inv.dimensions.integrity === 2.0, inv.confidence === 0.9
- * ```
  */
 export function trustInverse(a: TrustValue): TrustValue | null {
   const keys = Object.keys(a.dimensions);
@@ -1121,18 +1005,6 @@ export function verifyEnvelopeIntegrity(envelope: SafetyEnvelope): {
  * Takes the minimum of each dimension (union of all dimension keys;
  * missing dimensions default to 0). Confidence is the minimum of both.
  * This is the most conservative way to combine two trust assessments.
- *
- * @param a - The first trust value.
- * @param b - The second trust value.
- * @returns A new TrustValue representing the greatest lower bound.
- *
- * @example
- * ```ts
- * const a = { dimensions: { integrity: 0.8 }, confidence: 0.9 };
- * const b = { dimensions: { integrity: 0.6 }, confidence: 0.7 };
- * const result = trustMeet(a, b);
- * // result.dimensions.integrity === 0.6, result.confidence === 0.7
- * ```
  */
 export function trustMeet(a: TrustValue, b: TrustValue): TrustValue {
   const allKeys = new Set([
@@ -1159,18 +1031,6 @@ export function trustMeet(a: TrustValue, b: TrustValue): TrustValue {
  * Takes the maximum of each dimension (union of all dimension keys;
  * missing dimensions default to 0). Confidence is the maximum of both.
  * This is the most optimistic way to combine two trust assessments.
- *
- * @param a - The first trust value.
- * @param b - The second trust value.
- * @returns A new TrustValue representing the least upper bound.
- *
- * @example
- * ```ts
- * const a = { dimensions: { integrity: 0.8 }, confidence: 0.9 };
- * const b = { dimensions: { integrity: 0.6 }, confidence: 0.7 };
- * const result = trustJoin(a, b);
- * // result.dimensions.integrity === 0.8, result.confidence === 0.9
- * ```
  */
 export function trustJoin(a: TrustValue, b: TrustValue): TrustValue {
   const allKeys = new Set([
@@ -1202,17 +1062,6 @@ export function trustJoin(a: TrustValue, b: TrustValue): TrustValue {
  * computes a weighted average by confidence. The final confidence is the
  * product of all unique source confidences (or min if from the same source).
  * Dimensions not covered by any assessment get value 0 with confidence 0.
- *
- * @param assessments - An array of partial trust assessments, each with a source, scope, and value.
- * @returns A composed TrustValue covering all dimensions from the assessments.
- *
- * @example
- * ```ts
- * const composed = partialTrustCompose([
- *   { source: 'auditor', scope: ['integrity'], value: { dimensions: { integrity: 0.9 }, confidence: 0.8 } },
- *   { source: 'monitor', scope: ['competence'], value: { dimensions: { competence: 0.7 }, confidence: 0.6 } },
- * ]);
- * ```
  */
 export function partialTrustCompose(assessments: PartialTrust[]): TrustValue {
   if (assessments.length === 0) {
@@ -1278,17 +1127,6 @@ export function partialTrustCompose(assessments: PartialTrust[]): TrustValue {
  * the attenuation factor. If the chain length exceeds any link's maxDepth,
  * TRUST_ZERO is returned. The attenuated trusts are composed along the
  * chain using `trustCompose`.
- *
- * @param chain - An ordered array of delegation links, each with trust, attenuation, and maxDepth.
- * @returns The effective TrustValue at the end of the delegation chain.
- *
- * @example
- * ```ts
- * const trust = delegateTrust([
- *   { from: 'A', to: 'B', trust: { dimensions: { integrity: 0.9 }, confidence: 0.8 }, attenuation: 0.9, maxDepth: 3 },
- *   { from: 'B', to: 'C', trust: { dimensions: { integrity: 0.8 }, confidence: 0.7 }, attenuation: 0.8, maxDepth: 3 },
- * ]);
- * ```
  */
 export function delegateTrust(chain: AttenuatedDelegation[]): TrustValue {
   if (chain.length === 0) {
@@ -1337,16 +1175,6 @@ export function delegateTrust(chain: AttenuatedDelegation[]): TrustValue {
  *
  * Uses tolerance 1e-10 for floating-point comparison via the same
  * trustApproxEqual pattern used by proveAlgebraicProperties.
- *
- * @param samples - Optional array of at least 3 TrustValues to test. If omitted, random samples are generated.
- * @returns A TrustLatticeResult indicating which axioms hold and whether the structure is a lattice.
- *
- * @example
- * ```ts
- * const result = proveLatticeProperties();
- * console.log(result.isLattice);       // true
- * console.log(result.absorptionHolds); // true
- * ```
  */
 export function proveLatticeProperties(samples?: TrustValue[]): TrustLatticeResult {
   const tolerance = 1e-10;

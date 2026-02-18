@@ -77,7 +77,7 @@ export class SteleEventEmitter {
    * Uses an array (rather than a Set) to preserve insertion order and
    * to allow the same function reference to be registered more than once.
    */
-  private readonly _listeners = new Map<keyof SteleLifecycleEventMap, ListenerEntry<unknown>[]>();
+  private readonly _listeners = new Map<keyof SteleLifecycleEventMap, ListenerEntry<SteleLifecycleEventMap[keyof SteleLifecycleEventMap]>[]>();
 
   // ── on ──────────────────────────────────────────────────────────────────
 
@@ -105,7 +105,7 @@ export class SteleEventEmitter {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener as Listener<unknown>, once: false });
+    entries.push({ fn: listener, once: false });
     return this;
   }
 
@@ -173,7 +173,7 @@ export class SteleEventEmitter {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener as Listener<unknown>, once: true });
+    entries.push({ fn: listener, once: true });
     return this;
   }
 
