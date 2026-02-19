@@ -1206,7 +1206,7 @@ The following JSON Schema (Draft 2020-12) definitions provide machine-readable v
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://useusekova.dev/schema/covenant-document/1.0",
+  "$id": "https://usekova.dev/schema/covenant-document/1.0",
   "title": "CovenantDocument",
   "description": "A complete, signed Kova Covenant document conforming to protocol version 1.0.",
   "type": "object",
