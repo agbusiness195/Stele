@@ -3,7 +3,32 @@
   "entryPointStrategy": "packages",
   "entryPoints": ["packages/*"],
   "out": "docs/api-generated",
+  "name": "Stele Protocol — API Reference",
   "excludePrivate": true,
   "excludeInternal": true,
-  "readme": "README.md"
+  "readme": "README.md",
+  "includeVersion": true,
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Foundation",
+    "Enforcement",
+    "Protocol",
+    "SDK",
+    "Interop",
+    "Platform",
+    "*"
+  ],
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "visibilityFilters": {
+    "protected": false,
+    "private": false,
+    "inherited": true,
+    "@internal": false
+  },
+  "plugin": [],
+  "searchInComments": true,
+  "cleanOutputDir": true
 }

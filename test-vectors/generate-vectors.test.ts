@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   generateKeyPair,
+  keyPairFromPrivateKey,
   sha256String,
   canonicalizeJson,
   signString,
@@ -59,8 +60,14 @@ function addVector(vector: TestVector): void {
   vectors.push(vector);
 }
 
+// Fixed 32-byte seeds for deterministic test vector generation.
+// These MUST NOT change -- all cross-implementation test vectors depend on them.
+const ISSUER_SEED = fromHex('0000000000000000000000000000000000000000000000000000000000000001');
+const BENEFICIARY_SEED = fromHex('0000000000000000000000000000000000000000000000000000000000000002');
+const AUDITOR_SEED = fromHex('0000000000000000000000000000000000000000000000000000000000000003');
+
 describe('Canonical Test Vector Generation', () => {
-  // We use deterministic values where possible
+  // Deterministic key pairs derived from fixed seeds
   let issuerKp: Awaited<ReturnType<typeof generateKeyPair>>;
   let beneficiaryKp: Awaited<ReturnType<typeof generateKeyPair>>;
   let auditorKp: Awaited<ReturnType<typeof generateKeyPair>>;
@@ -107,9 +114,9 @@ describe('Canonical Test Vector Generation', () => {
     }
 
     // ── Ed25519 sign/verify vectors ──
-    issuerKp = await generateKeyPair();
-    beneficiaryKp = await generateKeyPair();
-    auditorKp = await generateKeyPair();
+    issuerKp = await keyPairFromPrivateKey(ISSUER_SEED);
+    beneficiaryKp = await keyPairFromPrivateKey(BENEFICIARY_SEED);
+    auditorKp = await keyPairFromPrivateKey(AUDITOR_SEED);
 
     const messages = [
       'hello world',
@@ -785,7 +792,7 @@ describe('Canonical Test Vector Generation', () => {
 
     const output = {
       _meta: {
-        generated_at: new Date().toISOString(),
+        generated_at: '2026-01-01T00:00:00.000Z',
         protocol_version: PROTOCOL_VERSION,
         generator: '@stele/test-vectors',
         description:

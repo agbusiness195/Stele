@@ -1,6 +1,6 @@
 {
   "name": "@stele/legal",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Legal document templates and regulatory compliance mapping",
   "sideEffects": false,
   "main": "dist/index.js",
@@ -18,7 +18,7 @@
     "bundle": "tsup src/index.ts --format cjs,esm",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "prepublishOnly": "npm run build",
-    "test": "vitest run",
+    "test": "vitest run --config ../../vitest.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "files": [
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "0.1.0",
-    "@stele/types": "0.1.0"
+    "@stele/crypto": "2.0.0",
+    "@stele/types": "2.0.0"
   },
   "license": "MIT",
   "author": "Stele Labs, Inc.",

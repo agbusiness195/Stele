@@ -1,6 +1,6 @@
 {
   "name": "@stele/store",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Pluggable storage backends — SQLite, PostgreSQL, S3",
   "sideEffects": false,
   "main": "dist/index.js",
@@ -20,13 +20,13 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --config ../../vitest.config.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@stele/types": "0.1.0",
-    "@stele/crypto": "0.1.0",
-    "@stele/core": "0.1.0"
+    "@stele/types": "2.0.0",
+    "@stele/crypto": "2.0.0",
+    "@stele/core": "2.0.0"
   },
   "license": "MIT",
   "engines": {

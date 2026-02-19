@@ -944,4 +944,753 @@ describe('Stele Protocol Conformance', () => {
       expect(kp.privateKey.length).toBe(32);
     });
   });
+
+  // ── Verification Check Coverage (SPEC-200 series) ──────────────────────────
+
+  describe('Verification Check Coverage', () => {
+
+    it('SPEC-200: id_match fails when ID is manually set to wrong value', async () => {
+      const { doc } = await makeTestCovenant();
+      const tampered: CovenantDocument = { ...doc, id: 'ff'.repeat(32) };
+      const result = await verifyCovenant(tampered);
+      expect(result.valid).toBe(false);
+      const idCheck = result.checks.find(c => c.name === 'id_match');
+      expect(idCheck?.passed).toBe(false);
+      expect(idCheck?.message).toContain('mismatch');
+    });
+
+    it('SPEC-201: signature_valid fails with truncated signature', async () => {
+      const { doc } = await makeTestCovenant();
+      // Truncate the signature to half its length
+      const truncated: CovenantDocument = {
+        ...doc,
+        signature: doc.signature.slice(0, doc.signature.length / 2),
+      };
+      const result = await verifyCovenant(truncated);
+      expect(result.valid).toBe(false);
+      const sigCheck = result.checks.find(c => c.name === 'signature_valid');
+      expect(sigCheck?.passed).toBe(false);
+    });
+
+    it('SPEC-202: signature_valid fails with all-zeros signature', async () => {
+      const { doc } = await makeTestCovenant();
+      const zeroed: CovenantDocument = {
+        ...doc,
+        signature: '00'.repeat(64),
+      };
+      const result = await verifyCovenant(zeroed);
+      expect(result.valid).toBe(false);
+      const sigCheck = result.checks.find(c => c.name === 'signature_valid');
+      expect(sigCheck?.passed).toBe(false);
+    });
+
+    it('SPEC-203: not_expired correctly passes for far-future expiry', async () => {
+      const parties = await makeTestParties();
+      const doc = await buildCovenant({
+        issuer: parties.issuer,
+        beneficiary: parties.beneficiary,
+        constraints: "permit read on '/data/**'",
+        privateKey: parties.issuerKp.privateKey,
+        expiresAt: '2099-12-31T23:59:59.999Z',
+      });
+      const result = await verifyCovenant(doc);
+      expect(result.valid).toBe(true);
+      const expiryCheck = result.checks.find(c => c.name === 'not_expired');
+      expect(expiryCheck?.passed).toBe(true);
+    });
+
+    it('SPEC-204: active correctly passes when activatesAt is in the past', async () => {
+      const parties = await makeTestParties();
+      const doc = await buildCovenant({
+        issuer: parties.issuer,
+        beneficiary: parties.beneficiary,
+        constraints: "permit read on '/data/**'",
+        privateKey: parties.issuerKp.privateKey,
+        activatesAt: '2000-01-01T00:00:00.000Z',
+      });
+      const result = await verifyCovenant(doc);
+      expect(result.valid).toBe(true);
+      const activeCheck = result.checks.find(c => c.name === 'active');
+      expect(activeCheck?.passed).toBe(true);
+    });
+
+    it('SPEC-205: ccl_parses fails for syntactically invalid CCL', async () => {
+      const { doc } = await makeTestCovenant();
+      // Inject syntactically invalid CCL (missing quotes, bad keywords)
+      const badCcl: CovenantDocument = {
+        ...doc,
+        constraints: 'foobar baz qux missing_quotes',
+      };
+      const result = await verifyCovenant(badCcl);
+      // ccl_parses check should fail
+      const cclCheck = result.checks.find(c => c.name === 'ccl_parses');
+      expect(cclCheck?.passed).toBe(false);
+      expect(cclCheck?.message).toContain('parse error');
+    });
+
+    it('SPEC-206: enforcement_valid fails for unknown enforcement type', async () => {
+      const parties = await makeTestParties();
+      const doc = await buildCovenant({
+        issuer: parties.issuer,
+        beneficiary: parties.beneficiary,
+        constraints: "permit read on '/data/**'",
+        privateKey: parties.issuerKp.privateKey,
+        enforcement: { type: 'capability', config: {} },
+      });
+      // Tamper the enforcement type to an unknown value after building
+      const tampered: CovenantDocument = {
+        ...doc,
+        enforcement: { type: 'unknown_type' as any, config: {} },
+      };
+      const result = await verifyCovenant(tampered);
+      const enfCheck = result.checks.find(c => c.name === 'enforcement_valid');
+      expect(enfCheck?.passed).toBe(false);
+      expect(enfCheck?.message).toContain('Unknown enforcement type');
+    });
+
+    it('SPEC-207: proof_valid fails for unknown proof type', async () => {
+      const parties = await makeTestParties();
+      const doc = await buildCovenant({
+        issuer: parties.issuer,
+        beneficiary: parties.beneficiary,
+        constraints: "permit read on '/data/**'",
+        privateKey: parties.issuerKp.privateKey,
+        proof: { type: 'tee', config: {} },
+      });
+      // Tamper the proof type to an unknown value after building
+      const tampered: CovenantDocument = {
+        ...doc,
+        proof: { type: 'unknown_proof' as any, config: {} },
+      };
+      const result = await verifyCovenant(tampered);
+      const proofCheck = result.checks.find(c => c.name === 'proof_valid');
+      expect(proofCheck?.passed).toBe(false);
+      expect(proofCheck?.message).toContain('Unknown proof type');
+    });
+
+    it('SPEC-208: chain_depth fails when depth is 0', async () => {
+      const { doc } = await makeTestCovenant();
+      // Inject a chain with depth 0 (invalid: must be >= 1)
+      const tampered: CovenantDocument = {
+        ...doc,
+        chain: { parentId: 'a'.repeat(64), relation: 'delegates', depth: 0 },
+      };
+      const result = await verifyCovenant(tampered);
+      const chainCheck = result.checks.find(c => c.name === 'chain_depth');
+      expect(chainCheck?.passed).toBe(false);
+    });
+
+    it('SPEC-209: chain_depth fails when depth is negative', async () => {
+      const { doc } = await makeTestCovenant();
+      // Inject a chain with negative depth
+      const tampered: CovenantDocument = {
+        ...doc,
+        chain: { parentId: 'b'.repeat(64), relation: 'delegates', depth: -5 },
+      };
+      const result = await verifyCovenant(tampered);
+      const chainCheck = result.checks.find(c => c.name === 'chain_depth');
+      expect(chainCheck?.passed).toBe(false);
+    });
+
+    it('SPEC-210: document_size check - verify large but valid document passes', async () => {
+      const parties = await makeTestParties();
+      // Build a document with a large metadata payload (but within limits)
+      const bigMetadata: Record<string, unknown> = {};
+      for (let i = 0; i < 100; i++) {
+        bigMetadata[`key_${i}`] = 'x'.repeat(100);
+      }
+      const doc = await buildCovenant({
+        issuer: parties.issuer,
+        beneficiary: parties.beneficiary,
+        constraints: "permit read on '/data/**'",
+        privateKey: parties.issuerKp.privateKey,
+        metadata: { custom: bigMetadata },
+      });
+      const serializedSize = new TextEncoder().encode(JSON.stringify(doc)).byteLength;
+      expect(serializedSize).toBeGreaterThan(10_000);
+      expect(serializedSize).toBeLessThanOrEqual(MAX_DOCUMENT_SIZE);
+
+      const result = await verifyCovenant(doc);
+      const sizeCheck = result.checks.find(c => c.name === 'document_size');
+      expect(sizeCheck?.passed).toBe(true);
+    });
+
+    it('SPEC-211: countersignatures check fails with tampered countersignature', async () => {
+      const { doc, beneficiaryKp } = await makeTestCovenant();
+      const countersigned = await countersignCovenant(doc, beneficiaryKp, 'auditor');
+
+      // Tamper the countersignature by flipping bytes
+      const cs = countersigned.countersignatures![0]!;
+      const tamperedSig = 'ff' + cs.signature.slice(2);
+      const tampered: CovenantDocument = {
+        ...countersigned,
+        countersignatures: [{ ...cs, signature: tamperedSig }],
+      };
+      const result = await verifyCovenant(tampered);
+      const csCheck = result.checks.find(c => c.name === 'countersignatures');
+      expect(csCheck?.passed).toBe(false);
+      expect(csCheck?.message).toContain('Invalid countersignature');
+    });
+
+    it('SPEC-212: nonce_present fails for non-hex nonce', async () => {
+      const { doc } = await makeTestCovenant();
+      // Replace nonce with non-hex characters
+      const tampered: CovenantDocument = {
+        ...doc,
+        nonce: 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz',
+      };
+      const result = await verifyCovenant(tampered);
+      const nonceCheck = result.checks.find(c => c.name === 'nonce_present');
+      expect(nonceCheck?.passed).toBe(false);
+    });
+
+    it('SPEC-213: nonce_present fails for too-short nonce', async () => {
+      const { doc } = await makeTestCovenant();
+      // Replace nonce with a valid hex string that is too short
+      const tampered: CovenantDocument = {
+        ...doc,
+        nonce: 'abcdef1234567890',
+      };
+      const result = await verifyCovenant(tampered);
+      const nonceCheck = result.checks.find(c => c.name === 'nonce_present');
+      expect(nonceCheck?.passed).toBe(false);
+      expect(nonceCheck?.message).toContain('malformed');
+    });
+
+    it('SPEC-214: All 11 checks have unique names in results', async () => {
+      const { doc } = await makeTestCovenant();
+      const result = await verifyCovenant(doc);
+      const names = result.checks.map(c => c.name);
+      const uniqueNames = new Set(names);
+      expect(uniqueNames.size).toBe(11);
+      expect(names.length).toBe(11);
+      // Verify no duplicates
+      expect(names.length).toBe(uniqueNames.size);
+    });
+  });
+
+  // ── CCL Edge Cases (SPEC-300 series) ────────────────────────────────────────
+
+  describe('CCL Edge Cases', () => {
+
+    it('SPEC-300: Empty resource string matches nothing', () => {
+      const doc = parse("permit read on '/data/**'");
+      const result = evaluate(doc, 'read', '');
+      // An empty resource should not match '/data/**' since that requires a 'data' segment
+      expect(result.permitted).toBe(false);
+    });
+
+    it('SPEC-301: Root resource / matches only / literal and **', () => {
+      const doc = parse("permit read on '/'");
+      // '/' should match itself
+      const resultSlash = evaluate(doc, 'read', '/');
+      expect(resultSlash.permitted).toBe(true);
+
+      // '/' should NOT match '/data'
+      const resultData = evaluate(doc, 'read', '/data');
+      expect(resultData.permitted).toBe(false);
+
+      // '**' should match '/'
+      const docWild = parse("permit read on '**'");
+      const resultWild = evaluate(docWild, 'read', '/');
+      expect(resultWild.permitted).toBe(true);
+    });
+
+    it('SPEC-302: Multiple permits - most specific wins', () => {
+      const doc = parse(
+        "permit read on '/data/**'\npermit write on '/data/users'"
+      );
+      // The more specific permit for /data/users should match
+      const result = evaluate(doc, 'write', '/data/users');
+      expect(result.permitted).toBe(true);
+      expect(result.matchedRule?.type).toBe('permit');
+      expect(result.matchedRule && 'resource' in result.matchedRule ? (result.matchedRule as any).resource : undefined).toBe('/data/users');
+    });
+
+    it('SPEC-303: Multiple denies - most specific wins', () => {
+      const doc = parse(
+        "permit read on '**'\ndeny read on '/data/**'\ndeny read on '/data/secret'"
+      );
+      // The most specific deny /data/secret should be the matched rule
+      const result = evaluate(doc, 'read', '/data/secret');
+      expect(result.permitted).toBe(false);
+      expect(result.matchedRule?.type).toBe('deny');
+    });
+
+    it('SPEC-304: Mixed case in action names (case-sensitive matching)', () => {
+      const doc = parse("permit Read on '/data/**'");
+      // Action matching should be case-sensitive: 'Read' != 'read'
+      const resultExact = evaluate(doc, 'Read', '/data/file');
+      expect(resultExact.permitted).toBe(true);
+
+      const resultLower = evaluate(doc, 'read', '/data/file');
+      expect(resultLower.permitted).toBe(false);
+    });
+
+    it('SPEC-305: Resource with trailing slash vs without', () => {
+      // matchResource normalizes leading/trailing slashes, so
+      // '/data/' and '/data' should match identically
+      expect(matchResource('/data', '/data/')).toBe(true);
+      expect(matchResource('/data/', '/data')).toBe(true);
+      expect(matchResource('/data/', '/data/')).toBe(true);
+    });
+
+    it('SPEC-306: Deeply nested action pattern (a.b.c.d.e.f)', () => {
+      expect(matchAction('a.b.c.d.e.f', 'a.b.c.d.e.f')).toBe(true);
+      expect(matchAction('a.b.c.d.e.f', 'a.b.c.d.e.g')).toBe(false);
+      expect(matchAction('a.b.c.**', 'a.b.c.d.e.f')).toBe(true);
+      expect(matchAction('a.b.*.d.e.f', 'a.b.c.d.e.f')).toBe(true);
+      expect(matchAction('a.b.*.d.e.f', 'a.b.c.d.e.g')).toBe(false);
+    });
+
+    it('SPEC-307: Deeply nested resource pattern (/a/b/c/d/e/f)', () => {
+      expect(matchResource('/a/b/c/d/e/f', '/a/b/c/d/e/f')).toBe(true);
+      expect(matchResource('/a/b/c/d/e/f', '/a/b/c/d/e/g')).toBe(false);
+      expect(matchResource('/a/b/c/**', '/a/b/c/d/e/f')).toBe(true);
+      expect(matchResource('/a/b/*/d/e/f', '/a/b/c/d/e/f')).toBe(true);
+      expect(matchResource('/a/b/*/d/e/f', '/a/b/c/d/e/g')).toBe(false);
+    });
+
+    it('SPEC-308: Star at different positions (/*/data, /data/*)', () => {
+      // Star in the first position
+      expect(matchResource('/*/data', '/users/data')).toBe(true);
+      expect(matchResource('/*/data', '/admin/data')).toBe(true);
+      expect(matchResource('/*/data', '/users/other')).toBe(false);
+      expect(matchResource('/*/data', '/a/b/data')).toBe(false);
+
+      // Star in the last position
+      expect(matchResource('/data/*', '/data/users')).toBe(true);
+      expect(matchResource('/data/*', '/data/admin')).toBe(true);
+      expect(matchResource('/data/*', '/data/a/b')).toBe(false);
+    });
+
+    it('SPEC-309: Double-star at different positions (/**/data, /data/**)', () => {
+      // Double-star at the beginning
+      expect(matchResource('/**/data', '/data')).toBe(true);
+      expect(matchResource('/**/data', '/a/data')).toBe(true);
+      expect(matchResource('/**/data', '/a/b/c/data')).toBe(true);
+
+      // Double-star at the end
+      expect(matchResource('/data/**', '/data')).toBe(true);
+      expect(matchResource('/data/**', '/data/a')).toBe(true);
+      expect(matchResource('/data/**', '/data/a/b/c')).toBe(true);
+    });
+
+    it('SPEC-310: Condition with numeric comparison (when amount > 100)', () => {
+      const doc = parse("permit transfer on '/account/**' when amount > 100");
+      const result1 = evaluate(doc, 'transfer', '/account/123', { amount: 200 });
+      expect(result1.permitted).toBe(true);
+
+      const result2 = evaluate(doc, 'transfer', '/account/123', { amount: 50 });
+      expect(result2.permitted).toBe(false);
+
+      const result3 = evaluate(doc, 'transfer', '/account/123', { amount: 100 });
+      expect(result3.permitted).toBe(false); // strictly greater than, not >=
+    });
+
+    it("SPEC-311: Condition with string equality (when role = 'admin')", () => {
+      const doc = parse("permit manage on '/system/**' when role = 'admin'");
+      const result1 = evaluate(doc, 'manage', '/system/config', { role: 'admin' });
+      expect(result1.permitted).toBe(true);
+
+      const result2 = evaluate(doc, 'manage', '/system/config', { role: 'user' });
+      expect(result2.permitted).toBe(false);
+
+      // Missing context field should default deny
+      const result3 = evaluate(doc, 'manage', '/system/config', {});
+      expect(result3.permitted).toBe(false);
+    });
+
+    it("SPEC-312: Condition with inequality (when status != 'blocked')", () => {
+      const doc = parse("permit access on '/api/**' when status != 'blocked'");
+      const result1 = evaluate(doc, 'access', '/api/endpoint', { status: 'active' });
+      expect(result1.permitted).toBe(true);
+
+      const result2 = evaluate(doc, 'access', '/api/endpoint', { status: 'blocked' });
+      expect(result2.permitted).toBe(false);
+    });
+
+    it('SPEC-313: Multiple statements with same action different resources', () => {
+      const doc = parse(
+        "permit read on '/public/**'\npermit read on '/shared/**'\ndeny read on '/private/**'"
+      );
+      expect(evaluate(doc, 'read', '/public/file').permitted).toBe(true);
+      expect(evaluate(doc, 'read', '/shared/doc').permitted).toBe(true);
+      expect(evaluate(doc, 'read', '/private/secret').permitted).toBe(false);
+      expect(evaluate(doc, 'read', '/other/path').permitted).toBe(false); // default deny
+    });
+
+    it('SPEC-314: Limit statement with different time units (seconds, minutes, hours, days)', () => {
+      const docSeconds = parse('limit api.call 10 per 30 seconds');
+      expect(docSeconds.limits[0]!.periodSeconds).toBe(30);
+
+      const docMinutes = parse('limit api.call 10 per 5 minutes');
+      expect(docMinutes.limits[0]!.periodSeconds).toBe(300);
+
+      const docHours = parse('limit api.call 10 per 2 hours');
+      expect(docHours.limits[0]!.periodSeconds).toBe(7200);
+
+      const docDays = parse('limit api.call 10 per 1 days');
+      expect(docDays.limits[0]!.periodSeconds).toBe(86400);
+    });
+
+    it('SPEC-315: CCL merge preserves deny-wins semantics', () => {
+      const parent = parse("permit read on '/data/**'");
+      const child = parse("deny read on '/data/secret/**'");
+      const merged = merge(parent, child);
+
+      // The merged document should permit reads on general data
+      const resultPublic = evaluate(merged, 'read', '/data/public');
+      expect(resultPublic.permitted).toBe(true);
+
+      // But deny reads on the secret path (deny wins)
+      const resultSecret = evaluate(merged, 'read', '/data/secret/file');
+      expect(resultSecret.permitted).toBe(false);
+      expect(resultSecret.matchedRule?.type).toBe('deny');
+    });
+
+    it('SPEC-316: CCL serialize/parse preserves all statement types', () => {
+      const source = [
+        "permit read on '/data/**'",
+        "deny write on '/system/**'",
+        "require audit on '/logs/**'",
+        'limit api.call 50 per 1 hours',
+      ].join('\n');
+
+      const doc = parse(source);
+      const serialized = serialize(doc);
+      const reparsed = parse(serialized);
+
+      expect(reparsed.permits.length).toBe(1);
+      expect(reparsed.denies.length).toBe(1);
+      expect(reparsed.obligations.length).toBe(1);
+      expect(reparsed.limits.length).toBe(1);
+
+      // Verify specific fields survived
+      expect(reparsed.permits[0]!.action).toBe('read');
+      expect(reparsed.permits[0]!.resource).toBe('/data/**');
+      expect(reparsed.denies[0]!.action).toBe('write');
+      expect(reparsed.denies[0]!.resource).toBe('/system/**');
+      expect(reparsed.obligations[0]!.action).toBe('audit');
+      expect(reparsed.obligations[0]!.resource).toBe('/logs/**');
+      expect(reparsed.limits[0]!.action).toBe('api.call');
+      expect(reparsed.limits[0]!.count).toBe(50);
+    });
+
+    it('SPEC-317: CCL narrowing - child removing parent deny is invalid', async () => {
+      const parties = await makeTestParties();
+      // Parent denies write on /system/**
+      const parent = await buildCovenant({
+        issuer: parties.issuer,
+        beneficiary: parties.beneficiary,
+        constraints: "permit read on '/data/**'\ndeny write on '/system/**'",
+        privateKey: parties.issuerKp.privateKey,
+      });
+      // Child tries to permit write on /system/** (contradicts parent deny)
+      const child = await buildCovenant({
+        issuer: parties.issuer,
+        beneficiary: parties.beneficiary,
+        constraints: "permit write on '/system/**'",
+        privateKey: parties.issuerKp.privateKey,
+        chain: { parentId: parent.id, relation: 'restricts', depth: 1 },
+      });
+      const narrowResult = await validateChainNarrowing(child, parent);
+      expect(narrowResult.valid).toBe(false);
+      expect(narrowResult.violations.length).toBeGreaterThan(0);
+      // Should mention the conflicting permit/deny
+      expect(narrowResult.violations[0]!.reason).toContain('denies');
+    });
+
+    it('SPEC-318: CCL narrowing - child adding new deny is valid', async () => {
+      const parties = await makeTestParties();
+      // Parent permits read on /data/**
+      const parent = await buildCovenant({
+        issuer: parties.issuer,
+        beneficiary: parties.beneficiary,
+        constraints: "permit read on '/data/**'",
+        privateKey: parties.issuerKp.privateKey,
+      });
+      // Child adds a deny (restricts further, which is valid narrowing)
+      const child = await buildCovenant({
+        issuer: parties.issuer,
+        beneficiary: parties.beneficiary,
+        constraints: "permit read on '/data/public/**'\ndeny read on '/data/secret/**'",
+        privateKey: parties.issuerKp.privateKey,
+        chain: { parentId: parent.id, relation: 'restricts', depth: 1 },
+      });
+      const narrowResult = await validateChainNarrowing(child, parent);
+      expect(narrowResult.valid).toBe(true);
+      expect(narrowResult.violations.length).toBe(0);
+    });
+
+    it('SPEC-319: Permit and deny on exactly the same pattern - deny wins', () => {
+      const doc = parse(
+        "permit read on '/data/file'\ndeny read on '/data/file'"
+      );
+      const result = evaluate(doc, 'read', '/data/file');
+      expect(result.permitted).toBe(false);
+      expect(result.matchedRule?.type).toBe('deny');
+    });
+  });
+
+  // ── Document Lifecycle (SPEC-400 series) ────────────────────────────────────
+
+  describe('Document Lifecycle', () => {
+
+    it('SPEC-400: Re-signing produces a new valid document with different ID', async () => {
+      const { doc, issuerKp } = await makeTestCovenant();
+      const { resignCovenant } = await import('@stele/core');
+      const resigned = await resignCovenant(doc, issuerKp.privateKey);
+
+      // New document has a different ID due to new nonce
+      expect(resigned.id).not.toBe(doc.id);
+      expect(resigned.nonce).not.toBe(doc.nonce);
+      expect(resigned.signature).not.toBe(doc.signature);
+
+      // But same constraints and parties
+      expect(resigned.constraints).toBe(doc.constraints);
+      expect(resigned.issuer.id).toBe(doc.issuer.id);
+      expect(resigned.beneficiary.id).toBe(doc.beneficiary.id);
+
+      // The re-signed document should pass verification
+      const result = await verifyCovenant(resigned);
+      expect(result.valid).toBe(true);
+    });
+
+    it('SPEC-401: Countersigning twice produces two valid countersignatures', async () => {
+      const { doc, beneficiaryKp } = await makeTestCovenant();
+      const thirdPartyKp = await generateKeyPair();
+
+      const cs1 = await countersignCovenant(doc, beneficiaryKp, 'auditor');
+      const cs2 = await countersignCovenant(cs1, thirdPartyKp, 'regulator');
+
+      expect(cs2.countersignatures).toBeDefined();
+      expect(cs2.countersignatures!.length).toBe(2);
+      expect(cs2.countersignatures![0]!.signerRole).toBe('auditor');
+      expect(cs2.countersignatures![1]!.signerRole).toBe('regulator');
+
+      // Both countersignatures should be independently verifiable
+      const result = await verifyCovenant(cs2);
+      expect(result.valid).toBe(true);
+      const csCheck = result.checks.find(c => c.name === 'countersignatures');
+      expect(csCheck?.passed).toBe(true);
+    });
+
+    it('SPEC-402: Deserializing invalid JSON throws', () => {
+      expect(() => deserializeCovenant('not valid json{')).toThrow();
+      expect(() => deserializeCovenant('')).toThrow();
+      expect(() => deserializeCovenant('{')).toThrow();
+    });
+
+    it('SPEC-403: Deserializing JSON with wrong version throws', async () => {
+      const { doc } = await makeTestCovenant();
+      const json = serializeCovenant(doc);
+      const obj = JSON.parse(json);
+      obj.version = '99.0';
+      expect(() => deserializeCovenant(JSON.stringify(obj))).toThrow(/version/i);
+    });
+
+    it('SPEC-404: Deserializing JSON with missing required fields throws', () => {
+      // Missing id field
+      expect(() => deserializeCovenant(JSON.stringify({
+        version: PROTOCOL_VERSION,
+        constraints: "permit read on '/data/**'",
+        nonce: 'aa'.repeat(32),
+        createdAt: '2025-01-01T00:00:00.000Z',
+        signature: 'bb'.repeat(64),
+        issuer: { id: 'test', publicKey: 'cc'.repeat(32), role: 'issuer' },
+        beneficiary: { id: 'test2', publicKey: 'dd'.repeat(32), role: 'beneficiary' },
+      }))).toThrow(/id/i);
+
+      // Missing constraints field
+      expect(() => deserializeCovenant(JSON.stringify({
+        id: 'aa'.repeat(32),
+        version: PROTOCOL_VERSION,
+        nonce: 'bb'.repeat(32),
+        createdAt: '2025-01-01T00:00:00.000Z',
+        signature: 'cc'.repeat(64),
+        issuer: { id: 'test', publicKey: 'dd'.repeat(32), role: 'issuer' },
+        beneficiary: { id: 'test2', publicKey: 'ee'.repeat(32), role: 'beneficiary' },
+      }))).toThrow(/constraints/i);
+
+      // Missing issuer entirely
+      expect(() => deserializeCovenant(JSON.stringify({
+        id: 'aa'.repeat(32),
+        version: PROTOCOL_VERSION,
+        constraints: "permit read on '/data/**'",
+        nonce: 'bb'.repeat(32),
+        createdAt: '2025-01-01T00:00:00.000Z',
+        signature: 'cc'.repeat(64),
+        beneficiary: { id: 'test', publicKey: 'dd'.repeat(32), role: 'beneficiary' },
+      }))).toThrow(/issuer/i);
+    });
+
+    it('SPEC-405: Building covenant with empty constraints throws', async () => {
+      const parties = await makeTestParties();
+      await expect(
+        buildCovenant({
+          issuer: parties.issuer,
+          beneficiary: parties.beneficiary,
+          constraints: '',
+          privateKey: parties.issuerKp.privateKey,
+        })
+      ).rejects.toThrow(/constraints/i);
+
+      await expect(
+        buildCovenant({
+          issuer: parties.issuer,
+          beneficiary: parties.beneficiary,
+          constraints: '   ',
+          privateKey: parties.issuerKp.privateKey,
+        })
+      ).rejects.toThrow(/constraints/i);
+    });
+
+    it('SPEC-406: Building covenant without issuer publicKey throws', async () => {
+      const parties = await makeTestParties();
+      await expect(
+        buildCovenant({
+          issuer: { id: 'test-issuer', publicKey: '', role: 'issuer' },
+          beneficiary: parties.beneficiary,
+          constraints: "permit read on '/data/**'",
+          privateKey: parties.issuerKp.privateKey,
+        })
+      ).rejects.toThrow(/publicKey/i);
+    });
+
+    it('SPEC-407: Building covenant with wrong issuer role throws', async () => {
+      const parties = await makeTestParties();
+      await expect(
+        buildCovenant({
+          issuer: { id: 'test-issuer', publicKey: parties.issuerKp.publicKeyHex, role: 'beneficiary' as any },
+          beneficiary: parties.beneficiary,
+          constraints: "permit read on '/data/**'",
+          privateKey: parties.issuerKp.privateKey,
+        })
+      ).rejects.toThrow(/role/i);
+    });
+
+    it('SPEC-408: Serialization preserves all optional fields (chain, enforcement, proof, metadata)', async () => {
+      const parties = await makeTestParties();
+      const doc = await buildCovenant({
+        issuer: parties.issuer,
+        beneficiary: parties.beneficiary,
+        constraints: "permit read on '/data/**'",
+        privateKey: parties.issuerKp.privateKey,
+        chain: { parentId: 'a'.repeat(64), relation: 'delegates', depth: 1 },
+        enforcement: { type: 'audit', config: { interval: 3600 } },
+        proof: { type: 'tee', config: { attestation: 'sgx' } },
+        metadata: { name: 'Test Covenant', tags: ['test', 'example'], custom: { priority: 1 } },
+      });
+
+      const json = serializeCovenant(doc);
+      const restored = deserializeCovenant(json);
+
+      // Chain
+      expect(restored.chain).toBeDefined();
+      expect(restored.chain!.parentId).toBe('a'.repeat(64));
+      expect(restored.chain!.relation).toBe('delegates');
+      expect(restored.chain!.depth).toBe(1);
+
+      // Enforcement
+      expect(restored.enforcement).toBeDefined();
+      expect(restored.enforcement!.type).toBe('audit');
+      expect((restored.enforcement!.config as any).interval).toBe(3600);
+
+      // Proof
+      expect(restored.proof).toBeDefined();
+      expect(restored.proof!.type).toBe('tee');
+      expect((restored.proof!.config as any).attestation).toBe('sgx');
+
+      // Metadata
+      expect(restored.metadata).toBeDefined();
+      expect(restored.metadata!.name).toBe('Test Covenant');
+      expect(restored.metadata!.tags).toEqual(['test', 'example']);
+      expect((restored.metadata!.custom as any).priority).toBe(1);
+    });
+  });
+
+  // ── Cross-Implementation Validation Vectors (SPEC-500 series) ──────────────
+
+  describe('Cross-Implementation Validation Vectors', () => {
+
+    it('SPEC-500: Known canonical JSON produces expected SHA-256 hash', () => {
+      // Canonical JSON for {"a":1,"b":2} is already sorted
+      const canonical = canonicalizeJson({ a: 1, b: 2 });
+      expect(canonical).toBe('{"a":1,"b":2}');
+
+      // Also verify {"b":2,"a":1} produces the same canonical form
+      const canonical2 = canonicalizeJson({ b: 2, a: 1 });
+      expect(canonical2).toBe('{"a":1,"b":2}');
+
+      // Compute hash of the canonical string
+      const hash = sha256String('{"a":1,"b":2}');
+      expect(hash).toMatch(/^[0-9a-f]{64}$/);
+
+      // The hash must be deterministic -- same input always produces same output
+      const hash2 = sha256String('{"a":1,"b":2}');
+      expect(hash).toBe(hash2);
+
+      // And hashing via sha256Object must produce the same hash
+      const hashObj1 = sha256Object({ a: 1, b: 2 });
+      const hashObj2 = sha256Object({ b: 2, a: 1 });
+      expect(hashObj1).toBe(hash);
+      expect(hashObj2).toBe(hash);
+    });
+
+    it("SPEC-501: Known CCL 'permit read on /data/**' produces expected parse tree structure", () => {
+      const doc = parse("permit read on '/data/**'");
+
+      // Should have exactly 1 statement, which is a permit
+      expect(doc.statements.length).toBe(1);
+      expect(doc.permits.length).toBe(1);
+      expect(doc.denies.length).toBe(0);
+      expect(doc.obligations.length).toBe(0);
+      expect(doc.limits.length).toBe(0);
+
+      const stmt = doc.permits[0]!;
+      expect(stmt.type).toBe('permit');
+      expect(stmt.action).toBe('read');
+      expect(stmt.resource).toBe('/data/**');
+      expect(stmt.condition).toBeUndefined();
+      expect(stmt.severity).toBe('high'); // default severity
+      expect(stmt.line).toBe(1);
+    });
+
+    it('SPEC-502: Ed25519 signature is exactly 64 bytes', async () => {
+      const kp = await generateKeyPair();
+      const message = new TextEncoder().encode('test message for signature length');
+      const sig = await sign(message, kp.privateKey);
+      expect(sig.length).toBe(64);
+      expect(sig).toBeInstanceOf(Uint8Array);
+
+      // Hex encoding should produce 128 characters
+      const sigHex = toHex(sig);
+      expect(sigHex.length).toBe(128);
+    });
+
+    it('SPEC-503: SHA-256 hash is exactly 32 bytes (64 hex chars)', () => {
+      const hash = sha256String('hello world');
+      expect(hash.length).toBe(64);
+      expect(hash).toMatch(/^[0-9a-f]{64}$/);
+
+      // Verify against known SHA-256 of "hello world"
+      // SHA-256("hello world") = b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9
+      expect(hash).toBe('b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9');
+
+      // Convert to bytes and verify length
+      const bytes = fromHex(hash);
+      expect(bytes.length).toBe(32);
+    });
+
+    it('SPEC-504: Nonce is exactly 32 bytes (64 hex chars)', () => {
+      const nonce = generateNonce();
+      expect(nonce.length).toBe(32);
+      expect(nonce).toBeInstanceOf(Uint8Array);
+
+      const nonceHex = toHex(nonce);
+      expect(nonceHex.length).toBe(64);
+      expect(nonceHex).toMatch(/^[0-9a-f]{64}$/);
+    });
+  });
 });

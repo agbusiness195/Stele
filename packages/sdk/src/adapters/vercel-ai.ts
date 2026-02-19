@@ -7,6 +7,8 @@
  * `SteleAccessDeniedError` is thrown (or the custom `onDenied` handler
  * is invoked). If permitted, the original `execute()` runs normally.
  *
+ * **Status: Stable** (promoted from beta in v1.0.0)
+ *
  * @packageDocumentation
  *
  * @example
