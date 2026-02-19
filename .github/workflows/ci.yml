@@ -91,6 +91,9 @@ jobs:
         if: steps.cache-modules.outputs.cache-hit != 'true'
         run: npm ci
 
+      - name: Build packages (required for workspace resolution)
+        run: npm run build
+
       - name: Run tests with coverage
         run: npx vitest run --coverage
 
