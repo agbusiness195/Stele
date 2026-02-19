@@ -1,11 +1,11 @@
-# @stele/cli
+# @usekova/cli
 
 Command-line interface for the Stele covenant protocol. Provides commands for key generation, covenant creation, verification, evaluation, inspection, CCL parsing, shell completions, diagnostics, and diff.
 
 ## Installation
 
 ```bash
-npm install @stele/cli
+npm install @usekova/cli
 ```
 
 ## Commands

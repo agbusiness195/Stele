@@ -1,13 +1,13 @@
 /**
- * @stele/discovery/well-known — Discovery document generation and validation.
+ * @usekova/discovery/well-known — Discovery document generation and validation.
  *
  * Implements RFC 5785-compliant `.well-known/stele/` endpoint handling
  * for the Stele cross-platform discovery protocol.
  */
 
-import { sha256String, signString, verify, canonicalizeJson, timestamp, generateNonce, toHex, fromHex } from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
-import { PROTOCOL_VERSION } from '@stele/core';
+import { sha256String, signString, verify, canonicalizeJson, timestamp, generateNonce, toHex, fromHex } from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
+import { PROTOCOL_VERSION } from '@usekova/core';
 
 import type { DiscoveryDocument, AgentKeyEntry, AgentKeySet } from './types.js';
 

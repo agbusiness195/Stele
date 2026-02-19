@@ -185,7 +185,7 @@ export function telemetryMiddleware(options?: TelemetryMiddlewareOptions): Stele
 /**
  * A minimal interface for an object that exposes `on()` for event subscription.
  *
- * This matches SteleClient's public API without importing the class directly,
+ * This matches KovaClient's public API without importing the class directly,
  * keeping the telemetry module loosely coupled.
  */
 export interface EventSource {
@@ -196,7 +196,7 @@ export interface EventSource {
  * Metrics collector for Stele SDK operations.
  *
  * Creates OTel-compatible counters and histograms and exposes a `record()`
- * method to update them from SteleClient lifecycle events.
+ * method to update them from KovaClient lifecycle events.
  */
 export class SteleMetrics {
   private readonly _covenantsCreated: Counter;
@@ -224,9 +224,9 @@ export class SteleMetrics {
   }
 
   /**
-   * Record a SteleClient event, updating the appropriate metrics.
+   * Record a KovaClient event, updating the appropriate metrics.
    *
-   * @param event - A SteleClient lifecycle event (from the `on()` callback).
+   * @param event - A KovaClient lifecycle event (from the `on()` callback).
    */
   record(event: SteleEvent): void {
     switch (event.type) {
@@ -264,9 +264,9 @@ export class SteleMetrics {
   }
 
   /**
-   * Subscribe to all SteleClient events and automatically record metrics.
+   * Subscribe to all KovaClient events and automatically record metrics.
    *
-   * @param client - An object with an `on()` method matching SteleClient's API.
+   * @param client - An object with an `on()` method matching KovaClient's API.
    * @returns An array of disposal functions that unsubscribe all listeners.
    */
   bindToClient(client: EventSource): (() => void)[] {
@@ -316,7 +316,7 @@ export interface CreateTelemetryOptions {
  *
  * @example
  * ```typescript
- * import { createTelemetry } from '@stele/sdk';
+ * import { createTelemetry } from '@usekova/sdk';
  *
  * // With real OTel SDK:
  * const { middleware, metrics } = createTelemetry({

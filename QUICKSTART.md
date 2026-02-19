@@ -5,17 +5,17 @@ Go from zero to enforcing your first covenant in under five minutes.
 ## 1. Install
 
 ```bash
-npm install @stele/sdk
+npm install @usekova/sdk
 ```
 
-The SDK re-exports everything you need from the underlying packages (`@stele/crypto`, `@stele/ccl`, `@stele/core`, `@stele/identity`, `@stele/enforcement`). One import covers the full API.
+The SDK re-exports everything you need from the underlying packages (`@usekova/crypto`, `@usekova/ccl`, `@usekova/core`, `@usekova/identity`, `@usekova/enforcement`). One import covers the full API.
 
 ## 2. Create Keys
 
 Every party in a covenant needs an Ed25519 key pair. Generate one:
 
 ```typescript
-import { SteleClient } from '@stele/sdk';
+import { SteleClient } from '@usekova/sdk';
 
 const issuerClient = new SteleClient();
 const issuerKeys = await issuerClient.generateKeyPair();
@@ -156,19 +156,19 @@ You now have a working covenant pipeline: create, sign, verify, enforce. Here is
 
 **Express Middleware** -- Enforce covenants on every HTTP request:
 ```typescript
-import { steleMiddleware } from '@stele/sdk';
+import { steleMiddleware } from '@usekova/sdk';
 app.use(steleMiddleware({ covenant, client: issuerClient }));
 ```
 
 **Vercel AI SDK** -- Wrap AI tools with covenant enforcement:
 ```typescript
-import { withStele } from '@stele/sdk';
+import { withStele } from '@usekova/sdk';
 const guardedTool = withStele(myTool, { covenant, client });
 ```
 
 **LangChain** -- Add a callback handler to any chain:
 ```typescript
-import { SteleCallbackHandler } from '@stele/sdk';
+import { SteleCallbackHandler } from '@usekova/sdk';
 const handler = new SteleCallbackHandler({ covenant, client });
 ```
 
@@ -199,4 +199,4 @@ const auditorKeys = await auditorClient.generateKeyPair();
 const audited = await auditorClient.countersign(covenant, 'auditor');
 ```
 
-Full API reference: see the JSDoc comments in `@stele/sdk` or run `npx typedoc`.
+Full API reference: see the JSDoc comments in `@usekova/sdk` or run `npx typedoc`.

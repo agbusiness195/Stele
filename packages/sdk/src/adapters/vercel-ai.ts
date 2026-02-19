@@ -13,15 +13,15 @@
  *
  * @example
  * ```typescript
- * import { SteleClient, withStele, withSteleTools } from '@stele/sdk';
+ * import { KovaClient, withStele, withSteleTools } from '@usekova/sdk';
  *
  * const protectedTool = withStele(myTool, { client, covenant });
  * const protectedTools = withSteleTools({ search, browse }, { client, covenant });
  * ```
  */
 
-import type { SteleClient } from '../index.js';
-import type { CovenantDocument } from '@stele/core';
+import type { KovaClient } from '../index.js';
+import type { CovenantDocument } from '@usekova/core';
 import type { EvaluationResult } from '../types.js';
 
 // ─── Error ───────────────────────────────────────────────────────────────────
@@ -62,8 +62,8 @@ export interface ToolLike {
  * Options for wrapping Vercel AI SDK tools with Stele enforcement.
  */
 export interface SteleToolOptions {
-  /** The SteleClient instance for covenant evaluation. */
-  client: SteleClient;
+  /** The KovaClient instance for covenant evaluation. */
+  client: KovaClient;
   /** The covenant document whose constraints are enforced. */
   covenant: CovenantDocument;
   /**

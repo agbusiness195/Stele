@@ -810,7 +810,7 @@ Stele assumes the following threat model:
 
 **Attack:** An agent creates a retroactive covenant that matches its already-executed actions, claiming it was inscribed before execution.
 
-**Mitigation:** Covenants are content-addressed and timestamped. When on-chain anchoring is used (via `@stele/evm`), the covenant's content address is recorded on an immutable ledger with a block timestamp. Even without on-chain anchoring, the covenant must be signed before any action records reference it, and the action records' hash chain includes the covenant ID. Backdating a covenant requires forging the entire action log.
+**Mitigation:** Covenants are content-addressed and timestamped. When on-chain anchoring is used (via `@usekova/evm`), the covenant's content address is recorded on an immutable ledger with a block timestamp. Even without on-chain anchoring, the covenant must be signed before any action records reference it, and the action records' hash chain includes the covenant ID. Backdating a covenant requires forging the entire action log.
 
 #### 12.2.2 Action Log Omission
 

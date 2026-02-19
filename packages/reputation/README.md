@@ -1,11 +1,11 @@
-# @stele/reputation
+# @usekova/reputation
 
 Reputation scoring, stake management, endorsements, and receipt-chain verification for Stele covenant agents.
 
 ## Installation
 
 ```bash
-npm install @stele/reputation
+npm install @usekova/reputation
 ```
 
 ## Key APIs
@@ -40,8 +40,8 @@ npm install @stele/reputation
 ## Usage
 
 ```typescript
-import { createReceipt, computeReputationScore, createStake } from '@stele/reputation';
-import { generateKeyPair } from '@stele/crypto';
+import { createReceipt, computeReputationScore, createStake } from '@usekova/reputation';
+import { generateKeyPair } from '@usekova/crypto';
 
 const keys = await generateKeyPair();
 

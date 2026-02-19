@@ -1,11 +1,11 @@
-# @stele/identity
+# @usekova/identity
 
 Agent identity management with cryptographic lineage tracking. Create, evolve, and verify AI agent identities with reputation carry-forward across identity changes.
 
 ## Installation
 
 ```bash
-npm install @stele/identity
+npm install @usekova/identity
 ```
 
 ## Usage
@@ -13,8 +13,8 @@ npm install @stele/identity
 ### Create an Identity
 
 ```typescript
-import { generateKeyPair } from '@stele/crypto';
-import { createIdentity } from '@stele/identity';
+import { generateKeyPair } from '@usekova/crypto';
+import { createIdentity } from '@usekova/identity';
 
 const kp = await generateKeyPair();
 
@@ -32,7 +32,7 @@ console.log(identity.version); // 1
 ### Evolve an Identity
 
 ```typescript
-import { evolveIdentity } from '@stele/identity';
+import { evolveIdentity } from '@usekova/identity';
 
 const evolved = await evolveIdentity(identity, {
   operatorKeyPair: kp,
@@ -48,7 +48,7 @@ console.log(evolved.lineage.length);   // 2
 ### Verify, Lineage, and Serialization
 
 ```typescript
-import { verifyIdentity, getLineage, shareAncestor, serializeIdentity } from '@stele/identity';
+import { verifyIdentity, getLineage, shareAncestor, serializeIdentity } from '@usekova/identity';
 
 const result = await verifyIdentity(identity);
 console.log(result.valid); // true

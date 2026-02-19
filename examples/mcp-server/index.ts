@@ -5,10 +5,10 @@
  * to enforce constraints on every tool call, generate compliance proofs,
  * and produce execution receipts.
  */
-import { SteleGuard } from '@stele/mcp';
-import type { MCPServer } from '@stele/mcp';
-import { MonitorDeniedError } from '@stele/enforcement';
-import { verifyComplianceProof } from '@stele/proof';
+import { SteleGuard } from '@usekova/mcp';
+import type { MCPServer } from '@usekova/mcp';
+import { MonitorDeniedError } from '@usekova/enforcement';
+import { verifyComplianceProof } from '@usekova/proof';
 
 async function main() {
   // 1. Create a mock MCP server with three tools

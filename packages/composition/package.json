@@ -1,5 +1,5 @@
 {
-  "name": "@stele/composition",
+  "name": "@usekova/composition",
   "version": "2.0.0",
   "description": "Covenant composition with merge, intersect, and chain operations",
   "sideEffects": false,
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "2.0.0",
-    "@stele/ccl": "2.0.0"
+    "@usekova/crypto": "2.0.0",
+    "@usekova/ccl": "2.0.0"
   },
   "license": "MIT",
   "engines": {

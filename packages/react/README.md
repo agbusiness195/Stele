@@ -1,11 +1,11 @@
-# @stele/react
+# @usekova/react
 
 Reactive primitives and React hooks for building Stele-powered UIs with observable state management.
 
 ## Installation
 
 ```bash
-npm install @stele/react
+npm install @usekova/react
 ```
 
 ## Key APIs
@@ -33,9 +33,9 @@ npm install @stele/react
 ## Usage
 
 ```typescript
-import { useCovenant, useIdentity, useCovenantStore } from '@stele/react';
-import { SteleClient } from '@stele/sdk';
-import { MemoryStore } from '@stele/store';
+import { useCovenant, useIdentity, useCovenantStore } from '@usekova/react';
+import { SteleClient } from '@usekova/sdk';
+import { MemoryStore } from '@usekova/store';
 
 function CovenantPanel() {
   const client = new SteleClient();
@@ -46,7 +46,7 @@ function CovenantPanel() {
 }
 
 // Framework-agnostic usage
-import { Observable, createCovenantState } from '@stele/react';
+import { Observable, createCovenantState } from '@usekova/react';
 
 const count = new Observable(0);
 const doubled = count.map(n => n * 2);

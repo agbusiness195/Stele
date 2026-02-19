@@ -1,13 +1,13 @@
 /**
- * @stele/discovery/server — Discovery server for serving .well-known/stele endpoints.
+ * @usekova/discovery/server — Discovery server for serving .well-known/stele endpoints.
  *
  * Provides a framework-agnostic discovery server that manages discovery documents,
  * key sets, and covenant registries. Can be mounted in Express, Fastify, or
  * any HTTP framework.
  */
 
-import type { CovenantDocument } from '@stele/core';
-import { verifyCovenant } from '@stele/core';
+import type { CovenantDocument } from '@usekova/core';
+import { verifyCovenant } from '@usekova/core';
 
 import type {
   DiscoveryDocument,

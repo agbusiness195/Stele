@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, sha256String, toHex } from '@stele/crypto';
-import type { KeyPair, HashHex } from '@stele/crypto';
+import { generateKeyPair, sha256String, toHex } from '@usekova/crypto';
+import type { KeyPair, HashHex } from '@usekova/crypto';
 import {
   buildCovenant,
   verifyCovenant,
@@ -10,17 +10,17 @@ import {
   validateChainNarrowing,
   serializeCovenant,
   deserializeCovenant,
-} from '@stele/core';
-import type { CovenantDocument } from '@stele/core';
-import { evaluate, parse } from '@stele/ccl';
-import { Monitor, MonitorDeniedError } from '@stele/enforcement';
-import { SteleGuard } from '@stele/mcp';
-import type { MCPServer, WrappedMCPServer, ViolationDetails, ToolCallDetails } from '@stele/mcp';
-import { createReceipt, verifyReceipt, computeReputationScore, createEndorsement, verifyEndorsement } from '@stele/reputation';
-import type { ExecutionReceipt } from '@stele/reputation';
-import { generateComplianceProof, verifyComplianceProof } from '@stele/proof';
-import { createIdentity, evolveIdentity, verifyIdentity, serializeIdentity, deserializeIdentity } from '@stele/identity';
-import { createBreachAttestation, verifyBreachAttestation, TrustGraph } from '@stele/breach';
+} from '@usekova/core';
+import type { CovenantDocument } from '@usekova/core';
+import { evaluate, parse } from '@usekova/ccl';
+import { Monitor, MonitorDeniedError } from '@usekova/enforcement';
+import { SteleGuard } from '@usekova/mcp';
+import type { MCPServer, WrappedMCPServer, ViolationDetails, ToolCallDetails } from '@usekova/mcp';
+import { createReceipt, verifyReceipt, computeReputationScore, createEndorsement, verifyEndorsement } from '@usekova/reputation';
+import type { ExecutionReceipt } from '@usekova/reputation';
+import { generateComplianceProof, verifyComplianceProof } from '@usekova/proof';
+import { createIdentity, evolveIdentity, verifyIdentity, serializeIdentity, deserializeIdentity } from '@usekova/identity';
+import { createBreachAttestation, verifyBreachAttestation, TrustGraph } from '@usekova/breach';
 
 // ---------------------------------------------------------------------------
 // Scenario 1: Chain Delegation with Constraint Narrowing (3 levels)

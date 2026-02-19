@@ -1,11 +1,11 @@
-# @stele/substrate
+# @usekova/substrate
 
 Cross-substrate layer for translating and enforcing covenants across heterogeneous platforms: AI agents, robots, drones, IoT devices, autonomous vehicles, and smart contracts.
 
 ## Installation
 
 ```bash
-npm install @stele/substrate
+npm install @usekova/substrate
 ```
 
 ## Key APIs
@@ -29,7 +29,7 @@ import {
   checkSafetyBound,
   substrateCompatibility,
   constraintTranslation,
-} from '@stele/substrate';
+} from '@usekova/substrate';
 
 // Create substrate adapters
 const robot = createAdapter('robot', {

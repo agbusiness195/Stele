@@ -1,11 +1,11 @@
-# @stele/types
+# @usekova/types
 
 Shared type definitions, error classes, validation utilities, and protocol constants for the Stele SDK.
 
 ## Installation
 
 ```bash
-npm install @stele/types
+npm install @usekova/types
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @stele/types
 ### Error Classes
 
 ```typescript
-import { SteleError, SteleErrorCode, ValidationError } from '@stele/types';
+import { SteleError, SteleErrorCode, ValidationError } from '@usekova/types';
 
 try {
   throw new SteleError('Something went wrong', SteleErrorCode.INVALID_INPUT);
@@ -27,7 +27,7 @@ try {
 ### Result Type
 
 ```typescript
-import { ok, err, type Result } from '@stele/types';
+import { ok, err, type Result } from '@usekova/types';
 
 function divide(a: number, b: number): Result<number> {
   if (b === 0) return err(new Error('Division by zero'));
@@ -43,7 +43,7 @@ if (result.ok) {
 ### Validation Utilities
 
 ```typescript
-import { validateNonEmpty, validateRange, validateHex, validateProbability } from '@stele/types';
+import { validateNonEmpty, validateRange, validateHex, validateProbability } from '@usekova/types';
 
 validateNonEmpty(name, 'issuer.name');       // throws ValidationError if blank
 validateRange(depth, 1, 16, 'chain.depth');  // throws if outside [1, 16]
@@ -54,7 +54,7 @@ validateProbability(rate, 'carryForward');    // throws if not in [0, 1]
 ### Type Guards
 
 ```typescript
-import { isNonEmptyString, isValidHex, isValidPublicKey, sanitizeString } from '@stele/types';
+import { isNonEmptyString, isValidHex, isValidPublicKey, sanitizeString } from '@usekova/types';
 
 if (isValidPublicKey(input)) {
   // input is narrowed to a valid public key string

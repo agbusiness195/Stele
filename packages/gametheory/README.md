@@ -1,11 +1,11 @@
-# @stele/gametheory
+# @usekova/gametheory
 
 Game-theoretic analysis for covenant systems, including Nash equilibria, mechanism design, and coalition stability.
 
 ## Installation
 
 ```bash
-npm install @stele/gametheory
+npm install @usekova/gametheory
 ```
 
 ## Key APIs
@@ -23,7 +23,7 @@ npm install @stele/gametheory
 ## Usage
 
 ```typescript
-import { proveHonesty, repeatedGameEquilibrium, mechanismDesign } from '@stele/gametheory';
+import { proveHonesty, repeatedGameEquilibrium, mechanismDesign } from '@usekova/gametheory';
 
 // Prove honesty is the dominant strategy
 const proof = proveHonesty({

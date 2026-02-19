@@ -1,11 +1,11 @@
-# @stele/verifier
+# @usekova/verifier
 
 Independent verification engine for third-party auditors. Wraps core verification with history tracking, batch processing, chain integrity validation, and action-level evaluation.
 
 ## Installation
 
 ```bash
-npm install @stele/verifier
+npm install @usekova/verifier
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @stele/verifier
 ### Single Document Verification
 
 ```typescript
-import { Verifier } from '@stele/verifier';
+import { Verifier } from '@usekova/verifier';
 
 const verifier = new Verifier({ strictMode: true });
 
@@ -50,7 +50,7 @@ console.log(report.reason);         // human-readable explanation
 ### Batch Verification
 
 ```typescript
-import { verifyBatch } from '@stele/verifier';
+import { verifyBatch } from '@usekova/verifier';
 
 const report = await verifyBatch([doc1, doc2, doc3]);
 console.log(`${report.summary.passed}/${report.summary.total} passed`);

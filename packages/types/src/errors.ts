@@ -11,7 +11,7 @@
 // ─── Error codes ────────────────────────────────────────────────────────────────
 
 /** All Stele error codes. Each maps to a specific, documented failure mode. */
-export enum SteleErrorCode {
+export enum KovaErrorCode {
   // Key management (1xx)
   /** A required private key was not provided or not available. */
   NO_PRIVATE_KEY = 'STELE_E100',
@@ -129,8 +129,8 @@ export enum SteleErrorCode {
 
 // ─── Error class ────────────────────────────────────────────────────────────────
 
-/** Options for constructing a SteleError. */
-export interface SteleErrorOptions {
+/** Options for constructing a KovaError. */
+export interface KovaErrorOptions {
   /** Additional structured context for diagnostics and logging. */
   context?: Record<string, unknown>;
   /** A human-readable hint suggesting how to resolve the error. */
@@ -147,21 +147,21 @@ export interface SteleErrorOptions {
  *
  * @example
  * ```typescript
- * throw new SteleError(
- *   SteleErrorCode.MISSING_ISSUER,
+ * throw new KovaError(
+ *   KovaErrorCode.MISSING_ISSUER,
  *   'Covenant requires an issuer',
  *   { hint: 'Set the issuer field before calling build()' }
  * );
  * ```
  */
-export class SteleError extends Error {
-  readonly code: SteleErrorCode;
+export class KovaError extends Error {
+  readonly code: KovaErrorCode;
   readonly context?: Record<string, unknown>;
   readonly hint?: string;
 
-  constructor(code: SteleErrorCode, message: string, options?: SteleErrorOptions) {
+  constructor(code: KovaErrorCode, message: string, options?: KovaErrorOptions) {
     super(message, options?.cause ? { cause: options.cause } : undefined);
-    this.name = 'SteleError';
+    this.name = 'KovaError';
     this.code = code;
     this.context = options?.context;
     this.hint = options?.hint;
@@ -200,11 +200,11 @@ const DOCS_BASE_URL = 'https://stele.dev/errors';
  *
  * @example
  * ```typescript
- * errorDocsUrl(SteleErrorCode.MISSING_ISSUER)
+ * errorDocsUrl(KovaErrorCode.MISSING_ISSUER)
  * // => 'https://stele.dev/errors/STELE_E200'
  * ```
  */
-export function errorDocsUrl(code: SteleErrorCode): string {
+export function errorDocsUrl(code: KovaErrorCode): string {
   return `${DOCS_BASE_URL}/${code}`;
 }
 
@@ -214,13 +214,13 @@ export function errorDocsUrl(code: SteleErrorCode): string {
  * Includes the error code, message, hint (if present), and a link
  * to the documentation page.
  *
- * @param error - The SteleError to format.
+ * @param error - The KovaError to format.
  * @returns A multi-line formatted string for terminal or log output.
  *
  * @example
  * ```typescript
- * const err = new SteleError(
- *   SteleErrorCode.MISSING_ISSUER,
+ * const err = new KovaError(
+ *   KovaErrorCode.MISSING_ISSUER,
  *   'Covenant requires an issuer',
  *   { hint: 'Set the issuer field before calling build()' }
  * );
@@ -230,7 +230,7 @@ export function errorDocsUrl(code: SteleErrorCode): string {
  * // Docs: https://stele.dev/errors/STELE_E200
  * ```
  */
-export function formatError(error: SteleError): string {
+export function formatError(error: KovaError): string {
   const lines: string[] = [];
   lines.push(`[${error.code}] ${error.message}`);
   if (error.hint) {

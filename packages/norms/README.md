@@ -1,11 +1,11 @@
-# @stele/norms
+# @usekova/norms
 
 Social norm modeling with emergence detection, conflict resolution, and governance proposal generation from covenant data.
 
 ## Installation
 
 ```bash
-npm install @stele/norms
+npm install @usekova/norms
 ```
 
 ## Key APIs
@@ -20,8 +20,8 @@ npm install @stele/norms
 ## Usage
 
 ```typescript
-import { analyzeNorms, proposeStandard, normConflictDetection } from '@stele/norms';
-import type { CovenantData } from '@stele/norms';
+import { analyzeNorms, proposeStandard, normConflictDetection } from '@usekova/norms';
+import type { CovenantData } from '@usekova/norms';
 
 const covenants: CovenantData[] = [
   {

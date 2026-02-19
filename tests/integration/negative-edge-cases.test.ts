@@ -23,7 +23,7 @@ import {
   generateId,
   keyPairFromPrivateKey,
   keyPairFromPrivateKeyHex,
-} from '@stele/crypto';
+} from '@usekova/crypto';
 
 import {
   parse,
@@ -33,7 +33,7 @@ import {
   validateNarrowing,
   tokenize,
   CCLSyntaxError,
-} from '@stele/ccl';
+} from '@usekova/ccl';
 
 import {
   buildCovenant,
@@ -46,10 +46,10 @@ import {
   MemoryChainResolver,
   resolveChain,
   validateChainNarrowing,
-} from '@stele/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@stele/core';
+} from '@usekova/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
 
-import { MemoryStore } from '@stele/store';
+import { MemoryStore } from '@usekova/store';
 
 import {
   createIdentity,
@@ -58,14 +58,14 @@ import {
   serializeIdentity,
   deserializeIdentity,
   computeIdentityHash,
-} from '@stele/identity';
+} from '@usekova/identity';
 
 import {
   Monitor,
   CapabilityGate,
   MonitorDeniedError,
   verifyMerkleProof,
-} from '@stele/enforcement';
+} from '@usekova/enforcement';
 
 // ---------------------------------------------------------------------------
 // Shared helpers

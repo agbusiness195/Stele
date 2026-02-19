@@ -6,10 +6,10 @@ import {
   fromHex,
   verify,
   canonicalizeJson,
-} from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
-import { buildCovenant, PROTOCOL_VERSION } from '@stele/core';
-import type { CovenantDocument } from '@stele/core';
+} from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
+import { buildCovenant, PROTOCOL_VERSION } from '@usekova/core';
+import type { CovenantDocument } from '@usekova/core';
 
 import {
   buildDiscoveryDocument,

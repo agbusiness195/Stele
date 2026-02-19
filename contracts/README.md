@@ -6,7 +6,7 @@ On-chain registry for anchoring and verifying Stele protocol covenant constraint
 
 `SteleRegistry` is a minimal, ownerless, non-upgradeable smart contract that stores covenant anchors on-chain. Each anchor binds a unique `covenantId` to a constraints hash, issuer address, beneficiary address, and timestamp. Any party can verify whether a covenant has been anchored; only the original issuer can revoke it.
 
-The contract implements the interface consumed by the `@stele/evm` TypeScript package (see `STELE_REGISTRY_ABI` and `SteleRegistryInterface` in `packages/evm/src/index.ts`).
+The contract implements the interface consumed by the `@usekova/evm` TypeScript package (see `STELE_REGISTRY_ABI` and `SteleRegistryInterface` in `packages/evm/src/index.ts`).
 
 ## Contract Interface
 
@@ -63,9 +63,9 @@ error AnchorNotFound(bytes32 covenantId);
 error ArrayLengthMismatch();
 ```
 
-## ABI Compatibility with @stele/evm
+## ABI Compatibility with @usekova/evm
 
-The core three functions (`anchor`, `verify`, `getAnchor`) match the `STELE_REGISTRY_ABI` exported by `@stele/evm`:
+The core three functions (`anchor`, `verify`, `getAnchor`) match the `STELE_REGISTRY_ABI` exported by `@usekova/evm`:
 
 ```typescript
 export const STELE_REGISTRY_ABI = [
@@ -104,7 +104,7 @@ export const STELE_REGISTRY_ABI = [
 ] as const;
 ```
 
-The `EVMClient` class in `@stele/evm` uses `buildAnchorCalldata()` to construct the `anchor()` calldata and `computeFunctionSelector('verify(bytes32)')` / `computeFunctionSelector('getAnchor(bytes32)')` for read calls. These selectors match the deployed contract's function signatures exactly.
+The `EVMClient` class in `@usekova/evm` uses `buildAnchorCalldata()` to construct the `anchor()` calldata and `computeFunctionSelector('verify(bytes32)')` / `computeFunctionSelector('getAnchor(bytes32)')` for read calls. These selectors match the deployed contract's function signatures exactly.
 
 ## Deployment
 
@@ -273,11 +273,11 @@ cast send $REGISTRY \
   --private-key $PRIVATE_KEY
 ```
 
-### Using @stele/evm (TypeScript)
+### Using @usekova/evm (TypeScript)
 
 ```typescript
-import { EVMClient } from '@stele/evm';
-import type { CovenantAnchor, EVMProvider } from '@stele/evm';
+import { EVMClient } from '@usekova/evm';
+import type { CovenantAnchor, EVMProvider } from '@usekova/evm';
 
 // Wrap your JSON-RPC transport (fetch, ethers, viem, etc.)
 const provider: EVMProvider = {

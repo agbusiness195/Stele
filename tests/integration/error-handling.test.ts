@@ -2,11 +2,11 @@
  * Integration tests for error handling across the Stele SDK.
  *
  * Exercises error paths in crypto, CCL, core covenant operations,
- * verification, store, deserialization, and SteleClient.
+ * verification, store, deserialization, and KovaClient.
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { generateKeyPair, toHex } from '@stele/crypto';
+import { generateKeyPair, toHex } from '@usekova/crypto';
 import {
   buildCovenant,
   verifyCovenant,
@@ -16,13 +16,13 @@ import {
   CovenantBuildError,
   PROTOCOL_VERSION,
   MAX_CHAIN_DEPTH,
-} from '@stele/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@stele/core';
-import { parse, evaluate } from '@stele/ccl';
-import { Verifier } from '@stele/verifier';
-import { MemoryStore } from '@stele/store';
-import { SteleClient } from '@stele/sdk';
-import { createIdentity } from '@stele/identity';
+} from '@usekova/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
+import { parse, evaluate } from '@usekova/ccl';
+import { Verifier } from '@usekova/verifier';
+import { MemoryStore } from '@usekova/store';
+import { KovaClient } from '@usekova/sdk';
+import { createIdentity } from '@usekova/identity';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -516,7 +516,7 @@ describe('Chain depth exceeded', () => {
 
 describe('Narrowing violations', () => {
   it('detects child permitting what parent denies', async () => {
-    const client = new SteleClient();
+    const client = new KovaClient();
     const kp = await client.generateKeyPair();
     const beneficiaryKp = await generateKeyPair();
 
@@ -569,7 +569,7 @@ describe('Narrowing violations', () => {
       },
     });
 
-    const client = new SteleClient({ keyPair: kp });
+    const client = new KovaClient({ keyPair: kp });
     const result = await client.validateChain([parentDoc, childDoc]);
     expect(result.narrowingViolations.length).toBe(0);
   });
@@ -801,12 +801,12 @@ describe('Deserialization errors', () => {
 });
 
 // ===========================================================================
-// 10. SteleClient errors
+// 10. KovaClient errors
 // ===========================================================================
 
-describe('SteleClient errors', () => {
+describe('KovaClient errors', () => {
   it('throws when creating covenant without key pair', async () => {
-    const client = new SteleClient();
+    const client = new KovaClient();
     const beneficiaryKp = await generateKeyPair();
 
     await expect(
@@ -819,14 +819,14 @@ describe('SteleClient errors', () => {
   });
 
   it('throws when countersigning without key pair', async () => {
-    const client = new SteleClient();
+    const client = new KovaClient();
     const { doc } = await buildValidCovenant();
 
     await expect(client.countersign(doc)).rejects.toThrow(/No key pair/);
   });
 
   it('throws when creating identity without key pair', async () => {
-    const client = new SteleClient();
+    const client = new KovaClient();
 
     await expect(
       client.createIdentity({
@@ -845,7 +845,7 @@ describe('SteleClient errors', () => {
   });
 
   it('throws when evolving identity without key pair', async () => {
-    const client = new SteleClient();
+    const client = new KovaClient();
     const kp = await generateKeyPair();
 
     const identity = await createIdentity({
@@ -872,7 +872,7 @@ describe('SteleClient errors', () => {
   });
 
   it('strict mode throws on invalid verification', async () => {
-    const client = new SteleClient({ strictMode: true });
+    const client = new KovaClient({ strictMode: true });
     const { doc } = await buildValidCovenant();
 
     // Tamper to make it fail
@@ -882,7 +882,7 @@ describe('SteleClient errors', () => {
   });
 
   it('non-strict mode returns result on invalid verification', async () => {
-    const client = new SteleClient({ strictMode: false });
+    const client = new KovaClient({ strictMode: false });
     const { doc } = await buildValidCovenant();
 
     const tampered = { ...doc, constraints: "deny all on '**'" };
@@ -894,7 +894,7 @@ describe('SteleClient errors', () => {
   it('client with key pair can create covenants', async () => {
     const kp = await generateKeyPair();
     const beneficiaryKp = await generateKeyPair();
-    const client = new SteleClient({ keyPair: kp });
+    const client = new KovaClient({ keyPair: kp });
 
     const doc = await client.createCovenant({
       issuer: makeIssuer(kp.publicKeyHex),
@@ -1181,10 +1181,10 @@ describe('Event system edge cases', () => {
     expect(events.length).toBe(1); // no new events
   });
 
-  it('SteleClient emits covenant:created event', async () => {
+  it('KovaClient emits covenant:created event', async () => {
     const kp = await generateKeyPair();
     const beneficiaryKp = await generateKeyPair();
-    const client = new SteleClient({ keyPair: kp });
+    const client = new KovaClient({ keyPair: kp });
 
     let eventFired = false;
     client.on('covenant:created', () => {
@@ -1200,10 +1200,10 @@ describe('Event system edge cases', () => {
     expect(eventFired).toBe(true);
   });
 
-  it('SteleClient removeAllListeners clears handlers', async () => {
+  it('KovaClient removeAllListeners clears handlers', async () => {
     const kp = await generateKeyPair();
     const beneficiaryKp = await generateKeyPair();
-    const client = new SteleClient({ keyPair: kp });
+    const client = new KovaClient({ keyPair: kp });
 
     let count = 0;
     client.on('covenant:created', () => {

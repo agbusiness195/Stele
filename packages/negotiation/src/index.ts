@@ -1,5 +1,5 @@
-import { generateId } from '@stele/crypto';
-import { SteleError, SteleErrorCode } from '@stele/types';
+import { generateId } from '@usekova/crypto';
+import { KovaError, KovaErrorCode } from '@usekova/types';
 
 export type {
   NegotiationSession,
@@ -486,21 +486,21 @@ export function computeNPartyNash(
   config?: NPartyNashConfig,
 ): NPartyNashResult | null {
   if (outcomes.length === 0) {
-    throw new SteleError('outcomes array must not be empty', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KovaError('outcomes array must not be empty', KovaErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (utilities.length < 2) {
-    throw new SteleError('At least 2 utility functions required for Nash bargaining', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KovaError('At least 2 utility functions required for Nash bargaining', KovaErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const n = utilities.length;
   const powers = bargainingPowers ?? utilities.map(() => 1.0);
 
   if (powers.length !== n) {
-    throw new SteleError(`bargainingPowers length (${powers.length}) must match utilities length (${n})`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KovaError(`bargainingPowers length (${powers.length}) must match utilities length (${n})`, KovaErrorCode.PROTOCOL_INVALID_INPUT);
   }
   for (let i = 0; i < powers.length; i++) {
     if (powers[i]! <= 0) {
-      throw new SteleError(`bargainingPowers[${i}] must be positive, got ${powers[i]}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KovaError(`bargainingPowers[${i}] must be positive, got ${powers[i]}`, KovaErrorCode.PROTOCOL_INVALID_INPUT);
     }
   }
 
@@ -609,13 +609,13 @@ export class ConcessionProtocol {
 
   constructor(config: ConcessionConfig) {
     if (config.concessionRate < 0 || config.concessionRate > 1) {
-      throw new SteleError('concessionRate must be in [0, 1]', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KovaError('concessionRate must be in [0, 1]', KovaErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (config.maxRounds < 1) {
-      throw new SteleError('maxRounds must be >= 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KovaError('maxRounds must be >= 1', KovaErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (config.deadline <= 0) {
-      throw new SteleError('deadline must be positive', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KovaError('deadline must be positive', KovaErrorCode.PROTOCOL_INVALID_INPUT);
     }
     this.config = config;
     this.startTime = Date.now();
@@ -677,7 +677,7 @@ export class ConcessionProtocol {
     }
 
     if (this.state === 'ACCEPT' || this.state === 'REJECT' || this.state === 'TIMEOUT') {
-      throw new SteleError(`Cannot propose in terminal state: ${this.state}`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KovaError(`Cannot propose in terminal state: ${this.state}`, KovaErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     this.log.push({
@@ -704,7 +704,7 @@ export class ConcessionProtocol {
     }
 
     if (this.state !== 'PROPOSE' && this.state !== 'CONCEDE') {
-      throw new SteleError(`Cannot counter in state: ${this.state}. Must be PROPOSE or CONCEDE.`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KovaError(`Cannot counter in state: ${this.state}. Must be PROPOSE or CONCEDE.`, KovaErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     if (this.round >= this.config.maxRounds) {
@@ -740,7 +740,7 @@ export class ConcessionProtocol {
     }
 
     if (this.state !== 'COUNTER' && this.state !== 'PROPOSE') {
-      throw new SteleError(`Cannot concede in state: ${this.state}. Must be COUNTER or PROPOSE.`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KovaError(`Cannot concede in state: ${this.state}. Must be COUNTER or PROPOSE.`, KovaErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     const concessionAmount = this.calculateConcession(remainingGap, now);
@@ -762,7 +762,7 @@ export class ConcessionProtocol {
    */
   accept(from: string, proposal: Proposal): ConcessionState {
     if (this.state === 'ACCEPT' || this.state === 'REJECT' || this.state === 'TIMEOUT') {
-      throw new SteleError(`Cannot accept in terminal state: ${this.state}`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KovaError(`Cannot accept in terminal state: ${this.state}`, KovaErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     this.log.push({
@@ -781,7 +781,7 @@ export class ConcessionProtocol {
    */
   reject(from: string, proposal: Proposal): ConcessionState {
     if (this.state === 'ACCEPT' || this.state === 'REJECT' || this.state === 'TIMEOUT') {
-      throw new SteleError(`Cannot reject in terminal state: ${this.state}`, SteleErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KovaError(`Cannot reject in terminal state: ${this.state}`, KovaErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     this.log.push({
@@ -818,7 +818,7 @@ export class IncrementalParetoFrontier {
 
   constructor(dimensions: number) {
     if (dimensions < 2) {
-      throw new SteleError('Pareto frontier requires at least 2 dimensions', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KovaError('Pareto frontier requires at least 2 dimensions', KovaErrorCode.PROTOCOL_INVALID_INPUT);
     }
     this.dimensions = dimensions;
   }
@@ -859,7 +859,7 @@ export class IncrementalParetoFrontier {
    */
   insert(outcome: Outcome, utilities: number[]): boolean {
     if (utilities.length !== this.dimensions) {
-      throw new SteleError(`Expected ${this.dimensions} utility values, got ${utilities.length}`, SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KovaError(`Expected ${this.dimensions} utility values, got ${utilities.length}`, KovaErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     const newPoint: ParetoOutcome = {
@@ -1028,10 +1028,10 @@ export function runZeuthenNegotiation(
   maxRounds: number = 100,
 ): { rounds: ZeuthenResult[]; agreedOutcome: Outcome | null } {
   if (outcomes.length === 0) {
-    throw new SteleError('outcomes array must not be empty', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KovaError('outcomes array must not be empty', KovaErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (maxRounds < 1) {
-    throw new SteleError('maxRounds must be >= 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KovaError('maxRounds must be >= 1', KovaErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Each party starts with their most preferred outcome

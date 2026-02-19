@@ -1,5 +1,5 @@
 {
-  "name": "@stele/identity",
+  "name": "@usekova/identity",
   "version": "2.0.0",
   "description": "Identity and DID management for the Stele covenant framework",
   "license": "MIT",
@@ -52,8 +52,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@stele/crypto": "2.0.0",
-    "@stele/proof": "2.0.0",
-    "@stele/types": "2.0.0"
+    "@usekova/crypto": "2.0.0",
+    "@usekova/proof": "2.0.0",
+    "@usekova/types": "2.0.0"
   }
 }

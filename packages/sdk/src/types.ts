@@ -1,11 +1,11 @@
 /**
- * @stele/sdk type definitions.
+ * @usekova/sdk type definitions.
  *
  * SDK-specific types that wrap and extend the lower-level package types
  * into a unified, ergonomic API surface.
  */
 
-import type { KeyPair } from '@stele/crypto';
+import type { KeyPair } from '@usekova/crypto';
 import type {
   CovenantDocument,
   VerificationResult,
@@ -19,24 +19,24 @@ import type {
   CovenantMetadata,
   Obligation,
   PartyRole,
-} from '@stele/core';
+} from '@usekova/core';
 import type {
   CCLDocument,
   EvaluationResult as CCLEvaluationResult,
   Statement,
   Severity,
-} from '@stele/ccl';
+} from '@usekova/ccl';
 import type {
   AgentIdentity,
   ModelAttestation,
   DeploymentContext,
   LineageEntry,
-} from '@stele/identity';
+} from '@usekova/identity';
 
 // ─── Client options ─────────────────────────────────────────────────────────
 
-/** Options for constructing a SteleClient instance. */
-export interface SteleClientOptions {
+/** Options for constructing a KovaClient instance. */
+export interface KovaClientOptions {
   /** Optional pre-generated key pair for signing operations. */
   keyPair?: KeyPair;
   /** Optional agent identifier for identity operations. */
@@ -167,7 +167,7 @@ export interface NarrowingViolationEntry {
 
 // ─── Events ─────────────────────────────────────────────────────────────────
 
-/** Event types emitted by SteleClient. */
+/** Event types emitted by KovaClient. */
 export type SteleEventType =
   | 'covenant:created'
   | 'covenant:verified'

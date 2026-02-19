@@ -1,11 +1,11 @@
-# @stele/attestation
+# @usekova/attestation
 
 Multi-party attestation creation, signing, verification, and reconciliation.
 
 ## Installation
 
 ```bash
-npm install @stele/attestation
+npm install @usekova/attestation
 ```
 
 ## Key APIs
@@ -29,7 +29,7 @@ import {
   reconcile,
   attestationChainVerify,
   computeAttestationCoverage,
-} from '@stele/attestation';
+} from '@usekova/attestation';
 
 // Create and sign an attestation
 const attestation = createAttestation(

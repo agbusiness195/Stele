@@ -1,5 +1,5 @@
 {
-  "name": "@stele/norms",
+  "name": "@usekova/norms",
   "version": "2.0.0",
   "description": "Social norm modeling with emergence and enforcement dynamics",
   "sideEffects": false,
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/ccl": "2.0.0",
-    "@stele/crypto": "2.0.0"
+    "@usekova/ccl": "2.0.0",
+    "@usekova/crypto": "2.0.0"
   },
   "license": "MIT",
   "author": "Stele Labs, Inc.",

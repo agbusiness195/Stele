@@ -11,15 +11,15 @@
  *
  * @example
  * ```typescript
- * import { SteleClient, SteleCallbackHandler, withSteleTool } from '@stele/sdk';
+ * import { KovaClient, SteleCallbackHandler, withSteleTool } from '@usekova/sdk';
  *
  * const handler = new SteleCallbackHandler({ client, covenant });
  * const protectedTool = withSteleTool(myTool, { client, covenant });
  * ```
  */
 
-import type { SteleClient } from '../index.js';
-import type { CovenantDocument } from '@stele/core';
+import type { KovaClient } from '../index.js';
+import type { CovenantDocument } from '@usekova/core';
 import type { EvaluationResult } from '../types.js';
 import { SteleAccessDeniedError } from './vercel-ai.js';
 
@@ -55,8 +55,8 @@ export interface LangChainToolLike {
  * Options for wrapping LangChain tools with Stele enforcement.
  */
 export interface SteleLangChainOptions {
-  /** The SteleClient instance for covenant evaluation. */
-  client: SteleClient;
+  /** The KovaClient instance for covenant evaluation. */
+  client: KovaClient;
   /** The covenant document whose constraints are enforced. */
   covenant: CovenantDocument;
   /**
@@ -106,14 +106,14 @@ export interface CallbackEvent {
  * ```
  */
 export class SteleCallbackHandler {
-  /** The SteleClient used for event emission. */
-  readonly client: SteleClient;
+  /** The KovaClient used for event emission. */
+  readonly client: KovaClient;
   /** The covenant document being audited. */
   readonly covenant: CovenantDocument;
   /** Ordered list of recorded events. */
   readonly events: CallbackEvent[] = [];
 
-  constructor(options: { client: SteleClient; covenant: CovenantDocument }) {
+  constructor(options: { client: KovaClient; covenant: CovenantDocument }) {
     this.client = options.client;
     this.covenant = options.covenant;
   }

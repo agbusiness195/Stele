@@ -20,11 +20,11 @@ signatures and SHA-256 content addressing. No trusted third party required.
 ## Quick Start
 
 ```bash
-npm install @stele/sdk
+npm install @usekova/sdk
 ```
 
 ```typescript
-import { SteleClient } from '@stele/sdk';
+import { SteleClient } from '@usekova/sdk';
 
 const client = new SteleClient();
 await client.generateKeyPair();
@@ -68,65 +68,65 @@ Stele works in three steps:
 
 | Package | Description |
 |---------|-------------|
-| `@stele/types` | Error hierarchy, validation guards, logging, tracing, retry utilities |
-| `@stele/crypto` | Ed25519 signing, SHA-256 hashing, JCS canonicalization |
-| `@stele/ccl` | Covenant Constraint Language parser & evaluator |
-| `@stele/core` | Covenant build, verify, chain, serialize, countersign |
-| `@stele/store` | MemoryStore + FileStore pluggable persistence |
-| `@stele/verifier` | Stateful verification engine with 11 specification checks |
-| `@stele/identity` | Agent identity creation, evolution & lineage tracking |
+| `@usekova/types` | Error hierarchy, validation guards, logging, tracing, retry utilities |
+| `@usekova/crypto` | Ed25519 signing, SHA-256 hashing, JCS canonicalization |
+| `@usekova/ccl` | Covenant Constraint Language parser & evaluator |
+| `@usekova/core` | Covenant build, verify, chain, serialize, countersign |
+| `@usekova/store` | MemoryStore + FileStore pluggable persistence |
+| `@usekova/verifier` | Stateful verification engine with 11 specification checks |
+| `@usekova/identity` | Agent identity creation, evolution & lineage tracking |
 
 ### SDK
 
 | Package | Description |
 |---------|-------------|
-| `@stele/sdk` | SteleClient unified API, QuickCovenant builders, event system |
+| `@usekova/sdk` | SteleClient unified API, QuickCovenant builders, event system |
 
 ### Enforcement
 
 | Package | Description |
 |---------|-------------|
-| `@stele/enforcement` | Runtime enforcement monitor with audit trail |
-| `@stele/proof` | Poseidon-based compliance proof generation |
-| `@stele/breach` | Breach detection, attestation & trust graph propagation |
-| `@stele/reputation` | Trust scoring with decay and stake-weighted reputation |
-| `@stele/mcp` | MCP middleware guard for tool-call enforcement |
+| `@usekova/enforcement` | Runtime enforcement monitor with audit trail |
+| `@usekova/proof` | Poseidon-based compliance proof generation |
+| `@usekova/breach` | Breach detection, attestation & trust graph propagation |
+| `@usekova/reputation` | Trust scoring with decay and stake-weighted reputation |
+| `@usekova/mcp` | MCP middleware guard for tool-call enforcement |
 
 ### Protocol
 
 | Package | Description |
 |---------|-------------|
-| `@stele/attestation` | External attestation reconciliation |
-| `@stele/canary` | Canary testing framework for constraint validation |
-| `@stele/gametheory` | Game-theoretic honesty proofs and incentive analysis |
-| `@stele/composition` | Formal constraint composition and verification |
-| `@stele/antifragile` | Breach-to-improvement antifragility engine |
-| `@stele/negotiation` | Multi-party covenant negotiation sessions |
-| `@stele/consensus` | Accountability-based consensus protocol |
-| `@stele/robustness` | Formal robustness and coverage analysis |
-| `@stele/temporal` | Temporal evolution, triggers & scheduled transitions |
-| `@stele/recursive` | Meta-covenants and recursive verification |
-| `@stele/alignment` | AI alignment property verification |
-| `@stele/norms` | Emergent norm discovery from behavioral patterns |
-| `@stele/substrate` | Cross-substrate constraint translation |
-| `@stele/derivatives` | Trust futures, insurance & derivative instruments |
-| `@stele/legal` | Legal compliance mapping and audit trails |
+| `@usekova/attestation` | External attestation reconciliation |
+| `@usekova/canary` | Canary testing framework for constraint validation |
+| `@usekova/gametheory` | Game-theoretic honesty proofs and incentive analysis |
+| `@usekova/composition` | Formal constraint composition and verification |
+| `@usekova/antifragile` | Breach-to-improvement antifragility engine |
+| `@usekova/negotiation` | Multi-party covenant negotiation sessions |
+| `@usekova/consensus` | Accountability-based consensus protocol |
+| `@usekova/robustness` | Formal robustness and coverage analysis |
+| `@usekova/temporal` | Temporal evolution, triggers & scheduled transitions |
+| `@usekova/recursive` | Meta-covenants and recursive verification |
+| `@usekova/alignment` | AI alignment property verification |
+| `@usekova/norms` | Emergent norm discovery from behavioral patterns |
+| `@usekova/substrate` | Cross-substrate constraint translation |
+| `@usekova/derivatives` | Trust futures, insurance & derivative instruments |
+| `@usekova/legal` | Legal compliance mapping and audit trails |
 
 ### Interop
 
 | Package | Description |
 |---------|-------------|
-| `@stele/discovery` | `.well-known/stele/` discovery protocol, key registry & negotiation |
-| `@stele/schema` | JSON Schema (Draft 2020-12) validation for all document types |
+| `@usekova/discovery` | `.well-known/stele/` discovery protocol, key registry & negotiation |
+| `@usekova/schema` | JSON Schema (Draft 2020-12) validation for all document types |
 
 ### Platform
 
 | Package | Description |
 |---------|-------------|
-| `@stele/react` | Reactive UI primitives (Observable, CovenantState) |
-| `@stele/evm` | EVM anchoring, ABI encoding & on-chain registry |
-| `@stele/mcp-server` | JSON-RPC 2.0 MCP server exposing Stele tools |
-| `@stele/cli` | Command-line interface for the Stele protocol |
+| `@usekova/react` | Reactive UI primitives (Observable, CovenantState) |
+| `@usekova/evm` | EVM anchoring, ABI encoding & on-chain registry |
+| `@usekova/mcp-server` | JSON-RPC 2.0 MCP server exposing Stele tools |
+| `@usekova/cli` | Command-line interface for the Stele protocol |
 
 ## CCL (Covenant Constraint Language)
 

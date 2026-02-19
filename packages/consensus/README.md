@@ -1,11 +1,11 @@
-# @stele/consensus
+# @usekova/consensus
 
 Byzantine fault-tolerant consensus protocols for the Stele covenant framework. Includes accountability scoring, BFT analysis, quorum computation, latency estimation, a HotStuff-inspired pipelined BFT implementation, dynamic quorum reconfiguration, pipeline simulation, and quorum intersection verification.
 
 ## Installation
 
 ```bash
-npm install @stele/consensus
+npm install @usekova/consensus
 ```
 
 ## Key APIs
@@ -29,7 +29,7 @@ import {
   quorumSize,
   StreamlinedBFT,
   DynamicQuorum,
-} from '@stele/consensus';
+} from '@usekova/consensus';
 
 // Compute accountability score
 const score = computeAccountability('agent-1', {

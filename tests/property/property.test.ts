@@ -5,7 +5,7 @@
  * function N times with random inputs and asserts the predicate holds
  * for every generated value.  No external dependencies beyond vitest.
  *
- * Covers invariants across @stele/crypto, @stele/ccl, @stele/core, @stele/store.
+ * Covers invariants across @usekova/crypto, @usekova/ccl, @usekova/core, @usekova/store.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -21,9 +21,9 @@ import {
   base64urlEncode,
   base64urlDecode,
   generateNonce,
-} from '@stele/crypto';
+} from '@usekova/crypto';
 
-import { parse, evaluate, merge, serialize } from '@stele/ccl';
+import { parse, evaluate, merge, serialize } from '@usekova/ccl';
 
 import {
   buildCovenant,
@@ -32,9 +32,9 @@ import {
   canonicalForm,
   serializeCovenant,
   deserializeCovenant,
-} from '@stele/core';
+} from '@usekova/core';
 
-import { MemoryStore } from '@stele/store';
+import { MemoryStore } from '@usekova/store';
 
 // ---------------------------------------------------------------------------
 // Property-testing helper

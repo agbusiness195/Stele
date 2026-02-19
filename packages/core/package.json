@@ -1,5 +1,5 @@
 {
-  "name": "@stele/core",
+  "name": "@usekova/core",
   "version": "2.0.0",
   "description": "Core covenant lifecycle management for the Stele framework",
   "license": "MIT",
@@ -52,7 +52,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@stele/crypto": "2.0.0",
-    "@stele/ccl": "2.0.0"
+    "@usekova/crypto": "2.0.0",
+    "@usekova/ccl": "2.0.0"
   }
 }

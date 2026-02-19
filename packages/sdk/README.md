@@ -1,11 +1,11 @@
-# @stele/sdk
+# @usekova/sdk
 
-High-level unified SDK for the Stele protocol. This is the **main entry point** -- it re-exports everything from `@stele/core`, `@stele/crypto`, `@stele/ccl`, `@stele/identity`, `@stele/store`, `@stele/verifier`, and more.
+High-level unified SDK for the Stele protocol. This is the **main entry point** -- it re-exports everything from `@usekova/core`, `@usekova/crypto`, `@usekova/ccl`, `@usekova/identity`, `@usekova/store`, `@usekova/verifier`, and more.
 
 ## Installation
 
 ```bash
-npm install @stele/sdk
+npm install @usekova/sdk
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @stele/sdk
 ### SteleClient
 
 ```typescript
-import { SteleClient } from '@stele/sdk';
+import { SteleClient } from '@usekova/sdk';
 
 const client = new SteleClient();
 await client.generateKeyPair();
@@ -47,7 +47,7 @@ const identity = await client.createIdentity({
 ### Quick Covenants
 
 ```typescript
-import { QuickCovenant } from '@stele/sdk';
+import { QuickCovenant } from '@usekova/sdk';
 
 const doc = await QuickCovenant.permit('read', '/data/**', issuer, beneficiary, kp.privateKey);
 const standard = await QuickCovenant.standard(issuer, beneficiary, kp.privateKey);
@@ -70,7 +70,7 @@ const off = client.on('covenant:created', (e) => console.log('Created:', e.docum
 - **QuickCovenant**: `permit()`, `deny()`, `standard()`
 - **CCL utilities**: `parseCCL()`, `mergeCCL()`, `serializeCCL()`
 - **Events**: `on()`, `off()`, `removeAllListeners()`
-- **Re-exports**: All APIs from `@stele/core`, `@stele/crypto`, `@stele/ccl`, `@stele/identity`, `@stele/store`, `@stele/verifier`, `@stele/breach`, `@stele/reputation`, `@stele/attestation`, `@stele/proof`
+- **Re-exports**: All APIs from `@usekova/core`, `@usekova/crypto`, `@usekova/ccl`, `@usekova/identity`, `@usekova/store`, `@usekova/verifier`, `@usekova/breach`, `@usekova/reputation`, `@usekova/attestation`, `@usekova/proof`
 - **Adapters**: Vercel AI, LangChain, Express middleware, OpenTelemetry
 - **Testing**: `runConformanceSuite()`, middleware pipeline
 

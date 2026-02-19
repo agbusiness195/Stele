@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
-import { generateKeyPair } from '@stele/crypto';
-import type { CovenantDocument } from '@stele/core';
+import { generateKeyPair } from '@usekova/crypto';
+import type { CovenantDocument } from '@usekova/core';
 
-import { SteleClient } from '../index.js';
+import { KovaClient } from '../index.js';
 import { steleMiddleware, steleGuardHandler, createCovenantRouter } from './express.js';
 import type { IncomingRequest, OutgoingResponse, NextFunction } from './express.js';
 import { withStele, withSteleTools, createToolGuard, SteleAccessDeniedError } from './vercel-ai.js';
@@ -14,11 +14,11 @@ import type { LangChainToolLike } from './langchain.js';
 // Shared setup
 // ---------------------------------------------------------------------------
 
-let client: SteleClient;
+let client: KovaClient;
 let covenant: CovenantDocument;
 
 beforeAll(async () => {
-  client = new SteleClient();
+  client = new KovaClient();
   const kp = await client.generateKeyPair();
   const kp2 = await generateKeyPair();
   covenant = await client.createCovenant({
@@ -201,7 +201,7 @@ describe('Express middleware adapter', () => {
       // Create a middleware with a broken client to force an error
       const brokenClient = {
         evaluateAction: () => Promise.reject(new Error('boom')),
-      } as unknown as SteleClient;
+      } as unknown as KovaClient;
 
       const mw = steleMiddleware({
         client: brokenClient,
@@ -224,7 +224,7 @@ describe('Express middleware adapter', () => {
     it('default onError handler returns 500 JSON', async () => {
       const brokenClient = {
         evaluateAction: () => Promise.reject(new Error('evaluation failed')),
-      } as unknown as SteleClient;
+      } as unknown as KovaClient;
 
       const mw = steleMiddleware({ client: brokenClient, covenant });
       const req = createMockRequest();
@@ -318,7 +318,7 @@ describe('Express middleware adapter', () => {
       const handler = vi.fn();
       const brokenClient = {
         evaluateAction: () => Promise.reject(new Error('fail')),
-      } as unknown as SteleClient;
+      } as unknown as KovaClient;
 
       const guarded = steleGuardHandler(
         { client: brokenClient, covenant, onError },

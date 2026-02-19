@@ -1,5 +1,5 @@
 {
-  "name": "@stele/types",
+  "name": "@usekova/types",
   "version": "2.0.0",
   "description": "Shared TypeScript type definitions and protocol schemas",
   "sideEffects": false,
@@ -41,7 +41,7 @@
   },
   "author": "Stele Labs, Inc.",
   "dependencies": {
-    "@stele/crypto": "2.0.0"
+    "@usekova/crypto": "2.0.0"
   },
   "keywords": [
     "stele",

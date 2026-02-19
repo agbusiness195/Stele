@@ -1,5 +1,5 @@
 /**
- * @stele/discovery — Cross-platform discovery protocol for Stele.
+ * @usekova/discovery — Cross-platform discovery protocol for Stele.
  *
  * Implements the `.well-known/stele/` endpoint specification,
  * enabling cross-platform agent verification, key discovery,

@@ -7,11 +7,11 @@ import type {
   ToolDefinition,
   ToolResult,
 } from './index';
-import { MemoryStore } from '@stele/store';
-import { generateKeyPair, toHex } from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
-import { buildCovenant } from '@stele/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@stele/core';
+import { MemoryStore } from '@usekova/store';
+import { generateKeyPair, toHex } from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
+import { buildCovenant } from '@usekova/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 

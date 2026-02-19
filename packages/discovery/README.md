@@ -1,11 +1,11 @@
-# @stele/discovery
+# @usekova/discovery
 
 Cross-platform discovery protocol for `.well-known/stele/` endpoints. Enables agent key discovery, covenant registry lookup, cross-platform verification, and protocol negotiation.
 
 ## Installation
 
 ```bash
-npm install @stele/discovery
+npm install @usekova/discovery
 ```
 
 ## Key APIs
@@ -28,7 +28,7 @@ import {
   DiscoveryClient,
   DiscoveryServer,
   WELL_KNOWN_PATH,
-} from '@stele/discovery';
+} from '@usekova/discovery';
 
 // Build a discovery document
 const doc = buildDiscoveryDocument({

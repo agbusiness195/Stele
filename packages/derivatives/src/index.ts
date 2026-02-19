@@ -1,4 +1,4 @@
-import { sha256Object, generateId } from '@stele/crypto';
+import { sha256Object, generateId } from '@usekova/crypto';
 
 export type {
   TrustFuture,

@@ -1,5 +1,5 @@
 /**
- * @stele/schema — Formal JSON Schema definitions for Stele protocol documents.
+ * @usekova/schema — Formal JSON Schema definitions for Stele protocol documents.
  *
  * Provides machine-readable schemas (JSON Schema Draft 2020-12) for:
  * - Covenant documents

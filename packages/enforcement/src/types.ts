@@ -1,5 +1,5 @@
-import type { HashHex } from '@stele/crypto';
-import type { Statement, Severity, EvaluationResult } from '@stele/ccl';
+import type { HashHex } from '@usekova/crypto';
+import type { Statement, Severity, EvaluationResult } from '@usekova/ccl';
 
 export type ExecutionOutcome = 'EXECUTED' | 'DENIED' | 'IMPOSSIBLE';
 

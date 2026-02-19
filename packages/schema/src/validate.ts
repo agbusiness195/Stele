@@ -163,7 +163,7 @@ export function validateAgentKeySchema(key: unknown): SchemaValidationResult {
  * @example
  * ```typescript
  * import Ajv from 'ajv';
- * import { getAllSchemas } from '@stele/schema';
+ * import { getAllSchemas } from '@usekova/schema';
  *
  * const ajv = new Ajv();
  * for (const [id, schema] of Object.entries(getAllSchemas())) {

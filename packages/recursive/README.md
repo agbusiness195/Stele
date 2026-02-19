@@ -1,11 +1,11 @@
-# @stele/recursive
+# @usekova/recursive
 
 Recursive covenant structures with self-referential constraints, DAG-based termination proofs, and transitive trust computation.
 
 ## Installation
 
 ```bash
-npm install @stele/recursive
+npm install @usekova/recursive
 ```
 
 ## Key APIs
@@ -26,7 +26,7 @@ import {
   addLayer,
   proveTermination,
   computeTrustTransitivity,
-} from '@stele/recursive';
+} from '@usekova/recursive';
 
 // Build a recursive covenant chain
 const base = createMetaCovenant('covenant', ['no-exfiltration']);

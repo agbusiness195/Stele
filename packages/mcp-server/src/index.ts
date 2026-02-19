@@ -1,17 +1,17 @@
 /**
- * @stele/mcp-server -- Model Context Protocol server that exposes
+ * @usekova/mcp-server -- Model Context Protocol server that exposes
  * Stele tools to any AI agent.
  *
  * Implements JSON-RPC 2.0 over stdio, with tool definitions that map
- * to @stele/sdk, @stele/store, and @stele/crypto operations.
+ * to @usekova/sdk, @usekova/store, and @usekova/crypto operations.
  *
  * @packageDocumentation
  */
 
-import { SteleClient } from '@stele/sdk';
-import { MemoryStore } from '@stele/store';
-import { generateKeyPair, toHex } from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
+import { KovaClient } from '@usekova/sdk';
+import { MemoryStore } from '@usekova/store';
+import { generateKeyPair, toHex } from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
 
 import type {
   JsonRpcRequest,
@@ -221,7 +221,7 @@ export class SteleServer {
   readonly store: MemoryStore;
 
   /** The SDK client used for operations. */
-  private readonly client: SteleClient;
+  private readonly client: KovaClient;
 
   /** Server name. */
   readonly name: string;
@@ -231,7 +231,7 @@ export class SteleServer {
 
   constructor(store: MemoryStore, options?: MCPServerOptions) {
     this.store = store;
-    this.client = new SteleClient();
+    this.client = new KovaClient();
     this.name = options?.name ?? 'stele-mcp-server';
     this.version = options?.version ?? '0.1.0';
   }
@@ -397,7 +397,7 @@ export class SteleServer {
         return this._toolError('Missing required field: privateKeyHex');
       }
 
-      const { fromHex } = await import('@stele/crypto');
+      const { fromHex } = await import('@usekova/crypto');
       const privateKey = fromHex(privateKeyHex);
 
       const doc = await this.client.createCovenant({
@@ -511,7 +511,7 @@ export class SteleServer {
 
       let keyPair: KeyPair;
       if (privateKeyHex) {
-        const { keyPairFromPrivateKeyHex } = await import('@stele/crypto');
+        const { keyPairFromPrivateKeyHex } = await import('@usekova/crypto');
         keyPair = await keyPairFromPrivateKeyHex(privateKeyHex);
       } else {
         keyPair = await generateKeyPair();

@@ -1,5 +1,5 @@
 /**
- * @stele/cli audit command.
+ * @usekova/cli audit command.
  *
  * Provides compliance audit functionality that inspects covenant coverage,
  * enforcement configuration, attestation coverage, identity verification,

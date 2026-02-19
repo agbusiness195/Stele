@@ -1,5 +1,5 @@
 /**
- * Stele Protocol Conformance Test Suite
+ * Kova Protocol Conformance Test Suite
  *
  * These tests verify that the protocol implementation conforms to its specification.
  * Each test is a real assertion that exercises the actual implementation, not a stub.
@@ -23,7 +23,7 @@ import {
   timestamp,
   base64urlEncode,
   base64urlDecode,
-} from '@stele/crypto';
+} from '@usekova/crypto';
 
 import {
   buildCovenant,
@@ -40,9 +40,9 @@ import {
   resolveChain,
   computeEffectiveConstraints,
   validateChainNarrowing,
-} from '@stele/core';
+} from '@usekova/core';
 
-import type { CovenantDocument } from '@stele/core';
+import type { CovenantDocument } from '@usekova/core';
 
 import {
   parse,
@@ -52,7 +52,7 @@ import {
   serialize,
   merge,
   checkRateLimit,
-} from '@stele/ccl';
+} from '@usekova/ccl';
 
 import {
   createIdentity,
@@ -61,7 +61,7 @@ import {
   serializeIdentity,
   deserializeIdentity,
   computeIdentityHash,
-} from '@stele/identity';
+} from '@usekova/identity';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -89,7 +89,7 @@ async function makeTestCovenant(constraints = "permit read on '/data/**'") {
 
 // ─── Test Suite ───────────────────────────────────────────────────────────────
 
-describe('Stele Protocol Conformance', () => {
+describe('Kova Protocol Conformance', () => {
 
   // ── Covenant Document Specification ─────────────────────────────────────────
 
@@ -922,7 +922,7 @@ describe('Stele Protocol Conformance', () => {
     it('SPEC-130: Public key is deterministically derived from private key', async () => {
       const kp1 = await generateKeyPair();
       // Import the same private key to get the same public key
-      const { keyPairFromPrivateKey } = await import('@stele/crypto');
+      const { keyPairFromPrivateKey } = await import('@usekova/crypto');
       const kp2 = await keyPairFromPrivateKey(kp1.privateKey);
       expect(kp2.publicKeyHex).toBe(kp1.publicKeyHex);
     });
@@ -1439,7 +1439,7 @@ describe('Stele Protocol Conformance', () => {
 
     it('SPEC-400: Re-signing produces a new valid document with different ID', async () => {
       const { doc, issuerKp } = await makeTestCovenant();
-      const { resignCovenant } = await import('@stele/core');
+      const { resignCovenant } = await import('@usekova/core');
       const resigned = await resignCovenant(doc, issuerKp.privateKey);
 
       // New document has a different ID due to new nonce

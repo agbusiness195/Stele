@@ -1,11 +1,11 @@
-# @stele/schema
+# @usekova/schema
 
 JSON Schema definitions (Draft 2020-12) for Stele protocol documents, enabling cross-language validation without the TypeScript SDK.
 
 ## Installation
 
 ```bash
-npm install @stele/schema
+npm install @usekova/schema
 ```
 
 ## Key APIs
@@ -34,7 +34,7 @@ import {
   validateCovenantSchema,
   validateDiscoverySchema,
   getAllSchemas,
-} from '@stele/schema';
+} from '@usekova/schema';
 
 // Validate a covenant document
 const result = validateCovenantSchema({

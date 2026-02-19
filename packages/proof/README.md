@@ -1,11 +1,11 @@
-# @stele/proof
+# @usekova/proof
 
 Compliance proof generation and verification using Poseidon hash commitments over audit logs and covenant constraints.
 
 ## Installation
 
 ```bash
-npm install @stele/proof
+npm install @usekova/proof
 ```
 
 ## Key APIs
@@ -25,7 +25,7 @@ npm install @stele/proof
 import {
   generateComplianceProof,
   verifyComplianceProof,
-} from '@stele/proof';
+} from '@usekova/proof';
 
 // Generate a proof that audit entries comply with constraints
 const proof = await generateComplianceProof({

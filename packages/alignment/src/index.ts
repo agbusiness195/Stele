@@ -1,7 +1,7 @@
-import { sha256Object } from '@stele/crypto';
-import { parse, matchAction, matchResource } from '@stele/ccl';
-import type { Statement } from '@stele/ccl';
-import { SteleError, SteleErrorCode } from '@stele/types';
+import { sha256Object } from '@usekova/crypto';
+import { parse, matchAction, matchResource } from '@usekova/ccl';
+import type { Statement } from '@usekova/ccl';
+import { KovaError, KovaErrorCode } from '@usekova/types';
 
 export type {
   AlignmentProperty,
@@ -70,7 +70,7 @@ export function defineAlignment(
   verificationMethod: 'behavioral' | 'compositional' | 'adversarial' = 'behavioral',
 ): AlignmentCovenant {
   if (!agentId || agentId.trim() === '') {
-    throw new SteleError('agentId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KovaError('agentId must be a non-empty string', KovaErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Build the union of all constraints from all properties
@@ -118,7 +118,7 @@ export function assessAlignment(
   history: ExecutionRecord[],
 ): AlignmentReport {
   if (!agentId || agentId.trim() === '') {
-    throw new SteleError('agentId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KovaError('agentId must be a non-empty string', KovaErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   if (covenant.alignmentProperties.length === 0) {
@@ -247,13 +247,13 @@ export function alignmentDrift(
   driftThreshold = 0.1,
 ): AlignmentDriftResult {
   if (!agentId || agentId.trim() === '') {
-    throw new SteleError('agentId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KovaError('agentId must be a non-empty string', KovaErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (windowCount < 2) {
-    throw new SteleError('windowCount must be at least 2', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KovaError('windowCount must be at least 2', KovaErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (history.length === 0) {
-    throw new SteleError('history must not be empty', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KovaError('history must not be empty', KovaErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Sort by timestamp
@@ -330,7 +330,7 @@ export function alignmentDecomposition(
   history: ExecutionRecord[],
 ): AlignmentDecompositionResult {
   if (!agentId || agentId.trim() === '') {
-    throw new SteleError('agentId must be a non-empty string', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KovaError('agentId must be a non-empty string', KovaErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const report = assessAlignment(agentId, covenant, history);
@@ -411,15 +411,15 @@ export class AdaptiveAlignmentTracker {
    */
   constructor(properties: AlignmentProperty[], alpha = 0.3) {
     if (properties.length === 0) {
-      throw new SteleError(
+      throw new KovaError(
         'Must provide at least one alignment property',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (alpha <= 0 || alpha >= 1) {
-      throw new SteleError(
+      throw new KovaError(
         'alpha must be between 0 and 1 (exclusive)',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.alpha = alpha;
@@ -440,15 +440,15 @@ export class AdaptiveAlignmentTracker {
    */
   recordObservation(obs: WeightObservation): void {
     if (!this.propertyNames.includes(obs.propertyName)) {
-      throw new SteleError(
+      throw new KovaError(
         `Unknown property: "${obs.propertyName}". Known: [${this.propertyNames.join(', ')}]`,
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(obs.severity) || obs.severity < 0) {
-      throw new SteleError(
+      throw new KovaError(
         'severity must be a non-negative finite number',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -553,9 +553,9 @@ export class PropertyAnomalyDetector {
    */
   constructor(anomalyThreshold = 3.5) {
     if (!Number.isFinite(anomalyThreshold) || anomalyThreshold <= 0) {
-      throw new SteleError(
+      throw new KovaError(
         'anomalyThreshold must be a positive finite number',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.anomalyThreshold = anomalyThreshold;
@@ -568,15 +568,15 @@ export class PropertyAnomalyDetector {
    */
   record(propertyName: string, value: number): void {
     if (!propertyName || propertyName.trim() === '') {
-      throw new SteleError(
+      throw new KovaError(
         'propertyName must be a non-empty string',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(value)) {
-      throw new SteleError(
+      throw new KovaError(
         'value must be a finite number',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!this.dataByProperty[propertyName]) {
@@ -595,15 +595,15 @@ export class PropertyAnomalyDetector {
    */
   check(propertyName: string, value: number): AnomalyResult {
     if (!propertyName || propertyName.trim() === '') {
-      throw new SteleError(
+      throw new KovaError(
         'propertyName must be a non-empty string',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(value)) {
-      throw new SteleError(
+      throw new KovaError(
         'value must be a finite number',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -642,9 +642,9 @@ export class PropertyAnomalyDetector {
    */
   statistics(propertyName: string): PropertyStatistics {
     if (!propertyName || propertyName.trim() === '') {
-      throw new SteleError(
+      throw new KovaError(
         'propertyName must be a non-empty string',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -730,9 +730,9 @@ export class DriftForecaster {
    */
   addScore(score: number): void {
     if (!Number.isFinite(score)) {
-      throw new SteleError(
+      throw new KovaError(
         'score must be a finite number',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.scores.push(score);
@@ -755,19 +755,19 @@ export class DriftForecaster {
    *
    * @param horizon Number of time steps to forecast ahead (default: 5).
    * @param breachThreshold Score below which we consider alignment breached (default: 0.5).
-   * @throws {SteleError} if fewer than 2 scores are recorded.
+   * @throws {KovaError} if fewer than 2 scores are recorded.
    */
   forecastLinear(horizon = 5, breachThreshold = 0.5): DriftForecast {
     if (horizon < 1) {
-      throw new SteleError(
+      throw new KovaError(
         'horizon must be at least 1',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.scores.length < 2) {
-      throw new SteleError(
+      throw new KovaError(
         'Need at least 2 scores for linear regression',
-        SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
+        KovaErrorCode.PROTOCOL_COMPUTATION_FAILED,
       );
     }
 
@@ -818,24 +818,24 @@ export class DriftForecaster {
     trendBeta = 0.1,
   ): DriftForecast {
     if (horizon < 1) {
-      throw new SteleError('horizon must be at least 1', SteleErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KovaError('horizon must be at least 1', KovaErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (this.scores.length < 2) {
-      throw new SteleError(
+      throw new KovaError(
         'Need at least 2 scores for Holt smoothing',
-        SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
+        KovaErrorCode.PROTOCOL_COMPUTATION_FAILED,
       );
     }
     if (levelAlpha <= 0 || levelAlpha >= 1) {
-      throw new SteleError(
+      throw new KovaError(
         'levelAlpha must be between 0 and 1 (exclusive)',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (trendBeta <= 0 || trendBeta >= 1) {
-      throw new SteleError(
+      throw new KovaError(
         'trendBeta must be between 0 and 1 (exclusive)',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -938,16 +938,16 @@ export class AlignmentSurface {
    */
   constructor(propertyNames: string[]) {
     if (propertyNames.length === 0) {
-      throw new SteleError(
+      throw new KovaError(
         'Must provide at least one property dimension',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     const unique = new Set(propertyNames);
     if (unique.size !== propertyNames.length) {
-      throw new SteleError(
+      throw new KovaError(
         'Property names must be unique',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.propertyNames = [...propertyNames];
@@ -960,15 +960,15 @@ export class AlignmentSurface {
   addPoint(scores: Record<string, number>): void {
     for (const name of this.propertyNames) {
       if (!(name in scores)) {
-        throw new SteleError(
+        throw new KovaError(
           `Missing score for property "${name}"`,
-          SteleErrorCode.PROTOCOL_INVALID_INPUT,
+          KovaErrorCode.PROTOCOL_INVALID_INPUT,
         );
       }
       if (!Number.isFinite(scores[name])) {
-        throw new SteleError(
+        throw new KovaError(
           `Score for "${name}" must be a finite number`,
-          SteleErrorCode.PROTOCOL_INVALID_INPUT,
+          KovaErrorCode.PROTOCOL_INVALID_INPUT,
         );
       }
     }
@@ -989,13 +989,13 @@ export class AlignmentSurface {
    * - Improvement recommendations
    *
    * @param weakThreshold Score below which a dimension is considered weak (default: 0.5).
-   * @throws {SteleError} if fewer than 2 points have been recorded.
+   * @throws {KovaError} if fewer than 2 points have been recorded.
    */
   analyze(weakThreshold = 0.5): AlignmentSurfaceResult {
     if (this.history.length < 2) {
-      throw new SteleError(
+      throw new KovaError(
         'Need at least 2 data points for surface analysis',
-        SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
+        KovaErrorCode.PROTOCOL_COMPUTATION_FAILED,
       );
     }
 
@@ -1118,15 +1118,15 @@ export class AlignmentFeedbackLoop {
     config: Partial<FeedbackLoopConfig> = {},
   ) {
     if (properties.length === 0) {
-      throw new SteleError(
+      throw new KovaError(
         'Must provide at least one alignment property',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (initialThreshold < 0 || initialThreshold > 1) {
-      throw new SteleError(
+      throw new KovaError(
         'initialThreshold must be between 0 and 1',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1137,9 +1137,9 @@ export class AlignmentFeedbackLoop {
     };
 
     if (this.config.learningRate <= 0 || this.config.learningRate >= 1) {
-      throw new SteleError(
+      throw new KovaError(
         'learningRate must be between 0 and 1 (exclusive)',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 

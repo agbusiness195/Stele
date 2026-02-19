@@ -1,12 +1,12 @@
 /**
  * Middleware system for the Stele SDK.
  *
- * Provides a composable pipeline that intercepts SteleClient operations
+ * Provides a composable pipeline that intercepts KovaClient operations
  * (create, verify, evaluate, etc.) for cross-cutting concerns like
  * logging, metrics, validation, caching, and rate limiting.
  */
 
-import { Logger, defaultLogger } from '@stele/types';
+import { Logger, defaultLogger } from '@usekova/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -53,7 +53,7 @@ export interface SteleMiddleware {
 // ─── Pipeline ────────────────────────────────────────────────────────────────
 
 /**
- * Composable middleware pipeline for intercepting SteleClient operations.
+ * Composable middleware pipeline for intercepting KovaClient operations.
  *
  * Middleware is executed in registration order for `before` hooks,
  * and in reverse order for `after` hooks (onion model).
@@ -173,7 +173,7 @@ export class MiddlewarePipeline {
 /**
  * Creates a logging middleware that logs operation start, completion, and errors.
  *
- * @param logger - Optional Logger instance. Defaults to the @stele/types defaultLogger.
+ * @param logger - Optional Logger instance. Defaults to the @usekova/types defaultLogger.
  */
 export function loggingMiddleware(logger?: Logger): SteleMiddleware {
   const log = logger ?? defaultLogger;

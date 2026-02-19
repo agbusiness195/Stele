@@ -1,7 +1,7 @@
 /**
  * Example 05: Store and Query
  *
- * Demonstrates the @stele/store package for persisting and querying
+ * Demonstrates the @usekova/store package for persisting and querying
  * covenant documents:
  * - Creating a MemoryStore
  * - Storing 5 covenants from different issuers
@@ -12,14 +12,14 @@
  * Run: npx tsx examples/05-store-and-query.ts
  */
 
-import { MemoryStore, type StoreEvent } from '@stele/store';
+import { MemoryStore, type StoreEvent } from '@usekova/store';
 import {
   buildCovenant,
   type CovenantDocument,
   type Issuer,
   type Beneficiary,
-} from '@stele/core';
-import { generateKeyPair, type KeyPair } from '@stele/crypto';
+} from '@usekova/core';
+import { generateKeyPair, type KeyPair } from '@usekova/crypto';
 
 async function createTestCovenant(
   issuerName: string,

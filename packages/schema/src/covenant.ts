@@ -179,7 +179,7 @@ const definitions = {
  * @example
  * ```typescript
  * import Ajv from 'ajv';
- * import { COVENANT_SCHEMA } from '@stele/schema';
+ * import { COVENANT_SCHEMA } from '@usekova/schema';
  *
  * const ajv = new Ajv();
  * const validate = ajv.compile(COVENANT_SCHEMA);

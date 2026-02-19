@@ -1,5 +1,5 @@
 {
-  "name": "@stele/derivatives",
+  "name": "@usekova/derivatives",
   "version": "2.0.0",
   "description": "Covenant derivative instruments and transformation calculus",
   "sideEffects": false,
@@ -27,7 +27,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "2.0.0"
+    "@usekova/crypto": "2.0.0"
   },
   "license": "MIT",
   "engines": {

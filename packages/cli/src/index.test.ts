@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { run } from './index';
-import { buildCovenant, serializeCovenant, PROTOCOL_VERSION } from '@stele/core';
-import { generateKeyPair } from '@stele/crypto';
+import { buildCovenant, serializeCovenant, PROTOCOL_VERSION } from '@usekova/core';
+import { generateKeyPair } from '@usekova/crypto';
 import { setColorsEnabled, stripAnsi } from './format';
 import { mkdtempSync, readFileSync, existsSync, rmSync } from 'fs';
 import { join } from 'path';

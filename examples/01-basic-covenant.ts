@@ -12,11 +12,11 @@
  */
 
 import {
-  SteleClient,
+  KovaClient,
   generateKeyPair,
   type Issuer,
   type Beneficiary,
-} from '@stele/sdk';
+} from '@usekova/sdk';
 
 async function main() {
   console.log('========================================');
@@ -52,10 +52,10 @@ async function main() {
     name: 'Data Analyst Agent v1',
   };
 
-  // ── Step 3: Create the SteleClient ─────────────────────────────────────
+  // ── Step 3: Create the KovaClient ─────────────────────────────────────
   // The client manages key pairs and provides the high-level API.
 
-  const client = new SteleClient({ keyPair: issuerKeys });
+  const client = new KovaClient({ keyPair: issuerKeys });
 
   // ── Step 4: Create a covenant ──────────────────────────────────────────
   // Constraints are written in CCL (Covenant Constraint Language).

@@ -1,11 +1,11 @@
-# @stele/mcp-server
+# @usekova/mcp-server
 
 Model Context Protocol (MCP) server that exposes Stele covenant operations as tools to any AI agent via JSON-RPC 2.0.
 
 ## Installation
 
 ```bash
-npm install @stele/mcp-server
+npm install @usekova/mcp-server
 ```
 
 ## Key APIs
@@ -28,8 +28,8 @@ npm install @stele/mcp-server
 ## Usage
 
 ```typescript
-import { SteleServer } from '@stele/mcp-server';
-import { MemoryStore } from '@stele/store';
+import { SteleServer } from '@usekova/mcp-server';
+import { MemoryStore } from '@usekova/store';
 
 const server = new SteleServer(new MemoryStore(), {
   name: 'my-stele-server',

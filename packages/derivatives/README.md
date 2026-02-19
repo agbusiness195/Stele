@@ -1,11 +1,11 @@
-# @stele/derivatives
+# @usekova/derivatives
 
 Covenant derivative instruments and transformation calculus. Provides risk assessment, insurance policy pricing, trust futures, Black-Scholes option pricing for behavioral contracts, Value at Risk (VaR), and hedge ratio computation.
 
 ## Installation
 
 ```bash
-npm install @stele/derivatives
+npm install @usekova/derivatives
 ```
 
 ## Key APIs
@@ -31,7 +31,7 @@ import {
   settleFuture,
   blackScholesPrice,
   valueAtRisk,
-} from '@stele/derivatives';
+} from '@usekova/derivatives';
 
 // Assess agent risk from reputation data
 const risk = assessRisk('agent-1', {

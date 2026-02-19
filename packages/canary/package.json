@@ -1,5 +1,5 @@
 {
-  "name": "@stele/canary",
+  "name": "@usekova/canary",
   "version": "2.0.0",
   "description": "Canary token generation and tripwire monitoring",
   "sideEffects": false,
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/ccl": "2.0.0",
-    "@stele/crypto": "2.0.0"
+    "@usekova/ccl": "2.0.0",
+    "@usekova/crypto": "2.0.0"
   },
   "license": "MIT",
   "engines": {

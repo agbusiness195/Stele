@@ -8,8 +8,8 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { generateKeyPair, sha256String, toHex } from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
+import { generateKeyPair, sha256String, toHex } from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
 
 import {
   buildCovenant,
@@ -25,10 +25,10 @@ import {
   serializeCovenant,
   deserializeCovenant,
   MAX_CHAIN_DEPTH,
-} from '@stele/core';
-import type { CovenantDocument } from '@stele/core';
+} from '@usekova/core';
+import type { CovenantDocument } from '@usekova/core';
 
-import { SteleClient, QuickCovenant } from '@stele/sdk';
+import { KovaClient, QuickCovenant } from '@usekova/sdk';
 import type {
   SteleEventType,
   CovenantCreatedEvent,
@@ -38,14 +38,14 @@ import type {
   ChainResolvedEvent,
   ChainValidatedEvent,
   EvaluationCompletedEvent,
-} from '@stele/sdk';
+} from '@usekova/sdk';
 
-import { MemoryStore } from '@stele/store';
-import type { StoreEvent } from '@stele/store';
+import { MemoryStore } from '@usekova/store';
+import type { StoreEvent } from '@usekova/store';
 
-import { Verifier, verifyBatch } from '@stele/verifier';
+import { Verifier, verifyBatch } from '@usekova/verifier';
 
-import { parse, evaluate, merge as mergeCCL, serialize as serializeCCL } from '@stele/ccl';
+import { parse, evaluate, merge as mergeCCL, serialize as serializeCCL } from '@usekova/ccl';
 
 import {
   createIdentity,
@@ -53,26 +53,26 @@ import {
   verifyIdentity,
   serializeIdentity,
   deserializeIdentity,
-} from '@stele/identity';
-import type { AgentIdentity } from '@stele/identity';
+} from '@usekova/identity';
+import type { AgentIdentity } from '@usekova/identity';
 
 
 // ---------------------------------------------------------------------------
-// SDK + Store: Create covenants via SteleClient, store, retrieve, verify
+// SDK + Store: Create covenants via KovaClient, store, retrieve, verify
 // ---------------------------------------------------------------------------
 
 describe('SDK + Store integration', () => {
-  let client: SteleClient;
+  let client: KovaClient;
   let store: MemoryStore;
   let kp: KeyPair;
 
   beforeEach(async () => {
     kp = await generateKeyPair();
-    client = new SteleClient({ keyPair: kp });
+    client = new KovaClient({ keyPair: kp });
     store = new MemoryStore();
   });
 
-  it('should create a covenant via SteleClient and store it in MemoryStore', async () => {
+  it('should create a covenant via KovaClient and store it in MemoryStore', async () => {
     const doc = await client.createCovenant({
       issuer: { id: 'issuer-1', publicKey: kp.publicKeyHex, role: 'issuer' },
       beneficiary: { id: 'ben-1', publicKey: kp.publicKeyHex, role: 'beneficiary' },
@@ -203,21 +203,21 @@ describe('SDK + Store integration', () => {
 
 
 // ---------------------------------------------------------------------------
-// SDK + Verifier: Create via SteleClient, verify via standalone Verifier
+// SDK + Verifier: Create via KovaClient, verify via standalone Verifier
 // ---------------------------------------------------------------------------
 
 describe('SDK + Verifier integration', () => {
-  let client: SteleClient;
+  let client: KovaClient;
   let verifier: Verifier;
   let kp: KeyPair;
 
   beforeEach(async () => {
     kp = await generateKeyPair();
-    client = new SteleClient({ keyPair: kp });
+    client = new KovaClient({ keyPair: kp });
     verifier = new Verifier({ verifierId: 'test-verifier' });
   });
 
-  it('should verify a covenant created by SteleClient via Verifier.verify', async () => {
+  it('should verify a covenant created by KovaClient via Verifier.verify', async () => {
     const doc = await client.createCovenant({
       issuer: { id: 'sdk-issuer', publicKey: kp.publicKeyHex, role: 'issuer' },
       beneficiary: { id: 'sdk-ben', publicKey: kp.publicKeyHex, role: 'beneficiary' },
@@ -887,12 +887,12 @@ describe('Crypto + Core integration', () => {
 // ---------------------------------------------------------------------------
 
 describe('SDK event system integration', () => {
-  let client: SteleClient;
+  let client: KovaClient;
   let kp: KeyPair;
 
   beforeEach(async () => {
     kp = await generateKeyPair();
-    client = new SteleClient({ keyPair: kp });
+    client = new KovaClient({ keyPair: kp });
   });
 
   it('should emit covenant:created event when creating a covenant', async () => {
@@ -1207,8 +1207,8 @@ describe('Chain operations spanning multiple packages', () => {
     expect(narrowing.violations.length).toBeGreaterThan(0);
   });
 
-  it('should validate a valid narrowing chain via SteleClient.validateChain', async () => {
-    const client = new SteleClient({ keyPair: kpRoot });
+  it('should validate a valid narrowing chain via KovaClient.validateChain', async () => {
+    const client = new KovaClient({ keyPair: kpRoot });
 
     const root = await client.createCovenant({
       issuer: { id: 'vc-root', publicKey: kpRoot.publicKeyHex, role: 'issuer' },
@@ -1216,7 +1216,7 @@ describe('Chain operations spanning multiple packages', () => {
       constraints: "permit file.read on '**'\ndeny file.delete on '**' severity critical",
     });
 
-    const childClient = new SteleClient({ keyPair: kpMid });
+    const childClient = new KovaClient({ keyPair: kpMid });
     const child = await childClient.createCovenant({
       issuer: { id: 'vc-child', publicKey: kpMid.publicKeyHex, role: 'issuer' },
       beneficiary: { id: 'vc-leaf', publicKey: kpLeaf.publicKeyHex, role: 'beneficiary' },
@@ -1230,7 +1230,7 @@ describe('Chain operations spanning multiple packages', () => {
   });
 
   it('should use SDK parseCCL and mergeCCL together', () => {
-    const client = new SteleClient();
+    const client = new KovaClient();
     const doc1 = client.parseCCL("permit file.read on '/data/**'");
     const doc2 = client.parseCCL("deny file.write on '**' severity critical");
     const merged = client.mergeCCL(doc1, doc2);
@@ -1245,7 +1245,7 @@ describe('Chain operations spanning multiple packages', () => {
   });
 
   it('should SDK serializeCCL preserve semantics after round-trip', () => {
-    const client = new SteleClient();
+    const client = new KovaClient();
     const original = client.parseCCL("permit file.read on '/data/**'\ndeny file.write on '/system/**' severity critical");
     const serialized = client.serializeCCL(original);
     const reparsed = client.parseCCL(serialized);
@@ -1290,7 +1290,7 @@ describe('Chain operations spanning multiple packages', () => {
   });
 
   it('should strictly mode throw CovenantVerificationError on invalid covenant', async () => {
-    const client = new SteleClient({ keyPair: kpRoot, strictMode: true });
+    const client = new KovaClient({ keyPair: kpRoot, strictMode: true });
 
     const doc = await client.createCovenant({
       issuer: { id: 'strict-issuer', publicKey: kpRoot.publicKeyHex, role: 'issuer' },

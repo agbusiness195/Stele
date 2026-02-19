@@ -1,11 +1,11 @@
-# @stele/core
+# @usekova/core
 
-Covenant document lifecycle: build, sign, verify, countersign, chain, and serialize. This is the protocol engine that ties `@stele/crypto` and `@stele/ccl` together.
+Covenant document lifecycle: build, sign, verify, countersign, chain, and serialize. This is the protocol engine that ties `@usekova/crypto` and `@usekova/ccl` together.
 
 ## Installation
 
 ```bash
-npm install @stele/core
+npm install @usekova/core
 ```
 
 ## Usage
@@ -13,8 +13,8 @@ npm install @stele/core
 ### Build and Verify a Covenant
 
 ```typescript
-import { generateKeyPair } from '@stele/crypto';
-import { buildCovenant, verifyCovenant } from '@stele/core';
+import { generateKeyPair } from '@usekova/crypto';
+import { buildCovenant, verifyCovenant } from '@usekova/core';
 
 const issuerKp = await generateKeyPair();
 const beneficiaryKp = await generateKeyPair();
@@ -34,7 +34,7 @@ console.log(result.checks.map(c => `${c.name}: ${c.passed}`));
 ### Countersign
 
 ```typescript
-import { countersignCovenant } from '@stele/core';
+import { countersignCovenant } from '@usekova/core';
 
 const auditorKp = await generateKeyPair();
 const audited = await countersignCovenant(doc, auditorKp, 'auditor');
@@ -44,7 +44,7 @@ console.log(audited.countersignatures?.length); // 1
 ### Delegation Chains
 
 ```typescript
-import { resolveChain, validateChainNarrowing, MemoryChainResolver } from '@stele/core';
+import { resolveChain, validateChainNarrowing, MemoryChainResolver } from '@usekova/core';
 
 const resolver = new MemoryChainResolver();
 resolver.add(parentDoc);
@@ -57,7 +57,7 @@ console.log(narrowing.valid); // true if child only restricts parent
 ### Serialization
 
 ```typescript
-import { serializeCovenant, deserializeCovenant } from '@stele/core';
+import { serializeCovenant, deserializeCovenant } from '@usekova/core';
 
 const json = serializeCovenant(doc);
 const restored = deserializeCovenant(json);

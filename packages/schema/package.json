@@ -1,5 +1,5 @@
 {
-  "name": "@stele/schema",
+  "name": "@usekova/schema",
   "version": "2.0.0",
   "description": "Formal JSON Schema definitions for Stele protocol documents",
   "sideEffects": false,
@@ -27,7 +27,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/types": "2.0.0"
+    "@usekova/types": "2.0.0"
   },
   "license": "MIT",
   "author": "Stele Labs, Inc.",

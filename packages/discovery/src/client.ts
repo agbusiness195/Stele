@@ -1,13 +1,13 @@
 /**
- * @stele/discovery/client — Cross-platform discovery client.
+ * @usekova/discovery/client — Cross-platform discovery client.
  *
  * Fetches, validates, and caches discovery documents from remote platforms.
  * This is what Agent A uses when it needs to verify Agent B's covenant
  * on a different platform.
  */
 
-import { generateNonce, timestamp, toHex } from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
+import { generateNonce, timestamp, toHex } from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
 
 import type {
   DiscoveryDocument,

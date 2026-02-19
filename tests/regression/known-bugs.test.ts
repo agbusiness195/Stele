@@ -7,11 +7,11 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { generateKeyPair, toHex } from '@stele/crypto';
-import { buildCovenant, verifyCovenant, resignCovenant, countersignCovenant, computeId, canonicalForm } from '@stele/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@stele/core';
-import { parse, evaluate, merge, validateNarrowing } from '@stele/ccl';
-import { MemoryStore } from '@stele/store';
+import { generateKeyPair, toHex } from '@usekova/crypto';
+import { buildCovenant, verifyCovenant, resignCovenant, countersignCovenant, computeId, canonicalForm } from '@usekova/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
+import { parse, evaluate, merge, validateNarrowing } from '@usekova/ccl';
+import { MemoryStore } from '@usekova/store';
 
 // ---------------------------------------------------------------------------
 // Helpers

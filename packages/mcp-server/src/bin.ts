@@ -11,7 +11,7 @@
  */
 
 import { SteleServer } from './index';
-import { MemoryStore } from '@stele/store';
+import { MemoryStore } from '@usekova/store';
 import type { JsonRpcRequest } from './types';
 
 const store = new MemoryStore();

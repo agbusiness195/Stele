@@ -5,9 +5,9 @@ export type {
   BreachEvent,
 } from './types.js';
 
-import type { KeyPair, HashHex } from '@stele/crypto';
-import type { Severity } from '@stele/ccl';
-import { SteleError, SteleErrorCode } from '@stele/types';
+import type { KeyPair, HashHex } from '@usekova/crypto';
+import type { Severity } from '@usekova/ccl';
+import { KovaError, KovaErrorCode } from '@usekova/types';
 import {
   sha256Object,
   canonicalizeJson,
@@ -16,7 +16,7 @@ import {
   toHex,
   fromHex,
   timestamp,
-} from '@stele/crypto';
+} from '@usekova/crypto';
 
 import type {
   BreachAttestation,
@@ -533,15 +533,15 @@ export class ExponentialDegradation {
 
   constructor(config: ExponentialDegradationConfig) {
     if (config.baseLoss <= 0 || config.baseLoss > 1) {
-      throw new SteleError(
+      throw new KovaError(
         'ExponentialDegradation baseLoss must be in (0, 1]',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (config.lambda <= 0) {
-      throw new SteleError(
+      throw new KovaError(
         'ExponentialDegradation lambda must be > 0',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.baseLoss = config.baseLoss;
@@ -555,9 +555,9 @@ export class ExponentialDegradation {
    */
   computeLoss(hopDistance: number): number {
     if (hopDistance < 0 || !Number.isFinite(hopDistance)) {
-      throw new SteleError(
+      throw new KovaError(
         'hopDistance must be a non-negative finite number',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     return this.baseLoss * Math.exp(-this.lambda * hopDistance);
@@ -571,9 +571,9 @@ export class ExponentialDegradation {
    */
   degrade(currentTrust: number, hopDistance: number): number {
     if (currentTrust < 0 || currentTrust > 1) {
-      throw new SteleError(
+      throw new KovaError(
         'currentTrust must be in [0, 1]',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     const loss = this.computeLoss(hopDistance);
@@ -586,9 +586,9 @@ export class ExponentialDegradation {
    */
   profile(maxHops: number): number[] {
     if (maxHops < 0 || !Number.isInteger(maxHops)) {
-      throw new SteleError(
+      throw new KovaError(
         'maxHops must be a non-negative integer',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     const result: number[] = [];
@@ -606,9 +606,9 @@ export class ExponentialDegradation {
    */
   effectiveRadius(threshold: number): number {
     if (threshold <= 0 || threshold > 1) {
-      throw new SteleError(
+      throw new KovaError(
         'threshold must be in (0, 1]',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.baseLoss < threshold) {
@@ -680,9 +680,9 @@ export class BreachStateMachine {
 
   constructor(breachId: string, config?: Partial<BreachStateMachineConfig>) {
     if (!breachId || breachId.trim().length === 0) {
-      throw new SteleError(
+      throw new KovaError(
         'breachId must be a non-empty string',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.breachId = breachId;
@@ -726,20 +726,20 @@ export class BreachStateMachine {
    * @param to - Target state.
    * @param actor - Identifier of the entity performing the transition.
    * @param evidence - Evidence supporting the transition.
-   * @throws SteleError if the transition is invalid.
+   * @throws KovaError if the transition is invalid.
    */
   transition(to: BreachState, actor: string, evidence: BreachEvidence[] = []): void {
     const allowedTargets = VALID_TRANSITIONS[this._state];
     if (!allowedTargets.includes(to)) {
-      throw new SteleError(
+      throw new KovaError(
         `Invalid breach state transition: ${this._state} -> ${to}. Allowed: [${allowedTargets.join(', ')}]`,
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!actor || actor.trim().length === 0) {
-      throw new SteleError(
+      throw new KovaError(
         'actor must be a non-empty string',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -832,21 +832,21 @@ export class RecoveryModel {
 
   constructor(config: RecoveryModelConfig) {
     if (config.maxRecovery <= 0 || config.maxRecovery > 1) {
-      throw new SteleError(
+      throw new KovaError(
         'maxRecovery must be in (0, 1]',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (config.steepness <= 0) {
-      throw new SteleError(
+      throw new KovaError(
         'steepness must be > 0',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (config.midpointMs <= 0) {
-      throw new SteleError(
+      throw new KovaError(
         'midpointMs must be > 0',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.config = { ...config };
@@ -859,9 +859,9 @@ export class RecoveryModel {
    */
   recoveryFraction(elapsedMs: number): number {
     if (elapsedMs < 0) {
-      throw new SteleError(
+      throw new KovaError(
         'elapsedMs must be non-negative',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     const { maxRecovery, steepness, midpointMs } = this.config;
@@ -886,21 +886,21 @@ export class RecoveryModel {
     elapsedMs: number,
   ): number {
     if (preBreachTrust < 0 || preBreachTrust > 1) {
-      throw new SteleError(
+      throw new KovaError(
         'preBreachTrust must be in [0, 1]',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (historicalReliability < 0 || historicalReliability > 1) {
-      throw new SteleError(
+      throw new KovaError(
         'historicalReliability must be in [0, 1]',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (elapsedMs < 0) {
-      throw new SteleError(
+      throw new KovaError(
         'elapsedMs must be non-negative',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1034,21 +1034,21 @@ export class RepeatOffenderDetector {
   constructor(config?: Partial<RepeatOffenderConfig>) {
     this.config = { ...DEFAULT_OFFENDER_CONFIG, ...config };
     if (this.config.warningThreshold <= 0) {
-      throw new SteleError(
+      throw new KovaError(
         'warningThreshold must be > 0',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.restrictionThreshold <= this.config.warningThreshold) {
-      throw new SteleError(
+      throw new KovaError(
         'restrictionThreshold must be > warningThreshold',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.revocationThreshold <= this.config.restrictionThreshold) {
-      throw new SteleError(
+      throw new KovaError(
         'revocationThreshold must be > restrictionThreshold',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
   }
@@ -1058,9 +1058,9 @@ export class RepeatOffenderDetector {
    */
   recordBreach(agentId: string, record: BreachRecord): void {
     if (!agentId || agentId.trim().length === 0) {
-      throw new SteleError(
+      throw new KovaError(
         'agentId must be a non-empty string',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     let records = this.history.get(agentId);

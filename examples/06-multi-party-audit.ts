@@ -12,15 +12,15 @@
  */
 
 import {
-  SteleClient,
+  KovaClient,
   generateKeyPair,
   countersignCovenant,
   type Issuer,
   type Beneficiary,
   type CovenantDocument,
-} from '@stele/sdk';
+} from '@usekova/sdk';
 
-import { Verifier } from '@stele/verifier';
+import { Verifier } from '@usekova/verifier';
 
 async function main() {
   console.log('========================================');
@@ -60,7 +60,7 @@ async function main() {
     name: 'Trading Bot v2',
   };
 
-  const client = new SteleClient({ keyPair: issuerKeys });
+  const client = new KovaClient({ keyPair: issuerKeys });
 
   const covenant = await client.createCovenant({
     issuer,

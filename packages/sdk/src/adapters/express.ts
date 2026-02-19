@@ -10,8 +10,8 @@
  * @packageDocumentation
  */
 
-import type { SteleClient } from '../index.js';
-import type { CovenantDocument } from '@stele/core';
+import type { KovaClient } from '../index.js';
+import type { CovenantDocument } from '@usekova/core';
 import type { EvaluationResult } from '../types.js';
 
 // ─── Generic HTTP types ──────────────────────────────────────────────────────
@@ -57,8 +57,8 @@ export type NextFunction = (err?: unknown) => void;
  * Options for the steleMiddleware factory.
  */
 export interface SteleMiddlewareOptions {
-  /** The SteleClient instance to use for covenant evaluation. */
-  client: SteleClient;
+  /** The KovaClient instance to use for covenant evaluation. */
+  client: KovaClient;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
   /**
@@ -89,8 +89,8 @@ export interface SteleMiddlewareOptions {
  * Options for the steleGuardHandler factory.
  */
 export interface SteleGuardHandlerOptions {
-  /** The SteleClient instance to use for covenant evaluation. */
-  client: SteleClient;
+  /** The KovaClient instance to use for covenant evaluation. */
+  client: KovaClient;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
   /**
@@ -121,8 +121,8 @@ export interface SteleGuardHandlerOptions {
  * Options for the createCovenantRouter factory.
  */
 export interface CovenantRouterOptions {
-  /** The SteleClient instance to use for covenant evaluation. */
-  client: SteleClient;
+  /** The KovaClient instance to use for covenant evaluation. */
+  client: KovaClient;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
 }
@@ -208,9 +208,9 @@ function defaultOnError(
  * @example
  * ```typescript
  * import express from 'express';
- * import { SteleClient, steleMiddleware } from '@stele/sdk';
+ * import { KovaClient, steleMiddleware } from '@usekova/sdk';
  *
- * const client = new SteleClient();
+ * const client = new KovaClient();
  * const app = express();
  *
  * app.use(steleMiddleware({

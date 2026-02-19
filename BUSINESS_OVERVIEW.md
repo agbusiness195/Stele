@@ -113,20 +113,20 @@ limit api.call 500 per 3600 seconds
 ```
 
 ### Foundation Layer (7 packages)
-- **@stele/types**: Error codes, validation, Result type, type guards
-- **@stele/crypto**: Ed25519, SHA-256, JCS canonicalization, hex encoding
-- **@stele/ccl**: CCL parser & evaluator (deny-wins, resource globs, rate limits)
-- **@stele/core**: Covenant build/sign/verify/chain/serialize (11-check verification)
-- **@stele/store**: MemoryStore + FileStore + SQLite (pluggable, queryable, event system)
-- **@stele/verifier**: Stateful verification with caching
-- **@stele/identity**: Agent identity lifecycle & lineage tracking
+- **@usekova/types**: Error codes, validation, Result type, type guards
+- **@usekova/crypto**: Ed25519, SHA-256, JCS canonicalization, hex encoding
+- **@usekova/ccl**: CCL parser & evaluator (deny-wins, resource globs, rate limits)
+- **@usekova/core**: Covenant build/sign/verify/chain/serialize (11-check verification)
+- **@usekova/store**: MemoryStore + FileStore + SQLite (pluggable, queryable, event system)
+- **@usekova/verifier**: Stateful verification with caching
+- **@usekova/identity**: Agent identity lifecycle & lineage tracking
 
 ### Enforcement Layer (5 packages)
-- **@stele/enforcement**: Real-time constraint evaluation + audit trail
-- **@stele/proof**: ZK proof generation (compliance proof)
-- **@stele/breach**: Breach detection, attestation, trust graph propagation
-- **@stele/reputation**: Trust scoring, decay curves, stake-weighted reputation
-- **@stele/mcp**: MCP middleware guard for tool-call enforcement
+- **@usekova/enforcement**: Real-time constraint evaluation + audit trail
+- **@usekova/proof**: ZK proof generation (compliance proof)
+- **@usekova/breach**: Breach detection, attestation, trust graph propagation
+- **@usekova/reputation**: Trust scoring, decay curves, stake-weighted reputation
+- **@usekova/mcp**: MCP middleware guard for tool-call enforcement
 
 ### Protocol Layer (17 packages)
 Advanced features for enterprise use:
@@ -137,16 +137,16 @@ Advanced features for enterprise use:
 - Trust derivatives, Legal compliance mapping
 
 ### SDK & Interop (4 packages)
-- **@stele/sdk**: Unified SteleClient API, QuickCovenant builders, event system
-- **@stele/discovery**: `.well-known/stele/` protocol, key registry, cross-platform negotiation
-- **@stele/schema**: JSON Schema (Draft 2020-12) for all document types
-- **@stele/mcp-server**: JSON-RPC 2.0 MCP server exposing Stele as tools
+- **@usekova/sdk**: Unified SteleClient API, QuickCovenant builders, event system
+- **@usekova/discovery**: `.well-known/stele/` protocol, key registry, cross-platform negotiation
+- **@usekova/schema**: JSON Schema (Draft 2020-12) for all document types
+- **@usekova/mcp-server**: JSON-RPC 2.0 MCP server exposing Stele as tools
 
 ### Platform Integrations (4 packages)
-- **@stele/react**: Reactive UI primitives
-- **@stele/evm**: Ethereum/blockchain anchoring
-- **@stele/cli**: Command-line interface
-- **@stele/mcp-server**: MCP server integration
+- **@usekova/react**: Reactive UI primitives
+- **@usekova/evm**: Ethereum/blockchain anchoring
+- **@usekova/cli**: Command-line interface
+- **@usekova/mcp-server**: MCP server integration
 
 ---
 
@@ -158,8 +158,8 @@ Advanced features for enterprise use:
 | **LangChain** | `SteleCallbackHandler` / `withSteleTool()` | Enforces tool constraints in chains |
 | **Express/Node.js** | `steleMiddleware()` | Zero-config HTTP covenant enforcement |
 | **OpenTelemetry** | `telemetryMiddleware()` | Bring-your-own-tracer integration |
-| **Ethereum/EVM** | `@stele/evm` | On-chain covenant registry |
-| **MCP (Claude)** | `@stele/mcp-server` | Model Context Protocol integration |
+| **Ethereum/EVM** | `@usekova/evm` | On-chain covenant registry |
+| **MCP (Claude)** | `@usekova/mcp-server` | Model Context Protocol integration |
 
 ---
 

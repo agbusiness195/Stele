@@ -120,7 +120,7 @@ class MockMeter implements Meter {
   }
 }
 
-/** A mock EventSource that simulates SteleClient's on() API. */
+/** A mock EventSource that simulates KovaClient's on() API. */
 class MockEventSource implements EventSource {
   private readonly _handlers = new Map<SteleEventType, Set<(data: unknown) => void>>();
 

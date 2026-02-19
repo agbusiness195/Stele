@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { MetricsRegistry, createMetricsRegistry } from '@stele/types';
+import { MetricsRegistry, createMetricsRegistry } from '@usekova/types';
 
 import { MiddlewarePipeline } from '../middleware.js';
 import type { SteleMiddleware, MiddlewareContext } from '../middleware.js';

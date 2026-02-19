@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateKeyPair } from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
-import type { CovenantDocument, Issuer, Beneficiary } from '@stele/core';
+import { generateKeyPair } from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
+import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
 
 import {
-  SteleClient,
+  KovaClient,
   steleMiddleware,
   steleGuardHandler,
   createCovenantRouter,
@@ -84,11 +84,11 @@ function mockResponse(): OutgoingResponse & {
 
 /** Helper: create a client and covenant for tests. */
 async function createTestFixture(constraints: string): Promise<{
-  client: SteleClient;
+  client: KovaClient;
   covenant: CovenantDocument;
 }> {
   const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-  const client = new SteleClient({ keyPair: issuerKeyPair });
+  const client = new KovaClient({ keyPair: issuerKeyPair });
 
   const covenant = await client.createCovenant({
     issuer,

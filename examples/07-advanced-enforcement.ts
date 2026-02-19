@@ -15,27 +15,27 @@
 import {
   Monitor,
   type AuditEntry,
-} from '@stele/enforcement';
+} from '@usekova/enforcement';
 
 import {
   createReceipt,
   computeReputationScore,
   createEndorsement,
   type ExecutionReceipt,
-} from '@stele/reputation';
+} from '@usekova/reputation';
 
 import {
   createBreachAttestation,
   TrustGraph,
-} from '@stele/breach';
+} from '@usekova/breach';
 
 import {
   buildCovenant,
   type Issuer,
   type Beneficiary,
-} from '@stele/core';
+} from '@usekova/core';
 
-import { generateKeyPair, sha256String, toHex, type HashHex } from '@stele/crypto';
+import { generateKeyPair, sha256String, toHex, type HashHex } from '@usekova/crypto';
 
 async function main() {
   console.log('========================================');

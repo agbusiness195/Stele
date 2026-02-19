@@ -1,11 +1,11 @@
-# @stele/mcp
+# @usekova/mcp
 
 Model Context Protocol (MCP) integration -- wraps any MCP server with Stele covenant enforcement, audit logging, and compliance proofs.
 
 ## Installation
 
 ```bash
-npm install @stele/mcp
+npm install @usekova/mcp
 ```
 
 ## Key APIs
@@ -18,7 +18,7 @@ npm install @stele/mcp
 ## Usage
 
 ```typescript
-import { SteleGuard } from '@stele/mcp';
+import { SteleGuard } from '@usekova/mcp';
 
 // Your existing MCP server
 const mcpServer = {
@@ -47,9 +47,9 @@ const receipt = guarded.getReceipt();
 ### Using a pre-built covenant
 
 ```typescript
-import { SteleGuard } from '@stele/mcp';
-import { buildCovenant } from '@stele/core';
-import { generateKeyPair } from '@stele/crypto';
+import { SteleGuard } from '@usekova/mcp';
+import { buildCovenant } from '@usekova/core';
+import { generateKeyPair } from '@usekova/crypto';
 
 const keyPair = await generateKeyPair();
 const covenant = await buildCovenant({ /* ... */ });

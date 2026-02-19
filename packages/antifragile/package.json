@@ -1,5 +1,5 @@
 {
-  "name": "@stele/antifragile",
+  "name": "@usekova/antifragile",
   "version": "2.0.0",
   "description": "Antifragility analysis with stress testing and recovery metrics",
   "sideEffects": false,
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "2.0.0",
-    "@stele/types": "2.0.0"
+    "@usekova/crypto": "2.0.0",
+    "@usekova/types": "2.0.0"
   },
   "license": "MIT",
   "engines": {

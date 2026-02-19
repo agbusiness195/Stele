@@ -1,11 +1,11 @@
-# @stele/store
+# @usekova/store
 
 Pluggable storage backends for covenant documents. Ships with `MemoryStore`, `FileStore`, and `SqliteStore`.
 
 ## Installation
 
 ```bash
-npm install @stele/store
+npm install @usekova/store
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @stele/store
 ### MemoryStore
 
 ```typescript
-import { MemoryStore } from '@stele/store';
+import { MemoryStore } from '@usekova/store';
 
 const store = new MemoryStore();
 
@@ -38,7 +38,7 @@ const docs = await store.getBatch([id1, id2]);
 ### FileStore
 
 ```typescript
-import { FileStore } from '@stele/store';
+import { FileStore } from '@usekova/store';
 
 const store = new FileStore('/path/to/covenants');
 await store.put(doc);
@@ -48,8 +48,8 @@ const retrieved = await store.get(doc.id);
 ### SqliteStore (bring-your-own-driver)
 
 ```typescript
-import { SqliteStore } from '@stele/store';
-import type { SQLiteDriver } from '@stele/store';
+import { SqliteStore } from '@usekova/store';
+import type { SQLiteDriver } from '@usekova/store';
 
 const driver: SQLiteDriver = { /* your sqlite driver implementation */ };
 const store = new SqliteStore(driver);
@@ -61,7 +61,7 @@ await store.put(doc);
 ```typescript
 store.onEvent((event) => console.log(`${event.type}: ${event.documentId}`));
 
-import { createQuery } from '@stele/store';
+import { createQuery } from '@usekova/store';
 const query = createQuery().where({ issuerId: 'alice' }).sortBy('createdAt', 'desc');
 ```
 

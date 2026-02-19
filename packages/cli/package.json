@@ -1,5 +1,5 @@
 {
-  "name": "@stele/cli",
+  "name": "@usekova/cli",
   "version": "2.0.0",
   "description": "Command-line interface for the Stele covenant framework",
   "sideEffects": false,
@@ -29,15 +29,15 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "2.0.0",
-    "@stele/ccl": "2.0.0",
-    "@stele/core": "2.0.0",
-    "@stele/identity": "2.0.0",
-    "@stele/enforcement": "2.0.0",
-    "@stele/proof": "2.0.0",
-    "@stele/reputation": "2.0.0",
-    "@stele/breach": "2.0.0",
-    "@stele/mcp": "2.0.0"
+    "@usekova/crypto": "2.0.0",
+    "@usekova/ccl": "2.0.0",
+    "@usekova/core": "2.0.0",
+    "@usekova/identity": "2.0.0",
+    "@usekova/enforcement": "2.0.0",
+    "@usekova/proof": "2.0.0",
+    "@usekova/reputation": "2.0.0",
+    "@usekova/breach": "2.0.0",
+    "@usekova/mcp": "2.0.0"
   },
   "license": "MIT",
   "engines": {

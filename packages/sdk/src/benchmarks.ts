@@ -1,5 +1,5 @@
 /**
- * @stele/sdk -- Performance benchmark suite with SLA targets.
+ * @usekova/sdk -- Performance benchmark suite with SLA targets.
  *
  * Defines production-quality SLA targets for all critical protocol operations
  * and provides a benchmark runner that validates them. This proves the protocol
@@ -8,17 +8,17 @@
  * @packageDocumentation
  */
 
-import { generateKeyPair, sign, verify, sha256, sha256String } from '@stele/crypto';
-import { buildCovenant, verifyCovenant } from '@stele/core';
-import { parse as cclParse, evaluate as cclEvaluate } from '@stele/ccl';
-import { MemoryStore } from '@stele/store';
-import { SteleClient } from './index.js';
+import { generateKeyPair, sign, verify, sha256, sha256String } from '@usekova/crypto';
+import { buildCovenant, verifyCovenant } from '@usekova/core';
+import { parse as cclParse, evaluate as cclEvaluate } from '@usekova/ccl';
+import { MemoryStore } from '@usekova/store';
+import { KovaClient } from './index.js';
 import {
   initiate as negotiationInitiate,
   propose as negotiationPropose,
   agree as negotiationAgree,
   evaluate as negotiationEvaluate,
-} from '@stele/negotiation';
+} from '@usekova/negotiation';
 
 // ─── SLA Targets ────────────────────────────────────────────────────────────
 
@@ -258,7 +258,7 @@ export async function runBenchmarkSuite(): Promise<BenchmarkSuiteResult> {
   }
 
   // SDK client for evaluateAction benchmark
-  const client = new SteleClient({ keyPair: kp });
+  const client = new KovaClient({ keyPair: kp });
 
   // ── Benchmarks ───────────────────────────────────────────────────────────
 

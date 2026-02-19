@@ -1,5 +1,5 @@
 /**
- * @stele/discovery — Types for the Stele cross-platform discovery protocol.
+ * @usekova/discovery — Types for the Stele cross-platform discovery protocol.
  *
  * Defines the `.well-known/stele/` endpoint format, key discovery (JWKS-like),
  * protocol version negotiation, and cross-platform covenant resolution.

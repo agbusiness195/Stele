@@ -1,11 +1,11 @@
-# @stele/crypto
+# @usekova/crypto
 
 Ed25519 cryptography, SHA-256 hashing, and encoding utilities for the Stele protocol. Built on [@noble/ed25519](https://github.com/paulmillr/noble-ed25519) and [@noble/hashes](https://github.com/paulmillr/noble-hashes).
 
 ## Installation
 
 ```bash
-npm install @stele/crypto
+npm install @usekova/crypto
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @stele/crypto
 ### Key Generation and Signing
 
 ```typescript
-import { generateKeyPair, sign, verify, toHex } from '@stele/crypto';
+import { generateKeyPair, sign, verify, toHex } from '@usekova/crypto';
 
 const kp = await generateKeyPair();
 console.log(kp.publicKeyHex); // 64-char hex string
@@ -28,7 +28,7 @@ console.log(valid); // true
 ### Hashing
 
 ```typescript
-import { sha256, sha256String, sha256Object } from '@stele/crypto';
+import { sha256, sha256String, sha256Object } from '@usekova/crypto';
 
 const hash = sha256(new TextEncoder().encode('hello'));
 const strHash = sha256String('hello world');
@@ -38,7 +38,7 @@ const objHash = sha256Object({ b: 2, a: 1 }); // deterministic, key-order indepe
 ### Canonical JSON
 
 ```typescript
-import { canonicalizeJson } from '@stele/crypto';
+import { canonicalizeJson } from '@usekova/crypto';
 
 canonicalizeJson({ z: 1, a: 2 }); // '{"a":2,"z":1}' -- RFC 8785 (JCS)
 ```
@@ -46,7 +46,7 @@ canonicalizeJson({ z: 1, a: 2 }); // '{"a":2,"z":1}' -- RFC 8785 (JCS)
 ### Hex and Base64url Encoding
 
 ```typescript
-import { toHex, fromHex, base64urlEncode, base64urlDecode } from '@stele/crypto';
+import { toHex, fromHex, base64urlEncode, base64urlDecode } from '@usekova/crypto';
 
 toHex(new Uint8Array([255, 0]));  // 'ff00'
 fromHex('ff00');                   // Uint8Array [255, 0]
@@ -58,7 +58,7 @@ const decoded = base64urlDecode(encoded);
 ### Key Rotation
 
 ```typescript
-import { KeyManager } from '@stele/crypto';
+import { KeyManager } from '@usekova/crypto';
 
 const manager = new KeyManager({ maxAgeMs: 86_400_000 }); // 24h rotation
 const managed = await manager.initialize();

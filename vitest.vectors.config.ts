@@ -12,7 +12,7 @@ const packages = [
 
 const alias: Record<string, string> = {};
 for (const pkg of packages) {
-  alias[`@stele/${pkg}`] = path.resolve(__dirname, `packages/${pkg}/src/index.ts`);
+  alias[`@usekova/${pkg}`] = path.resolve(__dirname, `packages/${pkg}/src/index.ts`);
 }
 
 export default defineConfig({

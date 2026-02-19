@@ -5,7 +5,7 @@
  *
  *   1. Covenant -> Enforcement -> Reputation -> Breach pipeline
  *   2. Identity evolution + covenant binding
- *   3. SDK SteleClient full workflow
+ *   3. SDK KovaClient full workflow
  *   4. Store + Verifier batch operations
  *   5. Attestation + Reputation cross-validation
  *
@@ -20,8 +20,8 @@ import {
   sha256Object,
   toHex,
   timestamp,
-} from '@stele/crypto';
-import type { KeyPair, HashHex } from '@stele/crypto';
+} from '@usekova/crypto';
+import type { KeyPair, HashHex } from '@usekova/crypto';
 
 import {
   buildCovenant,
@@ -34,17 +34,17 @@ import {
   serializeCovenant,
   deserializeCovenant,
   CovenantBuildError,
-} from '@stele/core';
-import type { CovenantDocument } from '@stele/core';
+} from '@usekova/core';
+import type { CovenantDocument } from '@usekova/core';
 
-import { parse, evaluate, merge, serialize, validateNarrowing } from '@stele/ccl';
+import { parse, evaluate, merge, serialize, validateNarrowing } from '@usekova/ccl';
 
-import { MemoryStore } from '@stele/store';
-import type { StoreEvent } from '@stele/store';
+import { MemoryStore } from '@usekova/store';
+import type { StoreEvent } from '@usekova/store';
 
-import { Verifier, verifyBatch } from '@stele/verifier';
+import { Verifier, verifyBatch } from '@usekova/verifier';
 
-import { SteleClient, QuickCovenant } from '@stele/sdk';
+import { KovaClient, QuickCovenant } from '@usekova/sdk';
 import type {
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
@@ -54,7 +54,7 @@ import type {
   ChainResolvedEvent,
   ChainValidatedEvent,
   EvaluationCompletedEvent,
-} from '@stele/sdk';
+} from '@usekova/sdk';
 
 import {
   createIdentity,
@@ -63,14 +63,14 @@ import {
   serializeIdentity,
   deserializeIdentity,
   computeIdentityHash,
-} from '@stele/identity';
-import type { AgentIdentity } from '@stele/identity';
+} from '@usekova/identity';
+import type { AgentIdentity } from '@usekova/identity';
 
 import {
   Monitor,
   MonitorDeniedError,
   verifyMerkleProof,
-} from '@stele/enforcement';
+} from '@usekova/enforcement';
 
 import {
   createReceipt,
@@ -82,15 +82,15 @@ import {
   createEndorsement,
   verifyEndorsement,
   verifyReceiptChain,
-} from '@stele/reputation';
-import type { ExecutionReceipt, Endorsement } from '@stele/reputation';
+} from '@usekova/reputation';
+import type { ExecutionReceipt, Endorsement } from '@usekova/reputation';
 
 import {
   createBreachAttestation,
   verifyBreachAttestation,
   TrustGraph,
-} from '@stele/breach';
-import type { BreachEvent } from '@stele/breach';
+} from '@usekova/breach';
+import type { BreachEvent } from '@usekova/breach';
 
 import {
   createAttestation,
@@ -99,15 +99,15 @@ import {
   reconcile,
   getDiscrepancies,
   computeAttestationCoverage,
-} from '@stele/attestation';
-import type { ReceiptSummary, AgentAction } from '@stele/attestation';
+} from '@usekova/attestation';
+import type { ReceiptSummary, AgentAction } from '@usekova/attestation';
 
 import {
   generateCanary,
   evaluateCanary,
   detectionProbability,
   isExpired,
-} from '@stele/canary';
+} from '@usekova/canary';
 
 
 // ===========================================================================
@@ -615,15 +615,15 @@ describe('Identity evolution + covenant binding', () => {
 
 
 // ===========================================================================
-// 3. SDK SteleClient full workflow
+// 3. SDK KovaClient full workflow
 // ===========================================================================
 
-describe('SDK SteleClient full workflow', () => {
-  let client: SteleClient;
+describe('SDK KovaClient full workflow', () => {
+  let client: KovaClient;
   let auditorKp: KeyPair;
 
   beforeEach(async () => {
-    client = new SteleClient();
+    client = new KovaClient();
     auditorKp = await generateKeyPair();
   });
 

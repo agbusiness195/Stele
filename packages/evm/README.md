@@ -1,11 +1,11 @@
-# @stele/evm
+# @usekova/evm
 
 EVM anchoring utilities for on-chain covenant verification with ABI encoding and Keccak-256 hashing.
 
 ## Installation
 
 ```bash
-npm install @stele/evm
+npm install @usekova/evm
 ```
 
 ## Key APIs
@@ -27,7 +27,7 @@ npm install @stele/evm
 ## Usage
 
 ```typescript
-import { EVMClient, buildAnchorCalldata, computeAnchorHash } from '@stele/evm';
+import { EVMClient, buildAnchorCalldata, computeAnchorHash } from '@usekova/evm';
 
 // Plug in any JSON-RPC provider (ethers, viem, raw fetch, etc.)
 const client = new EVMClient(myProvider, '0xRegistryAddress');

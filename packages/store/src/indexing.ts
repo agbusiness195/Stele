@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { CovenantDocument } from '@stele/core';
+import type { CovenantDocument } from '@usekova/core';
 
 import type { StoreFilter } from './types.js';
 

@@ -15,8 +15,8 @@ import {
   sha256,
   toHex,
   generateNonce,
-} from '@stele/crypto';
-import type { KeyPair, HashHex } from '@stele/crypto';
+} from '@usekova/crypto';
+import type { KeyPair, HashHex } from '@usekova/crypto';
 
 import {
   buildCovenant,
@@ -25,14 +25,14 @@ import {
   computeId,
   serializeCovenant,
   deserializeCovenant,
-} from '@stele/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@stele/core';
+} from '@usekova/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
 
-import { parse, evaluate } from '@stele/ccl';
+import { parse, evaluate } from '@usekova/ccl';
 
-import { MemoryStore } from '@stele/store';
+import { MemoryStore } from '@usekova/store';
 
-import { Verifier, verifyBatch } from '@stele/verifier';
+import { Verifier, verifyBatch } from '@usekova/verifier';
 
 import {
   createIdentity,
@@ -40,19 +40,19 @@ import {
   verifyIdentity,
   serializeIdentity,
   deserializeIdentity,
-} from '@stele/identity';
+} from '@usekova/identity';
 
 import {
   Monitor,
   MonitorDeniedError,
   CapabilityGate,
-} from '@stele/enforcement';
+} from '@usekova/enforcement';
 
 import {
   createReceipt,
   verifyReceipt,
   computeReputationScore,
-} from '@stele/reputation';
+} from '@usekova/reputation';
 
 // ---------------------------------------------------------------------------
 // Helpers

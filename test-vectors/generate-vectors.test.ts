@@ -8,7 +8,7 @@ import {
   verify,
   toHex,
   fromHex,
-} from '@stele/crypto';
+} from '@usekova/crypto';
 import {
   buildCovenant,
   verifyCovenant,
@@ -17,8 +17,8 @@ import {
   canonicalForm,
   computeId,
   PROTOCOL_VERSION,
-} from '@stele/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@stele/core';
+} from '@usekova/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
 import {
   parse,
   evaluate,
@@ -26,11 +26,11 @@ import {
   matchResource,
   checkRateLimit,
   serialize,
-} from '@stele/ccl';
-import { createIdentity, evolveIdentity } from '@stele/identity';
+} from '@usekova/ccl';
+import { createIdentity, evolveIdentity } from '@usekova/identity';
 
 /**
- * Canonical Test Vectors for the Stele Protocol.
+ * Canonical Test Vectors for the Kova Protocol.
  *
  * These vectors enable cross-implementation verification.
  * Any conformant implementation in any language MUST produce
@@ -120,7 +120,7 @@ describe('Canonical Test Vector Generation', () => {
 
     const messages = [
       'hello world',
-      'The Stele Protocol',
+      'The Kova Protocol',
       JSON.stringify({ action: 'read', resource: '/data' }),
     ];
 
@@ -794,7 +794,7 @@ describe('Canonical Test Vector Generation', () => {
       _meta: {
         generated_at: '2026-01-01T00:00:00.000Z',
         protocol_version: PROTOCOL_VERSION,
-        generator: '@stele/test-vectors',
+        generator: '@usekova/test-vectors',
         description:
           'Canonical test vectors for the Stele protocol. Any conformant implementation MUST produce identical results for these inputs.',
         total_vectors: vectors.length,

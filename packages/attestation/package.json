@@ -1,5 +1,5 @@
 {
-  "name": "@stele/attestation",
+  "name": "@usekova/attestation",
   "version": "2.0.0",
   "description": "Multi-party attestation creation and reconciliation",
   "sideEffects": false,
@@ -27,7 +27,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "2.0.0"
+    "@usekova/crypto": "2.0.0"
   },
   "license": "MIT",
   "engines": {

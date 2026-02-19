@@ -1,5 +1,5 @@
 {
-  "name": "@stele/alignment",
+  "name": "@usekova/alignment",
   "version": "2.0.0",
   "description": "Value alignment verification and normative constraint enforcement",
   "sideEffects": false,
@@ -27,9 +27,9 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/ccl": "2.0.0",
-    "@stele/crypto": "2.0.0",
-    "@stele/types": "2.0.0"
+    "@usekova/ccl": "2.0.0",
+    "@usekova/crypto": "2.0.0",
+    "@usekova/types": "2.0.0"
   },
   "license": "MIT",
   "engines": {

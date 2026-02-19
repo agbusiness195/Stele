@@ -1,11 +1,11 @@
-# @stele/enforcement
+# @usekova/enforcement
 
 Runtime covenant enforcement with tamper-evident audit logging and capability-based access control.
 
 ## Installation
 
 ```bash
-npm install @stele/enforcement
+npm install @usekova/enforcement
 ```
 
 ## Key APIs
@@ -20,7 +20,7 @@ npm install @stele/enforcement
 ## Usage
 
 ```typescript
-import { Monitor, CapabilityGate } from '@stele/enforcement';
+import { Monitor, CapabilityGate } from '@usekova/enforcement';
 
 // Runtime enforcement with audit logging
 const monitor = new Monitor(covenantId, `

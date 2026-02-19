@@ -1,5 +1,5 @@
 {
-  "name": "@stele/ccl",
+  "name": "@usekova/ccl",
   "version": "2.0.0",
   "description": "Covenant Constraint Language parser and evaluator for Stele",
   "license": "MIT",
@@ -53,6 +53,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@stele/crypto": "2.0.0"
+    "@usekova/crypto": "2.0.0"
   }
 }

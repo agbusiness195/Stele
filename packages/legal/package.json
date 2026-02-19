@@ -1,5 +1,5 @@
 {
-  "name": "@stele/legal",
+  "name": "@usekova/legal",
   "version": "2.0.0",
   "description": "Legal document templates and regulatory compliance mapping",
   "sideEffects": false,
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "2.0.0",
-    "@stele/types": "2.0.0"
+    "@usekova/crypto": "2.0.0",
+    "@usekova/types": "2.0.0"
   },
   "license": "MIT",
   "author": "Stele Labs, Inc.",

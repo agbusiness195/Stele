@@ -1,5 +1,5 @@
-import { sha256Object } from '@stele/crypto';
-import { SteleError, SteleErrorCode } from '@stele/types';
+import { sha256Object } from '@usekova/crypto';
+import { KovaError, KovaErrorCode } from '@usekova/types';
 
 export type {
   LegalIdentityPackage,
@@ -855,9 +855,9 @@ export class ComplianceSurface {
    */
   addRequirement(name: string): void {
     if (!name || name.trim() === '') {
-      throw new SteleError(
+      throw new KovaError(
         'Requirement name must be a non-empty string',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.requirementNames.add(name);
@@ -869,21 +869,21 @@ export class ComplianceSurface {
    */
   addDependency(dep: RequirementDependency): void {
     if (!dep.dependentRequirement || dep.dependentRequirement.trim() === '') {
-      throw new SteleError(
+      throw new KovaError(
         'dependentRequirement must be a non-empty string',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!dep.prerequisiteRequirement || dep.prerequisiteRequirement.trim() === '') {
-      throw new SteleError(
+      throw new KovaError(
         'prerequisiteRequirement must be a non-empty string',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(dep.couplingStrength) || dep.couplingStrength < 0 || dep.couplingStrength > 1) {
-      throw new SteleError(
+      throw new KovaError(
         'couplingStrength must be between 0 and 1',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.requirementNames.add(dep.dependentRequirement);
@@ -910,16 +910,16 @@ export class ComplianceSurface {
     // Validate all requirement names have scores
     for (const name of this.requirementNames) {
       if (!(name in rawScores)) {
-        throw new SteleError(
+        throw new KovaError(
           `Missing score for requirement "${name}"`,
-          SteleErrorCode.PROTOCOL_INVALID_INPUT,
+          KovaErrorCode.PROTOCOL_INVALID_INPUT,
         );
       }
       const score = rawScores[name]!;
       if (!Number.isFinite(score) || score < 0 || score > 1) {
-        throw new SteleError(
+        throw new KovaError(
           `Score for "${name}" must be between 0 and 1, got ${score}`,
-          SteleErrorCode.PROTOCOL_INVALID_INPUT,
+          KovaErrorCode.PROTOCOL_INVALID_INPUT,
         );
       }
     }
@@ -1059,9 +1059,9 @@ export class ComplianceTrajectory {
    */
   constructor(breachThreshold = 0.7) {
     if (!Number.isFinite(breachThreshold) || breachThreshold < 0 || breachThreshold > 1) {
-      throw new SteleError(
+      throw new KovaError(
         'breachThreshold must be between 0 and 1',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.breachThreshold = breachThreshold;
@@ -1072,15 +1072,15 @@ export class ComplianceTrajectory {
    */
   record(obs: ComplianceObservation): void {
     if (!Number.isFinite(obs.score) || obs.score < 0 || obs.score > 1) {
-      throw new SteleError(
+      throw new KovaError(
         'Compliance score must be between 0 and 1',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(obs.timestamp)) {
-      throw new SteleError(
+      throw new KovaError(
         'Timestamp must be a finite number',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.observations.push({ ...obs });
@@ -1092,13 +1092,13 @@ export class ComplianceTrajectory {
    * Computes a least-squares trend line and estimates when (if ever)
    * the compliance score will breach the threshold.
    *
-   * @throws {SteleError} if fewer than 2 observations are recorded.
+   * @throws {KovaError} if fewer than 2 observations are recorded.
    */
   analyze(): ComplianceTrajectoryResult {
     if (this.observations.length < 2) {
-      throw new SteleError(
+      throw new KovaError(
         'Need at least 2 observations for trajectory analysis',
-        SteleErrorCode.PROTOCOL_COMPUTATION_FAILED,
+        KovaErrorCode.PROTOCOL_COMPUTATION_FAILED,
       );
     }
 
@@ -1234,9 +1234,9 @@ export class RemediationPlanner {
    */
   plan(currentScores: Record<string, number>, targetImprovement = 0.1): RemediationPlanResult {
     if (targetImprovement <= 0 || targetImprovement > 1) {
-      throw new SteleError(
+      throw new KovaError(
         'targetImprovement must be between 0 (exclusive) and 1 (inclusive)',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1371,27 +1371,27 @@ export class JurisdictionConflictResolver {
    */
   addRequirement(req: JurisdictionalRequirement): void {
     if (!req.jurisdiction || req.jurisdiction.trim() === '') {
-      throw new SteleError(
+      throw new KovaError(
         'jurisdiction must be a non-empty string',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!req.requirementId || req.requirementId.trim() === '') {
-      throw new SteleError(
+      throw new KovaError(
         'requirementId must be a non-empty string',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(req.threshold) || req.threshold < 0 || req.threshold > 1) {
-      throw new SteleError(
+      throw new KovaError(
         'threshold must be between 0 and 1',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!req.category || req.category.trim() === '') {
-      throw new SteleError(
+      throw new KovaError(
         'category must be a non-empty string',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.requirements.push({ ...req });
@@ -1407,9 +1407,9 @@ export class JurisdictionConflictResolver {
    */
   resolve(strategy: ResolutionStrategy = 'strictest-wins'): JurisdictionConflictResult {
     if (!['strictest-wins', 'lex-specialis', 'proportionality'].includes(strategy)) {
-      throw new SteleError(
+      throw new KovaError(
         `Unknown resolution strategy: "${strategy}"`,
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1635,15 +1635,15 @@ export class RegulatoryImpactAnalyzer {
     weights: ComplianceWeights = DEFAULT_WEIGHTS,
   ): RegulatoryImpactResult {
     if (!change.changeId || change.changeId.trim() === '') {
-      throw new SteleError(
+      throw new KovaError(
         'changeId must be a non-empty string',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!change.affectedStandard) {
-      throw new SteleError(
+      throw new KovaError(
         'affectedStandard must be specified',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     validateComplianceRecord(currentCompliance);
@@ -1651,9 +1651,9 @@ export class RegulatoryImpactAnalyzer {
     // Get current standard requirements
     const currentStandard = COMPLIANCE_STANDARDS[change.affectedStandard];
     if (!currentStandard) {
-      throw new SteleError(
+      throw new KovaError(
         `Unknown compliance standard: "${change.affectedStandard}"`,
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1775,9 +1775,9 @@ export class RegulatoryImpactAnalyzer {
     totalRecommendations: string[];
   } {
     if (changes.length === 0) {
-      throw new SteleError(
+      throw new KovaError(
         'Must provide at least one regulatory change',
-        SteleErrorCode.PROTOCOL_INVALID_INPUT,
+        KovaErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 

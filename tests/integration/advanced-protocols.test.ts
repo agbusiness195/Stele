@@ -16,8 +16,8 @@ import {
   sha256Object,
   canonicalizeJson,
   toHex,
-} from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
+} from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
 
 import {
   buildCovenant,
@@ -26,18 +26,18 @@ import {
   deserializeCovenant,
   computeId,
   canonicalForm,
-} from '@stele/core';
-import type { CovenantDocument } from '@stele/core';
+} from '@usekova/core';
+import type { CovenantDocument } from '@usekova/core';
 
-import { parse, serialize, evaluate } from '@stele/ccl';
+import { parse, serialize, evaluate } from '@usekova/ccl';
 
 import {
   createIdentity,
   serializeIdentity,
   deserializeIdentity,
-} from '@stele/identity';
+} from '@usekova/identity';
 
-import { MemoryStore } from '@stele/store';
+import { MemoryStore } from '@usekova/store';
 
 import {
   generateCanary,
@@ -46,7 +46,7 @@ import {
   isExpired,
   canarySchedule,
   canaryCorrelation,
-} from '@stele/canary';
+} from '@usekova/canary';
 
 import {
   proveHonesty,
@@ -58,7 +58,7 @@ import {
   repeatedGameEquilibrium,
   coalitionStability,
   mechanismDesign,
-} from '@stele/gametheory';
+} from '@usekova/gametheory';
 
 import {
   compose,
@@ -68,7 +68,7 @@ import {
   decomposeCovenants,
   compositionComplexity,
   proveSystemProperty,
-} from '@stele/composition';
+} from '@usekova/composition';
 
 // ---------------------------------------------------------------------------
 // Helpers

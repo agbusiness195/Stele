@@ -1,5 +1,5 @@
 /**
- * Stele Protocol Conformance Test Suite
+ * Kova Protocol Conformance Test Suite
  *
  * Runs the conformance suite against the real Stele implementation
  * to prove that the reference implementation is spec-compliant.
@@ -15,9 +15,9 @@ import {
 } from '../src/conformance';
 import type { ConformanceTarget } from '../src/conformance';
 
-import { buildCovenant, verifyCovenant } from '@stele/core';
-import { generateKeyPair, sign, verify, sha256 } from '@stele/crypto';
-import { parse, evaluate } from '@stele/ccl';
+import { buildCovenant, verifyCovenant } from '@usekova/core';
+import { generateKeyPair, sign, verify, sha256 } from '@usekova/crypto';
+import { parse, evaluate } from '@usekova/ccl';
 
 // ─── Wire up the ConformanceTarget ──────────────────────────────────────────
 
@@ -46,7 +46,7 @@ function formatFailures(failures: Array<{ test: string; message: string }>): str
 // Full suite
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe('Stele Protocol Conformance Suite', () => {
+describe('Kova Protocol Conformance Suite', () => {
   it('passes the full conformance suite', async () => {
     const result = await runConformanceSuite(steleTarget);
 

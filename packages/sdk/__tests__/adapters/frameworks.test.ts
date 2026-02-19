@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { generateKeyPair } from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
-import type { CovenantDocument } from '@stele/core';
+import { generateKeyPair } from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
+import type { CovenantDocument } from '@usekova/core';
 
 import {
-  SteleClient,
+  KovaClient,
   // Vercel AI adapter
   withStele,
   withSteleTools,
@@ -28,12 +28,12 @@ import type {
 // ---------------------------------------------------------------------------
 
 let kp: KeyPair;
-let client: SteleClient;
+let client: KovaClient;
 let covenant: CovenantDocument;
 
 beforeAll(async () => {
   kp = await generateKeyPair();
-  client = new SteleClient({ keyPair: kp });
+  client = new KovaClient({ keyPair: kp });
   covenant = await client.createCovenant({
     issuer: { id: 'test-issuer', publicKey: kp.publicKeyHex, role: 'issuer' },
     beneficiary: { id: 'test-agent', publicKey: kp.publicKeyHex, role: 'beneficiary' },
@@ -487,7 +487,7 @@ describe('LangChain adapter', () => {
       // Not possible with defaults alone. Let's test with a new covenant.
 
       const chainKp = await generateKeyPair();
-      const chainClient = new SteleClient({ keyPair: chainKp });
+      const chainClient = new KovaClient({ keyPair: chainKp });
       const chainCovenant = await chainClient.createCovenant({
         issuer: { id: 'ci', publicKey: chainKp.publicKeyHex, role: 'issuer' },
         beneficiary: { id: 'ca', publicKey: chainKp.publicKeyHex, role: 'beneficiary' },

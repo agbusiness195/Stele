@@ -1,11 +1,11 @@
-# @stele/canary
+# @usekova/canary
 
 Canary token generation, tripwire evaluation, scheduling, and breach correlation analysis.
 
 ## Installation
 
 ```bash
-npm install @stele/canary
+npm install @usekova/canary
 ```
 
 ## Key APIs
@@ -26,7 +26,7 @@ import {
   detectionProbability,
   canarySchedule,
   canaryCorrelation,
-} from '@stele/canary';
+} from '@usekova/canary';
 
 // Generate a canary from a CCL constraint
 const canary = generateCanary(

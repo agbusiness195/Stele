@@ -1,5 +1,5 @@
-import type { HashHex } from '@stele/crypto';
-import type { Severity } from '@stele/ccl';
+import type { HashHex } from '@usekova/crypto';
+import type { Severity } from '@usekova/ccl';
 
 // ─── Protocol constants ────────────────────────────────────────────────────────
 
