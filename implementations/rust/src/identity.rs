@@ -6,7 +6,7 @@
 //! and records the type of change made.
 
 use crate::crypto;
-use crate::SteleError;
+use crate::KovaError;
 use serde::{Deserialize, Serialize};
 
 // ---------------------------------------------------------------------------
@@ -103,13 +103,13 @@ pub fn compute_identity_hash(body: &serde_json::Value) -> String {
 }
 
 /// Build the JSON body used for hashing/signing (excludes `id` and `signature`).
-fn identity_body(identity: &AgentIdentity) -> Result<serde_json::Value, SteleError> {
+fn identity_body(identity: &AgentIdentity) -> Result<serde_json::Value, KovaError> {
     let val = serde_json::to_value(identity)
-        .map_err(|e| SteleError::SerializationError(format!("Failed to serialize identity: {}", e)))?;
+        .map_err(|e| KovaError::SerializationError(format!("Failed to serialize identity: {}", e)))?;
 
     let mut obj = match val {
         serde_json::Value::Object(m) => m,
-        _ => return Err(SteleError::SerializationError("Expected object".to_string())),
+        _ => return Err(KovaError::SerializationError("Expected object".to_string())),
     };
 
     obj.remove("id");
@@ -128,26 +128,26 @@ fn identity_body(identity: &AgentIdentity) -> Result<serde_json::Value, SteleErr
 /// of type `created`, and signs the whole identity with the operator key.
 ///
 /// # Errors
-/// Returns `SteleError::InvalidInput` for missing fields or
-/// `SteleError::CryptoError` for signing failures.
-pub fn create_identity(opts: CreateIdentityOptions) -> Result<AgentIdentity, SteleError> {
+/// Returns `KovaError::InvalidInput` for missing fields or
+/// `KovaError::CryptoError` for signing failures.
+pub fn create_identity(opts: CreateIdentityOptions) -> Result<AgentIdentity, KovaError> {
     if opts.public_key_hex.is_empty() {
-        return Err(SteleError::InvalidInput(
+        return Err(KovaError::InvalidInput(
             "operatorPublicKey is required".to_string(),
         ));
     }
     if opts.model.provider.is_empty() || opts.model.model_id.is_empty() {
-        return Err(SteleError::InvalidInput(
+        return Err(KovaError::InvalidInput(
             "model.provider and model.modelId are required".to_string(),
         ));
     }
     if opts.capabilities.is_empty() {
-        return Err(SteleError::InvalidInput(
+        return Err(KovaError::InvalidInput(
             "capabilities array must not be empty".to_string(),
         ));
     }
     if opts.deployment.runtime.is_empty() {
-        return Err(SteleError::InvalidInput(
+        return Err(KovaError::InvalidInput(
             "deployment.runtime is required".to_string(),
         ));
     }
@@ -207,19 +207,19 @@ pub fn create_identity(opts: CreateIdentityOptions) -> Result<AgentIdentity, Ste
 /// appends a lineage entry describing the change, and re-signs everything.
 ///
 /// # Errors
-/// Returns `SteleError::InvalidInput` for invalid change types or
-/// `SteleError::CryptoError` for signing failures.
+/// Returns `KovaError::InvalidInput` for invalid change types or
+/// `KovaError::CryptoError` for signing failures.
 pub fn evolve_identity(
     identity: &AgentIdentity,
     opts: EvolveIdentityOptions,
-) -> Result<AgentIdentity, SteleError> {
+) -> Result<AgentIdentity, KovaError> {
     if opts.change_type.is_empty() {
-        return Err(SteleError::InvalidInput(
+        return Err(KovaError::InvalidInput(
             "changeType is required for evolution".to_string(),
         ));
     }
     if opts.description.is_empty() {
-        return Err(SteleError::InvalidInput(
+        return Err(KovaError::InvalidInput(
             "description is required for evolution".to_string(),
         ));
     }
@@ -293,7 +293,7 @@ pub fn evolve_identity(
 /// 4. `version_match` -- Version matches lineage length
 pub fn verify_identity(
     identity: &AgentIdentity,
-) -> Result<IdentityVerificationResult, SteleError> {
+) -> Result<IdentityVerificationResult, KovaError> {
     let mut checks: Vec<IdentityCheck> = Vec::new();
 
     // 1. ID match
@@ -389,15 +389,15 @@ pub fn verify_identity(
 // ---------------------------------------------------------------------------
 
 /// Serialize an AgentIdentity to a JSON string.
-pub fn serialize_identity(identity: &AgentIdentity) -> Result<String, SteleError> {
+pub fn serialize_identity(identity: &AgentIdentity) -> Result<String, KovaError> {
     serde_json::to_string_pretty(identity)
-        .map_err(|e| SteleError::SerializationError(format!("Failed to serialize identity: {}", e)))
+        .map_err(|e| KovaError::SerializationError(format!("Failed to serialize identity: {}", e)))
 }
 
 /// Deserialize a JSON string into an AgentIdentity.
-pub fn deserialize_identity(json: &str) -> Result<AgentIdentity, SteleError> {
+pub fn deserialize_identity(json: &str) -> Result<AgentIdentity, KovaError> {
     serde_json::from_str(json)
-        .map_err(|e| SteleError::SerializationError(format!("Failed to deserialize identity: {}", e)))
+        .map_err(|e| KovaError::SerializationError(format!("Failed to deserialize identity: {}", e)))
 }
 
 #[cfg(test)]

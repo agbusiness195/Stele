@@ -780,7 +780,7 @@ export function defineConjecture(params: {
 }
 
 /**
- * Return the four standard conjectures of the Stele/Kova protocol:
+ * Return the four standard conjectures of the Kova/Kova protocol:
  *
  * 1. Observation Bound — verification cost proportional to action space
  * 2. Trust-Privacy Tradeoff — trust and privacy cannot both be maximized

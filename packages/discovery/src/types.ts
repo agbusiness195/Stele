@@ -1,7 +1,7 @@
 /**
- * @stele/discovery — Types for the Stele cross-platform discovery protocol.
+ * @usekova/discovery — Types for the Kova cross-platform discovery protocol.
  *
- * Defines the `.well-known/stele/` endpoint format, key discovery (JWKS-like),
+ * Defines the `.well-known/kova/` endpoint format, key discovery (JWKS-like),
  * protocol version negotiation, and cross-platform covenant resolution.
  *
  * @packageDocumentation
@@ -10,7 +10,7 @@
 // ─── Discovery Document ─────────────────────────────────────────────────────
 
 /**
- * The discovery document served at `/.well-known/stele/configuration`.
+ * The discovery document served at `/.well-known/kova/configuration`.
  *
  * Modeled after OAuth 2.0 Authorization Server Metadata (RFC 8414)
  * and OpenID Connect Discovery. This is the entry point for any
@@ -18,8 +18,8 @@
  *
  * @example
  * ```
- * GET https://platform.example/.well-known/stele/configuration
- * Content-Type: application/stele+json
+ * GET https://platform.example/.well-known/kova/configuration
+ * Content-Type: application/kova+json
  * ```
  */
 export interface DiscoveryDocument {
@@ -41,7 +41,7 @@ export interface DiscoveryDocument {
   /** URL of the breach reporting endpoint. */
   breach_endpoint?: string;
 
-  /** Stele protocol versions supported by this platform. */
+  /** Kova protocol versions supported by this platform. */
   protocol_versions_supported: string[];
 
   /** Signature schemes supported (e.g., ["ed25519"]). */
@@ -84,7 +84,7 @@ export interface AgentKeyEntry {
   /** Unique key identifier (hex-encoded SHA-256 of the public key). */
   kid: string;
 
-  /** Key type (always "Ed25519" for Stele). */
+  /** Key type (always "Ed25519" for Kova). */
   kty: 'Ed25519';
 
   /** Hex-encoded Ed25519 public key. */

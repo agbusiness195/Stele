@@ -1,20 +1,20 @@
 /**
- * Stele SDK - Multi-Agent Chain Delegation
+ * Kova SDK - Multi-Agent Chain Delegation
  *
  * Demonstrates parent-child covenant chains where a child covenant
  * narrows the parent's constraints. Shows chain resolution, narrowing
  * validation, identity creation, and differential enforcement across
  * two agents operating under different constraint scopes.
  */
-import { generateKeyPair } from '@stele/crypto';
+import { generateKeyPair } from '@usekova/crypto';
 import {
   buildCovenant,
   MemoryChainResolver,
   resolveChain,
   validateChainNarrowing,
-} from '@stele/core';
-import { Monitor, MonitorDeniedError } from '@stele/enforcement';
-import { createIdentity, verifyIdentity } from '@stele/identity';
+} from '@usekova/core';
+import { Monitor, MonitorDeniedError } from '@usekova/enforcement';
+import { createIdentity, verifyIdentity } from '@usekova/identity';
 
 async function main() {
   // 1. Create two key pairs: one for the parent operator, one for the child

@@ -1,5 +1,5 @@
 """
-Stele in-memory covenant store.
+Kova in-memory covenant store.
 
 Provides a MemoryStore implementation for covenant document storage,
 suitable for testing, CLI tools, and scenarios where persistence

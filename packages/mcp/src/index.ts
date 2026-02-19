@@ -1,22 +1,22 @@
-import { generateKeyPair, timestamp, sha256Object } from '@stele/crypto';
-import type { KeyPair, HashHex } from '@stele/crypto';
-import { parse } from '@stele/ccl';
-import type { Severity } from '@stele/ccl';
-import { buildCovenant } from '@stele/core';
-import type { CovenantDocument } from '@stele/core';
-import { Monitor } from '@stele/enforcement';
-import type { AuditLog, AuditEntry } from '@stele/enforcement';
-import { createIdentity } from '@stele/identity';
-import type { AgentIdentity, ModelAttestation } from '@stele/identity';
-import { createReceipt } from '@stele/reputation';
-import type { ExecutionReceipt } from '@stele/reputation';
-import { generateComplianceProof } from '@stele/proof';
-import type { ComplianceProof, AuditEntryData } from '@stele/proof';
+import { generateKeyPair, timestamp, sha256Object } from '@usekova/crypto';
+import type { KeyPair, HashHex } from '@usekova/crypto';
+import { parse } from '@usekova/ccl';
+import type { Severity } from '@usekova/ccl';
+import { buildCovenant } from '@usekova/core';
+import type { CovenantDocument } from '@usekova/core';
+import { Monitor } from '@usekova/enforcement';
+import type { AuditLog, AuditEntry } from '@usekova/enforcement';
+import { createIdentity } from '@usekova/identity';
+import type { AgentIdentity, ModelAttestation } from '@usekova/identity';
+import { createReceipt } from '@usekova/reputation';
+import type { ExecutionReceipt } from '@usekova/reputation';
+import { generateComplianceProof } from '@usekova/proof';
+import type { ComplianceProof, AuditEntryData } from '@usekova/proof';
 
 import { PRESETS } from './presets.js';
 import type {
   MCPServer,
-  SteleGuardOptions,
+  KovaGuardOptions,
   WrappedMCPServer,
   ViolationDetails,
   ToolCallDetails,
@@ -26,7 +26,7 @@ import type {
 export type {
   MCPServer,
   MCPTool,
-  SteleGuardOptions,
+  KovaGuardOptions,
   WrappedMCPServer,
   ViolationDetails,
   ToolCallDetails,
@@ -111,24 +111,24 @@ function extractConstraint(matchedRule: unknown): string {
 }
 
 // ---------------------------------------------------------------------------
-// SteleGuard
+// KovaGuard
 // ---------------------------------------------------------------------------
 
 /**
- * SteleGuard wraps any MCP server with Stele accountability.
+ * KovaGuard wraps any MCP server with Kova accountability.
  *
  * Usage (2 lines):
  * ```ts
- * import { SteleGuard } from '@stele/mcp';
- * const server = await SteleGuard.wrap(myMcpServer, { constraints: 'standard:data-isolation' });
+ * import { KovaGuard } from '@usekova/mcp';
+ * const server = await KovaGuard.wrap(myMcpServer, { constraints: 'standard:data-isolation' });
  * ```
  */
-export class SteleGuard {
+export class KovaGuard {
   // Private constructor - use static factory methods
   private constructor() {}
 
   /**
-   * Wrap an MCP server with Stele accountability using constraint text
+   * Wrap an MCP server with Kova accountability using constraint text
    * (either a preset name or raw CCL).
    *
    * Generates a keypair if one is not provided, creates an agent identity,
@@ -137,7 +137,7 @@ export class SteleGuard {
    */
   static async wrap(
     server: MCPServer,
-    options: SteleGuardOptions,
+    options: KovaGuardOptions,
   ): Promise<WrappedMCPServer> {
     // 1. Resolve constraints
     const constraintSource = resolveConstraints(options.constraints);
@@ -195,7 +195,7 @@ export class SteleGuard {
     });
 
     // 6. Build the wrapped server
-    return SteleGuard.buildWrappedServer(
+    return KovaGuard.buildWrappedServer(
       server,
       monitor,
       identity,
@@ -240,7 +240,7 @@ export class SteleGuard {
       mode,
     });
 
-    return SteleGuard.buildWrappedServer(
+    return KovaGuard.buildWrappedServer(
       server,
       monitor,
       identity,
@@ -260,7 +260,7 @@ export class SteleGuard {
     identity: AgentIdentity,
     covenant: CovenantDocument,
     operatorKeyPair: KeyPair,
-    options: Partial<SteleGuardOptions>,
+    options: Partial<KovaGuardOptions>,
   ): WrappedMCPServer {
     // Track state for receipt generation
     let totalToolCalls = 0;
@@ -391,7 +391,7 @@ export class SteleGuard {
     };
 
     // Build the wrapped server object by copying all original properties
-    // and adding the Stele methods
+    // and adding the Kova methods
     const wrapped: WrappedMCPServer = Object.create(null);
 
     // Copy all properties from the original server
@@ -410,7 +410,7 @@ export class SteleGuard {
     // Set the intercepted handler
     wrapped.handleToolCall = interceptedHandleToolCall;
 
-    // Expose Stele accessors
+    // Expose Kova accessors
     wrapped.getMonitor = (): Monitor => monitor;
     wrapped.getIdentity = (): AgentIdentity => identity;
     wrapped.getAuditLog = (): AuditLog => monitor.getAuditLog();

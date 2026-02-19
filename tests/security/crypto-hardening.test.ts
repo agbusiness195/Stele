@@ -1,5 +1,5 @@
 /**
- * Crypto hardening tests for @stele/crypto.
+ * Crypto hardening tests for @usekova/crypto.
  *
  * Exercises edge cases, known-answer vectors, encoding roundtrips,
  * constant-time comparison, and signature manipulation scenarios
@@ -26,7 +26,7 @@ import {
   timestamp,
   keyPairFromPrivateKey,
   keyPairFromPrivateKeyHex,
-} from '@stele/crypto';
+} from '@usekova/crypto';
 
 // ---------------------------------------------------------------------------
 // Key generation hardening
@@ -132,7 +132,7 @@ describe('Signature edge cases', () => {
 
   it('signString signs and verifies via raw bytes', async () => {
     const kp = await generateKeyPair();
-    const text = 'hello stele';
+    const text = 'hello kova';
     const sig = await signString(text, kp.privateKey);
     const msgBytes = new TextEncoder().encode(text);
     const ok = await verify(msgBytes, sig, kp.publicKey);

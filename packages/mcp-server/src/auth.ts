@@ -12,7 +12,7 @@ import {
   fromHex,
   sha256String,
   timestamp,
-} from '@stele/crypto';
+} from '@usekova/crypto';
 
 /**
  * Options for configuring the authentication middleware.

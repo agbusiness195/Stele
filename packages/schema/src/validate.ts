@@ -1,5 +1,5 @@
 /**
- * Lightweight schema validation for Stele documents.
+ * Lightweight schema validation for Kova documents.
  *
  * Provides validation against the formal JSON Schema definitions
  * without requiring external dependencies (no Ajv).
@@ -163,7 +163,7 @@ export function validateAgentKeySchema(key: unknown): SchemaValidationResult {
  * @example
  * ```typescript
  * import Ajv from 'ajv';
- * import { getAllSchemas } from '@stele/schema';
+ * import { getAllSchemas } from '@usekova/schema';
  *
  * const ajv = new Ajv();
  * for (const [id, schema] of Object.entries(getAllSchemas())) {

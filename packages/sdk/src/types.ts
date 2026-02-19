@@ -1,11 +1,11 @@
 /**
- * @stele/sdk type definitions.
+ * @usekova/sdk type definitions.
  *
  * SDK-specific types that wrap and extend the lower-level package types
  * into a unified, ergonomic API surface.
  */
 
-import type { KeyPair } from '@stele/crypto';
+import type { KeyPair } from '@usekova/crypto';
 import type {
   CovenantDocument,
   VerificationResult,
@@ -19,24 +19,24 @@ import type {
   CovenantMetadata,
   Obligation,
   PartyRole,
-} from '@stele/core';
+} from '@usekova/core';
 import type {
   CCLDocument,
   EvaluationResult as CCLEvaluationResult,
   Statement,
   Severity,
-} from '@stele/ccl';
+} from '@usekova/ccl';
 import type {
   AgentIdentity,
   ModelAttestation,
   DeploymentContext,
   LineageEntry,
-} from '@stele/identity';
+} from '@usekova/identity';
 
 // ─── Client options ─────────────────────────────────────────────────────────
 
-/** Options for constructing a SteleClient instance. */
-export interface SteleClientOptions {
+/** Options for constructing a KovaClient instance. */
+export interface KovaClientOptions {
   /** Optional pre-generated key pair for signing operations. */
   keyPair?: KeyPair;
   /** Optional agent identifier for identity operations. */
@@ -167,8 +167,8 @@ export interface NarrowingViolationEntry {
 
 // ─── Events ─────────────────────────────────────────────────────────────────
 
-/** Event types emitted by SteleClient. */
-export type SteleEventType =
+/** Event types emitted by KovaClient. */
+export type KovaEventType =
   | 'covenant:created'
   | 'covenant:verified'
   | 'covenant:countersigned'
@@ -180,59 +180,59 @@ export type SteleEventType =
   | 'key:rotated';
 
 /** Base event payload. */
-export interface SteleEvent {
+export interface KovaEvent {
   /** The event type. */
-  type: SteleEventType;
+  type: KovaEventType;
   /** ISO 8601 timestamp of when the event occurred. */
   timestamp: string;
 }
 
 /** Event emitted when a covenant is created. */
-export interface CovenantCreatedEvent extends SteleEvent {
+export interface CovenantCreatedEvent extends KovaEvent {
   type: 'covenant:created';
   document: CovenantDocument;
 }
 
 /** Event emitted when a covenant is verified. */
-export interface CovenantVerifiedEvent extends SteleEvent {
+export interface CovenantVerifiedEvent extends KovaEvent {
   type: 'covenant:verified';
   result: VerificationResult;
 }
 
 /** Event emitted when a covenant is countersigned. */
-export interface CovenantCountersignedEvent extends SteleEvent {
+export interface CovenantCountersignedEvent extends KovaEvent {
   type: 'covenant:countersigned';
   document: CovenantDocument;
   signerRole: PartyRole;
 }
 
 /** Event emitted when an identity is created. */
-export interface IdentityCreatedEvent extends SteleEvent {
+export interface IdentityCreatedEvent extends KovaEvent {
   type: 'identity:created';
   identity: AgentIdentity;
 }
 
 /** Event emitted when an identity is evolved. */
-export interface IdentityEvolvedEvent extends SteleEvent {
+export interface IdentityEvolvedEvent extends KovaEvent {
   type: 'identity:evolved';
   identity: AgentIdentity;
   changeType: LineageEntry['changeType'];
 }
 
 /** Event emitted when a chain is resolved. */
-export interface ChainResolvedEvent extends SteleEvent {
+export interface ChainResolvedEvent extends KovaEvent {
   type: 'chain:resolved';
   documents: CovenantDocument[];
 }
 
 /** Event emitted when a chain is validated. */
-export interface ChainValidatedEvent extends SteleEvent {
+export interface ChainValidatedEvent extends KovaEvent {
   type: 'chain:validated';
   result: ChainValidationResult;
 }
 
 /** Event emitted when an action is evaluated. */
-export interface EvaluationCompletedEvent extends SteleEvent {
+export interface EvaluationCompletedEvent extends KovaEvent {
   type: 'evaluation:completed';
   result: EvaluationResult;
   action: string;
@@ -240,14 +240,14 @@ export interface EvaluationCompletedEvent extends SteleEvent {
 }
 
 /** Event emitted when a key rotation occurs. */
-export interface KeyRotatedEvent extends SteleEvent {
+export interface KeyRotatedEvent extends KovaEvent {
   type: 'key:rotated';
   previousPublicKey: string;
   currentPublicKey: string;
 }
 
 /** Map of event types to their payloads. */
-export interface SteleEventMap {
+export interface KovaEventMap {
   'covenant:created': CovenantCreatedEvent;
   'covenant:verified': CovenantVerifiedEvent;
   'covenant:countersigned': CovenantCountersignedEvent;
@@ -260,7 +260,7 @@ export interface SteleEventMap {
 }
 
 /** Event handler function type. */
-export type SteleEventHandler<T extends SteleEventType> = (event: SteleEventMap[T]) => void;
+export type KovaEventHandler<T extends KovaEventType> = (event: KovaEventMap[T]) => void;
 
 // ─── Re-exports for convenience ─────────────────────────────────────────────
 

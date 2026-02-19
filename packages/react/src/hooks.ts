@@ -1,7 +1,7 @@
 /**
- * React hooks for Stele.
+ * React hooks for Kova.
  *
- * Provides idiomatic React hooks for subscribing to Stele observables,
+ * Provides idiomatic React hooks for subscribing to Kova observables,
  * managing covenant state, identity state, and store queries.
  *
  * Requires React >= 18 as a peer dependency.
@@ -9,11 +9,11 @@
  * @packageDocumentation
  */
 
-import type { CovenantDocument, VerificationResult } from '@stele/core';
-import type { AgentIdentity } from '@stele/identity';
-import type { CovenantStore, StoreFilter } from '@stele/store';
-import type { SteleClient, CreateCovenantOptions, EvaluationResult, CreateIdentityOptions, EvolveOptions } from '@stele/sdk';
-import type { EvaluationContext } from '@stele/ccl';
+import type { CovenantDocument, VerificationResult } from '@usekova/core';
+import type { AgentIdentity } from '@usekova/identity';
+import type { CovenantStore, StoreFilter } from '@usekova/store';
+import type { KovaClient, CreateCovenantOptions, EvaluationResult, CreateIdentityOptions, EvolveOptions } from '@usekova/sdk';
+import type { EvaluationContext } from '@usekova/ccl';
 import { Observable, CovenantState, IdentityState, StoreState } from './index';
 
 // ─── Minimal React type interface ──────────────────────────────────────────────
@@ -39,7 +39,7 @@ function getReact(): ReactModule {
       _react = require('react') as ReactModule;
     } catch {
       throw new Error(
-        '@stele/react hooks require React >= 18 as a peer dependency. ' +
+        '@usekova/react hooks require React >= 18 as a peer dependency. ' +
         'Install it with: npm install react',
       );
     }
@@ -66,7 +66,7 @@ export function _resetReact(): void {
 // ─── useObservable ─────────────────────────────────────────────────────────────
 
 /**
- * Subscribe to a Stele {@link Observable} and re-render when it changes.
+ * Subscribe to a Kova {@link Observable} and re-render when it changes.
  *
  * Uses `useSyncExternalStore` for tear-free reads that are compatible
  * with React concurrent features.
@@ -114,18 +114,18 @@ export interface UseCovenantReturn {
  * Manage the full covenant lifecycle (create, verify, evaluate) with
  * reactive state updates.
  *
- * @param client - A configured {@link SteleClient} instance.
+ * @param client - A configured {@link KovaClient} instance.
  * @returns Reactive covenant state and action methods.
  *
  * @example
  * ```tsx
- * function CovenantPanel({ client }: { client: SteleClient }) {
+ * function CovenantPanel({ client }: { client: KovaClient }) {
  *   const { status, document, create, verify } = useCovenant(client);
  *   // ...
  * }
  * ```
  */
-export function useCovenant(client: SteleClient): UseCovenantReturn {
+export function useCovenant(client: KovaClient): UseCovenantReturn {
   const react = getReact();
   const stateRef = react.useRef<CovenantState | null>(null);
 
@@ -174,10 +174,10 @@ export interface UseIdentityReturn {
  * Manage the agent identity lifecycle (create, evolve) with reactive
  * state updates.
  *
- * @param client - A configured {@link SteleClient} instance.
+ * @param client - A configured {@link KovaClient} instance.
  * @returns Reactive identity state and action methods.
  */
-export function useIdentity(client: SteleClient): UseIdentityReturn {
+export function useIdentity(client: KovaClient): UseIdentityReturn {
   const react = getReact();
   const stateRef = react.useRef<IdentityState | null>(null);
 

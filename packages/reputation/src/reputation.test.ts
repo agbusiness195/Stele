@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, sha256String, toHex } from '@stele/crypto';
-import type { KeyPair, HashHex } from '@stele/crypto';
+import { generateKeyPair, sha256String, toHex } from '@usekova/crypto';
+import type { KeyPair, HashHex } from '@usekova/crypto';
 import {
   createReceipt,
   verifyReceipt,

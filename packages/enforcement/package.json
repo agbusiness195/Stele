@@ -1,7 +1,7 @@
 {
-  "name": "@stele/enforcement",
+  "name": "@usekova/enforcement",
   "version": "2.0.0",
-  "description": "Covenant enforcement and policy execution for the Stele framework",
+  "description": "Covenant enforcement and policy execution for the Kova framework",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,13 +30,13 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/enforcement"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Kova Labs, Inc.",
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "enforcement",
@@ -52,9 +52,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@stele/ccl": "2.0.0",
-    "@stele/core": "2.0.0",
-    "@stele/crypto": "2.0.0",
-    "@stele/types": "2.0.0"
+    "@usekova/ccl": "2.0.0",
+    "@usekova/core": "2.0.0",
+    "@usekova/crypto": "2.0.0",
+    "@usekova/types": "2.0.0"
   }
 }

@@ -1,7 +1,7 @@
 {
-  "name": "@stele/discovery",
+  "name": "@usekova/discovery",
   "version": "2.0.0",
-  "description": "Cross-platform discovery protocol for .well-known/stele/ endpoints",
+  "description": "Cross-platform discovery protocol for .well-known/kova/ endpoints",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,9 +27,9 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/core": "2.0.0",
-    "@stele/crypto": "2.0.0",
-    "@stele/types": "2.0.0"
+    "@usekova/core": "2.0.0",
+    "@usekova/crypto": "2.0.0",
+    "@usekova/types": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -43,13 +43,13 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/discovery"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Kova Labs, Inc.",
   "keywords": [
-    "stele",
+    "kova",
     "discovery",
     "well-known",
     "cross-platform",

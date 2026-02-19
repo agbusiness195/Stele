@@ -1,14 +1,14 @@
 /**
- * Stele Protocol Conformance Suite
+ * Kova Protocol Conformance Suite
  *
  * Provides test vectors and validation functions for any implementation
- * of the Stele protocol. Implementations that pass all conformance checks
+ * of the Kova protocol. Implementations that pass all conformance checks
  * are considered spec-compliant.
  *
  * Like the W3C Acid Tests for browsers or TLS conformance suites --
- * a standardized set of test vectors that any Stele implementation must pass.
+ * a standardized set of test vectors that any Kova implementation must pass.
  *
- * This module is self-contained: it does NOT import from other @stele packages.
+ * This module is self-contained: it does NOT import from other @kova packages.
  * It generates its own keys and test documents using the provided
  * {@link ConformanceTarget} interface.
  *
@@ -46,7 +46,7 @@ export interface ConformanceFailure {
 /**
  * Functions that the implementation under test must provide.
  *
- * Any Stele-compatible implementation can be tested by wiring up these
+ * Any Kova-compatible implementation can be tested by wiring up these
  * functions and passing the resulting object to {@link runConformanceSuite}.
  */
 export interface ConformanceTarget {
@@ -253,7 +253,7 @@ export async function cryptoConformance(
   total++;
   try {
     const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
-    const message = textEncode('stele conformance test message');
+    const message = textEncode('kova conformance test message');
     const sig = await target.sign(message, kp.privateKey);
     const valid = await target.verify(message, sig, kp.publicKey);
     if (!valid) {
@@ -1602,7 +1602,7 @@ export async function securityConformance(
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Run the complete Stele Protocol Conformance Suite.
+ * Run the complete Kova Protocol Conformance Suite.
  *
  * Executes all five categories (crypto, CCL, covenant, interop, security)
  * and aggregates the results. An implementation that returns
@@ -1613,10 +1613,10 @@ export async function securityConformance(
  *
  * @example
  * ```typescript
- * import { runConformanceSuite } from '@stele/sdk/conformance';
- * import { buildCovenant, verifyCovenant } from '@stele/core';
- * import { generateKeyPair, sign, verify, sha256 } from '@stele/crypto';
- * import { parse, evaluate } from '@stele/ccl';
+ * import { runConformanceSuite } from '@usekova/sdk/conformance';
+ * import { buildCovenant, verifyCovenant } from '@usekova/core';
+ * import { generateKeyPair, sign, verify, sha256 } from '@usekova/crypto';
+ * import { parse, evaluate } from '@usekova/ccl';
  *
  * const result = await runConformanceSuite({
  *   buildCovenant,

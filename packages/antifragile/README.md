@@ -1,11 +1,11 @@
-# @stele/antifragile
+# @usekova/antifragile
 
 Antifragility analysis with stress testing, recovery metrics, and evolutionary antibody fitness.
 
 ## Installation
 
 ```bash
-npm install @stele/antifragile
+npm install @usekova/antifragile
 ```
 
 ## Key APIs
@@ -35,7 +35,7 @@ import {
   stressTest,
   antifragilityIndex,
   StressResponseCurve,
-} from '@stele/antifragile';
+} from '@usekova/antifragile';
 
 // Generate an antibody from a detected breach
 const antibody = generateAntibody({
@@ -67,4 +67,4 @@ console.log(curve.logistic(0.8)); // S-curve response at stress level 0.8
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

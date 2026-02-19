@@ -1,10 +1,10 @@
 /**
- * Stele adapter for Vercel AI SDK.
+ * Kova adapter for Vercel AI SDK.
  *
  * Wraps AI SDK tool definitions with covenant enforcement.
  * Before a tool's `execute()` is called, the action/resource pair is
  * evaluated against the covenant's CCL constraints. If denied, a
- * `SteleAccessDeniedError` is thrown (or the custom `onDenied` handler
+ * `KovaAccessDeniedError` is thrown (or the custom `onDenied` handler
  * is invoked). If permitted, the original `execute()` runs normally.
  *
  * **Status: Stable** (promoted from beta in v1.0.0)
@@ -13,32 +13,32 @@
  *
  * @example
  * ```typescript
- * import { SteleClient, withStele, withSteleTools } from '@stele/sdk';
+ * import { KovaClient, withKova, withKovaTools } from '@usekova/sdk';
  *
- * const protectedTool = withStele(myTool, { client, covenant });
- * const protectedTools = withSteleTools({ search, browse }, { client, covenant });
+ * const protectedTool = withKova(myTool, { client, covenant });
+ * const protectedTools = withKovaTools({ search, browse }, { client, covenant });
  * ```
  */
 
-import type { SteleClient } from '../index.js';
-import type { CovenantDocument } from '@stele/core';
+import type { KovaClient } from '../index.js';
+import type { CovenantDocument } from '@usekova/core';
 import type { EvaluationResult } from '../types.js';
 
 // ─── Error ───────────────────────────────────────────────────────────────────
 
 /**
- * Error thrown when a tool call is denied by a Stele covenant.
+ * Error thrown when a tool call is denied by a Kova covenant.
  *
  * Carries the full `EvaluationResult` so callers can inspect the
  * matched rule, severity, and reason for the denial.
  */
-export class SteleAccessDeniedError extends Error {
+export class KovaAccessDeniedError extends Error {
   /** The evaluation result that triggered the denial. */
   readonly evaluationResult: EvaluationResult;
 
   constructor(message: string, result: EvaluationResult) {
     super(message);
-    this.name = 'SteleAccessDeniedError';
+    this.name = 'KovaAccessDeniedError';
     this.evaluationResult = result;
   }
 }
@@ -59,11 +59,11 @@ export interface ToolLike {
 }
 
 /**
- * Options for wrapping Vercel AI SDK tools with Stele enforcement.
+ * Options for wrapping Vercel AI SDK tools with Kova enforcement.
  */
-export interface SteleToolOptions {
-  /** The SteleClient instance for covenant evaluation. */
-  client: SteleClient;
+export interface KovaToolOptions {
+  /** The KovaClient instance for covenant evaluation. */
+  client: KovaClient;
   /** The covenant document whose constraints are enforced. */
   covenant: CovenantDocument;
   /**
@@ -79,15 +79,15 @@ export interface SteleToolOptions {
   /**
    * Custom handler invoked when a tool call is denied. If provided,
    * its return value is returned instead of throwing. If not provided,
-   * a `SteleAccessDeniedError` is thrown.
+   * a `KovaAccessDeniedError` is thrown.
    */
   onDenied?: (tool: ToolLike, result: EvaluationResult) => unknown;
 }
 
-// ─── withStele ───────────────────────────────────────────────────────────────
+// ─── withKova ───────────────────────────────────────────────────────────────
 
 /**
- * Wrap a single Vercel AI SDK tool with Stele covenant enforcement.
+ * Wrap a single Vercel AI SDK tool with Kova covenant enforcement.
  *
  * Returns a new tool object whose `execute()` evaluates the
  * action/resource against the covenant before delegating to the
@@ -99,11 +99,11 @@ export interface SteleToolOptions {
  *
  * @example
  * ```typescript
- * const protectedTool = withStele(myTool, { client, covenant });
+ * const protectedTool = withKova(myTool, { client, covenant });
  * await protectedTool.execute('arg1'); // throws if denied
  * ```
  */
-export function withStele<T extends ToolLike>(tool: T, options: SteleToolOptions): T {
+export function withKova<T extends ToolLike>(tool: T, options: KovaToolOptions): T {
   const { client, covenant, actionFromTool, resourceFromTool, onDenied } = options;
 
   const originalExecute = tool.execute;
@@ -127,7 +127,7 @@ export function withStele<T extends ToolLike>(tool: T, options: SteleToolOptions
       if (onDenied) {
         return onDenied(tool, result);
       }
-      throw new SteleAccessDeniedError(
+      throw new KovaAccessDeniedError(
         `Action '${action}' on resource '${resource}' denied by covenant`,
         result,
       );
@@ -139,43 +139,43 @@ export function withStele<T extends ToolLike>(tool: T, options: SteleToolOptions
   return wrapped;
 }
 
-// ─── withSteleTools ──────────────────────────────────────────────────────────
+// ─── withKovaTools ──────────────────────────────────────────────────────────
 
 /**
- * Wrap an array of tools with Stele covenant enforcement.
+ * Wrap an array of tools with Kova covenant enforcement.
  *
  * @param tools   - Array of tools to wrap.
  * @param options - Enforcement options.
  * @returns A new array of wrapped tools.
  */
-export function withSteleTools(
+export function withKovaTools(
   tools: ToolLike[],
-  options: SteleToolOptions,
+  options: KovaToolOptions,
 ): ToolLike[];
 
 /**
- * Wrap a record of tools with Stele covenant enforcement.
+ * Wrap a record of tools with Kova covenant enforcement.
  *
  * @param tools   - Record of named tools to wrap.
  * @param options - Enforcement options.
  * @returns A new record with the same keys and wrapped tool values.
  */
-export function withSteleTools(
+export function withKovaTools(
   tools: Record<string, ToolLike>,
-  options: SteleToolOptions,
+  options: KovaToolOptions,
 ): Record<string, ToolLike>;
 
-export function withSteleTools(
+export function withKovaTools(
   tools: ToolLike[] | Record<string, ToolLike>,
-  options: SteleToolOptions,
+  options: KovaToolOptions,
 ): ToolLike[] | Record<string, ToolLike> {
   if (Array.isArray(tools)) {
-    return tools.map((tool) => withStele(tool, options));
+    return tools.map((tool) => withKova(tool, options));
   }
 
   const wrapped: Record<string, ToolLike> = {};
   for (const [key, tool] of Object.entries(tools)) {
-    wrapped[key] = withStele(tool, options);
+    wrapped[key] = withKova(tool, options);
   }
   return wrapped;
 }
@@ -185,7 +185,7 @@ export function withSteleTools(
 /**
  * Create a reusable guard function that enforces a covenant on any tool call.
  *
- * Unlike `withStele` which returns a new tool, `createToolGuard` returns a
+ * Unlike `withKova` which returns a new tool, `createToolGuard` returns a
  * function you call manually, passing the tool and arguments each time.
  *
  * @param options - Enforcement options.
@@ -199,7 +199,7 @@ export function withSteleTools(
  * ```
  */
 export function createToolGuard(
-  options: SteleToolOptions,
+  options: KovaToolOptions,
 ): (tool: ToolLike, ...args: unknown[]) => Promise<unknown> {
   const { client, covenant, actionFromTool, resourceFromTool, onDenied } = options;
 
@@ -217,7 +217,7 @@ export function createToolGuard(
       if (onDenied) {
         return onDenied(tool, result);
       }
-      throw new SteleAccessDeniedError(
+      throw new KovaAccessDeniedError(
         `Action '${action}' on resource '${resource}' denied by covenant`,
         result,
       );

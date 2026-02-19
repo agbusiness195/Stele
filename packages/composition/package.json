@@ -1,5 +1,5 @@
 {
-  "name": "@stele/composition",
+  "name": "@usekova/composition",
   "version": "2.0.0",
   "description": "Covenant composition with merge, intersect, and chain operations",
   "sideEffects": false,
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "2.0.0",
-    "@stele/ccl": "2.0.0"
+    "@usekova/crypto": "2.0.0",
+    "@usekova/ccl": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -42,13 +42,13 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/composition"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Kova Labs, Inc.",
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "composition",

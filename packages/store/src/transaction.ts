@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { CovenantDocument } from '@stele/core';
+import type { CovenantDocument } from '@usekova/core';
 
 import type { CovenantStore } from './types.js';
 

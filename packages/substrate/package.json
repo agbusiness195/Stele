@@ -1,5 +1,5 @@
 {
-  "name": "@stele/substrate",
+  "name": "@usekova/substrate",
   "version": "2.0.0",
   "description": "Cross-chain substrate layer for multi-network covenant anchoring",
   "sideEffects": false,
@@ -27,11 +27,11 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "2.0.0"
+    "@usekova/crypto": "2.0.0"
   },
   "license": "MIT",
-  "author": "Stele Labs, Inc.",
-  "homepage": "https://stele.dev",
+  "author": "Kova Labs, Inc.",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
@@ -47,7 +47,7 @@
     "directory": "packages/substrate"
   },
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "substrate",

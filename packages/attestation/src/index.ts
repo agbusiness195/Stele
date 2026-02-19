@@ -1,5 +1,5 @@
-import { sha256Object, signString, toHex, verify, fromHex } from '@stele/crypto';
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
+import { sha256Object, signString, toHex, verify, fromHex } from '@usekova/crypto';
+import { DocumentedKovaError as KovaError, DocumentedErrorCode as KovaErrorCode } from '@usekova/types';
 
 export type {
   ExternalAttestation,
@@ -40,16 +40,16 @@ export function createAttestation(
   timestamp: number,
 ): ExternalAttestation {
   if (!agentId || typeof agentId !== 'string') {
-    throw new SteleError(SteleErrorCode.ATTESTATION_INVALID, 'agentId must be a non-empty string', { hint: 'Provide a non-empty agentId when creating an attestation.' });
+    throw new KovaError(KovaErrorCode.ATTESTATION_INVALID, 'agentId must be a non-empty string', { hint: 'Provide a non-empty agentId when creating an attestation.' });
   }
   if (!counterpartyId || typeof counterpartyId !== 'string') {
-    throw new SteleError(SteleErrorCode.ATTESTATION_INVALID, 'counterpartyId must be a non-empty string', { hint: 'Provide a non-empty counterpartyId when creating an attestation.' });
+    throw new KovaError(KovaErrorCode.ATTESTATION_INVALID, 'counterpartyId must be a non-empty string', { hint: 'Provide a non-empty counterpartyId when creating an attestation.' });
   }
   if (!endpoint || typeof endpoint !== 'string') {
-    throw new SteleError(SteleErrorCode.ATTESTATION_INVALID, 'endpoint must be a non-empty string', { hint: 'Provide a non-empty endpoint string when creating an attestation.' });
+    throw new KovaError(KovaErrorCode.ATTESTATION_INVALID, 'endpoint must be a non-empty string', { hint: 'Provide a non-empty endpoint string when creating an attestation.' });
   }
   if (typeof timestamp !== 'number' || timestamp < 0) {
-    throw new SteleError(SteleErrorCode.ATTESTATION_INVALID, 'timestamp must be a non-negative number', { hint: 'Provide a non-negative numeric timestamp when creating an attestation.' });
+    throw new KovaError(KovaErrorCode.ATTESTATION_INVALID, 'timestamp must be a non-negative number', { hint: 'Provide a non-negative numeric timestamp when creating an attestation.' });
   }
 
   const content = {
@@ -335,7 +335,7 @@ export function computeAttestationCoverage(
   timeWindowMs: number = 5000,
 ): AttestationCoverageResult {
   if (timeWindowMs < 0) {
-    throw new SteleError(SteleErrorCode.ATTESTATION_INVALID, 'timeWindowMs must be non-negative', { hint: 'Provide a non-negative value for timeWindowMs.' });
+    throw new KovaError(KovaErrorCode.ATTESTATION_INVALID, 'timeWindowMs must be non-negative', { hint: 'Provide a non-negative value for timeWindowMs.' });
   }
 
   if (actions.length === 0) {
@@ -427,13 +427,13 @@ export function createEntanglement(params: {
   conditionalDependencies?: string[];
 }): EntanglementLink {
   if (!params.sourceAgentId || typeof params.sourceAgentId !== 'string') {
-    throw new SteleError(SteleErrorCode.ATTESTATION_INVALID, 'sourceAgentId must be a non-empty string', { hint: 'Provide a non-empty sourceAgentId when creating an entanglement link.' });
+    throw new KovaError(KovaErrorCode.ATTESTATION_INVALID, 'sourceAgentId must be a non-empty string', { hint: 'Provide a non-empty sourceAgentId when creating an entanglement link.' });
   }
   if (!params.targetAgentId || typeof params.targetAgentId !== 'string') {
-    throw new SteleError(SteleErrorCode.ATTESTATION_INVALID, 'targetAgentId must be a non-empty string', { hint: 'Provide a non-empty targetAgentId when creating an entanglement link.' });
+    throw new KovaError(KovaErrorCode.ATTESTATION_INVALID, 'targetAgentId must be a non-empty string', { hint: 'Provide a non-empty targetAgentId when creating an entanglement link.' });
   }
   if (typeof params.strength !== 'number' || params.strength < 0 || params.strength > 1) {
-    throw new SteleError(SteleErrorCode.ATTESTATION_INVALID, 'strength must be a number between 0 and 1', { hint: 'Set the entanglement strength to a number in the range [0, 1].' });
+    throw new KovaError(KovaErrorCode.ATTESTATION_INVALID, 'strength must be a number between 0 and 1', { hint: 'Set the entanglement strength to a number in the range [0, 1].' });
   }
 
   const mutualObligations = params.mutualObligations ?? [];

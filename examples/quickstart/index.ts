@@ -1,13 +1,13 @@
 /**
- * Stele SDK Quickstart
+ * Kova SDK Quickstart
  *
  * Demonstrates the basic flow: generate keys, build a covenant,
  * verify it, enforce constraints through a Monitor, and inspect
  * the tamper-evident audit log.
  */
-import { generateKeyPair } from '@stele/crypto';
-import { buildCovenant, verifyCovenant } from '@stele/core';
-import { Monitor, MonitorDeniedError } from '@stele/enforcement';
+import { generateKeyPair } from '@usekova/crypto';
+import { buildCovenant, verifyCovenant } from '@usekova/core';
+import { Monitor, MonitorDeniedError } from '@usekova/enforcement';
 
 async function main() {
   // 1. Generate an Ed25519 key pair

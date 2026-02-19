@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, sha256String } from '@stele/crypto';
-import type { HashHex, KeyPair } from '@stele/crypto';
+import { generateKeyPair, sha256String } from '@usekova/crypto';
+import type { HashHex, KeyPair } from '@usekova/crypto';
 import {
   Monitor,
   MonitorDeniedError,

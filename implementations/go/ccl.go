@@ -1,4 +1,4 @@
-package stele
+package kova
 
 import (
 	"encoding/json"

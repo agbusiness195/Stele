@@ -1,7 +1,7 @@
 {
-  "name": "@stele/mcp-server",
+  "name": "@usekova/mcp-server",
   "version": "2.0.0",
-  "description": "Model Context Protocol server with stdio transport that exposes Stele covenant tools to AI agents",
+  "description": "Model Context Protocol server with stdio transport that exposes Kova covenant tools to AI agents",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "stele-mcp": "dist/bin.js"
+    "kova-mcp": "dist/bin.js"
   },
   "files": [
     "dist",
@@ -27,12 +27,12 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@stele/types": "2.0.0",
-    "@stele/crypto": "2.0.0",
-    "@stele/core": "2.0.0",
-    "@stele/store": "2.0.0",
-    "@stele/verifier": "2.0.0",
-    "@stele/sdk": "2.0.0"
+    "@usekova/types": "2.0.0",
+    "@usekova/crypto": "2.0.0",
+    "@usekova/core": "2.0.0",
+    "@usekova/store": "2.0.0",
+    "@usekova/verifier": "2.0.0",
+    "@usekova/sdk": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -46,13 +46,13 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/mcp-server"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Kova Labs, Inc.",
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "mcp",

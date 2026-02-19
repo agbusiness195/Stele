@@ -1,5 +1,5 @@
 /**
- * @stele/core/migration — Document migration system for protocol version upgrades.
+ * @usekova/core/migration — Document migration system for protocol version upgrades.
  *
  * Provides a `DocumentMigrator` class that can chain version-specific migrations
  * to upgrade CovenantDocument structures from older protocol versions to the current one.
@@ -12,7 +12,7 @@
  * @packageDocumentation
  */
 
-import { generateNonce, toHex } from '@stele/crypto';
+import { generateNonce, toHex } from '@usekova/crypto';
 import { PROTOCOL_VERSION } from './types.js';
 
 // ─── Public types ────────────────────────────────────────────────────────────────

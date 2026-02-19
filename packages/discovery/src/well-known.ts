@@ -1,26 +1,26 @@
 /**
- * @stele/discovery/well-known — Discovery document generation and validation.
+ * @usekova/discovery/well-known — Discovery document generation and validation.
  *
- * Implements RFC 5785-compliant `.well-known/stele/` endpoint handling
- * for the Stele cross-platform discovery protocol.
+ * Implements RFC 5785-compliant `.well-known/kova/` endpoint handling
+ * for the Kova cross-platform discovery protocol.
  */
 
-import { sha256String, signString, verify, canonicalizeJson, timestamp, generateNonce, toHex, fromHex } from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
-import { PROTOCOL_VERSION } from '@stele/core';
+import { sha256String, signString, verify, canonicalizeJson, timestamp, generateNonce, toHex, fromHex } from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
+import { PROTOCOL_VERSION } from '@usekova/core';
 
 import type { DiscoveryDocument, AgentKeyEntry, AgentKeySet } from './types.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-/** The well-known path prefix for Stele discovery. */
-export const WELL_KNOWN_PATH = '/.well-known/stele';
+/** The well-known path prefix for Kova discovery. */
+export const WELL_KNOWN_PATH = '/.well-known/kova';
 
 /** The well-known configuration path. */
 export const CONFIGURATION_PATH = `${WELL_KNOWN_PATH}/configuration`;
 
-/** The MIME type for Stele discovery documents. */
-export const STELE_MEDIA_TYPE = 'application/stele+json';
+/** The MIME type for Kova discovery documents. */
+export const KOVA_MEDIA_TYPE = 'application/kova+json';
 
 /** Maximum age for a discovery document before it should be refreshed (24 hours). */
 export const MAX_DOCUMENT_AGE_MS = 86_400_000;
@@ -57,7 +57,7 @@ export interface BuildDiscoveryDocumentOptions {
  * Build a complete discovery document for a platform.
  *
  * @param options - Configuration for the discovery document.
- * @returns A signed DiscoveryDocument ready to serve at `/.well-known/stele/configuration`.
+ * @returns A signed DiscoveryDocument ready to serve at `/.well-known/kova/configuration`.
  */
 export async function buildDiscoveryDocument(
   options: BuildDiscoveryDocumentOptions,

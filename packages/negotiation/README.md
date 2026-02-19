@@ -1,11 +1,11 @@
-# @stele/negotiation
+# @usekova/negotiation
 
 Multi-party covenant negotiation with Nash bargaining, Zeuthen strategies, Pareto frontier analysis, and concession protocols.
 
 ## Installation
 
 ```bash
-npm install @stele/negotiation
+npm install @usekova/negotiation
 ```
 
 ## Key APIs
@@ -27,8 +27,8 @@ npm install @stele/negotiation
 ## Usage
 
 ```typescript
-import { initiate, propose, evaluate, agree } from '@stele/negotiation';
-import type { NegotiationPolicy, Proposal } from '@stele/negotiation';
+import { initiate, propose, evaluate, agree } from '@usekova/negotiation';
+import type { NegotiationPolicy, Proposal } from '@usekova/negotiation';
 
 const policy: NegotiationPolicy = {
   requiredConstraints: ['deny:exfiltrate-data'],
@@ -61,4 +61,4 @@ if (decision === 'accept') {
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

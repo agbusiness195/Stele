@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { run } from './index';
-import { buildCovenant, serializeCovenant, PROTOCOL_VERSION } from '@stele/core';
-import { generateKeyPair } from '@stele/crypto';
+import { buildCovenant, serializeCovenant, PROTOCOL_VERSION } from '@usekova/core';
+import { generateKeyPair } from '@usekova/crypto';
 import { setColorsEnabled, stripAnsi } from './format';
 import { mkdtempSync, readFileSync, existsSync, rmSync } from 'fs';
 import { join } from 'path';
@@ -53,11 +53,11 @@ afterEach(() => {
 // help / --help
 // ===========================================================================
 
-describe('stele help', () => {
+describe('kova help', () => {
   it('shows help with no arguments', async () => {
     const r = await run([]);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('Stele CLI');
+    expect(r.stdout).toContain('Kova CLI');
     expect(r.stdout).toContain('Commands');
     expect(r.stdout).toContain('init');
     expect(r.stdout).toContain('create');
@@ -76,14 +76,14 @@ describe('stele help', () => {
   it('shows help with "help" command', async () => {
     const r = await run(['help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('Stele CLI');
+    expect(r.stdout).toContain('Kova CLI');
     expect(r.stderr).toBe('');
   });
 
   it('shows help with --help on a subcommand', async () => {
     const r = await run(['init', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('stele init');
+    expect(r.stdout).toContain('kova init');
     expect(r.stderr).toBe('');
   });
 
@@ -95,7 +95,7 @@ describe('stele help', () => {
   it('strips ANSI from help when --no-color is set', async () => {
     const r = await run(['--no-color']);
     expect(hasAnsi(r.stdout)).toBe(false);
-    expect(r.stdout).toContain('Stele CLI');
+    expect(r.stdout).toContain('Kova CLI');
   });
 });
 
@@ -103,7 +103,7 @@ describe('stele help', () => {
 // version
 // ===========================================================================
 
-describe('stele version', () => {
+describe('kova version', () => {
   it('prints 0.1.0', async () => {
     const r = await run(['version']);
     expect(r.exitCode).toBe(0);
@@ -125,9 +125,9 @@ describe('stele version', () => {
 // init
 // ===========================================================================
 
-describe('stele init', () => {
+describe('kova init', () => {
   it('generates a key pair and prints public key', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'stele-test-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'kova-test-'));
     try {
       const r = await run(['init'], tmp);
       expect(r.exitCode).toBe(0);
@@ -157,16 +157,16 @@ describe('stele init', () => {
   it('shows help with --help', async () => {
     const r = await run(['init', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('stele init');
+    expect(r.stdout).toContain('kova init');
     expect(r.stdout).toContain('Generate');
   });
 
-  it('writes stele.config.json on init', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'stele-test-'));
+  it('writes kova.config.json on init', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'kova-test-'));
     try {
       const r = await run(['init'], tmp);
       expect(r.exitCode).toBe(0);
-      const configPath = join(tmp, 'stele.config.json');
+      const configPath = join(tmp, 'kova.config.json');
       expect(existsSync(configPath)).toBe(true);
       const config = JSON.parse(readFileSync(configPath, 'utf-8'));
       expect(config.defaultIssuer).toBeDefined();
@@ -178,7 +178,7 @@ describe('stele init', () => {
   });
 
   it('init output contains ANSI when colors enabled', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'stele-test-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'kova-test-'));
     try {
       const r = await run(['init'], tmp);
       expect(hasAnsi(r.stdout)).toBe(true);
@@ -188,7 +188,7 @@ describe('stele init', () => {
   });
 
   it('init output has no ANSI with --no-color', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'stele-test-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'kova-test-'));
     try {
       const r = await run(['init', '--no-color'], tmp);
       expect(hasAnsi(r.stdout)).toBe(false);
@@ -203,7 +203,7 @@ describe('stele init', () => {
 // create
 // ===========================================================================
 
-describe('stele create', () => {
+describe('kova create', () => {
   it('creates a covenant and outputs formatted text', async () => {
     const r = await run([
       'create',
@@ -282,7 +282,7 @@ describe('stele create', () => {
   it('shows help with --help', async () => {
     const r = await run(['create', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('stele create');
+    expect(r.stdout).toContain('kova create');
     expect(r.stdout).toContain('--issuer');
   });
 
@@ -313,7 +313,7 @@ describe('stele create', () => {
 // verify
 // ===========================================================================
 
-describe('stele verify', () => {
+describe('kova verify', () => {
   it('verifies a valid covenant with colored output', async () => {
     const json = await makeCovenantJson();
     const r = await run(['verify', json]);
@@ -385,7 +385,7 @@ describe('stele verify', () => {
   it('shows help with --help', async () => {
     const r = await run(['verify', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('stele verify');
+    expect(r.stdout).toContain('kova verify');
   });
 
   it('verify output includes box-drawing summary', async () => {
@@ -401,7 +401,7 @@ describe('stele verify', () => {
 // evaluate
 // ===========================================================================
 
-describe('stele evaluate', () => {
+describe('kova evaluate', () => {
   it('evaluates a permitted action with PERMITTED text', async () => {
     const json = await makeCovenantJson("permit read on '**'");
     const r = await run(['evaluate', json, 'read', '/data']);
@@ -469,7 +469,7 @@ describe('stele evaluate', () => {
   it('shows help with --help', async () => {
     const r = await run(['evaluate', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('stele evaluate');
+    expect(r.stdout).toContain('kova evaluate');
   });
 });
 
@@ -477,7 +477,7 @@ describe('stele evaluate', () => {
 // inspect
 // ===========================================================================
 
-describe('stele inspect', () => {
+describe('kova inspect', () => {
   it('pretty-prints covenant details with boxes', async () => {
     const json = await makeCovenantJson("permit read on '**'\ndeny write on '/system/**'");
     const r = await run(['inspect', json]);
@@ -533,7 +533,7 @@ describe('stele inspect', () => {
   it('shows help with --help', async () => {
     const r = await run(['inspect', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('stele inspect');
+    expect(r.stdout).toContain('kova inspect');
   });
 });
 
@@ -541,7 +541,7 @@ describe('stele inspect', () => {
 // parse
 // ===========================================================================
 
-describe('stele parse', () => {
+describe('kova parse', () => {
   it('parses valid CCL and shows formatted summary', async () => {
     const r = await run(['parse', "permit read on '**'"]);
     expect(r.exitCode).toBe(0);
@@ -596,7 +596,7 @@ describe('stele parse', () => {
   it('shows help with --help', async () => {
     const r = await run(['parse', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('stele parse');
+    expect(r.stdout).toContain('kova parse');
   });
 });
 
@@ -604,11 +604,11 @@ describe('stele parse', () => {
 // completions
 // ===========================================================================
 
-describe('stele completions', () => {
+describe('kova completions', () => {
   it('generates bash completion script', async () => {
     const r = await run(['completions', 'bash']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('_stele_completions');
+    expect(r.stdout).toContain('_kova_completions');
     expect(r.stdout).toContain('complete -F');
     expect(r.stdout).toContain('compgen');
     expect(r.stdout).toContain('init');
@@ -622,8 +622,8 @@ describe('stele completions', () => {
   it('generates zsh completion script', async () => {
     const r = await run(['completions', 'zsh']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('#compdef stele');
-    expect(r.stdout).toContain('_stele');
+    expect(r.stdout).toContain('#compdef kova');
+    expect(r.stdout).toContain('_kova');
     expect(r.stdout).toContain('_arguments');
     expect(r.stdout).toContain('init');
     expect(r.stdout).toContain('create');
@@ -635,7 +635,7 @@ describe('stele completions', () => {
   it('generates fish completion script', async () => {
     const r = await run(['completions', 'fish']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('complete -c stele');
+    expect(r.stdout).toContain('complete -c kova');
     expect(r.stdout).toContain('init');
     expect(r.stdout).toContain('create');
     expect(r.stdout).toContain('doctor');
@@ -661,7 +661,7 @@ describe('stele completions', () => {
   it('shows help with --help', async () => {
     const r = await run(['completions', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('stele completions');
+    expect(r.stdout).toContain('kova completions');
     expect(r.stdout).toContain('bash');
     expect(r.stdout).toContain('zsh');
     expect(r.stdout).toContain('fish');
@@ -685,7 +685,7 @@ describe('unknown command', () => {
     const r = await run(['foobar']);
     expect(r.exitCode).toBe(1);
     expect(r.stderr).toContain("Unknown command 'foobar'");
-    expect(r.stderr).toContain('stele help');
+    expect(r.stderr).toContain('kova help');
   });
 });
 
@@ -695,12 +695,12 @@ describe('unknown command', () => {
 
 describe('config loading', () => {
   it('loads config from specified directory', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'stele-cfg-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'kova-cfg-'));
     try {
       // Write a config file
       const { writeFileSync } = await import('fs');
       writeFileSync(
-        join(tmp, 'stele.config.json'),
+        join(tmp, 'kova.config.json'),
         JSON.stringify({
           defaultIssuer: { id: 'cfg-issuer', publicKey: 'a'.repeat(64) },
           defaultBeneficiary: { id: 'cfg-beneficiary', publicKey: 'b'.repeat(64) },
@@ -724,11 +724,11 @@ describe('config loading', () => {
   });
 
   it('CLI flags override config defaults', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'stele-cfg-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'kova-cfg-'));
     try {
       const { writeFileSync } = await import('fs');
       writeFileSync(
-        join(tmp, 'stele.config.json'),
+        join(tmp, 'kova.config.json'),
         JSON.stringify({
           defaultIssuer: { id: 'cfg-issuer', publicKey: 'a'.repeat(64) },
           defaultBeneficiary: { id: 'cfg-beneficiary', publicKey: 'b'.repeat(64) },
@@ -753,7 +753,7 @@ describe('config loading', () => {
   });
 
   it('works gracefully when no config file exists', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'stele-nocfg-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'kova-nocfg-'));
     try {
       const r = await run(['version'], tmp);
       expect(r.exitCode).toBe(0);
@@ -813,11 +813,11 @@ describe('--json flag produces clean JSON without ANSI', () => {
 // doctor
 // ===========================================================================
 
-describe('stele doctor', () => {
+describe('kova doctor', () => {
   it('returns checks with colored output', async () => {
     const r = await run(['doctor']);
     expect(r.exitCode).toBe(0);
-    expect(stripAnsi(r.stdout)).toContain('Stele Doctor');
+    expect(stripAnsi(r.stdout)).toContain('Kova Doctor');
     expect(stripAnsi(r.stdout)).toContain('Node.js version');
     expect(stripAnsi(r.stdout)).toContain('Crypto');
     expect(stripAnsi(r.stdout)).toContain('Core');
@@ -844,7 +844,7 @@ describe('stele doctor', () => {
   it('shows help with --help', async () => {
     const r = await run(['doctor', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('stele doctor');
+    expect(r.stdout).toContain('kova doctor');
     expect(r.stdout).toContain('diagnostic');
   });
 
@@ -852,7 +852,7 @@ describe('stele doctor', () => {
     const r = await run(['doctor', '--no-color']);
     expect(r.exitCode).toBe(0);
     expect(hasAnsi(r.stdout)).toBe(false);
-    expect(r.stdout).toContain('Stele Doctor');
+    expect(r.stdout).toContain('Kova Doctor');
   });
 
   it('doctor output includes summary box', async () => {
@@ -867,7 +867,7 @@ describe('stele doctor', () => {
 // diff
 // ===========================================================================
 
-describe('stele diff', () => {
+describe('kova diff', () => {
   it('shows differences between two covenants', async () => {
     const json1 = await makeCovenantJson("permit read on '**'");
     const json2 = await makeCovenantJson("permit write on '**'");
@@ -971,7 +971,7 @@ describe('stele diff', () => {
   it('shows help with --help', async () => {
     const r = await run(['diff', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('stele diff');
+    expect(r.stdout).toContain('kova diff');
     expect(r.stdout).toContain('differences');
   });
 });

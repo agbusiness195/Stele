@@ -1,5 +1,5 @@
 /**
- * @stele/schema — Formal JSON Schema definitions for Stele protocol documents.
+ * @usekova/schema — Formal JSON Schema definitions for Kova protocol documents.
  *
  * Provides machine-readable schemas (JSON Schema Draft 2020-12) for:
  * - Covenant documents
@@ -8,7 +8,7 @@
  * - CCL evaluation contexts
  *
  * These schemas enable any language implementation to validate
- * Stele protocol documents without the TypeScript SDK.
+ * Kova protocol documents without the TypeScript SDK.
  *
  * @packageDocumentation
  */

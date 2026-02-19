@@ -15,8 +15,8 @@
  * @packageDocumentation
  */
 
-import type { CovenantDocument } from '@stele/core';
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
+import type { CovenantDocument } from '@usekova/core';
+import { DocumentedKovaError as KovaError, DocumentedErrorCode as KovaErrorCode } from '@usekova/types';
 
 import type {
   CovenantStore,
@@ -171,15 +171,15 @@ export class SqliteStore implements CovenantStore {
 
   async put(doc: CovenantDocument): Promise<void> {
     if (doc == null) {
-      throw new SteleError(
-        SteleErrorCode.STORE_MISSING_DOC,
+      throw new KovaError(
+        KovaErrorCode.STORE_MISSING_DOC,
         'put(): document is required',
         { hint: 'Pass a valid CovenantDocument object to store.' }
       );
     }
     if (!doc.id || (typeof doc.id === 'string' && doc.id.trim().length === 0)) {
-      throw new SteleError(
-        SteleErrorCode.STORE_MISSING_ID,
+      throw new KovaError(
+        KovaErrorCode.STORE_MISSING_ID,
         'put(): document.id is required and must be a non-empty string',
         { hint: 'Ensure the document has a non-empty id field. Use buildCovenant() to generate properly identified documents.' }
       );

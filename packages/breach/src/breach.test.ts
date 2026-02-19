@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { generateKeyPair, sha256String } from '@stele/crypto';
-import type { KeyPair, HashHex } from '@stele/crypto';
-import type { Severity } from '@stele/ccl';
+import { generateKeyPair, sha256String } from '@usekova/crypto';
+import type { KeyPair, HashHex } from '@usekova/crypto';
+import type { Severity } from '@usekova/ccl';
 import {
   createBreachAttestation,
   verifyBreachAttestation,

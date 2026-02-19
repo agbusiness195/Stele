@@ -1,5 +1,5 @@
 {
-  "name": "@stele/store",
+  "name": "@usekova/store",
   "version": "2.0.0",
   "description": "Pluggable storage backends — SQLite, PostgreSQL, S3",
   "sideEffects": false,
@@ -24,9 +24,9 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@stele/types": "2.0.0",
-    "@stele/crypto": "2.0.0",
-    "@stele/core": "2.0.0"
+    "@usekova/types": "2.0.0",
+    "@usekova/crypto": "2.0.0",
+    "@usekova/core": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -40,13 +40,13 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/store"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Kova Labs, Inc.",
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "storage",

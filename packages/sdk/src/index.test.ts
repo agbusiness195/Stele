@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateKeyPair } from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
-import type { CovenantDocument, Issuer, Beneficiary } from '@stele/core';
-import { verifyCovenant as coreVerifyCovenant } from '@stele/core';
-import { verifyIdentity } from '@stele/identity';
+import { generateKeyPair } from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
+import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
+import { verifyCovenant as coreVerifyCovenant } from '@usekova/core';
+import { verifyIdentity } from '@usekova/identity';
 
 import {
-  SteleClient,
+  KovaClient,
   QuickCovenant,
 
   // Re-exports: core
@@ -50,13 +50,13 @@ import {
 } from './index';
 
 import type {
-  SteleClientOptions,
+  KovaClientOptions,
   CreateCovenantOptions,
   EvaluationResult,
   CreateIdentityOptions,
   EvolveOptions,
   ChainValidationResult,
-  SteleEventType,
+  KovaEventType,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   CovenantCountersignedEvent,
@@ -115,12 +115,12 @@ function makeIdentityOptions(kp: KeyPair): CreateIdentityOptions {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('@stele/sdk', () => {
-  // ── SteleClient constructor ───────────────────────────────────────────
+describe('@usekova/sdk', () => {
+  // ── KovaClient constructor ───────────────────────────────────────────
 
-  describe('SteleClient constructor', () => {
+  describe('KovaClient constructor', () => {
     it('creates a client with default options', () => {
-      const client = new SteleClient();
+      const client = new KovaClient();
       expect(client.keyPair).toBeUndefined();
       expect(client.agentId).toBeUndefined();
       expect(client.strictMode).toBe(false);
@@ -128,23 +128,23 @@ describe('@stele/sdk', () => {
 
     it('accepts a pre-existing key pair', async () => {
       const kp = await generateKeyPair();
-      const client = new SteleClient({ keyPair: kp });
+      const client = new KovaClient({ keyPair: kp });
       expect(client.keyPair).toBe(kp);
     });
 
     it('accepts an agentId', () => {
-      const client = new SteleClient({ agentId: 'agent-42' });
+      const client = new KovaClient({ agentId: 'agent-42' });
       expect(client.agentId).toBe('agent-42');
     });
 
     it('accepts strictMode flag', () => {
-      const client = new SteleClient({ strictMode: true });
+      const client = new KovaClient({ strictMode: true });
       expect(client.strictMode).toBe(true);
     });
 
     it('sets all options at once', async () => {
       const kp = await generateKeyPair();
-      const client = new SteleClient({
+      const client = new KovaClient({
         keyPair: kp,
         agentId: 'my-agent',
         strictMode: true,
@@ -157,9 +157,9 @@ describe('@stele/sdk', () => {
 
   // ── Key management ────────────────────────────────────────────────────
 
-  describe('SteleClient.generateKeyPair', () => {
+  describe('KovaClient.generateKeyPair', () => {
     it('generates a valid key pair', async () => {
-      const client = new SteleClient();
+      const client = new KovaClient();
       const kp = await client.generateKeyPair();
 
       expect(kp.privateKey).toBeInstanceOf(Uint8Array);
@@ -169,7 +169,7 @@ describe('@stele/sdk', () => {
     });
 
     it('sets the generated key pair on the client', async () => {
-      const client = new SteleClient();
+      const client = new KovaClient();
       expect(client.keyPair).toBeUndefined();
 
       const kp = await client.generateKeyPair();
@@ -177,7 +177,7 @@ describe('@stele/sdk', () => {
     });
 
     it('overwrites previous key pair when called again', async () => {
-      const client = new SteleClient();
+      const client = new KovaClient();
       const kp1 = await client.generateKeyPair();
       const kp2 = await client.generateKeyPair();
 
@@ -188,10 +188,10 @@ describe('@stele/sdk', () => {
 
   // ── Covenant creation ─────────────────────────────────────────────────
 
-  describe('SteleClient.createCovenant', () => {
+  describe('KovaClient.createCovenant', () => {
     it('creates a valid covenant document', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -209,7 +209,7 @@ describe('@stele/sdk', () => {
     it('uses explicit privateKey over client keyPair', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
       const otherKp = await generateKeyPair();
-      const client = new SteleClient({ keyPair: otherKp });
+      const client = new KovaClient({ keyPair: otherKp });
 
       const doc = await client.createCovenant({
         issuer,
@@ -225,7 +225,7 @@ describe('@stele/sdk', () => {
 
     it('throws when no private key is available', async () => {
       const { issuer, beneficiary } = await makeParties();
-      const client = new SteleClient();
+      const client = new KovaClient();
 
       await expect(
         client.createCovenant({
@@ -238,7 +238,7 @@ describe('@stele/sdk', () => {
 
     it('passes optional fields through to buildCovenant', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -256,7 +256,7 @@ describe('@stele/sdk', () => {
 
     it('throws a helpful error for empty constraints', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       await expect(
         client.createCovenant({
@@ -269,7 +269,7 @@ describe('@stele/sdk', () => {
 
     it('propagates CovenantBuildError for invalid CCL syntax', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       await expect(
         client.createCovenant({
@@ -283,10 +283,10 @@ describe('@stele/sdk', () => {
 
   // ── Covenant verification ─────────────────────────────────────────────
 
-  describe('SteleClient.verifyCovenant', () => {
+  describe('KovaClient.verifyCovenant', () => {
     it('returns valid for a well-formed covenant', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -301,7 +301,7 @@ describe('@stele/sdk', () => {
 
     it('returns invalid for a tampered covenant', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -316,7 +316,7 @@ describe('@stele/sdk', () => {
 
     it('throws in strict mode on verification failure', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({
+      const client = new KovaClient({
         keyPair: issuerKeyPair,
         strictMode: true,
       });
@@ -335,7 +335,7 @@ describe('@stele/sdk', () => {
 
     it('does not throw in non-strict mode on verification failure', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -351,12 +351,12 @@ describe('@stele/sdk', () => {
 
   // ── Countersign ───────────────────────────────────────────────────────
 
-  describe('SteleClient.countersign', () => {
+  describe('KovaClient.countersign', () => {
     it('adds a valid countersignature using client key pair', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
       const auditorKp = await generateKeyPair();
-      const createClient = new SteleClient({ keyPair: issuerKeyPair });
-      const auditClient = new SteleClient({ keyPair: auditorKp });
+      const createClient = new KovaClient({ keyPair: issuerKeyPair });
+      const auditClient = new KovaClient({ keyPair: auditorKp });
 
       const doc = await createClient.createCovenant({
         issuer,
@@ -375,7 +375,7 @@ describe('@stele/sdk', () => {
     it('adds a countersignature with an explicit key pair', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
       const auditorKp = await generateKeyPair();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -390,7 +390,7 @@ describe('@stele/sdk', () => {
 
     it('defaults to auditor role', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -404,8 +404,8 @@ describe('@stele/sdk', () => {
 
     it('throws when no key pair is available', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const createClient = new SteleClient({ keyPair: issuerKeyPair });
-      const noKeyClient = new SteleClient();
+      const createClient = new KovaClient({ keyPair: issuerKeyPair });
+      const noKeyClient = new KovaClient();
 
       const doc = await createClient.createCovenant({
         issuer,
@@ -421,10 +421,10 @@ describe('@stele/sdk', () => {
 
   // ── Evaluate action ───────────────────────────────────────────────────
 
-  describe('SteleClient.evaluateAction', () => {
+  describe('KovaClient.evaluateAction', () => {
     it('permits an action that matches a permit rule', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -438,7 +438,7 @@ describe('@stele/sdk', () => {
 
     it('denies an action that matches a deny rule', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -452,7 +452,7 @@ describe('@stele/sdk', () => {
 
     it('denies by default when no rules match', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -466,7 +466,7 @@ describe('@stele/sdk', () => {
 
     it('respects deny-wins over permit at equal specificity', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -480,7 +480,7 @@ describe('@stele/sdk', () => {
 
     it('supports evaluation context', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -498,10 +498,10 @@ describe('@stele/sdk', () => {
 
   // ── Identity ──────────────────────────────────────────────────────────
 
-  describe('SteleClient.createIdentity', () => {
+  describe('KovaClient.createIdentity', () => {
     it('creates a valid agent identity', async () => {
       const kp = await generateKeyPair();
-      const client = new SteleClient({ keyPair: kp });
+      const client = new KovaClient({ keyPair: kp });
 
       const identity = await client.createIdentity({
         model: {
@@ -527,7 +527,7 @@ describe('@stele/sdk', () => {
     it('uses explicit operatorKeyPair when provided', async () => {
       const clientKp = await generateKeyPair();
       const operatorKp = await generateKeyPair();
-      const client = new SteleClient({ keyPair: clientKp });
+      const client = new KovaClient({ keyPair: clientKp });
 
       const identity = await client.createIdentity({
         operatorKeyPair: operatorKp,
@@ -544,7 +544,7 @@ describe('@stele/sdk', () => {
     });
 
     it('throws when no key pair is available', async () => {
-      const client = new SteleClient();
+      const client = new KovaClient();
 
       await expect(
         client.createIdentity({
@@ -559,10 +559,10 @@ describe('@stele/sdk', () => {
     });
   });
 
-  describe('SteleClient.evolveIdentity', () => {
+  describe('KovaClient.evolveIdentity', () => {
     it('evolves an identity with new capabilities', async () => {
       const kp = await generateKeyPair();
-      const client = new SteleClient({ keyPair: kp });
+      const client = new KovaClient({ keyPair: kp });
 
       const identity = await client.createIdentity(makeIdentityOptions(kp));
 
@@ -584,10 +584,10 @@ describe('@stele/sdk', () => {
 
     it('throws when no key pair is available', async () => {
       const kp = await generateKeyPair();
-      const identityClient = new SteleClient({ keyPair: kp });
+      const identityClient = new KovaClient({ keyPair: kp });
       const identity = await identityClient.createIdentity(makeIdentityOptions(kp));
 
-      const noKeyClient = new SteleClient();
+      const noKeyClient = new KovaClient();
       await expect(
         noKeyClient.evolveIdentity(identity, {
           changeType: 'capability_change',
@@ -600,10 +600,10 @@ describe('@stele/sdk', () => {
 
   // ── Chain operations ──────────────────────────────────────────────────
 
-  describe('SteleClient.resolveChain', () => {
+  describe('KovaClient.resolveChain', () => {
     it('resolves a parent-child chain', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const root = await client.createCovenant({
         issuer,
@@ -625,7 +625,7 @@ describe('@stele/sdk', () => {
 
     it('returns empty array for root covenant', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const root = await client.createCovenant({
         issuer,
@@ -638,10 +638,10 @@ describe('@stele/sdk', () => {
     });
   });
 
-  describe('SteleClient.validateChain', () => {
+  describe('KovaClient.validateChain', () => {
     it('validates a proper narrowing chain', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const root = await client.createCovenant({
         issuer,
@@ -664,7 +664,7 @@ describe('@stele/sdk', () => {
 
     it('detects narrowing violations', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const root = await client.createCovenant({
         issuer,
@@ -686,7 +686,7 @@ describe('@stele/sdk', () => {
 
     it('validates each document individually', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -703,21 +703,21 @@ describe('@stele/sdk', () => {
 
   // ── CCL utilities ─────────────────────────────────────────────────────
 
-  describe('SteleClient CCL utilities', () => {
+  describe('KovaClient CCL utilities', () => {
     it('parseCCL parses valid CCL', () => {
-      const client = new SteleClient();
+      const client = new KovaClient();
       const doc = client.parseCCL("permit read on '/data'");
       expect(doc.permits).toHaveLength(1);
       expect(doc.permits[0]!.action).toBe('read');
     });
 
     it('parseCCL throws on invalid CCL', () => {
-      const client = new SteleClient();
+      const client = new KovaClient();
       expect(() => client.parseCCL('!!! invalid !!!')).toThrow();
     });
 
     it('mergeCCL merges two CCL documents', () => {
-      const client = new SteleClient();
+      const client = new KovaClient();
       const a = client.parseCCL("permit read on '/data'");
       const b = client.parseCCL("deny write on '/system'");
 
@@ -727,7 +727,7 @@ describe('@stele/sdk', () => {
     });
 
     it('serializeCCL round-trips with parseCCL', () => {
-      const client = new SteleClient();
+      const client = new KovaClient();
       const source = "permit read on '/data'";
       const doc = client.parseCCL(source);
       const serialized = client.serializeCCL(doc);
@@ -741,10 +741,10 @@ describe('@stele/sdk', () => {
 
   // ── Event system ──────────────────────────────────────────────────────
 
-  describe('SteleClient event system', () => {
+  describe('KovaClient event system', () => {
     it('emits covenant:created event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const events: CovenantCreatedEvent[] = [];
       client.on('covenant:created', (e) => events.push(e));
@@ -763,7 +763,7 @@ describe('@stele/sdk', () => {
 
     it('emits covenant:verified event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -783,7 +783,7 @@ describe('@stele/sdk', () => {
 
     it('emits covenant:countersigned event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -802,7 +802,7 @@ describe('@stele/sdk', () => {
 
     it('emits identity:created event', async () => {
       const kp = await generateKeyPair();
-      const client = new SteleClient({ keyPair: kp });
+      const client = new KovaClient({ keyPair: kp });
 
       const events: IdentityCreatedEvent[] = [];
       client.on('identity:created', (e) => events.push(e));
@@ -816,7 +816,7 @@ describe('@stele/sdk', () => {
 
     it('emits identity:evolved event', async () => {
       const kp = await generateKeyPair();
-      const client = new SteleClient({ keyPair: kp });
+      const client = new KovaClient({ keyPair: kp });
       const identity = await client.createIdentity(makeIdentityOptions(kp));
 
       const events: IdentityEvolvedEvent[] = [];
@@ -835,7 +835,7 @@ describe('@stele/sdk', () => {
 
     it('emits chain:resolved event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const root = await client.createCovenant({
         issuer,
@@ -855,7 +855,7 @@ describe('@stele/sdk', () => {
 
     it('emits chain:validated event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -875,7 +875,7 @@ describe('@stele/sdk', () => {
 
     it('emits evaluation:completed event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -897,7 +897,7 @@ describe('@stele/sdk', () => {
 
     it('on() returns a disposer function', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       let count = 0;
       const dispose = client.on('covenant:created', () => { count++; });
@@ -921,7 +921,7 @@ describe('@stele/sdk', () => {
 
     it('off() removes a specific handler', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       let count = 0;
       const handler = () => { count++; };
@@ -946,7 +946,7 @@ describe('@stele/sdk', () => {
 
     it('removeAllListeners() clears handlers for a specific event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       let count = 0;
       client.on('covenant:created', () => { count++; });
@@ -970,7 +970,7 @@ describe('@stele/sdk', () => {
     });
 
     it('removeAllListeners() without args clears all events', async () => {
-      const client = new SteleClient();
+      const client = new KovaClient();
       let created = 0;
       let verified = 0;
 
@@ -987,7 +987,7 @@ describe('@stele/sdk', () => {
 
     it('supports multiple handlers for the same event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const calls: string[] = [];
       client.on('covenant:created', () => calls.push('handler1'));
@@ -1106,9 +1106,9 @@ describe('@stele/sdk', () => {
     });
   });
 
-  // ── Re-exports from @stele/core ───────────────────────────────────────
+  // ── Re-exports from @usekova/core ───────────────────────────────────────
 
-  describe('re-exports from @stele/core', () => {
+  describe('re-exports from @usekova/core', () => {
     it('exports PROTOCOL_VERSION constant', () => {
       expect(PROTOCOL_VERSION).toBe('1.0');
     });
@@ -1171,9 +1171,9 @@ describe('@stele/sdk', () => {
     });
   });
 
-  // ── Re-exports from @stele/crypto ─────────────────────────────────────
+  // ── Re-exports from @usekova/crypto ─────────────────────────────────────
 
-  describe('re-exports from @stele/crypto', () => {
+  describe('re-exports from @usekova/crypto', () => {
     it('exports sha256String', () => {
       const hash = sha256String('hello');
       expect(hash).toMatch(/^[0-9a-f]{64}$/);
@@ -1199,9 +1199,9 @@ describe('@stele/sdk', () => {
     });
   });
 
-  // ── Re-exports from @stele/ccl ────────────────────────────────────────
+  // ── Re-exports from @usekova/ccl ────────────────────────────────────────
 
-  describe('re-exports from @stele/ccl', () => {
+  describe('re-exports from @usekova/ccl', () => {
     it('exports parseCCL', () => {
       const doc = parseCCL("permit read on '/data'");
       expect(doc.permits).toHaveLength(1);
@@ -1240,9 +1240,9 @@ describe('@stele/sdk', () => {
     });
   });
 
-  // ── Re-exports from @stele/identity ───────────────────────────────────
+  // ── Re-exports from @usekova/identity ───────────────────────────────────
 
-  describe('re-exports from @stele/identity', () => {
+  describe('re-exports from @usekova/identity', () => {
     it('exports DEFAULT_EVOLUTION_POLICY', () => {
       expect(DEFAULT_EVOLUTION_POLICY.minorUpdate).toBe(0.95);
       expect(DEFAULT_EVOLUTION_POLICY.modelVersionChange).toBe(0.80);
@@ -1251,7 +1251,7 @@ describe('@stele/sdk', () => {
 
     it('exports getLineage', async () => {
       const kp = await generateKeyPair();
-      const client = new SteleClient({ keyPair: kp });
+      const client = new KovaClient({ keyPair: kp });
       const identity = await client.createIdentity(makeIdentityOptions(kp));
 
       const lineage = getLineage(identity);
@@ -1261,7 +1261,7 @@ describe('@stele/sdk', () => {
 
     it('exports serializeIdentity and deserializeIdentity', async () => {
       const kp = await generateKeyPair();
-      const client = new SteleClient({ keyPair: kp });
+      const client = new KovaClient({ keyPair: kp });
       const identity = await client.createIdentity(makeIdentityOptions(kp));
 
       const json = serializeIdentity(identity);
@@ -1278,7 +1278,7 @@ describe('@stele/sdk', () => {
     it('create -> verify -> countersign -> verify -> evaluate', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
       const auditorKp = await generateKeyPair();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       // Create
       const doc = await client.createCovenant({
@@ -1311,7 +1311,7 @@ describe('@stele/sdk', () => {
 
     it('create chain -> validate -> resolve', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new SteleClient({ keyPair: issuerKeyPair });
+      const client = new KovaClient({ keyPair: issuerKeyPair });
 
       const root = await client.createCovenant({
         issuer,

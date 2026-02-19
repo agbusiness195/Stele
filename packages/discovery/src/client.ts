@@ -1,13 +1,13 @@
 /**
- * @stele/discovery/client — Cross-platform discovery client.
+ * @usekova/discovery/client — Cross-platform discovery client.
  *
  * Fetches, validates, and caches discovery documents from remote platforms.
  * This is what Agent A uses when it needs to verify Agent B's covenant
  * on a different platform.
  */
 
-import { generateNonce, timestamp, toHex } from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
+import { generateNonce, timestamp, toHex } from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
 
 import type {
   DiscoveryDocument,
@@ -39,9 +39,9 @@ export interface DiscoveryClientOptions {
 }
 
 /**
- * Client for the Stele cross-platform discovery protocol.
+ * Client for the Kova cross-platform discovery protocol.
  *
- * Discovers, caches, and interacts with remote Stele platform endpoints.
+ * Discovers, caches, and interacts with remote Kova platform endpoints.
  * This is the primary interface for cross-platform agent verification.
  *
  * @example
@@ -80,9 +80,9 @@ export class DiscoveryClient {
   }
 
   /**
-   * Discover a remote platform's Stele configuration.
+   * Discover a remote platform's Kova configuration.
    *
-   * Fetches the discovery document from `{platformUrl}/.well-known/stele/configuration`,
+   * Fetches the discovery document from `{platformUrl}/.well-known/kova/configuration`,
    * validates its structure, and optionally verifies its signature.
    *
    * @param platformUrl - The platform's base URL (e.g., "https://platform.example").
@@ -235,7 +235,7 @@ export class DiscoveryClient {
     const response = await this._fetchFn(discovery.verification_endpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/stele+json',
+        'Content-Type': 'application/kova+json',
         ...opts.headers,
       },
       body: JSON.stringify(request),
@@ -322,7 +322,7 @@ export class DiscoveryClient {
   private async _fetch(url: string, opts: FetchOptions): Promise<Response> {
     const response = await this._fetchFn(url, {
       headers: {
-        Accept: 'application/stele+json, application/json',
+        Accept: 'application/kova+json, application/json',
         ...opts.headers,
       },
       signal: opts.timeout ? AbortSignal.timeout(opts.timeout) : undefined,

@@ -7,19 +7,19 @@ import {
   fromHex,
   generateNonce,
   timestamp,
-} from '@stele/crypto';
+} from '@usekova/crypto';
 
-import type { KeyPair, HashHex } from '@stele/crypto';
+import type { KeyPair, HashHex } from '@usekova/crypto';
 
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
+import { DocumentedKovaError as KovaError, DocumentedErrorCode as KovaErrorCode } from '@usekova/types';
 
 import {
   parse as cclParse,
   merge as cclMerge,
   validateNarrowing as cclValidateNarrowing,
-} from '@stele/ccl';
+} from '@usekova/ccl';
 
-import type { CCLDocument, NarrowingViolation } from '@stele/ccl';
+import type { CCLDocument, NarrowingViolation } from '@usekova/ccl';
 
 import {
   PROTOCOL_VERSION,
@@ -37,7 +37,7 @@ import type {
   PartyRole,
 } from './types.js';
 
-// Re-export all types so consumers only need @stele/core
+// Re-export all types so consumers only need @usekova/core
 export type {
   EnforcementType,
   ProofType,
@@ -764,16 +764,16 @@ export async function resolveChain(
   maxDepth: number = MAX_CHAIN_DEPTH,
 ): Promise<CovenantDocument[]> {
   if (doc == null) {
-    throw new SteleError(
-      SteleErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new KovaError(
+      KovaErrorCode.PROTOCOL_INVALID_INPUT,
       'doc must not be null or undefined',
       { hint: 'Provide a valid CovenantDocument to resolveChain.' }
     );
   }
 
   if (typeof maxDepth !== 'number' || !Number.isFinite(maxDepth) || maxDepth < 0) {
-    throw new SteleError(
-      SteleErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new KovaError(
+      KovaErrorCode.PROTOCOL_INVALID_INPUT,
       'maxDepth must be a non-negative number',
       { hint: 'Provide a non-negative number for maxDepth.' }
     );

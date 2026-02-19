@@ -1,5 +1,5 @@
 /**
- * @stele/types — Shared TypeScript type definitions and protocol schemas.
+ * @usekova/types — Shared TypeScript type definitions and protocol schemas.
  *
  * Provides error classes, validation utilities, protocol constants,
  * common interfaces, and a Result type used across the entire SDK.
@@ -9,8 +9,8 @@
 
 // ─── Error codes ────────────────────────────────────────────────────────────────
 
-/** Enumeration of all error codes used across the Stele SDK. */
-export enum SteleErrorCode {
+/** Enumeration of all error codes used across the Kova SDK. */
+export enum KovaErrorCode {
   /** A required input was empty, missing, or otherwise invalid. */
   INVALID_INPUT = 'INVALID_INPUT',
   /** A cryptographic operation (sign, verify, hash) failed. */
@@ -36,25 +36,25 @@ export enum SteleErrorCode {
   /** A chain narrowing validation detected a broadening violation. */
   NARROWING_VIOLATION = 'NARROWING_VIOLATION',
   /** A protocol-layer function received invalid input. */
-  PROTOCOL_INVALID_INPUT = 'STELE_E940',
+  PROTOCOL_INVALID_INPUT = 'KOVA_E940',
   /** A protocol-layer computation failed (numerical, algorithmic, or convergence). */
-  PROTOCOL_COMPUTATION_FAILED = 'STELE_E941',
+  PROTOCOL_COMPUTATION_FAILED = 'KOVA_E941',
 }
 
 // ─── Error classes ──────────────────────────────────────────────────────────────
 
 /**
- * Base error class for the Stele SDK.
+ * Base error class for the Kova SDK.
  *
- * Every Stele error carries a {@link SteleErrorCode} so callers can
+ * Every Kova error carries a {@link KovaErrorCode} so callers can
  * programmatically distinguish error categories without parsing messages.
  */
-export class SteleError extends Error {
-  readonly code: SteleErrorCode;
+export class KovaError extends Error {
+  readonly code: KovaErrorCode;
 
-  constructor(message: string, code: SteleErrorCode) {
+  constructor(message: string, code: KovaErrorCode) {
     super(message);
-    this.name = 'SteleError';
+    this.name = 'KovaError';
     this.code = code;
   }
 }
@@ -62,11 +62,11 @@ export class SteleError extends Error {
 /**
  * Thrown when an input fails validation (empty string, out of range, etc.).
  */
-export class ValidationError extends SteleError {
+export class ValidationError extends KovaError {
   /** The name of the field or parameter that failed validation. */
   readonly field: string;
 
-  constructor(message: string, field: string, code: SteleErrorCode = SteleErrorCode.INVALID_INPUT) {
+  constructor(message: string, field: string, code: KovaErrorCode = KovaErrorCode.INVALID_INPUT) {
     super(message, code);
     this.name = 'ValidationError';
     this.field = field;
@@ -76,9 +76,9 @@ export class ValidationError extends SteleError {
 /**
  * Thrown when a cryptographic operation fails.
  */
-export class CryptoError extends SteleError {
+export class CryptoError extends KovaError {
   constructor(message: string) {
-    super(message, SteleErrorCode.CRYPTO_FAILURE);
+    super(message, KovaErrorCode.CRYPTO_FAILURE);
     this.name = 'CryptoError';
   }
 }
@@ -86,9 +86,9 @@ export class CryptoError extends SteleError {
 /**
  * Thrown when CCL constraint parsing or evaluation fails.
  */
-export class CCLError extends SteleError {
+export class CCLError extends KovaError {
   constructor(message: string) {
-    super(message, SteleErrorCode.CCL_PARSE_ERROR);
+    super(message, KovaErrorCode.CCL_PARSE_ERROR);
     this.name = 'CCLError';
   }
 }
@@ -96,8 +96,8 @@ export class CCLError extends SteleError {
 /**
  * Thrown when a chain operation violates protocol rules.
  */
-export class ChainError extends SteleError {
-  constructor(message: string, code: SteleErrorCode = SteleErrorCode.CHAIN_DEPTH_EXCEEDED) {
+export class ChainError extends KovaError {
+  constructor(message: string, code: KovaErrorCode = KovaErrorCode.CHAIN_DEPTH_EXCEEDED) {
     super(message, code);
     this.name = 'ChainError';
   }
@@ -106,8 +106,8 @@ export class ChainError extends SteleError {
 /**
  * Thrown when a storage operation fails.
  */
-export class StorageError extends SteleError {
-  constructor(message: string, code: SteleErrorCode = SteleErrorCode.STORAGE_NOT_FOUND) {
+export class StorageError extends KovaError {
+  constructor(message: string, code: KovaErrorCode = KovaErrorCode.STORAGE_NOT_FOUND) {
     super(message, code);
     this.name = 'StorageError';
   }
@@ -132,7 +132,7 @@ export function validateNonEmpty(value: string, name: string): void {
     throw new ValidationError(
       `${name} must be a non-empty string`,
       name,
-      SteleErrorCode.INVALID_INPUT,
+      KovaErrorCode.INVALID_INPUT,
     );
   }
 }
@@ -156,7 +156,7 @@ export function validateRange(value: number, min: number, max: number, name: str
     throw new ValidationError(
       `${name} must be between ${min} and ${max} (got ${value})`,
       name,
-      SteleErrorCode.OUT_OF_RANGE,
+      KovaErrorCode.OUT_OF_RANGE,
     );
   }
 }
@@ -178,21 +178,21 @@ export function validateHex(value: string, name: string): void {
     throw new ValidationError(
       `${name} must be a non-empty hex string`,
       name,
-      SteleErrorCode.INVALID_HEX,
+      KovaErrorCode.INVALID_HEX,
     );
   }
   if (value.length % 2 !== 0) {
     throw new ValidationError(
       `${name} must have even length (got ${value.length})`,
       name,
-      SteleErrorCode.INVALID_HEX,
+      KovaErrorCode.INVALID_HEX,
     );
   }
   if (!/^[0-9a-fA-F]+$/.test(value)) {
     throw new ValidationError(
       `${name} contains invalid hex characters`,
       name,
-      SteleErrorCode.INVALID_HEX,
+      KovaErrorCode.INVALID_HEX,
     );
   }
 }
@@ -214,25 +214,25 @@ export function validateProbability(value: number, name: string): void {
     throw new ValidationError(
       `${name} must be a probability between 0 and 1 (got ${value})`,
       name,
-      SteleErrorCode.INVALID_PROBABILITY,
+      KovaErrorCode.INVALID_PROBABILITY,
     );
   }
 }
 
 // ─── Protocol constants ─────────────────────────────────────────────────────────
 
-/** Current Stele SDK version string. */
-export const STELE_VERSION = '0.1.0';
+/** Current Kova SDK version string. */
+export const KOVA_VERSION = '0.1.0';
 
 /** Default severity level for CCL statements. */
 export const DEFAULT_SEVERITY = 'must';
 
-/** Hash algorithms supported by the Stele protocol. */
+/** Hash algorithms supported by the Kova protocol. */
 export const SUPPORTED_HASH_ALGORITHMS: readonly string[] = [
   'sha256',
 ] as const;
 
-/** Signature schemes supported by the Stele protocol. */
+/** Signature schemes supported by the Kova protocol. */
 export const SUPPORTED_SIGNATURE_SCHEMES: readonly string[] = [
   'ed25519',
 ] as const;
@@ -364,16 +364,16 @@ export type { HistogramSnapshot, MetricsSnapshot } from './metrics';
 // ─── Documented error codes ─────────────────────────────────────────────────────
 //
 // The comprehensive error code system in ./errors provides unique, documentable
-// error codes (STELE_Exxx). The legacy SteleErrorCode/SteleError above are
+// error codes (KOVA_Exxx). The legacy KovaErrorCode/KovaError above are
 // retained for backward compatibility. Import directly from './errors' for the
 // full documented error code system.
 export {
-  SteleErrorCode as DocumentedErrorCode,
-  SteleError as DocumentedSteleError,
+  KovaErrorCode as DocumentedErrorCode,
+  KovaError as DocumentedKovaError,
   errorDocsUrl,
   formatError,
 } from './errors';
-export type { SteleErrorOptions } from './errors';
+export type { KovaErrorOptions } from './errors';
 
 // ─── Debug logging ──────────────────────────────────────────────────────────────
 export { isDebugEnabled, createDebugLogger, debug } from './debug';

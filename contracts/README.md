@@ -1,12 +1,12 @@
-# SteleRegistry Smart Contract
+# KovaRegistry Smart Contract
 
-On-chain registry for anchoring and verifying Stele protocol covenant constraints on EVM-compatible blockchains.
+On-chain registry for anchoring and verifying Kova protocol covenant constraints on EVM-compatible blockchains.
 
 ## Overview
 
-`SteleRegistry` is a minimal, ownerless, non-upgradeable smart contract that stores covenant anchors on-chain. Each anchor binds a unique `covenantId` to a constraints hash, issuer address, beneficiary address, and timestamp. Any party can verify whether a covenant has been anchored; only the original issuer can revoke it.
+`KovaRegistry` is a minimal, ownerless, non-upgradeable smart contract that stores covenant anchors on-chain. Each anchor binds a unique `covenantId` to a constraints hash, issuer address, beneficiary address, and timestamp. Any party can verify whether a covenant has been anchored; only the original issuer can revoke it.
 
-The contract implements the interface consumed by the `@stele/evm` TypeScript package (see `STELE_REGISTRY_ABI` and `SteleRegistryInterface` in `packages/evm/src/index.ts`).
+The contract implements the interface consumed by the `@usekova/evm` TypeScript package (see `KOVA_REGISTRY_ABI` and `KovaRegistryInterface` in `packages/evm/src/index.ts`).
 
 ## Contract Interface
 
@@ -63,12 +63,12 @@ error AnchorNotFound(bytes32 covenantId);
 error ArrayLengthMismatch();
 ```
 
-## ABI Compatibility with @stele/evm
+## ABI Compatibility with @usekova/evm
 
-The core three functions (`anchor`, `verify`, `getAnchor`) match the `STELE_REGISTRY_ABI` exported by `@stele/evm`:
+The core three functions (`anchor`, `verify`, `getAnchor`) match the `KOVA_REGISTRY_ABI` exported by `@usekova/evm`:
 
 ```typescript
-export const STELE_REGISTRY_ABI = [
+export const KOVA_REGISTRY_ABI = [
   {
     name: 'anchor',
     type: 'function',
@@ -104,7 +104,7 @@ export const STELE_REGISTRY_ABI = [
 ] as const;
 ```
 
-The `EVMClient` class in `@stele/evm` uses `buildAnchorCalldata()` to construct the `anchor()` calldata and `computeFunctionSelector('verify(bytes32)')` / `computeFunctionSelector('getAnchor(bytes32)')` for read calls. These selectors match the deployed contract's function signatures exactly.
+The `EVMClient` class in `@usekova/evm` uses `buildAnchorCalldata()` to construct the `anchor()` calldata and `computeFunctionSelector('verify(bytes32)')` / `computeFunctionSelector('getAnchor(bytes32)')` for read calls. These selectors match the deployed contract's function signatures exactly.
 
 ## Deployment
 
@@ -134,7 +134,7 @@ forge init --no-git --no-commit .
 3. **Copy the contract** into `src/`:
 
 ```bash
-cp SteleRegistry.sol src/SteleRegistry.sol
+cp KovaRegistry.sol src/KovaRegistry.sol
 ```
 
 4. **Compile**:
@@ -157,7 +157,7 @@ export PRIVATE_KEY=0x...
 export RPC_URL=https://...
 
 # Deploy
-forge create src/SteleRegistry.sol:SteleRegistry \
+forge create src/KovaRegistry.sol:KovaRegistry \
   --rpc-url $RPC_URL \
   --private-key $PRIVATE_KEY \
   --broadcast
@@ -170,7 +170,7 @@ forge create src/SteleRegistry.sol:SteleRegistry \
 anvil
 
 # Terminal 2: deploy
-forge create src/SteleRegistry.sol:SteleRegistry \
+forge create src/KovaRegistry.sol:KovaRegistry \
   --rpc-url http://127.0.0.1:8545 \
   --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 ```
@@ -192,7 +192,7 @@ npx hardhat init
 3. **Copy the contract** into `contracts/`:
 
 ```bash
-# If using Hardhat from the repo root, SteleRegistry.sol is already here.
+# If using Hardhat from the repo root, KovaRegistry.sol is already here.
 ```
 
 4. **Compile**:
@@ -207,12 +207,12 @@ npx hardhat compile
 const { ethers } = require("hardhat");
 
 async function main() {
-  const SteleRegistry = await ethers.getContractFactory("SteleRegistry");
-  const registry = await SteleRegistry.deploy();
+  const KovaRegistry = await ethers.getContractFactory("KovaRegistry");
+  const registry = await KovaRegistry.deploy();
   await registry.waitForDeployment();
 
   const address = await registry.getAddress();
-  console.log("SteleRegistry deployed to:", address);
+  console.log("KovaRegistry deployed to:", address);
 }
 
 main().catch((error) => {
@@ -273,11 +273,11 @@ cast send $REGISTRY \
   --private-key $PRIVATE_KEY
 ```
 
-### Using @stele/evm (TypeScript)
+### Using @usekova/evm (TypeScript)
 
 ```typescript
-import { EVMClient } from '@stele/evm';
-import type { CovenantAnchor, EVMProvider } from '@stele/evm';
+import { EVMClient } from '@usekova/evm';
+import type { CovenantAnchor, EVMProvider } from '@usekova/evm';
 
 // Wrap your JSON-RPC transport (fetch, ethers, viem, etc.)
 const provider: EVMProvider = {

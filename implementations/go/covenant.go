@@ -1,4 +1,4 @@
-package stele
+package kova
 
 import (
 	"crypto/ed25519"
@@ -90,7 +90,7 @@ func CanonicalForm(doc *CovenantDocument) (string, error) {
 	// Convert to map, then strip the three mutable fields
 	m, err := objectToMap(doc)
 	if err != nil {
-		return "", fmt.Errorf("stele: failed to convert document to map: %w", err)
+		return "", fmt.Errorf("kova: failed to convert document to map: %w", err)
 	}
 
 	delete(m, "id")
@@ -99,7 +99,7 @@ func CanonicalForm(doc *CovenantDocument) (string, error) {
 
 	canonical, err := CanonicalizeJSON(m)
 	if err != nil {
-		return "", fmt.Errorf("stele: failed to canonicalize document: %w", err)
+		return "", fmt.Errorf("kova: failed to canonicalize document: %w", err)
 	}
 
 	return canonical, nil
@@ -120,52 +120,52 @@ func ComputeID(doc *CovenantDocument) (string, error) {
 func BuildCovenant(opts *CovenantBuilderOptions) (*CovenantDocument, error) {
 	// Validate required inputs
 	if opts.Issuer.ID == "" {
-		return nil, fmt.Errorf("stele: issuer.id is required")
+		return nil, fmt.Errorf("kova: issuer.id is required")
 	}
 	if opts.Issuer.PublicKey == "" {
-		return nil, fmt.Errorf("stele: issuer.publicKey is required")
+		return nil, fmt.Errorf("kova: issuer.publicKey is required")
 	}
 	if opts.Issuer.Role != "issuer" {
-		return nil, fmt.Errorf("stele: issuer.role must be 'issuer'")
+		return nil, fmt.Errorf("kova: issuer.role must be 'issuer'")
 	}
 	if opts.Beneficiary.ID == "" {
-		return nil, fmt.Errorf("stele: beneficiary.id is required")
+		return nil, fmt.Errorf("kova: beneficiary.id is required")
 	}
 	if opts.Beneficiary.PublicKey == "" {
-		return nil, fmt.Errorf("stele: beneficiary.publicKey is required")
+		return nil, fmt.Errorf("kova: beneficiary.publicKey is required")
 	}
 	if opts.Beneficiary.Role != "beneficiary" {
-		return nil, fmt.Errorf("stele: beneficiary.role must be 'beneficiary'")
+		return nil, fmt.Errorf("kova: beneficiary.role must be 'beneficiary'")
 	}
 	if strings.TrimSpace(opts.Constraints) == "" {
-		return nil, fmt.Errorf("stele: constraints is required")
+		return nil, fmt.Errorf("kova: constraints is required")
 	}
 	if len(opts.PrivateKey) != ed25519.PrivateKeySize {
-		return nil, fmt.Errorf("stele: privateKey must be %d bytes", ed25519.PrivateKeySize)
+		return nil, fmt.Errorf("kova: privateKey must be %d bytes", ed25519.PrivateKeySize)
 	}
 
 	// Parse CCL to verify syntax and check constraint count
 	parsedCCL, err := Parse(opts.Constraints)
 	if err != nil {
-		return nil, fmt.Errorf("stele: invalid CCL constraints: %w", err)
+		return nil, fmt.Errorf("kova: invalid CCL constraints: %w", err)
 	}
 	if len(parsedCCL.Statements) > MaxConstraints {
-		return nil, fmt.Errorf("stele: constraints exceed maximum of %d statements (got %d)", MaxConstraints, len(parsedCCL.Statements))
+		return nil, fmt.Errorf("kova: constraints exceed maximum of %d statements (got %d)", MaxConstraints, len(parsedCCL.Statements))
 	}
 
 	// Validate chain reference
 	if opts.Chain != nil {
 		if opts.Chain.ParentID == "" {
-			return nil, fmt.Errorf("stele: chain.parentId is required")
+			return nil, fmt.Errorf("kova: chain.parentId is required")
 		}
 		if opts.Chain.Relation == "" {
-			return nil, fmt.Errorf("stele: chain.relation is required")
+			return nil, fmt.Errorf("kova: chain.relation is required")
 		}
 		if opts.Chain.Depth < 1 {
-			return nil, fmt.Errorf("stele: chain.depth must be a positive integer")
+			return nil, fmt.Errorf("kova: chain.depth must be a positive integer")
 		}
 		if opts.Chain.Depth > MaxChainDepth {
-			return nil, fmt.Errorf("stele: chain.depth exceeds maximum of %d (got %d)", MaxChainDepth, opts.Chain.Depth)
+			return nil, fmt.Errorf("kova: chain.depth exceeds maximum of %d (got %d)", MaxChainDepth, opts.Chain.Depth)
 		}
 	}
 
@@ -210,7 +210,7 @@ func BuildCovenant(opts *CovenantBuilderOptions) (*CovenantDocument, error) {
 
 	sigBytes, err := Sign([]byte(canonical), opts.PrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to sign covenant: %w", err)
+		return nil, fmt.Errorf("kova: failed to sign covenant: %w", err)
 	}
 	doc.Signature = ToHex(sigBytes)
 	doc.ID = SHA256String(canonical)
@@ -218,10 +218,10 @@ func BuildCovenant(opts *CovenantBuilderOptions) (*CovenantDocument, error) {
 	// Validate serialized size
 	serialized, err := json.Marshal(doc)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to serialize covenant: %w", err)
+		return nil, fmt.Errorf("kova: failed to serialize covenant: %w", err)
 	}
 	if len(serialized) > MaxDocumentSize {
-		return nil, fmt.Errorf("stele: serialized document exceeds maximum size of %d bytes", MaxDocumentSize)
+		return nil, fmt.Errorf("kova: serialized document exceeds maximum size of %d bytes", MaxDocumentSize)
 	}
 
 	return doc, nil
@@ -515,7 +515,7 @@ func CountersignCovenant(doc *CovenantDocument, kp *KeyPair, role string) (*Cove
 
 	sigBytes, err := Sign([]byte(canonical), kp.PrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to countersign: %w", err)
+		return nil, fmt.Errorf("kova: failed to countersign: %w", err)
 	}
 
 	cs := Countersignature{
@@ -538,7 +538,7 @@ func CountersignCovenant(doc *CovenantDocument, kp *KeyPair, role string) (*Cove
 func SerializeCovenant(doc *CovenantDocument) (string, error) {
 	b, err := json.Marshal(doc)
 	if err != nil {
-		return "", fmt.Errorf("stele: failed to serialize covenant: %w", err)
+		return "", fmt.Errorf("kova: failed to serialize covenant: %w", err)
 	}
 	return string(b), nil
 }
@@ -548,51 +548,51 @@ func SerializeCovenant(doc *CovenantDocument) (string, error) {
 func DeserializeCovenant(jsonStr string) (*CovenantDocument, error) {
 	var doc CovenantDocument
 	if err := json.Unmarshal([]byte(jsonStr), &doc); err != nil {
-		return nil, fmt.Errorf("stele: invalid JSON: %w", err)
+		return nil, fmt.Errorf("kova: invalid JSON: %w", err)
 	}
 
 	// Validate required fields
 	if doc.ID == "" {
-		return nil, fmt.Errorf("stele: missing required field: id")
+		return nil, fmt.Errorf("kova: missing required field: id")
 	}
 	if doc.Version == "" {
-		return nil, fmt.Errorf("stele: missing required field: version")
+		return nil, fmt.Errorf("kova: missing required field: version")
 	}
 	if doc.Version != ProtocolVersion {
-		return nil, fmt.Errorf("stele: unsupported protocol version: %s (expected %s)", doc.Version, ProtocolVersion)
+		return nil, fmt.Errorf("kova: unsupported protocol version: %s (expected %s)", doc.Version, ProtocolVersion)
 	}
 	if doc.Issuer.ID == "" || doc.Issuer.PublicKey == "" || doc.Issuer.Role != "issuer" {
-		return nil, fmt.Errorf("stele: invalid issuer: must have id, publicKey, and role='issuer'")
+		return nil, fmt.Errorf("kova: invalid issuer: must have id, publicKey, and role='issuer'")
 	}
 	if doc.Beneficiary.ID == "" || doc.Beneficiary.PublicKey == "" || doc.Beneficiary.Role != "beneficiary" {
-		return nil, fmt.Errorf("stele: invalid beneficiary: must have id, publicKey, and role='beneficiary'")
+		return nil, fmt.Errorf("kova: invalid beneficiary: must have id, publicKey, and role='beneficiary'")
 	}
 	if doc.Constraints == "" {
-		return nil, fmt.Errorf("stele: missing required field: constraints")
+		return nil, fmt.Errorf("kova: missing required field: constraints")
 	}
 	if doc.Nonce == "" {
-		return nil, fmt.Errorf("stele: missing required field: nonce")
+		return nil, fmt.Errorf("kova: missing required field: nonce")
 	}
 	if doc.CreatedAt == "" {
-		return nil, fmt.Errorf("stele: missing required field: createdAt")
+		return nil, fmt.Errorf("kova: missing required field: createdAt")
 	}
 	if doc.Signature == "" {
-		return nil, fmt.Errorf("stele: missing required field: signature")
+		return nil, fmt.Errorf("kova: missing required field: signature")
 	}
 
 	// Validate chain if present
 	if doc.Chain != nil {
 		if doc.Chain.ParentID == "" {
-			return nil, fmt.Errorf("stele: invalid chain.parentId: must be a string")
+			return nil, fmt.Errorf("kova: invalid chain.parentId: must be a string")
 		}
 		if doc.Chain.Relation == "" {
-			return nil, fmt.Errorf("stele: invalid chain.relation: must be a string")
+			return nil, fmt.Errorf("kova: invalid chain.relation: must be a string")
 		}
 	}
 
 	// Validate document size
 	if len(jsonStr) > MaxDocumentSize {
-		return nil, fmt.Errorf("stele: document size %d bytes exceeds maximum of %d bytes", len(jsonStr), MaxDocumentSize)
+		return nil, fmt.Errorf("kova: document size %d bytes exceeds maximum of %d bytes", len(jsonStr), MaxDocumentSize)
 	}
 
 	return &doc, nil
@@ -603,11 +603,11 @@ func DeserializeCovenant(jsonStr string) (*CovenantDocument, error) {
 func ValidateChainNarrowing(child, parent *CovenantDocument) (*NarrowingResult, error) {
 	parentCCL, err := Parse(parent.Constraints)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to parse parent constraints: %w", err)
+		return nil, fmt.Errorf("kova: failed to parse parent constraints: %w", err)
 	}
 	childCCL, err := Parse(child.Constraints)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to parse child constraints: %w", err)
+		return nil, fmt.Errorf("kova: failed to parse child constraints: %w", err)
 	}
 	return ValidateNarrowing(parentCCL, childCCL), nil
 }

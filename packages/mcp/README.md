@@ -1,24 +1,24 @@
-# @stele/mcp
+# @usekova/mcp
 
-Model Context Protocol (MCP) integration -- wraps any MCP server with Stele covenant enforcement, audit logging, and compliance proofs.
+Model Context Protocol (MCP) integration -- wraps any MCP server with Kova covenant enforcement, audit logging, and compliance proofs.
 
 ## Installation
 
 ```bash
-npm install @stele/mcp
+npm install @usekova/mcp
 ```
 
 ## Key APIs
 
-- **SteleGuard.wrap(server, options)**: Wrap an MCP server with constraint enforcement using CCL text or a preset name. Returns a `WrappedMCPServer`.
-- **SteleGuard.fromCovenant(server, covenant, keyPair)**: Wrap an MCP server using a pre-built `CovenantDocument` (for externally managed covenants).
+- **KovaGuard.wrap(server, options)**: Wrap an MCP server with constraint enforcement using CCL text or a preset name. Returns a `WrappedMCPServer`.
+- **KovaGuard.fromCovenant(server, covenant, keyPair)**: Wrap an MCP server using a pre-built `CovenantDocument` (for externally managed covenants).
 - **PRESETS**: Built-in CCL constraint presets (`standard:data-isolation`, `standard:read-write`, `standard:network`, `standard:minimal`).
 - **WrappedMCPServer**: Extended server with `getMonitor()`, `getAuditLog()`, `generateProof()`, `getReceipt()`, and `getCovenant()` accessors.
 
 ## Usage
 
 ```typescript
-import { SteleGuard } from '@stele/mcp';
+import { KovaGuard } from '@usekova/mcp';
 
 // Your existing MCP server
 const mcpServer = {
@@ -29,7 +29,7 @@ const mcpServer = {
 };
 
 // Wrap with a built-in preset (2 lines)
-const guarded = await SteleGuard.wrap(mcpServer, {
+const guarded = await KovaGuard.wrap(mcpServer, {
   constraints: 'standard:data-isolation',
   mode: 'enforce', // or 'log_only'
   onViolation: (v) => console.warn(`Blocked: ${v.toolName} - ${v.constraint}`),
@@ -47,14 +47,14 @@ const receipt = guarded.getReceipt();
 ### Using a pre-built covenant
 
 ```typescript
-import { SteleGuard } from '@stele/mcp';
-import { buildCovenant } from '@stele/core';
-import { generateKeyPair } from '@stele/crypto';
+import { KovaGuard } from '@usekova/mcp';
+import { buildCovenant } from '@usekova/core';
+import { generateKeyPair } from '@usekova/crypto';
 
 const keyPair = await generateKeyPair();
 const covenant = await buildCovenant({ /* ... */ });
 
-const guarded = await SteleGuard.fromCovenant(mcpServer, covenant, keyPair);
+const guarded = await KovaGuard.fromCovenant(mcpServer, covenant, keyPair);
 ```
 
 ## Presets
@@ -68,4 +68,4 @@ const guarded = await SteleGuard.fromCovenant(mcpServer, covenant, keyPair);
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

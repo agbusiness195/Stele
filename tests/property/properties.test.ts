@@ -1,11 +1,11 @@
 /**
- * Property-based and fuzz-style tests for the Stele SDK.
+ * Property-based and fuzz-style tests for the Kova SDK.
  *
  * Since fast-check is unavailable, we use manual random generators with
  * crypto.getRandomValues for true randomness, running 20 iterations per
  * property to cover a broad range of inputs.
  *
- * Covers: @stele/crypto, @stele/ccl, @stele/core, @stele/identity
+ * Covers: @usekova/crypto, @usekova/ccl, @usekova/core, @usekova/identity
  */
 
 import { describe, it, expect } from 'vitest';
@@ -26,8 +26,8 @@ import {
   generateNonce,
   generateId,
   constantTimeEqual,
-} from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
+} from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
 
 import {
   parse,
@@ -39,8 +39,8 @@ import {
   matchAction,
   matchResource,
   evaluateCondition,
-} from '@stele/ccl';
-import type { CCLDocument, EvaluationContext } from '@stele/ccl';
+} from '@usekova/ccl';
+import type { CCLDocument, EvaluationContext } from '@usekova/ccl';
 
 import {
   buildCovenant,
@@ -52,8 +52,8 @@ import {
   serializeCovenant,
   deserializeCovenant,
   MAX_CHAIN_DEPTH,
-} from '@stele/core';
-import type { CovenantDocument, CovenantBuilderOptions } from '@stele/core';
+} from '@usekova/core';
+import type { CovenantDocument, CovenantBuilderOptions } from '@usekova/core';
 
 import {
   createIdentity,
@@ -61,8 +61,8 @@ import {
   verifyIdentity,
   computeIdentityHash,
   computeCapabilityManifestHash,
-} from '@stele/identity';
-import type { AgentIdentity, CreateIdentityOptions } from '@stele/identity';
+} from '@usekova/identity';
+import type { AgentIdentity, CreateIdentityOptions } from '@usekova/identity';
 
 // ---------------------------------------------------------------------------
 // Random generators

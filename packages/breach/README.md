@@ -1,11 +1,11 @@
-# @stele/breach
+# @usekova/breach
 
 Breach detection, trust graph propagation, lifecycle tracking, and reputation recovery.
 
 ## Installation
 
 ```bash
-npm install @stele/breach
+npm install @usekova/breach
 ```
 
 ## Key APIs
@@ -29,7 +29,7 @@ import {
   BreachStateMachine,
   RecoveryModel,
   RepeatOffenderDetector,
-} from '@stele/breach';
+} from '@usekova/breach';
 
 // Create and verify a breach attestation
 const attestation = await createBreachAttestation(
@@ -68,4 +68,4 @@ console.log(profile.dominantPattern); // most common resource:action pattern
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

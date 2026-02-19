@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 /**
- * Stele MCP Server — stdio transport.
+ * Kova MCP Server — stdio transport.
  *
  * Reads newline-delimited JSON-RPC 2.0 messages from stdin,
- * dispatches them to the SteleServer, and writes responses to stdout.
+ * dispatches them to the KovaServer, and writes responses to stdout.
  *
  * Usage:
- *   npx stele-mcp
- *   echo '{"jsonrpc":"2.0","method":"initialize","id":1}' | npx stele-mcp
+ *   npx kova-mcp
+ *   echo '{"jsonrpc":"2.0","method":"initialize","id":1}' | npx kova-mcp
  */
 
-import { SteleServer } from './index';
-import { MemoryStore } from '@stele/store';
+import { KovaServer } from './index';
+import { MemoryStore } from '@usekova/store';
 import type { JsonRpcRequest } from './types';
 
 const store = new MemoryStore();
-const server = new SteleServer(store);
+const server = new KovaServer(store);
 
 let buffer = '';
 

@@ -1,7 +1,7 @@
 {
-  "name": "@stele/react",
+  "name": "@usekova/react",
   "version": "2.0.0",
-  "description": "React hooks and reactive primitives for Stele-powered UIs",
+  "description": "React hooks and reactive primitives for Kova-powered UIs",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,12 +24,12 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@stele/ccl": "2.0.0",
-    "@stele/core": "2.0.0",
-    "@stele/identity": "2.0.0",
-    "@stele/sdk": "2.0.0",
-    "@stele/store": "2.0.0",
-    "@stele/types": "2.0.0"
+    "@usekova/ccl": "2.0.0",
+    "@usekova/core": "2.0.0",
+    "@usekova/identity": "2.0.0",
+    "@usekova/sdk": "2.0.0",
+    "@usekova/store": "2.0.0",
+    "@usekova/types": "2.0.0"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
@@ -51,13 +51,13 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/react"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Kova Labs, Inc.",
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "react",

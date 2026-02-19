@@ -1,5 +1,5 @@
 """
-Stele Covenant document builder, verifier, and serializer.
+Kova Covenant document builder, verifier, and serializer.
 
 Implements the full covenant lifecycle: build, sign, verify, countersign,
 chain, serialize, and deserialize.

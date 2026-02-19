@@ -11,10 +11,10 @@ import { describe, it, expect } from 'vitest';
 
 describe('API Surface Tests', () => {
 
-  // ─── @stele/crypto ──────────────────────────────────────────────────────────
+  // ─── @usekova/crypto ──────────────────────────────────────────────────────────
 
-  it('@stele/crypto exports', async () => {
-    const mod = await import('@stele/crypto');
+  it('@usekova/crypto exports', async () => {
+    const mod = await import('@usekova/crypto');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'KeyManager',
@@ -39,10 +39,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @stele/ccl ─────────────────────────────────────────────────────────────
+  // ─── @usekova/ccl ─────────────────────────────────────────────────────────────
 
-  it('@stele/ccl exports', async () => {
-    const mod = await import('@stele/ccl');
+  it('@usekova/ccl exports', async () => {
+    const mod = await import('@usekova/ccl');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'CCLSyntaxError',
@@ -62,10 +62,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @stele/core ────────────────────────────────────────────────────────────
+  // ─── @usekova/core ────────────────────────────────────────────────────────────
 
-  it('@stele/core exports', async () => {
-    const mod = await import('@stele/core');
+  it('@usekova/core exports', async () => {
+    const mod = await import('@usekova/core');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'CovenantBuildError',
@@ -95,10 +95,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @stele/store ───────────────────────────────────────────────────────────
+  // ─── @usekova/store ───────────────────────────────────────────────────────────
 
-  it('@stele/store exports', async () => {
-    const mod = await import('@stele/store');
+  it('@usekova/store exports', async () => {
+    const mod = await import('@usekova/store');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'FileStore',
@@ -112,10 +112,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @stele/types ───────────────────────────────────────────────────────────
+  // ─── @usekova/types ───────────────────────────────────────────────────────────
 
-  it('@stele/types exports', async () => {
-    const mod = await import('@stele/types');
+  it('@usekova/types exports', async () => {
+    const mod = await import('@usekova/types');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'ActiveSpan',
@@ -126,7 +126,7 @@ describe('API Surface Tests', () => {
       'CryptoError',
       'DEFAULT_SEVERITY',
       'DocumentedErrorCode',
-      'DocumentedSteleError',
+      'DocumentedKovaError',
       'Gauge',
       'HealthChecker',
       'Histogram',
@@ -134,11 +134,11 @@ describe('API Surface Tests', () => {
       'LogLevel',
       'Logger',
       'MetricsRegistry',
-      'STELE_VERSION',
+      'KOVA_VERSION',
       'SUPPORTED_HASH_ALGORITHMS',
       'SUPPORTED_SIGNATURE_SCHEMES',
-      'SteleError',
-      'SteleErrorCode',
+      'KovaError',
+      'KovaErrorCode',
       'StorageError',
       'Tracer',
       'ValidationError',
@@ -178,10 +178,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @stele/identity ────────────────────────────────────────────────────────
+  // ─── @usekova/identity ────────────────────────────────────────────────────────
 
-  it('@stele/identity exports', async () => {
-    const mod = await import('@stele/identity');
+  it('@usekova/identity exports', async () => {
+    const mod = await import('@usekova/identity');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'AdaptiveCarryForward',
@@ -208,10 +208,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @stele/verifier ────────────────────────────────────────────────────────
+  // ─── @usekova/verifier ────────────────────────────────────────────────────────
 
-  it('@stele/verifier exports', async () => {
-    const mod = await import('@stele/verifier');
+  it('@usekova/verifier exports', async () => {
+    const mod = await import('@usekova/verifier');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'Verifier',
@@ -219,10 +219,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @stele/enforcement ─────────────────────────────────────────────────────
+  // ─── @usekova/enforcement ─────────────────────────────────────────────────────
 
-  it('@stele/enforcement exports', async () => {
-    const mod = await import('@stele/enforcement');
+  it('@usekova/enforcement exports', async () => {
+    const mod = await import('@usekova/enforcement');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'AuditChain',
@@ -242,10 +242,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @stele/sdk ─────────────────────────────────────────────────────────────
+  // ─── @usekova/sdk ─────────────────────────────────────────────────────────────
 
-  it('@stele/sdk exports', async () => {
-    const mod = await import('@stele/sdk');
+  it('@usekova/sdk exports', async () => {
+    const mod = await import('@usekova/sdk');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'AGENT_KEY_SCHEMA',
@@ -320,14 +320,14 @@ describe('API Surface Tests', () => {
       'STAKE_TIERS',
       'STANDARD_ALIGNMENT_PROPERTIES',
       'STANDARD_METRICS',
-      'STELE_MEDIA_TYPE',
+      'KOVA_MEDIA_TYPE',
       'SUBSTRATE_DEFAULTS',
       'SpanStatusCode',
       'SqliteStore',
-      'SteleAccessDeniedError',
-      'SteleCallbackHandler',
-      'SteleClient',
-      'SteleMetrics',
+      'KovaAccessDeniedError',
+      'KovaCallbackHandler',
+      'KovaClient',
+      'KovaMetrics',
       'StoreIndex',
       'StreamlinedBFT',
       'StressResponseCurve',
@@ -621,8 +621,8 @@ describe('API Surface Tests', () => {
       'signString',
       'slashStake',
       'specificity',
-      'steleGuardHandler',
-      'steleMiddleware',
+      'kovaGuardHandler',
+      'kovaMiddleware',
       'stressTest',
       'substrateCapabilityMatrix',
       'substrateCompatibility',
@@ -675,9 +675,9 @@ describe('API Surface Tests', () => {
       'verifyReceiptChain',
       'verifyRecursively',
       'voteForAntibody',
-      'withStele',
-      'withSteleTool',
-      'withSteleTools',
+      'withKova',
+      'withKovaTool',
+      'withKovaTools',
       'zeuthenStrategy',
     ].sort());
   });
@@ -687,32 +687,32 @@ describe('API Surface Tests', () => {
   describe('Cross-package consistency', () => {
 
     it('PROTOCOL_VERSION is consistent across core and sdk', async () => {
-      const core = await import('@stele/core');
-      const sdk = await import('@stele/sdk');
+      const core = await import('@usekova/core');
+      const sdk = await import('@usekova/sdk');
       expect(core.PROTOCOL_VERSION).toBe(sdk.PROTOCOL_VERSION);
     });
 
     it('MAX_CHAIN_DEPTH is consistent across core and sdk', async () => {
-      const core = await import('@stele/core');
-      const sdk = await import('@stele/sdk');
+      const core = await import('@usekova/core');
+      const sdk = await import('@usekova/sdk');
       expect(core.MAX_CHAIN_DEPTH).toBe(sdk.MAX_CHAIN_DEPTH);
     });
 
     it('buildCovenant is the same function in core and sdk', async () => {
-      const core = await import('@stele/core');
-      const sdk = await import('@stele/sdk');
+      const core = await import('@usekova/core');
+      const sdk = await import('@usekova/sdk');
       expect(core.buildCovenant).toBe(sdk.buildCovenant);
     });
 
     it('generateKeyPair is the same function in crypto and sdk', async () => {
-      const crypto = await import('@stele/crypto');
-      const sdk = await import('@stele/sdk');
+      const crypto = await import('@usekova/crypto');
+      const sdk = await import('@usekova/sdk');
       expect(crypto.generateKeyPair).toBe(sdk.generateKeyPair);
     });
 
     it('parse from ccl is the same function as parseCCL from sdk', async () => {
-      const ccl = await import('@stele/ccl');
-      const sdk = await import('@stele/sdk');
+      const ccl = await import('@usekova/ccl');
+      const sdk = await import('@usekova/sdk');
       expect(ccl.parse).toBe(sdk.parseCCL);
     });
   });

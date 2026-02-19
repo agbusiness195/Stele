@@ -1,7 +1,7 @@
 {
-  "name": "@stele/schema",
+  "name": "@usekova/schema",
   "version": "2.0.0",
-  "description": "Formal JSON Schema definitions for Stele protocol documents",
+  "description": "Formal JSON Schema definitions for Kova protocol documents",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,11 +27,11 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/types": "2.0.0"
+    "@usekova/types": "2.0.0"
   },
   "license": "MIT",
-  "author": "Stele Labs, Inc.",
-  "homepage": "https://stele.dev",
+  "author": "Kova Labs, Inc.",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
@@ -47,7 +47,7 @@
     "directory": "packages/schema"
   },
   "keywords": [
-    "stele",
+    "kova",
     "schema",
     "json-schema",
     "covenant",

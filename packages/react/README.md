@@ -1,11 +1,11 @@
-# @stele/react
+# @usekova/react
 
-Reactive primitives and React hooks for building Stele-powered UIs with observable state management.
+Reactive primitives and React hooks for building Kova-powered UIs with observable state management.
 
 ## Installation
 
 ```bash
-npm install @stele/react
+npm install @usekova/react
 ```
 
 ## Key APIs
@@ -19,8 +19,8 @@ npm install @stele/react
 
 ### Factory Functions
 
-- **createCovenantState(client)**: Create a `CovenantState` bound to a `SteleClient`
-- **createIdentityState(client)**: Create an `IdentityState` bound to a `SteleClient`
+- **createCovenantState(client)**: Create a `CovenantState` bound to a `KovaClient`
+- **createIdentityState(client)**: Create an `IdentityState` bound to a `KovaClient`
 - **createStoreState(store)**: Create a `StoreState` bound to a `CovenantStore`
 
 ### React Hooks (requires React >= 18)
@@ -33,12 +33,12 @@ npm install @stele/react
 ## Usage
 
 ```typescript
-import { useCovenant, useIdentity, useCovenantStore } from '@stele/react';
-import { SteleClient } from '@stele/sdk';
-import { MemoryStore } from '@stele/store';
+import { useCovenant, useIdentity, useCovenantStore } from '@usekova/react';
+import { KovaClient } from '@usekova/sdk';
+import { MemoryStore } from '@usekova/store';
 
 function CovenantPanel() {
-  const client = new SteleClient();
+  const client = new KovaClient();
   const { status, document, error, create, verify } = useCovenant(client);
 
   // status: 'idle' | 'creating' | 'created' | 'verifying' | 'verified' | 'error'
@@ -46,7 +46,7 @@ function CovenantPanel() {
 }
 
 // Framework-agnostic usage
-import { Observable, createCovenantState } from '@stele/react';
+import { Observable, createCovenantState } from '@usekova/react';
 
 const count = new Observable(0);
 const doubled = count.map(n => n * 2);
@@ -56,4 +56,4 @@ count.set(5); // logs "doubled: 10"
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

@@ -1,7 +1,7 @@
 {
-  "name": "@stele/crypto",
+  "name": "@usekova/crypto",
   "version": "2.0.0",
-  "description": "Cryptographic primitives for the Stele covenant framework",
+  "description": "Cryptographic primitives for the Kova covenant framework",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,13 +30,13 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/crypto"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Kova Labs, Inc.",
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "cryptography",
@@ -55,6 +55,6 @@
   "dependencies": {
     "@noble/ed25519": "^2.1.0",
     "@noble/hashes": "^1.4.0",
-    "@stele/types": "2.0.0"
+    "@usekova/types": "2.0.0"
   }
 }

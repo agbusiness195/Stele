@@ -6,7 +6,7 @@ import {
   verify,
   sha256,
   canonicalizeJson,
-} from '@stele/crypto';
+} from '@usekova/crypto';
 
 import {
   parse,
@@ -14,7 +14,7 @@ import {
   merge,
   serialize,
   validateNarrowing,
-} from '@stele/ccl';
+} from '@usekova/ccl';
 
 import {
   buildCovenant,
@@ -23,9 +23,9 @@ import {
   resolveChain,
   computeEffectiveConstraints,
   MemoryChainResolver,
-} from '@stele/core';
+} from '@usekova/core';
 
-import { MemoryStore } from '@stele/store';
+import { MemoryStore } from '@usekova/store';
 
 // ---------------------------------------------------------------------------
 // Benchmark helper

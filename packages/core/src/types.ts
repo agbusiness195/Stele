@@ -1,9 +1,9 @@
-import type { HashHex } from '@stele/crypto';
-import type { Severity } from '@stele/ccl';
+import type { HashHex } from '@usekova/crypto';
+import type { Severity } from '@usekova/ccl';
 
 // ─── Protocol constants ────────────────────────────────────────────────────────
 
-/** Current Stele Covenant protocol version. */
+/** Current Kova Covenant protocol version. */
 export const PROTOCOL_VERSION = '1.0';
 
 /** Maximum number of CCL constraint statements in a single covenant. */

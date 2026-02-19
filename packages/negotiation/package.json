@@ -1,5 +1,5 @@
 {
-  "name": "@stele/negotiation",
+  "name": "@usekova/negotiation",
   "version": "2.0.0",
   "description": "Multi-party negotiation with Nash bargaining and Zeuthen strategies",
   "sideEffects": false,
@@ -27,12 +27,12 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "2.0.0",
-    "@stele/types": "2.0.0"
+    "@usekova/crypto": "2.0.0",
+    "@usekova/types": "2.0.0"
   },
   "license": "MIT",
-  "author": "Stele Labs, Inc.",
-  "homepage": "https://stele.dev",
+  "author": "Kova Labs, Inc.",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
@@ -48,7 +48,7 @@
     "directory": "packages/negotiation"
   },
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "negotiation",

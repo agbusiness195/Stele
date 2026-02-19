@@ -1,7 +1,7 @@
 import * as ed from '@noble/ed25519';
 import { sha256 as nobleSha256 } from '@noble/hashes/sha256';
 import { randomBytes } from '@noble/hashes/utils';
-import { DocumentedSteleError as SteleError, DocumentedErrorCode as SteleErrorCode } from '@stele/types';
+import { DocumentedKovaError as KovaError, DocumentedErrorCode as KovaErrorCode } from '@usekova/types';
 
 export type {
   KeyPair,
@@ -33,16 +33,16 @@ import type { KeyPair, PrivateKey, Signature, HashHex, Base64Url, Nonce } from '
 export async function generateKeyPair(): Promise<KeyPair> {
   const privateKey = randomBytes(32);
   if (privateKey.length !== 32) {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_INVALID_KEY,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_INVALID_KEY,
       `Expected 32-byte private key from CSPRNG, got ${privateKey.length} bytes`,
       { hint: 'This indicates a platform CSPRNG issue. Ensure your environment supports crypto.getRandomValues().' }
     );
   }
   const publicKey = await ed.getPublicKeyAsync(privateKey);
   if (publicKey.length !== 32) {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_INVALID_KEY,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_INVALID_KEY,
       `Expected 32-byte public key from Ed25519 derivation, got ${publicKey.length} bytes`,
       { hint: 'This indicates an issue with the Ed25519 implementation. Check @noble/ed25519 version.' }
     );
@@ -71,8 +71,8 @@ export async function generateKeyPair(): Promise<KeyPair> {
  */
 export async function keyPairFromPrivateKey(privateKey: Uint8Array): Promise<KeyPair> {
   if (!(privateKey instanceof Uint8Array) || privateKey.length !== 32) {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_INVALID_KEY,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_INVALID_KEY,
       `Private key must be a 32-byte Uint8Array, got ${privateKey instanceof Uint8Array ? `${privateKey.length} bytes` : typeof privateKey}`,
       { hint: 'Provide a 32-byte Uint8Array as the Ed25519 private key.' }
     );
@@ -119,15 +119,15 @@ export async function keyPairFromPrivateKeyHex(hex: string): Promise<KeyPair> {
  */
 export async function sign(message: Uint8Array, privateKey: PrivateKey): Promise<Signature> {
   if (!(message instanceof Uint8Array)) {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_SIGNATURE_FAILED,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_SIGNATURE_FAILED,
       `sign() expects message to be a Uint8Array, got ${typeof message}`,
       { hint: 'Use new TextEncoder().encode(str) to convert strings, or use signString() instead.' }
     );
   }
   if (!(privateKey instanceof Uint8Array) || privateKey.length !== 32) {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_INVALID_KEY,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_INVALID_KEY,
       `sign() expects privateKey to be a 32-byte Uint8Array, got ${privateKey instanceof Uint8Array ? `${privateKey.length} bytes` : typeof privateKey}`,
       { hint: 'Provide a 32-byte Uint8Array as the Ed25519 private key.' }
     );
@@ -135,8 +135,8 @@ export async function sign(message: Uint8Array, privateKey: PrivateKey): Promise
   try {
     return await ed.signAsync(message, privateKey);
   } catch (err) {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_SIGNATURE_FAILED,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_SIGNATURE_FAILED,
       `Ed25519 signing operation failed: ${err instanceof Error ? err.message : String(err)}`,
       { hint: 'Ensure the private key is a valid 32-byte Ed25519 key.' }
     );
@@ -157,15 +157,15 @@ export async function sign(message: Uint8Array, privateKey: PrivateKey): Promise
  */
 export async function signString(message: string, privateKey: PrivateKey): Promise<Signature> {
   if (typeof message !== 'string') {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_SIGNATURE_FAILED,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_SIGNATURE_FAILED,
       `signString() expects message to be a string, got ${typeof message}`,
       { hint: 'Pass a string message, or use sign() for Uint8Array messages.' }
     );
   }
   if (!(privateKey instanceof Uint8Array) || privateKey.length !== 32) {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_INVALID_KEY,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_INVALID_KEY,
       `signString() expects privateKey to be a 32-byte Uint8Array, got ${privateKey instanceof Uint8Array ? `${privateKey.length} bytes` : typeof privateKey}`,
       { hint: 'Provide a 32-byte Uint8Array as the Ed25519 private key.' }
     );
@@ -331,8 +331,8 @@ export function base64urlEncode(data: Uint8Array): Base64Url {
  */
 export function base64urlDecode(encoded: Base64Url): Uint8Array {
   if (typeof encoded !== 'string') {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_INVALID_HEX,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_INVALID_HEX,
       `base64urlDecode() expects a string, got ${typeof encoded}`,
       { hint: 'Pass a base64url-encoded string to base64urlDecode().' }
     );
@@ -343,8 +343,8 @@ export function base64urlDecode(encoded: Base64Url): Uint8Array {
   try {
     binary = atob(padded);
   } catch (err) {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_INVALID_HEX,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_INVALID_HEX,
       `Invalid base64url string: ${err instanceof Error ? err.message : String(err)}`,
       { hint: 'Ensure the input is a valid base64url-encoded string (characters A-Z, a-z, 0-9, -, _).' }
     );
@@ -369,8 +369,8 @@ export function base64urlDecode(encoded: Base64Url): Uint8Array {
  */
 export function toHex(data: Uint8Array): string {
   if (!(data instanceof Uint8Array)) {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_INVALID_HEX,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_INVALID_HEX,
       `toHex() expects a Uint8Array, got ${typeof data}`,
       { hint: 'Pass a Uint8Array to toHex(). Use new TextEncoder().encode(str) to convert strings.' }
     );
@@ -396,22 +396,22 @@ export function toHex(data: Uint8Array): string {
  */
 export function fromHex(hex: string): Uint8Array {
   if (typeof hex !== 'string') {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_INVALID_HEX,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_INVALID_HEX,
       `fromHex() expects a string, got ${typeof hex}`,
       { hint: 'Pass a hexadecimal string (e.g. "a1b2c3") to fromHex().' }
     );
   }
   if (hex.length % 2 !== 0) {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_INVALID_HEX,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_INVALID_HEX,
       `Invalid hex string: odd length (${hex.length})`,
       { hint: 'Hex strings must have even length. Each byte is represented by two hex characters.' }
     );
   }
   if (hex.length > 0 && !/^[0-9a-fA-F]+$/.test(hex)) {
-    throw new SteleError(
-      SteleErrorCode.CRYPTO_INVALID_HEX,
+    throw new KovaError(
+      KovaErrorCode.CRYPTO_INVALID_HEX,
       'Invalid hex string: contains non-hexadecimal characters',
       { hint: 'Hex strings must only contain characters 0-9 and a-f (case-insensitive).' }
     );
@@ -487,7 +487,7 @@ export function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
 /**
  * Create a timestamp string in ISO 8601 format (e.g. `"2025-01-15T12:00:00.000Z"`).
  *
- * Uses the current system time. All Stele protocol timestamps are UTC.
+ * Uses the current system time. All Kova protocol timestamps are UTC.
  *
  * @returns An ISO 8601 timestamp string.
  *

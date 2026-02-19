@@ -1,5 +1,5 @@
 [package]
-name = "stele"
+name = "kova"
 version = "1.0.0"
 edition = "2021"
 description = "The accountability primitive for AI agents - Rust implementation"

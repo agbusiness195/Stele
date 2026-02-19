@@ -1,5 +1,5 @@
 {
-  "name": "@stele/robustness",
+  "name": "@usekova/robustness",
   "version": "2.0.0",
   "description": "Robustness analysis with fault injection and resilience metrics",
   "sideEffects": false,
@@ -27,12 +27,12 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/ccl": "2.0.0",
-    "@stele/crypto": "2.0.0"
+    "@usekova/ccl": "2.0.0",
+    "@usekova/crypto": "2.0.0"
   },
   "license": "MIT",
-  "author": "Stele Labs, Inc.",
-  "homepage": "https://stele.dev",
+  "author": "Kova Labs, Inc.",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
@@ -48,7 +48,7 @@
     "directory": "packages/robustness"
   },
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "robustness",

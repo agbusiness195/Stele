@@ -1,5 +1,5 @@
 {
-  "name": "@stele/verifier",
+  "name": "@usekova/verifier",
   "version": "2.0.0",
   "description": "Standalone verification engine for third-party auditors",
   "sideEffects": false,
@@ -24,10 +24,10 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@stele/types": "2.0.0",
-    "@stele/crypto": "2.0.0",
-    "@stele/ccl": "2.0.0",
-    "@stele/core": "2.0.0"
+    "@usekova/types": "2.0.0",
+    "@usekova/crypto": "2.0.0",
+    "@usekova/ccl": "2.0.0",
+    "@usekova/core": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -41,13 +41,13 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/verifier"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Kova Labs, Inc.",
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "verifier",

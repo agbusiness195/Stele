@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair } from '@stele/crypto';
-import type { KeyPair } from '@stele/crypto';
+import { generateKeyPair } from '@usekova/crypto';
+import type { KeyPair } from '@usekova/crypto';
 
 import {
   buildCovenant,
@@ -86,7 +86,7 @@ async function buildValidCovenant(overrides?: Partial<CovenantBuilderOptions>): 
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('@stele/core', () => {
+describe('@usekova/core', () => {
   // ── buildCovenant ──────────────────────────────────────────────────────
 
   describe('buildCovenant', () => {

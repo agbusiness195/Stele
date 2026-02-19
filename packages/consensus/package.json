@@ -1,5 +1,5 @@
 {
-  "name": "@stele/consensus",
+  "name": "@usekova/consensus",
   "version": "2.0.0",
   "description": "Byzantine fault-tolerant consensus protocols for covenant agreement",
   "sideEffects": false,
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "2.0.0",
-    "@stele/types": "2.0.0"
+    "@usekova/crypto": "2.0.0",
+    "@usekova/types": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -42,13 +42,13 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/consensus"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Kova Labs, Inc.",
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "consensus",

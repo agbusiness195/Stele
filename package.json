@@ -1,5 +1,5 @@
 {
-  "name": "stele",
+  "name": "kova",
   "private": true,
   "version": "2.0.0",
   "description": "The accountability primitive for AI agents",
@@ -55,11 +55,11 @@
     "type": "git",
     "url": "https://github.com/agbusiness195/stele"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Kova Labs, Inc.",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^25.2.3",

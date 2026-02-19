@@ -1,5 +1,5 @@
 {
-  "name": "@stele/mcp",
+  "name": "@usekova/mcp",
   "version": "2.0.0",
   "description": "Model Context Protocol integration utilities",
   "sideEffects": false,
@@ -27,17 +27,17 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "2.0.0",
-    "@stele/ccl": "2.0.0",
-    "@stele/core": "2.0.0",
-    "@stele/enforcement": "2.0.0",
-    "@stele/identity": "2.0.0",
-    "@stele/reputation": "2.0.0",
-    "@stele/proof": "2.0.0"
+    "@usekova/crypto": "2.0.0",
+    "@usekova/ccl": "2.0.0",
+    "@usekova/core": "2.0.0",
+    "@usekova/enforcement": "2.0.0",
+    "@usekova/identity": "2.0.0",
+    "@usekova/reputation": "2.0.0",
+    "@usekova/proof": "2.0.0"
   },
   "license": "MIT",
-  "author": "Stele Labs, Inc.",
-  "homepage": "https://stele.dev",
+  "author": "Kova Labs, Inc.",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
@@ -53,7 +53,7 @@
     "directory": "packages/mcp"
   },
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "mcp",

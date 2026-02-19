@@ -1,4 +1,4 @@
-import type { Severity } from '@stele/ccl';
+import type { Severity } from '@usekova/ccl';
 
 export interface MCPServer {
   tools?: MCPTool[];
@@ -12,24 +12,24 @@ export interface MCPTool {
   inputSchema?: Record<string, unknown>;
 }
 
-export interface SteleGuardOptions {
+export interface KovaGuardOptions {
   constraints: string;
   mode?: 'enforce' | 'log_only';
   proofType?: 'audit_log' | 'capability_manifest';
-  operatorKeyPair?: import('@stele/crypto').KeyPair;
+  operatorKeyPair?: import('@usekova/crypto').KeyPair;
   agentIdentifier?: string;
-  model?: import('@stele/identity').ModelAttestation;
+  model?: import('@usekova/identity').ModelAttestation;
   onViolation?: (details: ViolationDetails) => void;
   onToolCall?: (details: ToolCallDetails) => void;
 }
 
 export interface WrappedMCPServer extends MCPServer {
-  getMonitor(): import('@stele/enforcement').Monitor;
-  getIdentity(): import('@stele/identity').AgentIdentity;
-  getAuditLog(): import('@stele/enforcement').AuditLog;
-  generateProof(): Promise<import('@stele/proof').ComplianceProof>;
-  getReceipt(): import('@stele/reputation').ExecutionReceipt | null;
-  getCovenant(): import('@stele/core').CovenantDocument;
+  getMonitor(): import('@usekova/enforcement').Monitor;
+  getIdentity(): import('@usekova/identity').AgentIdentity;
+  getAuditLog(): import('@usekova/enforcement').AuditLog;
+  generateProof(): Promise<import('@usekova/proof').ComplianceProof>;
+  getReceipt(): import('@usekova/reputation').ExecutionReceipt | null;
+  getCovenant(): import('@usekova/core').CovenantDocument;
 }
 
 export interface ViolationDetails {

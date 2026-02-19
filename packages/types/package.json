@@ -1,5 +1,5 @@
 {
-  "name": "@stele/types",
+  "name": "@usekova/types",
   "version": "2.0.0",
   "description": "Shared TypeScript type definitions and protocol schemas",
   "sideEffects": false,
@@ -35,16 +35,16 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/types"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Kova Labs, Inc.",
   "dependencies": {
-    "@stele/crypto": "2.0.0"
+    "@usekova/crypto": "2.0.0"
   },
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "types",

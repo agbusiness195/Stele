@@ -1,7 +1,7 @@
 {
-  "name": "@stele/ccl",
+  "name": "@usekova/ccl",
   "version": "2.0.0",
-  "description": "Covenant Constraint Language parser and evaluator for Stele",
+  "description": "Covenant Constraint Language parser and evaluator for Kova",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,13 +30,13 @@
     "url": "https://github.com/agbusiness195/Stele.git",
     "directory": "packages/ccl"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Kova Labs, Inc.",
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "ccl",
@@ -53,6 +53,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@stele/crypto": "2.0.0"
+    "@usekova/crypto": "2.0.0"
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Structured logging utility for the Stele SDK.
+ * Structured logging utility for the Kova SDK.
  *
  * Provides a simple, zero-dependency structured logger that outputs
  * JSON log entries. Supports log levels, contextual fields, and
@@ -200,7 +200,7 @@ export function createLogger(options?: LoggerOptions): Logger {
  *
  * Suitable for quick, import-and-go usage:
  * ```ts
- * import { defaultLogger } from '@stele/types';
+ * import { defaultLogger } from '@usekova/types';
  * defaultLogger.info('hello');
  * ```
  */

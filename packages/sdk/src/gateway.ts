@@ -1,5 +1,5 @@
 /**
- * API gateway for the Stele protocol.
+ * API gateway for the Kova protocol.
  *
  * Drop-in middleware that requires covenants before granting API access.
  * Enforces identity verification, covenant presence, trust score minimums,

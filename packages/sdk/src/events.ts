@@ -1,9 +1,9 @@
 /**
- * Typed event emitter for the Stele SDK lifecycle.
+ * Typed event emitter for the Kova SDK lifecycle.
  *
  * Provides a fully typed, zero-dependency event emitter that tracks
  * covenant creation, verification, signing, action evaluation, and errors.
- * All event payloads are strictly typed via {@link SteleEventMap}.
+ * All event payloads are strictly typed via {@link KovaEventMap}.
  *
  * @packageDocumentation
  */
@@ -16,7 +16,7 @@
  * Each key is a lifecycle event emitted by the SDK; the corresponding
  * value type describes the data delivered to listeners.
  */
-export type SteleLifecycleEventMap = {
+export type KovaLifecycleEventMap = {
   /** Emitted when a new covenant document is created. */
   'covenant:created': { documentId: string; issuerId: string };
   /** Emitted when a covenant document has been verified. */
@@ -49,17 +49,17 @@ interface ListenerEntry<T> {
   once: boolean;
 }
 
-// ─── SteleEventEmitter ──────────────────────────────────────────────────────────
+// ─── KovaEventEmitter ──────────────────────────────────────────────────────────
 
 /**
- * A strongly-typed event emitter for Stele SDK lifecycle events.
+ * A strongly-typed event emitter for Kova SDK lifecycle events.
  *
  * This implementation has **no dependency on Node's `events` module** and
  * can run in any JavaScript environment (Node, Deno, browser, edge workers).
  *
  * @example
  * ```typescript
- * const emitter = new SteleEventEmitter();
+ * const emitter = new KovaEventEmitter();
  *
  * emitter.on('covenant:created', (data) => {
  *   console.log(`Created: ${data.documentId} by ${data.issuerId}`);
@@ -71,13 +71,13 @@ interface ListenerEntry<T> {
  * });
  * ```
  */
-export class SteleEventEmitter {
+export class KovaEventEmitter {
   /**
    * Internal map of event names to their ordered listener entries.
    * Uses an array (rather than a Set) to preserve insertion order and
    * to allow the same function reference to be registered more than once.
    */
-  private readonly _listeners = new Map<keyof SteleLifecycleEventMap, ListenerEntry<SteleLifecycleEventMap[keyof SteleLifecycleEventMap]>[]>();
+  private readonly _listeners = new Map<keyof KovaLifecycleEventMap, ListenerEntry<KovaLifecycleEventMap[keyof KovaLifecycleEventMap]>[]>();
 
   // ── on ──────────────────────────────────────────────────────────────────
 
@@ -96,9 +96,9 @@ export class SteleEventEmitter {
    * });
    * ```
    */
-  on<K extends keyof SteleLifecycleEventMap>(
+  on<K extends keyof KovaLifecycleEventMap>(
     event: K,
-    listener: Listener<SteleLifecycleEventMap[K]>,
+    listener: Listener<KovaLifecycleEventMap[K]>,
   ): this {
     let entries = this._listeners.get(event);
     if (!entries) {
@@ -129,9 +129,9 @@ export class SteleEventEmitter {
    * emitter.off('covenant:signed', handler);
    * ```
    */
-  off<K extends keyof SteleLifecycleEventMap>(
+  off<K extends keyof KovaLifecycleEventMap>(
     event: K,
-    listener: Listener<SteleLifecycleEventMap[K]>,
+    listener: Listener<KovaLifecycleEventMap[K]>,
   ): this {
     const entries = this._listeners.get(event);
     if (!entries) return this;
@@ -164,9 +164,9 @@ export class SteleEventEmitter {
    * });
    * ```
    */
-  once<K extends keyof SteleLifecycleEventMap>(
+  once<K extends keyof KovaLifecycleEventMap>(
     event: K,
-    listener: Listener<SteleLifecycleEventMap[K]>,
+    listener: Listener<KovaLifecycleEventMap[K]>,
   ): this {
     let entries = this._listeners.get(event);
     if (!entries) {
@@ -198,9 +198,9 @@ export class SteleEventEmitter {
    * });
    * ```
    */
-  emit<K extends keyof SteleLifecycleEventMap>(
+  emit<K extends keyof KovaLifecycleEventMap>(
     event: K,
-    data: SteleLifecycleEventMap[K],
+    data: KovaLifecycleEventMap[K],
   ): boolean {
     const entries = this._listeners.get(event);
     if (!entries || entries.length === 0) return false;
@@ -244,7 +244,7 @@ export class SteleEventEmitter {
    * console.log(emitter.listenerCount('error')); // 1
    * ```
    */
-  listenerCount(event: keyof SteleLifecycleEventMap): number {
+  listenerCount(event: keyof KovaLifecycleEventMap): number {
     const entries = this._listeners.get(event);
     return entries ? entries.length : 0;
   }
@@ -265,7 +265,7 @@ export class SteleEventEmitter {
    * emitter.removeAllListeners();              // clear everything
    * ```
    */
-  removeAllListeners(event?: keyof SteleLifecycleEventMap): this {
+  removeAllListeners(event?: keyof KovaLifecycleEventMap): this {
     if (event !== undefined) {
       this._listeners.delete(event);
     } else {

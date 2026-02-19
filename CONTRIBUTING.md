@@ -1,6 +1,6 @@
-# Contributing to Stele
+# Contributing to Kova
 
-Thank you for your interest in contributing to Stele, the accountability primitive for
+Thank you for your interest in contributing to Kova, the accountability primitive for
 AI agents. This guide covers everything you need to get started.
 
 ## Prerequisites
@@ -14,7 +14,7 @@ AI agents. This guide covers everything you need to get started.
 ```bash
 # Clone the repository
 git clone https://github.com/agbusiness195/stele.git
-cd stele
+cd kova
 
 # Install all dependencies (npm workspaces resolves inter-package deps automatically)
 npm install
@@ -50,7 +50,7 @@ npx vitest run --coverage
 ## Project Structure
 
 ```
-stele/
+kova/
   packages/           # All 30+ packages live here
     types/            # Shared types, error classes, validation
     crypto/           # Ed25519 signing, SHA-256, encoding
@@ -58,7 +58,7 @@ stele/
     core/             # Covenant lifecycle (build, verify, chain)
     store/            # Pluggable storage backends
     verifier/         # Standalone verification engine
-    sdk/              # High-level SteleClient unified SDK
+    sdk/              # High-level KovaClient unified SDK
     identity/         # Agent identity with lineage tracking
     enforcement/      # Runtime constraint enforcement
     proof/            # Poseidon-based compliance proofs
@@ -98,7 +98,7 @@ Follow this checklist when adding a new package:
 2. **Create `package.json`**:
    ```json
    {
-     "name": "@stele/my-package",
+     "name": "@usekova/my-package",
      "version": "0.1.0",
      "type": "module",
      "main": "dist/index.js",
@@ -109,7 +109,7 @@ Follow this checklist when adding a new package:
        "test": "vitest run"
      },
      "dependencies": {
-       "@stele/types": "0.1.0"
+       "@usekova/types": "0.1.0"
      }
    }
    ```
@@ -130,7 +130,7 @@ Follow this checklist when adding a new package:
 - **Pure functions**: Prefer pure functions over stateful classes where possible.
 - **Immutable returns**: Functions that transform documents return new copies rather
   than mutating the input.
-- **Explicit error types**: Use the error classes from `@stele/types` (`SteleError`,
+- **Explicit error types**: Use the error classes from `@usekova/types` (`KovaError`,
   `ValidationError`, `CryptoError`, etc.) rather than plain `Error`.
 - **Branded types**: Use branded string types (`HashHex`, `Base64Url`, etc.) for
   type safety at API boundaries.
@@ -185,5 +185,5 @@ npm run docs
 
 ## License
 
-By contributing to Stele, you agree that your contributions will be licensed
+By contributing to Kova, you agree that your contributions will be licensed
 under the MIT License.

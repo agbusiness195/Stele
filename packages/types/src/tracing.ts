@@ -1,11 +1,11 @@
 /**
- * Lightweight tracing utilities for the Stele SDK.
+ * Lightweight tracing utilities for the Kova SDK.
  * Provides Span-based instrumentation without OpenTelemetry dependency.
  *
  * @packageDocumentation
  */
 
-import { generateId } from '@stele/crypto';
+import { generateId } from '@usekova/crypto';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 

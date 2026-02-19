@@ -3,7 +3,7 @@
   "entryPointStrategy": "packages",
   "entryPoints": ["packages/*"],
   "out": "docs/api-generated",
-  "name": "Stele Protocol — API Reference",
+  "name": "Kova Protocol — API Reference",
   "excludePrivate": true,
   "excludeInternal": true,
   "readme": "README.md",

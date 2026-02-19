@@ -1,7 +1,7 @@
 /**
- * @stele/cli doctor command.
+ * @usekova/cli doctor command.
  *
- * Checks the health of the Stele installation by running a series of
+ * Checks the health of the Kova installation by running a series of
  * diagnostic tests: Node.js version, package importability, crypto
  * operations, covenant build/verify round-trip, CCL parsing, config
  * file readability, and stale dist file detection.
@@ -48,13 +48,13 @@ function checkNodeVersion(): DoctorCheck {
 }
 
 /**
- * Check that core @stele/* packages can be imported.
+ * Check that core @usekova/* packages can be imported.
  */
 async function checkPackageImports(): Promise<DoctorCheck> {
   const packages = [
-    '@stele/crypto',
-    '@stele/ccl',
-    '@stele/core',
+    '@usekova/crypto',
+    '@usekova/ccl',
+    '@usekova/core',
   ];
 
   const failed: string[] = [];
@@ -71,7 +71,7 @@ async function checkPackageImports(): Promise<DoctorCheck> {
     return {
       name: 'Package imports',
       status: 'ok',
-      message: 'All @stele/* packages importable (crypto, ccl, core)',
+      message: 'All @usekova/* packages importable (crypto, ccl, core)',
     };
   }
 
@@ -87,7 +87,7 @@ async function checkPackageImports(): Promise<DoctorCheck> {
  */
 async function checkCrypto(): Promise<DoctorCheck> {
   try {
-    const { generateKeyPair } = await import('@stele/crypto');
+    const { generateKeyPair } = await import('@usekova/crypto');
     const kp = await generateKeyPair();
 
     if (kp.publicKeyHex && kp.publicKeyHex.length === 64) {
@@ -118,8 +118,8 @@ async function checkCrypto(): Promise<DoctorCheck> {
  */
 async function checkCore(): Promise<DoctorCheck> {
   try {
-    const { generateKeyPair } = await import('@stele/crypto');
-    const { buildCovenant, verifyCovenant } = await import('@stele/core');
+    const { generateKeyPair } = await import('@usekova/crypto');
+    const { buildCovenant, verifyCovenant } = await import('@usekova/core');
 
     const kp = await generateKeyPair();
     const doc = await buildCovenant({
@@ -172,7 +172,7 @@ async function checkCore(): Promise<DoctorCheck> {
  */
 async function checkCCL(): Promise<DoctorCheck> {
   try {
-    const { parse } = await import('@stele/ccl');
+    const { parse } = await import('@usekova/ccl');
     const doc = parse("permit read on '**'\ndeny write on '/system/**'");
 
     if (doc.permits.length === 1 && doc.denies.length === 1) {
@@ -209,7 +209,7 @@ function checkConfig(configDir?: string): DoctorCheck {
       return {
         name: 'Config',
         status: 'warn',
-        message: 'No stele.config.json found (optional)',
+        message: 'No kova.config.json found (optional)',
       };
     }
 
@@ -245,7 +245,7 @@ function checkStaleDist(): DoctorCheck {
     // Verify that the main require paths resolve without error
     // This is a heuristic check -- if we got this far, the CLI itself is running
     // which means the dist is not completely stale.
-    const cliPackageJson = require.resolve('@stele/cli/package.json');
+    const cliPackageJson = require.resolve('@usekova/cli/package.json');
 
     if (cliPackageJson) {
       return {
@@ -277,14 +277,14 @@ function checkStaleDist(): DoctorCheck {
  *
  * The checks verify:
  * - Node.js version is >= 18
- * - All @stele/* packages can be imported
+ * - All @usekova/* packages can be imported
  * - Crypto key pair generation works
  * - Covenant build and verify round-trip succeeds
  * - CCL parsing works
  * - Config file is readable (if exists)
  * - No stale dist files detected
  *
- * @param configDir - Optional directory to search for stele.config.json.
+ * @param configDir - Optional directory to search for kova.config.json.
  * @returns An array of DoctorCheck results.
  *
  * @example

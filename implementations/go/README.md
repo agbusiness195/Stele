@@ -1,10 +1,10 @@
-# Stele Go Implementation
+# Kova Go Implementation
 
-A complete Go implementation of the Stele protocol for cryptographic accountability of AI agents.
+A complete Go implementation of the Kova protocol for cryptographic accountability of AI agents.
 
 ## Overview
 
-This package implements the core Stele protocol primitives:
+This package implements the core Kova protocol primitives:
 
 - **Crypto** (`crypto.go`) -- Ed25519 signing/verification, SHA-256 hashing, JCS (RFC 8785) JSON canonicalization
 - **CCL** (`ccl.go`) -- Covenant Constraint Language parser and evaluator with wildcard matching, rate limits, and narrowing validation
@@ -30,22 +30,22 @@ package main
 
 import (
     "fmt"
-    stele "github.com/agbusiness195/stele/implementations/go"
+    kova "github.com/agbusiness195/stele/implementations/go"
 )
 
 func main() {
     // Generate key pairs
-    issuerKP, _ := stele.GenerateKeyPair()
-    beneficiaryKP, _ := stele.GenerateKeyPair()
+    issuerKP, _ := kova.GenerateKeyPair()
+    beneficiaryKP, _ := kova.GenerateKeyPair()
 
     // Build a covenant
-    doc, _ := stele.BuildCovenant(&stele.CovenantBuilderOptions{
-        Issuer: stele.Party{
+    doc, _ := kova.BuildCovenant(&kova.CovenantBuilderOptions{
+        Issuer: kova.Party{
             ID:        "alice",
             PublicKey: issuerKP.PublicKeyHex,
             Role:      "issuer",
         },
-        Beneficiary: stele.Party{
+        Beneficiary: kova.Party{
             ID:        "bob",
             PublicKey: beneficiaryKP.PublicKeyHex,
             Role:      "beneficiary",
@@ -55,12 +55,12 @@ func main() {
     })
 
     // Verify the covenant
-    result, _ := stele.VerifyCovenant(doc)
+    result, _ := kova.VerifyCovenant(doc)
     fmt.Println("Valid:", result.Valid)
 
     // Evaluate CCL constraints
-    ccl, _ := stele.Parse(doc.Constraints)
-    eval := stele.Evaluate(ccl, "read", "/data/users", nil)
+    ccl, _ := kova.Parse(doc.Constraints)
+    eval := kova.Evaluate(ccl, "read", "/data/users", nil)
     fmt.Println("Permitted:", eval.Permitted)
 }
 ```
@@ -73,7 +73,7 @@ go test -v ./...
 
 ## Protocol Version
 
-This implementation targets Stele protocol version 1.0.
+This implementation targets Kova protocol version 1.0.
 
 ## Architecture
 

@@ -1,8 +1,8 @@
 /**
- * Debug/verbose logging system for the Stele SDK.
+ * Debug/verbose logging system for the Kova SDK.
  *
  * Controlled by the `DEBUG` environment variable. Supports namespace
- * filtering with patterns like `stele`, `stele:*`, or `stele:crypto`.
+ * filtering with patterns like `kova`, `kova:*`, or `kova:crypto`.
  *
  * When debug is not enabled, all logging methods are no-ops with zero overhead.
  *
@@ -16,15 +16,15 @@
  *
  * Reads the `DEBUG` environment variable and checks for matching patterns.
  * Supported patterns:
- * - `stele`     — enables all Stele debug logging
- * - `stele:*`   — enables all Stele debug logging (wildcard)
- * - `stele:ccl` — enables only the `stele:ccl` namespace
+ * - `kova`     — enables all Kova debug logging
+ * - `kova:*`   — enables all Kova debug logging (wildcard)
+ * - `kova:ccl` — enables only the `kova:ccl` namespace
  * - `*`         — enables all debug logging
  *
  * Multiple patterns can be separated by commas.
  *
- * @param namespace - Optional namespace to check (e.g., `'stele:crypto'`).
- *   If omitted, checks whether any Stele debug logging is enabled.
+ * @param namespace - Optional namespace to check (e.g., `'kova:crypto'`).
+ *   If omitted, checks whether any Kova debug logging is enabled.
  * @returns `true` if debug output should be produced for this namespace.
  */
 export function isDebugEnabled(namespace?: string): boolean {
@@ -41,26 +41,26 @@ export function isDebugEnabled(namespace?: string): boolean {
       return true;
     }
 
-    // Exact match for "stele" enables all stele namespaces
-    if (pattern === 'stele') {
-      if (!namespace || namespace === 'stele' || namespace.startsWith('stele:')) {
+    // Exact match for "kova" enables all kova namespaces
+    if (pattern === 'kova') {
+      if (!namespace || namespace === 'kova' || namespace.startsWith('kova:')) {
         return true;
       }
     }
 
-    // "stele:*" enables all stele namespaces
-    if (pattern === 'stele:*') {
-      if (!namespace || namespace === 'stele' || namespace.startsWith('stele:')) {
+    // "kova:*" enables all kova namespaces
+    if (pattern === 'kova:*') {
+      if (!namespace || namespace === 'kova' || namespace.startsWith('kova:')) {
         return true;
       }
     }
 
-    // Exact namespace match (e.g., "stele:crypto")
+    // Exact namespace match (e.g., "kova:crypto")
     if (namespace && pattern === namespace) {
       return true;
     }
 
-    // Pattern with wildcard suffix (e.g., "stele:crypto:*")
+    // Pattern with wildcard suffix (e.g., "kova:crypto:*")
     if (namespace && pattern.endsWith(':*')) {
       const prefix = pattern.slice(0, -2);
       if (namespace === prefix || namespace.startsWith(prefix + ':')) {
@@ -107,16 +107,16 @@ function timestamp(): string {
  * When debug is not enabled for this namespace, all methods are no-ops
  * with zero overhead (no string formatting, no timestamp generation).
  *
- * @param namespace - The namespace for this logger (e.g., `'stele:crypto'`).
+ * @param namespace - The namespace for this logger (e.g., `'kova:crypto'`).
  * @returns A debug logger with `log`, `warn`, `error`, and `time` methods.
  *
  * @example
  * ```typescript
- * const dbg = createDebugLogger('stele:crypto');
+ * const dbg = createDebugLogger('kova:crypto');
  * dbg.log('generating keypair', { bits: 256 });
  * const stop = dbg.time('sign');
  * // ... signing operation ...
- * stop(); // logs: [stele:crypto] sign: 12.34ms
+ * stop(); // logs: [kova:crypto] sign: 12.34ms
  * ```
  */
 export function createDebugLogger(namespace: string): DebugLogger {
@@ -154,15 +154,15 @@ export function createDebugLogger(namespace: string): DebugLogger {
 // ─── Pre-created loggers ────────────────────────────────────────────────────────
 
 /**
- * Pre-created debug loggers for each Stele subsystem.
+ * Pre-created debug loggers for each Kova subsystem.
  *
  * Each logger is scoped to its subsystem namespace and will only produce
  * output when the corresponding DEBUG pattern is set.
  *
  * @example
  * ```typescript
- * // Enable with: DEBUG=stele:crypto node script.js
- * import { debug } from '@stele/types';
+ * // Enable with: DEBUG=kova:crypto node script.js
+ * import { debug } from '@usekova/types';
  * debug.crypto.log('keypair generated');
  * ```
  */
@@ -175,11 +175,11 @@ export const debug: {
   identity: DebugLogger;
   enforcement: DebugLogger;
 } = {
-  crypto: createDebugLogger('stele:crypto'),
-  ccl: createDebugLogger('stele:ccl'),
-  core: createDebugLogger('stele:core'),
-  store: createDebugLogger('stele:store'),
-  sdk: createDebugLogger('stele:sdk'),
-  identity: createDebugLogger('stele:identity'),
-  enforcement: createDebugLogger('stele:enforcement'),
+  crypto: createDebugLogger('kova:crypto'),
+  ccl: createDebugLogger('kova:ccl'),
+  core: createDebugLogger('kova:core'),
+  store: createDebugLogger('kova:store'),
+  sdk: createDebugLogger('kova:sdk'),
+  identity: createDebugLogger('kova:identity'),
+  enforcement: createDebugLogger('kova:enforcement'),
 };

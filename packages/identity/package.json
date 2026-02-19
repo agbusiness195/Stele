@@ -1,10 +1,10 @@
 {
-  "name": "@stele/identity",
+  "name": "@usekova/identity",
   "version": "2.0.0",
-  "description": "Identity and DID management for the Stele covenant framework",
+  "description": "Identity and DID management for the Kova covenant framework",
   "license": "MIT",
-  "author": "Stele Labs, Inc.",
-  "homepage": "https://stele.dev",
+  "author": "Kova Labs, Inc.",
+  "homepage": "https://usekova.dev",
   "bugs": {
     "url": "https://github.com/agbusiness195/stele/issues"
   },
@@ -36,7 +36,7 @@
     "directory": "packages/identity"
   },
   "keywords": [
-    "stele",
+    "kova",
     "covenant",
     "ai-accountability",
     "identity",
@@ -52,8 +52,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@stele/crypto": "2.0.0",
-    "@stele/proof": "2.0.0",
-    "@stele/types": "2.0.0"
+    "@usekova/crypto": "2.0.0",
+    "@usekova/proof": "2.0.0",
+    "@usekova/types": "2.0.0"
   }
 }

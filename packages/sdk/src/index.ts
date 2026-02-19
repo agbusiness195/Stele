@@ -1,7 +1,7 @@
 /**
- * @stele/sdk -- High-level TypeScript SDK that unifies the entire Stele protocol.
+ * @usekova/sdk -- High-level TypeScript SDK that unifies the entire Kova protocol.
  *
- * Provides a single entry point (SteleClient) for key management, covenant
+ * Provides a single entry point (KovaClient) for key management, covenant
  * lifecycle, identity management, chain operations, and CCL utilities.
  *
  * @packageDocumentation
@@ -13,8 +13,8 @@ import {
   generateKeyPair as cryptoGenerateKeyPair,
   timestamp,
   KeyManager,
-} from '@stele/crypto';
-import type { KeyPair, KeyRotationPolicy, ManagedKeyPair } from '@stele/crypto';
+} from '@usekova/crypto';
+import type { KeyPair, KeyRotationPolicy, ManagedKeyPair } from '@usekova/crypto';
 
 import {
   buildCovenant,
@@ -35,7 +35,7 @@ import {
   resignCovenant,
   serializeCovenant,
   deserializeCovenant,
-} from '@stele/core';
+} from '@usekova/core';
 import type {
   CovenantDocument,
   VerificationResult,
@@ -43,7 +43,7 @@ import type {
   Issuer,
   Beneficiary,
   PartyRole,
-} from '@stele/core';
+} from '@usekova/core';
 
 import {
   parse as cclParse,
@@ -54,27 +54,27 @@ import {
   serialize as cclSerialize,
   checkRateLimit as cclCheckRateLimit,
   validateNarrowing as cclValidateNarrowing,
-} from '@stele/ccl';
-import type { CCLDocument, EvaluationContext } from '@stele/ccl';
+} from '@usekova/ccl';
+import type { CCLDocument, EvaluationContext } from '@usekova/ccl';
 
 import {
   createIdentity as identityCreate,
   evolveIdentity as identityEvolve,
   verifyIdentity as identityVerify,
-} from '@stele/identity';
-import type { AgentIdentity } from '@stele/identity';
+} from '@usekova/identity';
+import type { AgentIdentity } from '@usekova/identity';
 
 import type {
-  SteleClientOptions,
+  KovaClientOptions,
   CreateCovenantOptions,
   EvaluationResult,
   CreateIdentityOptions,
   EvolveOptions,
   ChainValidationResult,
   NarrowingViolationEntry,
-  SteleEventType,
-  SteleEventMap,
-  SteleEventHandler,
+  KovaEventType,
+  KovaEventMap,
+  KovaEventHandler,
 } from './types.js';
 
 // ─── Re-exports ─────────────────────────────────────────────────────────────
@@ -96,7 +96,7 @@ export type {
 
 // Re-export middleware system
 export { MiddlewarePipeline, loggingMiddleware, validationMiddleware, timingMiddleware, rateLimitMiddleware } from './middleware.js';
-export type { MiddlewareContext, MiddlewareResult, MiddlewareFn, SteleMiddleware } from './middleware.js';
+export type { MiddlewareContext, MiddlewareResult, MiddlewareFn, KovaMiddleware } from './middleware.js';
 
 // Re-export plugins
 export * from './plugins/index.js';
@@ -104,7 +104,7 @@ export * from './plugins/index.js';
 // Re-export telemetry
 export {
   telemetryMiddleware,
-  SteleMetrics,
+  KovaMetrics,
   NoopTracer,
   NoopMeter,
   NoopSpan,
@@ -126,16 +126,16 @@ export type {
 
 // Re-export all SDK types
 export type {
-  SteleClientOptions,
+  KovaClientOptions,
   CreateCovenantOptions,
   EvaluationResult,
   CreateIdentityOptions,
   EvolveOptions,
   ChainValidationResult,
   NarrowingViolationEntry,
-  SteleEventType,
-  SteleEventMap,
-  SteleEventHandler,
+  KovaEventType,
+  KovaEventMap,
+  KovaEventHandler,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   CovenantCountersignedEvent,
@@ -145,7 +145,7 @@ export type {
   ChainValidatedEvent,
   EvaluationCompletedEvent,
   KeyRotatedEvent,
-  SteleEvent,
+  KovaEvent,
 } from './types.js';
 
 // Re-export core types
@@ -170,7 +170,7 @@ export type {
   ProofType,
   RevocationMethod,
   Severity,
-} from '@stele/core';
+} from '@usekova/core';
 
 export {
   PROTOCOL_VERSION,
@@ -191,9 +191,9 @@ export {
   resolveChain as resolveChain_core,
   computeEffectiveConstraints,
   validateChainNarrowing,
-} from '@stele/core';
+} from '@usekova/core';
 
-export type { ChainResolver } from '@stele/core';
+export type { ChainResolver } from '@usekova/core';
 
 // Re-export crypto types and functions
 export type {
@@ -207,7 +207,7 @@ export type {
   Nonce,
   KeyRotationPolicy,
   ManagedKeyPair,
-} from '@stele/crypto';
+} from '@usekova/crypto';
 
 export {
   generateKeyPair,
@@ -229,7 +229,7 @@ export {
   keyPairFromPrivateKey,
   keyPairFromPrivateKeyHex,
   KeyManager,
-} from '@stele/crypto';
+} from '@usekova/crypto';
 
 // Re-export CCL types and functions
 export type {
@@ -243,7 +243,7 @@ export type {
   Condition,
   CompoundCondition,
   NarrowingViolation,
-} from '@stele/ccl';
+} from '@usekova/ccl';
 
 export {
   parse as parseCCL,
@@ -260,7 +260,7 @@ export {
   parseTokens,
   CCLSyntaxError,
   CCLValidationError,
-} from '@stele/ccl';
+} from '@usekova/ccl';
 
 // Re-export identity types and functions
 export type {
@@ -272,7 +272,7 @@ export type {
   CreateIdentityOptions as CoreCreateIdentityOptions,
   EvolveIdentityOptions as CoreEvolveIdentityOptions,
   RuntimeType,
-} from '@stele/identity';
+} from '@usekova/identity';
 
 export {
   createIdentity as createIdentity_core,
@@ -289,20 +289,20 @@ export {
   triggerReverification,
   computeDecayedTrust,
   completeReverification,
-} from '@stele/identity';
+} from '@usekova/identity';
 
-// ─── SteleClient ────────────────────────────────────────────────────────────
+// ─── KovaClient ────────────────────────────────────────────────────────────
 
 /**
- * The main entry point for the Stele SDK.
+ * The main entry point for the Kova SDK.
  *
- * Provides a unified, high-level API for the entire Stele protocol:
+ * Provides a unified, high-level API for the entire Kova protocol:
  * key management, covenant lifecycle, identity management, chain
  * operations, and CCL utilities.
  *
  * @example
  * ```typescript
- * const client = new SteleClient();
+ * const client = new KovaClient();
  * await client.generateKeyPair();
  *
  * const doc = await client.createCovenant({
@@ -315,14 +315,14 @@ export {
  * console.log(result.valid); // true
  * ```
  */
-export class SteleClient {
+export class KovaClient {
   private _keyPair: KeyPair | undefined;
   private readonly _agentId: string | undefined;
   private readonly _strictMode: boolean;
-  private readonly _listeners: Map<SteleEventType, Set<SteleEventHandler<SteleEventType>>>;
+  private readonly _listeners: Map<KovaEventType, Set<KovaEventHandler<KovaEventType>>>;
   private _keyManager: KeyManager | undefined;
 
-  constructor(options: SteleClientOptions = {}) {
+  constructor(options: KovaClientOptions = {}) {
     this._keyPair = options.keyPair;
     this._agentId = options.agentId;
     this._strictMode = options.strictMode ?? false;
@@ -471,17 +471,17 @@ export class SteleClient {
     // ── Input validation (Stripe-quality errors at the public API boundary) ──
     if (!options.issuer || !options.issuer.id) {
       throw new Error(
-        "SteleClient.createCovenant(): issuer.id is required. Provide a non-empty string identifying the issuing party.",
+        "KovaClient.createCovenant(): issuer.id is required. Provide a non-empty string identifying the issuing party.",
       );
     }
     if (!options.beneficiary || !options.beneficiary.id) {
       throw new Error(
-        "SteleClient.createCovenant(): beneficiary.id is required. Provide a non-empty string identifying the beneficiary party.",
+        "KovaClient.createCovenant(): beneficiary.id is required. Provide a non-empty string identifying the beneficiary party.",
       );
     }
     if (!options.constraints || options.constraints.trim().length === 0) {
       throw new Error(
-        "SteleClient.createCovenant(): constraints must be a non-empty CCL string. Example: permit read on '/data/**'",
+        "KovaClient.createCovenant(): constraints must be a non-empty CCL string. Example: permit read on '/data/**'",
       );
     }
 
@@ -497,7 +497,7 @@ export class SteleClient {
     const privateKey = options.privateKey ?? this._keyPair?.privateKey;
     if (!privateKey) {
       throw new Error(
-        "SteleClient.createCovenant(): No private key available. Either call client.generateKeyPair() first, or pass { privateKey } in the options.",
+        "KovaClient.createCovenant(): No private key available. Either call client.generateKeyPair() first, or pass { privateKey } in the options.",
       );
     }
 
@@ -600,7 +600,7 @@ export class SteleClient {
     const kp = signerKeyPair ?? this._keyPair;
     if (!kp) {
       throw new Error(
-        "SteleClient.countersign(): No key pair available. Either call client.generateKeyPair() first, or pass a KeyPair as the third argument.",
+        "KovaClient.countersign(): No key pair available. Either call client.generateKeyPair() first, or pass a KeyPair as the third argument.",
       );
     }
 
@@ -643,12 +643,12 @@ export class SteleClient {
   ): Promise<EvaluationResult> {
     if (!action || action.trim().length === 0) {
       throw new Error(
-        "SteleClient.evaluateAction(): action must be a non-empty string (e.g., 'read', 'write', 'api.call').",
+        "KovaClient.evaluateAction(): action must be a non-empty string (e.g., 'read', 'write', 'api.call').",
       );
     }
     if (!resource || resource.trim().length === 0) {
       throw new Error(
-        "SteleClient.evaluateAction(): resource must be a non-empty string (e.g., '/data/**', '/api/endpoint').",
+        "KovaClient.evaluateAction(): resource must be a non-empty string (e.g., '/data/**', '/api/endpoint').",
       );
     }
 
@@ -699,7 +699,7 @@ export class SteleClient {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
       throw new Error(
-        "SteleClient.createIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
+        "KovaClient.createIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
 
@@ -748,7 +748,7 @@ export class SteleClient {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
       throw new Error(
-        "SteleClient.evolveIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
+        "KovaClient.evolveIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
 
@@ -929,18 +929,18 @@ export class SteleClient {
    * // later: off() to unsubscribe
    * ```
    */
-  on<T extends SteleEventType>(
+  on<T extends KovaEventType>(
     event: T,
-    handler: SteleEventHandler<T>,
+    handler: KovaEventHandler<T>,
   ): () => void {
     if (!this._listeners.has(event)) {
       this._listeners.set(event, new Set());
     }
     const handlers = this._listeners.get(event)!;
-    handlers.add(handler as SteleEventHandler<SteleEventType>);
+    handlers.add(handler as KovaEventHandler<KovaEventType>);
 
     return () => {
-      handlers.delete(handler as SteleEventHandler<SteleEventType>);
+      handlers.delete(handler as KovaEventHandler<KovaEventType>);
     };
   }
 
@@ -950,13 +950,13 @@ export class SteleClient {
    * @param event - The event type.
    * @param handler - The handler function to remove.
    */
-  off<T extends SteleEventType>(
+  off<T extends KovaEventType>(
     event: T,
-    handler: SteleEventHandler<T>,
+    handler: KovaEventHandler<T>,
   ): void {
     const handlers = this._listeners.get(event);
     if (handlers) {
-      handlers.delete(handler as SteleEventHandler<SteleEventType>);
+      handlers.delete(handler as KovaEventHandler<KovaEventType>);
     }
   }
 
@@ -966,7 +966,7 @@ export class SteleClient {
    *
    * @param event - Optional event type. If omitted, removes all handlers.
    */
-  removeAllListeners(event?: SteleEventType): void {
+  removeAllListeners(event?: KovaEventType): void {
     if (event) {
       this._listeners.delete(event);
     } else {
@@ -975,9 +975,9 @@ export class SteleClient {
   }
 
   /** Emit an event to all registered handlers. */
-  private _emit<T extends SteleEventType>(
+  private _emit<T extends KovaEventType>(
     event: T,
-    payload: SteleEventMap[T],
+    payload: KovaEventMap[T],
   ): void {
     const handlers = this._listeners.get(event);
     if (handlers) {
@@ -1099,7 +1099,7 @@ export class QuickCovenant {
 export * from './adapters/index.js';
 
 // ─── Store ────────────────────────────────────────────────────────────────────
-export { MemoryStore, FileStore, SqliteStore, QueryBuilder, createQuery, StoreIndex, IndexedStore, createTransaction } from '@stele/store';
+export { MemoryStore, FileStore, SqliteStore, QueryBuilder, createQuery, StoreIndex, IndexedStore, createTransaction } from '@usekova/store';
 export type {
   CovenantStore,
   StoreFilter,
@@ -1113,7 +1113,7 @@ export type {
   SortOrder,
   IndexField,
   Transaction,
-} from '@stele/store';
+} from '@usekova/store';
 
 // ─── Breach Detection ─────────────────────────────────────────────────────────
 export {
@@ -1129,13 +1129,13 @@ export {
   createIncidentReport,
   escalateIncident,
   resolveIncident,
-} from '@stele/breach';
+} from '@usekova/breach';
 export type {
   BreachAttestation,
   TrustStatus,
   TrustNode,
   BreachEvent,
-} from '@stele/breach';
+} from '@usekova/breach';
 
 // ─── Reputation ───────────────────────────────────────────────────────────────
 export {
@@ -1170,7 +1170,7 @@ export {
   createStakedAgent,
   recordQuery,
   computeGovernanceVote,
-} from '@stele/reputation';
+} from '@usekova/reputation';
 export type {
   ReputationScore,
   ExecutionReceipt,
@@ -1185,7 +1185,7 @@ export type {
   StakeTier,
   StakeTierConfig,
   StakedAgent,
-} from '@stele/reputation';
+} from '@usekova/reputation';
 
 // ─── Proof ────────────────────────────────────────────────────────────────────
 export {
@@ -1197,13 +1197,13 @@ export {
   hashToField,
   fieldToHex,
   FIELD_PRIME,
-} from '@stele/proof';
+} from '@usekova/proof';
 export type {
   ComplianceProof,
   ProofVerificationResult,
   ProofGenerationOptions,
   AuditEntryData,
-} from '@stele/proof';
+} from '@usekova/proof';
 
 // ─── Attestation ──────────────────────────────────────────────────────────────
 export {
@@ -1219,7 +1219,7 @@ export {
   buildEntanglementNetwork,
   verifyEntangled,
   assessConditionalRisk,
-} from '@stele/attestation';
+} from '@usekova/attestation';
 export type {
   ExternalAttestation,
   AttestationReconciliation,
@@ -1229,10 +1229,10 @@ export type {
   ChainVerificationResult,
   AgentAction,
   AttestationCoverageResult,
-} from '@stele/attestation';
+} from '@usekova/attestation';
 
 // ─── Verifier ─────────────────────────────────────────────────────────────────
-export { Verifier, verifyBatch } from '@stele/verifier';
+export { Verifier, verifyBatch } from '@usekova/verifier';
 export type {
   VerifierOptions,
   VerificationReport,
@@ -1245,7 +1245,7 @@ export type {
   BatchSummary,
   VerificationRecord,
   VerificationKind,
-} from '@stele/verifier';
+} from '@usekova/verifier';
 
 // ─── Discovery ─────────────────────────────────────────────────────────────────
 export {
@@ -1257,7 +1257,7 @@ export {
   buildKeySet,
   WELL_KNOWN_PATH,
   CONFIGURATION_PATH,
-  STELE_MEDIA_TYPE,
+  KOVA_MEDIA_TYPE,
   MAX_DOCUMENT_AGE_MS,
   createFederationConfig,
   addResolver,
@@ -1270,7 +1270,7 @@ export {
   createTransaction as createMarketplaceTransaction,
   completeTransaction,
   disputeTransaction,
-} from '@stele/discovery';
+} from '@usekova/discovery';
 export type {
   DiscoveryDocument,
   AgentKeyEntry,
@@ -1294,7 +1294,7 @@ export type {
   MarketplaceConfig,
   MarketplaceQuery,
   MarketplaceTransaction,
-} from '@stele/discovery';
+} from '@usekova/discovery';
 
 // ─── Schema ────────────────────────────────────────────────────────────────────
 export {
@@ -1306,11 +1306,11 @@ export {
   validateDiscoverySchema,
   validateAgentKeySchema,
   getAllSchemas,
-} from '@stele/schema';
+} from '@usekova/schema';
 export type {
   SchemaValidationError,
   SchemaValidationResult,
-} from '@stele/schema';
+} from '@usekova/schema';
 
 // ─── Temporal ─────────────────────────────────────────────────────────────────
 export {
@@ -1330,7 +1330,7 @@ export {
   evaluatePhaseTransition,
   transitionPhase,
   computeVotingPower,
-} from '@stele/temporal';
+} from '@usekova/temporal';
 export type {
   TriggerType,
   TriggerAction,
@@ -1355,7 +1355,7 @@ export type {
   GovernancePhase,
   GovernanceState,
   GovernanceBootstrapConfig,
-} from '@stele/temporal';
+} from '@usekova/temporal';
 
 // ─── Trust Gate ───────────────────────────────────────────────────────────────
 export { createTrustGate, evaluateAccess, calculateRevenueLift } from './trust-gate.js';
@@ -1454,7 +1454,7 @@ export {
   isExpired as isCanaryExpired,
   canarySchedule,
   canaryCorrelation,
-} from '@stele/canary';
+} from '@usekova/canary';
 export type {
   ChallengePayload,
   Canary,
@@ -1462,7 +1462,7 @@ export type {
   CanaryScheduleEntry,
   CanaryScheduleResult,
   CanaryCorrelationResult,
-} from '@stele/canary';
+} from '@usekova/canary';
 
 // ─── Game Theory ──────────────────────────────────────────────────────────────
 export {
@@ -1480,7 +1480,7 @@ export {
   defineConjecture,
   getStandardConjectures,
   analyzeImpossibilityBounds,
-} from '@stele/gametheory';
+} from '@usekova/gametheory';
 export type {
   HonestyParameters,
   HonestyProof,
@@ -1497,7 +1497,7 @@ export type {
   ConjectureStatus,
   Conjecture,
   ImpossibilityBound,
-} from '@stele/gametheory';
+} from '@usekova/gametheory';
 
 // ─── Composition ──────────────────────────────────────────────────────────────
 export {
@@ -1520,7 +1520,7 @@ export {
   proposeImprovement,
   applyImprovement,
   verifyEnvelopeIntegrity,
-} from '@stele/composition';
+} from '@usekova/composition';
 export type {
   CompositionProof,
   ComposedConstraint,
@@ -1533,7 +1533,7 @@ export type {
   SafetyEnvelope,
   ImprovementProposal,
   ImprovementResult,
-} from '@stele/composition';
+} from '@usekova/composition';
 
 // ─── Antifragile ──────────────────────────────────────────────────────────────
 export {
@@ -1551,7 +1551,7 @@ export {
   PhaseTransitionDetector,
   FitnessEvolution,
   calibratedAntifragilityIndex,
-} from '@stele/antifragile';
+} from '@usekova/antifragile';
 export type {
   BreachAntibody,
   NetworkHealth,
@@ -1565,7 +1565,7 @@ export type {
   ScoredAntibody,
   FitnessEvolutionConfig,
   CalibratedAntifragilityResult,
-} from '@stele/antifragile';
+} from '@usekova/antifragile';
 
 // ─── Consensus ────────────────────────────────────────────────────────────────
 export {
@@ -1584,7 +1584,7 @@ export {
   DynamicQuorum,
   PipelineSimulator,
   QuorumIntersectionVerifier,
-} from '@stele/consensus';
+} from '@usekova/consensus';
 export type {
   AccountabilityTier,
   AccountabilityScore,
@@ -1607,7 +1607,7 @@ export type {
   NetworkCondition,
   PipelineSimulationResult,
   QuorumIntersectionResult,
-} from '@stele/consensus';
+} from '@usekova/consensus';
 
 // ─── Robustness ───────────────────────────────────────────────────────────────
 export {
@@ -1617,7 +1617,7 @@ export {
   generateAdversarialInputs,
   formalVerification,
   robustnessScore,
-} from '@stele/robustness';
+} from '@usekova/robustness';
 export type {
   RobustnessProof,
   InputBound,
@@ -1630,7 +1630,7 @@ export type {
   Contradiction,
   RobustnessScoreResult,
   RobustnessFactor,
-} from '@stele/robustness';
+} from '@usekova/robustness';
 
 // ─── Recursive ────────────────────────────────────────────────────────────────
 export {
@@ -1641,7 +1641,7 @@ export {
   addLayer,
   computeTrustTransitivity,
   findMinimalVerificationSet,
-} from '@stele/recursive';
+} from '@usekova/recursive';
 export type {
   MetaTargetType,
   MetaCovenant,
@@ -1653,7 +1653,7 @@ export type {
   TransitiveTrustResult,
   VerifierNode,
   MinimalVerificationSetResult,
-} from '@stele/recursive';
+} from '@usekova/recursive';
 
 // ─── Alignment ────────────────────────────────────────────────────────────────
 export {
@@ -1668,7 +1668,7 @@ export {
   DriftForecaster,
   AlignmentSurface,
   AlignmentFeedbackLoop,
-} from '@stele/alignment';
+} from '@usekova/alignment';
 export type {
   AlignmentProperty,
   AlignmentCovenant,
@@ -1687,7 +1687,7 @@ export type {
   FeedbackLoopConfig,
   AlignmentOutcome,
   FeedbackLoopState,
-} from '@stele/alignment';
+} from '@usekova/alignment';
 
 // ─── Norms ────────────────────────────────────────────────────────────────────
 export {
@@ -1697,7 +1697,7 @@ export {
   generateTemplate,
   normConflictDetection,
   normPrecedence,
-} from '@stele/norms';
+} from '@usekova/norms';
 export type {
   DiscoveredNorm,
   NormAnalysis,
@@ -1708,7 +1708,7 @@ export type {
   NormDefinition,
   NormConflict,
   NormPrecedenceResult,
-} from '@stele/norms';
+} from '@usekova/norms';
 
 // ─── Substrate ────────────────────────────────────────────────────────────────
 export {
@@ -1721,7 +1721,7 @@ export {
   substrateCompatibility,
   constraintTranslation,
   substrateCapabilityMatrix,
-} from '@stele/substrate';
+} from '@usekova/substrate';
 export type {
   SubstrateType,
   SubstrateAdapter,
@@ -1736,7 +1736,7 @@ export type {
   CapabilityEntry,
   CapabilityMatrixRow,
   CapabilityMatrix,
-} from '@stele/substrate';
+} from '@usekova/substrate';
 
 // ─── Derivatives ──────────────────────────────────────────────────────────────
 export {
@@ -1749,7 +1749,7 @@ export {
   blackScholesPrice,
   valueAtRisk,
   hedgeRatio,
-} from '@stele/derivatives';
+} from '@usekova/derivatives';
 export type {
   TrustFuture,
   AgentInsurancePolicy,
@@ -1764,7 +1764,7 @@ export type {
   VaRResult,
   HedgeRatioParams,
   HedgeRatioResult,
-} from '@stele/derivatives';
+} from '@usekova/derivatives';
 
 // ─── Legal ────────────────────────────────────────────────────────────────────
 export {
@@ -1786,7 +1786,7 @@ export {
   takeSnapshot,
   analyzeTrajectory,
   generateRegulatoryReport,
-} from '@stele/legal';
+} from '@usekova/legal';
 export type {
   LegalIdentityPackage,
   ComplianceRecord,
@@ -1824,7 +1824,7 @@ export type {
   ComplianceSnapshot,
   ComplianceAlert,
   ComplianceAutopilotTrajectory,
-} from '@stele/legal';
+} from '@usekova/legal';
 
 // ─── Enforcement ──────────────────────────────────────────────────────────────
 export {
@@ -1842,7 +1842,7 @@ export {
   addDefenseLayer,
   disableLayer,
   AuditChain,
-} from '@stele/enforcement';
+} from '@usekova/enforcement';
 export type {
   ExecutionOutcome,
   AuditEntry,
@@ -1859,7 +1859,7 @@ export type {
   DefenseInDepthConfig,
   DefenseAnalysis,
   ChainedAuditEntry,
-} from '@stele/enforcement';
+} from '@usekova/enforcement';
 
 // ─── Negotiation ──────────────────────────────────────────────────────────────
 export {
@@ -1878,7 +1878,7 @@ export {
   IncrementalParetoFrontier,
   zeuthenStrategy,
   runZeuthenNegotiation,
-} from '@stele/negotiation';
+} from '@usekova/negotiation';
 export type {
   NegotiationSession,
   Proposal,
@@ -1893,4 +1893,4 @@ export type {
   ConcessionEvent,
   ConcessionConfig,
   ZeuthenResult,
-} from '@stele/negotiation';
+} from '@usekova/negotiation';
