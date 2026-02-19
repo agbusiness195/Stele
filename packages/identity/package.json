@@ -1,6 +1,6 @@
 {
   "name": "@stele/identity",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Identity and DID management for the Stele covenant framework",
   "license": "MIT",
   "author": "Stele Labs, Inc.",
@@ -48,12 +48,12 @@
     "bundle": "tsup src/index.ts --format cjs,esm",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "prepublishOnly": "npm run build",
-    "test": "vitest run",
+    "test": "vitest run --config ../../vitest.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@stele/crypto": "0.1.0",
-    "@stele/proof": "0.1.0",
-    "@stele/types": "0.1.0"
+    "@stele/crypto": "2.0.0",
+    "@stele/proof": "2.0.0",
+    "@stele/types": "2.0.0"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@stele/derivatives",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Covenant derivative instruments and transformation calculus",
   "sideEffects": false,
   "main": "dist/index.js",
@@ -17,7 +17,7 @@
     "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
     "bundle": "tsup src/index.ts --format cjs,esm",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "test": "vitest run",
+    "test": "vitest run --config ../../vitest.config.ts",
     "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit"
   },
@@ -27,7 +27,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "0.1.0"
+    "@stele/crypto": "2.0.0"
   },
   "license": "MIT",
   "engines": {

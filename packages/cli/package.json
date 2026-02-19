@@ -1,6 +1,6 @@
 {
   "name": "@stele/cli",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Command-line interface for the Stele covenant framework",
   "sideEffects": false,
   "main": "dist/index.js",
@@ -19,7 +19,7 @@
     "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
     "bundle": "tsup src/index.ts --format cjs",
     "dev": "tsup src/index.ts --format cjs --dts --watch",
-    "test": "vitest run",
+    "test": "vitest run --config ../../vitest.config.ts",
     "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit"
   },
@@ -29,15 +29,15 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/crypto": "0.1.0",
-    "@stele/ccl": "0.1.0",
-    "@stele/core": "0.1.0",
-    "@stele/identity": "0.1.0",
-    "@stele/enforcement": "0.1.0",
-    "@stele/proof": "0.1.0",
-    "@stele/reputation": "0.1.0",
-    "@stele/breach": "0.1.0",
-    "@stele/mcp": "0.1.0"
+    "@stele/crypto": "2.0.0",
+    "@stele/ccl": "2.0.0",
+    "@stele/core": "2.0.0",
+    "@stele/identity": "2.0.0",
+    "@stele/enforcement": "2.0.0",
+    "@stele/proof": "2.0.0",
+    "@stele/reputation": "2.0.0",
+    "@stele/breach": "2.0.0",
+    "@stele/mcp": "2.0.0"
   },
   "license": "MIT",
   "engines": {

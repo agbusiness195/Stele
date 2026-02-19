@@ -1,6 +1,6 @@
 {
   "name": "@stele/mcp-server",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Model Context Protocol server with stdio transport that exposes Stele covenant tools to AI agents",
   "sideEffects": false,
   "main": "dist/index.js",
@@ -23,16 +23,16 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --config ../../vitest.config.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@stele/types": "0.1.0",
-    "@stele/crypto": "0.1.0",
-    "@stele/core": "0.1.0",
-    "@stele/store": "0.1.0",
-    "@stele/verifier": "0.1.0",
-    "@stele/sdk": "0.1.0"
+    "@stele/types": "2.0.0",
+    "@stele/crypto": "2.0.0",
+    "@stele/core": "2.0.0",
+    "@stele/store": "2.0.0",
+    "@stele/verifier": "2.0.0",
+    "@stele/sdk": "2.0.0"
   },
   "license": "MIT",
   "engines": {

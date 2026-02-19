@@ -42,8 +42,9 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "typecheck": "npm run typecheck --workspaces",
-    "test": "npm run test --workspaces",
+    "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:vectors": "vitest run --config vitest.vectors.config.ts",
     "lint": "npx tsc --build --noEmit",
     "docs": "npx typedoc",
     "docs:build": "typedoc",

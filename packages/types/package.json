@@ -1,6 +1,6 @@
 {
   "name": "@stele/types",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Shared TypeScript type definitions and protocol schemas",
   "sideEffects": false,
   "main": "dist/index.js",
@@ -20,7 +20,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --config ../../vitest.config.ts",
     "prepublishOnly": "npm run build"
   },
   "license": "MIT",
@@ -41,7 +41,7 @@
   },
   "author": "Stele Labs, Inc.",
   "dependencies": {
-    "@stele/crypto": "0.1.0"
+    "@stele/crypto": "2.0.0"
   },
   "keywords": [
     "stele",

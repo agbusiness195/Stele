@@ -1,6 +1,6 @@
 {
   "name": "@stele/canary",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Canary token generation and tripwire monitoring",
   "sideEffects": false,
   "main": "dist/index.js",
@@ -17,7 +17,7 @@
     "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
     "bundle": "tsup src/index.ts --format cjs,esm",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "test": "vitest run",
+    "test": "vitest run --config ../../vitest.config.ts",
     "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit"
   },
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@stele/ccl": "0.1.0",
-    "@stele/crypto": "0.1.0"
+    "@stele/ccl": "2.0.0",
+    "@stele/crypto": "2.0.0"
   },
   "license": "MIT",
   "engines": {

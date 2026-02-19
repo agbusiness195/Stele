@@ -19,18 +19,6 @@ export default defineConfig({
   resolve: { alias },
   test: {
     globals: true,
-    include: ['packages/*/src/**/*.test.ts', 'packages/*/__tests__/**/*.test.ts', 'tests/**/*.test.ts', 'benchmarks/**/*.test.ts'],
-    coverage: {
-      provider: 'v8',
-      include: ['packages/*/src/**/*.ts'],
-      exclude: ['packages/*/src/**/*.test.ts', 'packages/*/src/**/*.d.ts'],
-      thresholds: {
-        statements: 99,
-        branches: 97,
-        functions: 99,
-        lines: 99,
-      },
-      reporter: ['text', 'text-summary', 'json-summary', 'html'],
-    },
+    include: ['test-vectors/**/*.test.ts'],
   },
 });
