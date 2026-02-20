@@ -1894,3 +1894,4 @@ export type {
   ConcessionConfig,
   ZeuthenResult,
 } from '@usekova/negotiation';
+export { protect, listPresets, getPreset } from './easy';

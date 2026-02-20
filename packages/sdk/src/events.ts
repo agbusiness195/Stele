@@ -105,7 +105,7 @@ export class SteleEventEmitter {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener, once: false });
+    entries.push({ fn: listener as any, once: false });
     return this;
   }
 
@@ -173,7 +173,7 @@ export class SteleEventEmitter {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener, once: true });
+    entries.push({ fn: listener as any, once: true });
     return this;
   }
 
