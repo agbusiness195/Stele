@@ -20,7 +20,7 @@ import { Observable, CovenantState, IdentityState, StoreState } from './index';
 // Defined here so the package compiles without @types/react installed.
 // At runtime, the actual React module provides these functions.
 
-interface ReactModule {
+export interface ReactModule {
   useState<T>(initial: T | (() => T)): [T, (v: T | ((prev: T) => T)) => void];
   useEffect(effect: () => void | (() => void), deps?: unknown[]): void;
   useRef<T>(initial: T): { current: T };

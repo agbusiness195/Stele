@@ -4,7 +4,7 @@ import type { CovenantDocument } from '@usekova/core';
 
 import { KovaClient } from '../index.js';
 import { kovaMiddleware, kovaGuardHandler, createCovenantRouter } from './express.js';
-import type { IncomingRequest, OutgoingResponse, NextFunction } from './express.js';
+import type { KovaEvaluator, IncomingRequest, OutgoingResponse, NextFunction } from './express.js';
 import { withKova, withKovaTools, createToolGuard, KovaAccessDeniedError } from './vercel-ai.js';
 import type { ToolLike } from './vercel-ai.js';
 import { KovaCallbackHandler, withKovaTool, createChainGuard } from './langchain.js';
@@ -201,7 +201,7 @@ describe('Express middleware adapter', () => {
       // Create a middleware with a broken client to force an error
       const brokenClient = {
         evaluateAction: () => Promise.reject(new Error('boom')),
-      } as unknown as KovaClient;
+      } satisfies KovaEvaluator;
 
       const mw = kovaMiddleware({
         client: brokenClient,
@@ -224,7 +224,7 @@ describe('Express middleware adapter', () => {
     it('default onError handler returns 500 JSON', async () => {
       const brokenClient = {
         evaluateAction: () => Promise.reject(new Error('evaluation failed')),
-      } as unknown as KovaClient;
+      } satisfies KovaEvaluator;
 
       const mw = kovaMiddleware({ client: brokenClient, covenant });
       const req = createMockRequest();
@@ -318,7 +318,7 @@ describe('Express middleware adapter', () => {
       const handler = vi.fn();
       const brokenClient = {
         evaluateAction: () => Promise.reject(new Error('fail')),
-      } as unknown as KovaClient;
+      } satisfies KovaEvaluator;
 
       const guarded = kovaGuardHandler(
         { client: brokenClient, covenant, onError },

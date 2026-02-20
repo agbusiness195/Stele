@@ -53,11 +53,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/stele"
+    "url": "https://github.com/agbusiness195/kova"
   },
   "homepage": "https://usekova.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/stele/issues"
+    "url": "https://github.com/agbusiness195/kova/issues"
   },
   "author": "Kova Labs, Inc.",
   "license": "MIT",

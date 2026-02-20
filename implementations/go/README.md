@@ -20,7 +20,7 @@ This package implements the core Kova protocol primitives:
 ## Installation
 
 ```bash
-go get github.com/agbusiness195/stele/implementations/go
+go get github.com/agbusiness195/kova/implementations/go
 ```
 
 ## Quick Start
@@ -30,7 +30,7 @@ package main
 
 import (
     "fmt"
-    kova "github.com/agbusiness195/stele/implementations/go"
+    kova "github.com/agbusiness195/kova/implementations/go"
 )
 
 func main() {

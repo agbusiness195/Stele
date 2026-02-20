@@ -10,9 +10,19 @@
  * @packageDocumentation
  */
 
-import type { KovaClient } from '../index.js';
 import type { CovenantDocument } from '@usekova/core';
 import type { EvaluationResult } from '../types.js';
+
+/**
+ * Minimal interface for covenant evaluation. KovaClient satisfies this.
+ */
+export interface KovaEvaluator {
+  evaluateAction(
+    covenant: CovenantDocument,
+    action: string,
+    resource: string,
+  ): Promise<EvaluationResult>;
+}
 
 // ─── Generic HTTP types ──────────────────────────────────────────────────────
 
@@ -57,8 +67,8 @@ export type NextFunction = (err?: unknown) => void;
  * Options for the kovaMiddleware factory.
  */
 export interface KovaMiddlewareOptions {
-  /** The KovaClient instance to use for covenant evaluation. */
-  client: KovaClient;
+  /** The KovaClient (or any KovaEvaluator) instance to use for covenant evaluation. */
+  client: KovaEvaluator;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
   /**
@@ -89,8 +99,8 @@ export interface KovaMiddlewareOptions {
  * Options for the kovaGuardHandler factory.
  */
 export interface KovaGuardHandlerOptions {
-  /** The KovaClient instance to use for covenant evaluation. */
-  client: KovaClient;
+  /** The KovaClient (or any KovaEvaluator) instance to use for covenant evaluation. */
+  client: KovaEvaluator;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
   /**

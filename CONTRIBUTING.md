@@ -13,7 +13,7 @@ AI agents. This guide covers everything you need to get started.
 
 ```bash
 # Clone the repository
-git clone https://github.com/agbusiness195/stele.git
+git clone https://github.com/agbusiness195/kova.git
 cd kova
 
 # Install all dependencies (npm workspaces resolves inter-package deps automatically)

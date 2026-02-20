@@ -13,7 +13,7 @@ the most recent version.
 
 If you discover a security vulnerability in Kova, please report it responsibly.
 
-**Email**: security@useusekova.dev
+**Email**: security@usekova.dev
 
 Please include:
 
@@ -110,5 +110,5 @@ the attack surface. We pin exact versions and review updates before merging.
 
 ## Security Contacts
 
-- **Primary**: security@useusekova.dev
-- **GitHub**: https://github.com/agbusiness195/stele/security
+- **Primary**: security@usekova.dev
+- **GitHub**: https://github.com/agbusiness195/kova/security
