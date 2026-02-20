@@ -105,7 +105,7 @@ export class KovaEventEmitter {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener, once: false });
+    entries.push({ fn: listener as Listener<KovaLifecycleEventMap[keyof KovaLifecycleEventMap]>, once: false });
     return this;
   }
 
@@ -173,7 +173,7 @@ export class KovaEventEmitter {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener, once: true });
+    entries.push({ fn: listener as Listener<KovaLifecycleEventMap[keyof KovaLifecycleEventMap]>, once: true });
     return this;
   }
 

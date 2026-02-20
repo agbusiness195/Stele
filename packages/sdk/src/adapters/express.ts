@@ -131,8 +131,8 @@ export interface KovaGuardHandlerOptions {
  * Options for the createCovenantRouter factory.
  */
 export interface CovenantRouterOptions {
-  /** The KovaClient instance to use for covenant evaluation. */
-  client: KovaClient;
+  /** The KovaClient (or any KovaEvaluator) instance to use for covenant evaluation. */
+  client: KovaEvaluator;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
 }

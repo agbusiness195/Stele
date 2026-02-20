@@ -185,7 +185,7 @@ These packages explore advanced protocol concepts. APIs will change. Not recomme
 
 ### Near-term (next release)
 
-1. **npm publish**: Publish all stable-tier packages to npm under the `@kova` scope.
+1. **npm publish**: Publish all stable-tier packages to npm under the `@usekova` scope.
 2. **Security audit**: Engage an external firm to audit `@usekova/crypto`, `@usekova/ccl`, and `@usekova/core`. The threat model (THREAT_MODEL.md) defines the scope.
 3. **API documentation site**: Generate and host TypeDoc output for all stable packages.
 
