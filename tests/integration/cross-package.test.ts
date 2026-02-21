@@ -1,5 +1,5 @@
 /**
- * Cross-package integration tests for the Stele monorepo.
+ * Cross-package integration tests for the Kova monorepo.
  *
  * Validates that packages interact correctly when composed together:
  *   SDK + Store, SDK + Verifier, Core + Identity, CCL + Verifier,
@@ -30,7 +30,7 @@ import type { CovenantDocument } from '@usekova/core';
 
 import { KovaClient, QuickCovenant } from '@usekova/sdk';
 import type {
-  SteleEventType,
+  KovaEventType,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   IdentityCreatedEvent,

@@ -1,6 +1,6 @@
 # @usekova/sdk
 
-High-level unified SDK for the Stele protocol. This is the **main entry point** -- it re-exports everything from `@usekova/core`, `@usekova/crypto`, `@usekova/ccl`, `@usekova/identity`, `@usekova/store`, `@usekova/verifier`, and more.
+High-level unified SDK for the Kova protocol. This is the **main entry point** -- it re-exports everything from `@usekova/core`, `@usekova/crypto`, `@usekova/ccl`, `@usekova/identity`, `@usekova/store`, `@usekova/verifier`, and more.
 
 ## Installation
 
@@ -10,12 +10,12 @@ npm install @usekova/sdk
 
 ## Usage
 
-### SteleClient
+### KovaClient
 
 ```typescript
-import { SteleClient } from '@usekova/sdk';
+import { KovaClient } from '@usekova/sdk';
 
-const client = new SteleClient();
+const client = new KovaClient();
 await client.generateKeyPair();
 
 // Create a covenant
@@ -56,7 +56,7 @@ const standard = await QuickCovenant.standard(issuer, beneficiary, kp.privateKey
 ### Key Rotation and Events
 
 ```typescript
-const client = new SteleClient({
+const client = new KovaClient({
   keyRotation: { maxAgeMs: 86_400_000, overlapPeriodMs: 3_600_000 },
 });
 await client.initializeKeyRotation();
@@ -66,7 +66,7 @@ const off = client.on('covenant:created', (e) => console.log('Created:', e.docum
 
 ## Key APIs
 
-- **SteleClient**: `createCovenant()`, `verifyCovenant()`, `countersign()`, `evaluateAction()`, `createIdentity()`, `evolveIdentity()`, `resolveChain()`, `validateChain()`
+- **KovaClient**: `createCovenant()`, `verifyCovenant()`, `countersign()`, `evaluateAction()`, `createIdentity()`, `evolveIdentity()`, `resolveChain()`, `validateChain()`
 - **QuickCovenant**: `permit()`, `deny()`, `standard()`
 - **CCL utilities**: `parseCCL()`, `mergeCCL()`, `serializeCCL()`
 - **Events**: `on()`, `off()`, `removeAllListeners()`
@@ -76,4 +76,4 @@ const off = client.on('covenant:created', (e) => console.log('Created:', e.docum
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Kova SDK root documentation](../../README.md) for the full API reference and architecture guide.

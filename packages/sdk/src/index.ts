@@ -1,5 +1,5 @@
 /**
- * @usekova/sdk -- High-level TypeScript SDK that unifies the entire Stele protocol.
+ * @usekova/sdk -- High-level TypeScript SDK that unifies the entire Kova protocol.
  *
  * Provides a single entry point (KovaClient) for key management, covenant
  * lifecycle, identity management, chain operations, and CCL utilities.
@@ -72,9 +72,9 @@ import type {
   EvolveOptions,
   ChainValidationResult,
   NarrowingViolationEntry,
-  SteleEventType,
-  SteleEventMap,
-  SteleEventHandler,
+  KovaEventType,
+  KovaEventMap,
+  KovaEventHandler,
 } from './types.js';
 
 // ─── Re-exports ─────────────────────────────────────────────────────────────
@@ -96,7 +96,7 @@ export type {
 
 // Re-export middleware system
 export { MiddlewarePipeline, loggingMiddleware, validationMiddleware, timingMiddleware, rateLimitMiddleware } from './middleware.js';
-export type { MiddlewareContext, MiddlewareResult, MiddlewareFn, SteleMiddleware } from './middleware.js';
+export type { MiddlewareContext, MiddlewareResult, MiddlewareFn, KovaMiddleware } from './middleware.js';
 
 // Re-export plugins
 export * from './plugins/index.js';
@@ -104,7 +104,7 @@ export * from './plugins/index.js';
 // Re-export telemetry
 export {
   telemetryMiddleware,
-  SteleMetrics,
+  KovaMetrics,
   NoopTracer,
   NoopMeter,
   NoopSpan,
@@ -133,9 +133,9 @@ export type {
   EvolveOptions,
   ChainValidationResult,
   NarrowingViolationEntry,
-  SteleEventType,
-  SteleEventMap,
-  SteleEventHandler,
+  KovaEventType,
+  KovaEventMap,
+  KovaEventHandler,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   CovenantCountersignedEvent,
@@ -145,7 +145,7 @@ export type {
   ChainValidatedEvent,
   EvaluationCompletedEvent,
   KeyRotatedEvent,
-  SteleEvent,
+  KovaEvent,
 } from './types.js';
 
 // Re-export core types
@@ -294,9 +294,9 @@ export {
 // ─── KovaClient ────────────────────────────────────────────────────────────
 
 /**
- * The main entry point for the Stele SDK.
+ * The main entry point for the Kova SDK.
  *
- * Provides a unified, high-level API for the entire Stele protocol:
+ * Provides a unified, high-level API for the entire Kova protocol:
  * key management, covenant lifecycle, identity management, chain
  * operations, and CCL utilities.
  *
@@ -319,7 +319,7 @@ export class KovaClient {
   private _keyPair: KeyPair | undefined;
   private readonly _agentId: string | undefined;
   private readonly _strictMode: boolean;
-  private readonly _listeners: Map<SteleEventType, Set<SteleEventHandler<SteleEventType>>>;
+  private readonly _listeners: Map<KovaEventType, Set<KovaEventHandler<KovaEventType>>>;
   private _keyManager: KeyManager | undefined;
 
   constructor(options: KovaClientOptions = {}) {
@@ -929,18 +929,18 @@ export class KovaClient {
    * // later: off() to unsubscribe
    * ```
    */
-  on<T extends SteleEventType>(
+  on<T extends KovaEventType>(
     event: T,
-    handler: SteleEventHandler<T>,
+    handler: KovaEventHandler<T>,
   ): () => void {
     if (!this._listeners.has(event)) {
       this._listeners.set(event, new Set());
     }
     const handlers = this._listeners.get(event)!;
-    handlers.add(handler as SteleEventHandler<SteleEventType>);
+    handlers.add(handler as KovaEventHandler<KovaEventType>);
 
     return () => {
-      handlers.delete(handler as SteleEventHandler<SteleEventType>);
+      handlers.delete(handler as KovaEventHandler<KovaEventType>);
     };
   }
 
@@ -950,13 +950,13 @@ export class KovaClient {
    * @param event - The event type.
    * @param handler - The handler function to remove.
    */
-  off<T extends SteleEventType>(
+  off<T extends KovaEventType>(
     event: T,
-    handler: SteleEventHandler<T>,
+    handler: KovaEventHandler<T>,
   ): void {
     const handlers = this._listeners.get(event);
     if (handlers) {
-      handlers.delete(handler as SteleEventHandler<SteleEventType>);
+      handlers.delete(handler as KovaEventHandler<KovaEventType>);
     }
   }
 
@@ -966,7 +966,7 @@ export class KovaClient {
    *
    * @param event - Optional event type. If omitted, removes all handlers.
    */
-  removeAllListeners(event?: SteleEventType): void {
+  removeAllListeners(event?: KovaEventType): void {
     if (event) {
       this._listeners.delete(event);
     } else {
@@ -975,9 +975,9 @@ export class KovaClient {
   }
 
   /** Emit an event to all registered handlers. */
-  private _emit<T extends SteleEventType>(
+  private _emit<T extends KovaEventType>(
     event: T,
-    payload: SteleEventMap[T],
+    payload: KovaEventMap[T],
   ): void {
     const handlers = this._listeners.get(event);
     if (handlers) {
@@ -1257,7 +1257,7 @@ export {
   buildKeySet,
   WELL_KNOWN_PATH,
   CONFIGURATION_PATH,
-  STELE_MEDIA_TYPE,
+  KOVA_MEDIA_TYPE,
   MAX_DOCUMENT_AGE_MS,
   createFederationConfig,
   addResolver,

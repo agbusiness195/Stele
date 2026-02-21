@@ -1,5 +1,5 @@
 /**
- * @usekova/store — Pluggable storage backends for stele records.
+ * @usekova/store — Pluggable storage backends for kova records.
  *
  * Provides a {@link CovenantStore} interface and a ready-to-use
  * {@link MemoryStore} implementation backed by a Map.

@@ -1,5 +1,5 @@
 /**
- * Edge-case tests for the Stele SDK governance module.
+ * Edge-case tests for the Kova SDK governance module.
  */
 
 import { describe, it, expect } from 'vitest';

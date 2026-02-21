@@ -3,11 +3,11 @@ import { generateKeyPair } from '@usekova/crypto';
 import type { CovenantDocument } from '@usekova/core';
 
 import { KovaClient } from '../index.js';
-import { steleMiddleware, steleGuardHandler, createCovenantRouter } from './express.js';
-import type { IncomingRequest, OutgoingResponse, NextFunction } from './express.js';
-import { withStele, withSteleTools, createToolGuard, SteleAccessDeniedError } from './vercel-ai.js';
+import { kovaMiddleware, kovaGuardHandler, createCovenantRouter } from './express.js';
+import type { KovaEvaluator, IncomingRequest, OutgoingResponse, NextFunction } from './express.js';
+import { withKova, withKovaTools, createToolGuard, KovaAccessDeniedError } from './vercel-ai.js';
 import type { ToolLike } from './vercel-ai.js';
-import { SteleCallbackHandler, withSteleTool, createChainGuard } from './langchain.js';
+import { KovaCallbackHandler, withKovaTool, createChainGuard } from './langchain.js';
 import type { LangChainToolLike } from './langchain.js';
 
 // ---------------------------------------------------------------------------
@@ -84,11 +84,11 @@ function createMockNext(): NextFunction & { called: boolean; error: unknown } {
 // ===========================================================================
 
 describe('Express middleware adapter', () => {
-  // ── steleMiddleware ─────────────────────────────────────────────────────
+  // ── kovaMiddleware ─────────────────────────────────────────────────────
 
-  describe('steleMiddleware', () => {
-    it('calls next() and sets x-stele-permitted header for permitted requests', async () => {
-      const mw = steleMiddleware({
+  describe('kovaMiddleware', () => {
+    it('calls next() and sets x-kova-permitted header for permitted requests', async () => {
+      const mw = kovaMiddleware({
         client,
         covenant,
         actionExtractor: () => 'read',
@@ -105,11 +105,11 @@ describe('Express middleware adapter', () => {
 
       expect(next.called).toBe(true);
       expect(next.error).toBeUndefined();
-      expect(res._headers['x-stele-permitted']).toBe('true');
+      expect(res._headers['x-kova-permitted']).toBe('true');
     });
 
     it('returns 403 for denied requests', async () => {
-      const mw = steleMiddleware({ client, covenant });
+      const mw = kovaMiddleware({ client, covenant });
       const req = createMockRequest({ method: 'PUT', path: '/system/config' });
       const res = createMockResponse();
       const next = createMockNext();
@@ -118,7 +118,7 @@ describe('Express middleware adapter', () => {
       // But the covenant denies 'write' on '/system/**', not 'put'.
       // We need to use a custom extractor or use method 'WRITE'.
       // Actually, let's use a custom actionExtractor to map to 'write'.
-      const mw2 = steleMiddleware({
+      const mw2 = kovaMiddleware({
         client,
         covenant,
         actionExtractor: () => 'write',
@@ -129,7 +129,7 @@ describe('Express middleware adapter', () => {
 
       expect(next.called).toBe(false);
       expect(res._statusCode).toBe(403);
-      expect(res._headers['x-stele-permitted']).toBe('false');
+      expect(res._headers['x-kova-permitted']).toBe('false');
       expect(res._headers['content-type']).toBe('application/json');
 
       const body = JSON.parse(res._body!);
@@ -142,7 +142,7 @@ describe('Express middleware adapter', () => {
       // 'get' won't match 'read' unless the CCL uses wildcards for action.
       // So let's test that the default extractor is producing the method name.
       // A GET on /data/anything with action='get' will be default-deny (no rule matches 'get')
-      const mw = steleMiddleware({ client, covenant });
+      const mw = kovaMiddleware({ client, covenant });
       const req = createMockRequest({ method: 'GET', path: '/data/something' });
       const res = createMockResponse();
       const next = createMockNext();
@@ -156,7 +156,7 @@ describe('Express middleware adapter', () => {
     });
 
     it('uses custom action and resource extractors', async () => {
-      const mw = steleMiddleware({
+      const mw = kovaMiddleware({
         client,
         covenant,
         actionExtractor: () => 'read',
@@ -171,12 +171,12 @@ describe('Express middleware adapter', () => {
       await new Promise((r) => setTimeout(r, 50));
 
       expect(next.called).toBe(true);
-      expect(res._headers['x-stele-permitted']).toBe('true');
+      expect(res._headers['x-kova-permitted']).toBe('true');
     });
 
     it('calls custom onDenied handler instead of default 403', async () => {
       const onDenied = vi.fn();
-      const mw = steleMiddleware({
+      const mw = kovaMiddleware({
         client,
         covenant,
         actionExtractor: () => 'write',
@@ -201,9 +201,9 @@ describe('Express middleware adapter', () => {
       // Create a middleware with a broken client to force an error
       const brokenClient = {
         evaluateAction: () => Promise.reject(new Error('boom')),
-      } as unknown as KovaClient;
+      } satisfies KovaEvaluator;
 
-      const mw = steleMiddleware({
+      const mw = kovaMiddleware({
         client: brokenClient,
         covenant,
         onError,
@@ -224,9 +224,9 @@ describe('Express middleware adapter', () => {
     it('default onError handler returns 500 JSON', async () => {
       const brokenClient = {
         evaluateAction: () => Promise.reject(new Error('evaluation failed')),
-      } as unknown as KovaClient;
+      } satisfies KovaEvaluator;
 
-      const mw = steleMiddleware({ client: brokenClient, covenant });
+      const mw = kovaMiddleware({ client: brokenClient, covenant });
       const req = createMockRequest();
       const res = createMockResponse();
       const next = createMockNext();
@@ -242,15 +242,15 @@ describe('Express middleware adapter', () => {
     });
   });
 
-  // ── steleGuardHandler ───────────────────────────────────────────────────
+  // ── kovaGuardHandler ───────────────────────────────────────────────────
 
-  describe('steleGuardHandler', () => {
+  describe('kovaGuardHandler', () => {
     it('calls the wrapped handler for permitted requests', async () => {
       const handler = vi.fn(async (_req, res) => {
         res.end?.('ok');
       });
 
-      const guarded = steleGuardHandler(
+      const guarded = kovaGuardHandler(
         {
           client,
           covenant,
@@ -266,12 +266,12 @@ describe('Express middleware adapter', () => {
       await guarded(req, res);
 
       expect(handler).toHaveBeenCalledTimes(1);
-      expect(res._headers['x-stele-permitted']).toBe('true');
+      expect(res._headers['x-kova-permitted']).toBe('true');
     });
 
     it('blocks the handler and returns 403 for denied requests', async () => {
       const handler = vi.fn();
-      const guarded = steleGuardHandler(
+      const guarded = kovaGuardHandler(
         {
           client,
           covenant,
@@ -293,7 +293,7 @@ describe('Express middleware adapter', () => {
     it('calls custom onDenied handler for denied requests', async () => {
       const onDenied = vi.fn();
       const handler = vi.fn();
-      const guarded = steleGuardHandler(
+      const guarded = kovaGuardHandler(
         {
           client,
           covenant,
@@ -318,9 +318,9 @@ describe('Express middleware adapter', () => {
       const handler = vi.fn();
       const brokenClient = {
         evaluateAction: () => Promise.reject(new Error('fail')),
-      } as unknown as KovaClient;
+      } satisfies KovaEvaluator;
 
-      const guarded = steleGuardHandler(
+      const guarded = kovaGuardHandler(
         { client: brokenClient, covenant, onError },
         handler,
       );
@@ -351,7 +351,7 @@ describe('Express middleware adapter', () => {
         await new Promise((r) => setTimeout(r, 50));
 
         expect(next.called).toBe(true);
-        expect(res._headers['x-stele-permitted']).toBe('true');
+        expect(res._headers['x-kova-permitted']).toBe('true');
       });
 
       it('returns 403 for a denied action/resource pair', async () => {
@@ -367,7 +367,7 @@ describe('Express middleware adapter', () => {
 
         expect(next.called).toBe(false);
         expect(res._statusCode).toBe(403);
-        expect(res._headers['x-stele-permitted']).toBe('false');
+        expect(res._headers['x-kova-permitted']).toBe('false');
       });
     });
 
@@ -399,9 +399,9 @@ describe('Express middleware adapter', () => {
 // ===========================================================================
 
 describe('Vercel AI adapter', () => {
-  // ── withStele ───────────────────────────────────────────────────────────
+  // ── withKova ───────────────────────────────────────────────────────────
 
-  describe('withStele', () => {
+  describe('withKova', () => {
     it('wraps tool execute with covenant enforcement', async () => {
       const tool: ToolLike = {
         name: 'read',
@@ -409,7 +409,7 @@ describe('Vercel AI adapter', () => {
         execute: vi.fn(async () => 'result'),
       };
 
-      const wrapped = withStele(tool, {
+      const wrapped = withKova(tool, {
         client,
         covenant,
         resourceFromTool: () => '/data/file',
@@ -426,7 +426,7 @@ describe('Vercel AI adapter', () => {
         execute: executeFn,
       };
 
-      const wrapped = withStele(tool, {
+      const wrapped = withKova(tool, {
         client,
         covenant,
         actionFromTool: () => 'read',
@@ -439,30 +439,30 @@ describe('Vercel AI adapter', () => {
       expect(executeFn).toHaveBeenCalledTimes(1);
     });
 
-    it('throws SteleAccessDeniedError when action is denied', async () => {
+    it('throws KovaAccessDeniedError when action is denied', async () => {
       const tool: ToolLike = {
         name: 'write',
         execute: vi.fn(async () => 'should not reach'),
       };
 
-      const wrapped = withStele(tool, {
+      const wrapped = withKova(tool, {
         client,
         covenant,
         actionFromTool: () => 'write',
         resourceFromTool: () => '/system/config',
       });
 
-      await expect(wrapped.execute!()).rejects.toThrow(SteleAccessDeniedError);
+      await expect(wrapped.execute!()).rejects.toThrow(KovaAccessDeniedError);
       expect(tool.execute).not.toHaveBeenCalled();
     });
 
-    it('SteleAccessDeniedError carries evaluationResult', async () => {
+    it('KovaAccessDeniedError carries evaluationResult', async () => {
       const tool: ToolLike = {
         name: 'write',
         execute: vi.fn(async () => 'nope'),
       };
 
-      const wrapped = withStele(tool, {
+      const wrapped = withKova(tool, {
         client,
         covenant,
         actionFromTool: () => 'write',
@@ -473,11 +473,11 @@ describe('Vercel AI adapter', () => {
         await wrapped.execute!();
         expect.unreachable('should have thrown');
       } catch (err) {
-        expect(err).toBeInstanceOf(SteleAccessDeniedError);
-        const denied = err as SteleAccessDeniedError;
+        expect(err).toBeInstanceOf(KovaAccessDeniedError);
+        const denied = err as KovaAccessDeniedError;
         expect(denied.evaluationResult).toBeDefined();
         expect(denied.evaluationResult.permitted).toBe(false);
-        expect(denied.name).toBe('SteleAccessDeniedError');
+        expect(denied.name).toBe('KovaAccessDeniedError');
       }
     });
 
@@ -489,7 +489,7 @@ describe('Vercel AI adapter', () => {
 
       const onDenied = vi.fn(() => 'custom-denied-result');
 
-      const wrapped = withStele(tool, {
+      const wrapped = withKova(tool, {
         client,
         covenant,
         actionFromTool: () => 'write',
@@ -514,7 +514,7 @@ describe('Vercel AI adapter', () => {
         description: 'A tool without execute',
       };
 
-      const wrapped = withStele(tool, { client, covenant });
+      const wrapped = withKova(tool, { client, covenant });
 
       expect(wrapped).not.toBe(tool);
       expect(wrapped.execute).toBeUndefined();
@@ -530,16 +530,16 @@ describe('Vercel AI adapter', () => {
         execute: vi.fn(async () => 'result'),
       };
 
-      const wrapped = withStele(tool, { client, covenant });
+      const wrapped = withKova(tool, { client, covenant });
 
       // Default resource is '/read' which does not match '/data/**', so denied
-      await expect(wrapped.execute!()).rejects.toThrow(SteleAccessDeniedError);
+      await expect(wrapped.execute!()).rejects.toThrow(KovaAccessDeniedError);
     });
   });
 
-  // ── withSteleTools ──────────────────────────────────────────────────────
+  // ── withKovaTools ──────────────────────────────────────────────────────
 
-  describe('withSteleTools', () => {
+  describe('withKovaTools', () => {
     it('wraps an array of tools', async () => {
       const tool1: ToolLike = {
         name: 'reader',
@@ -559,7 +559,7 @@ describe('Vercel AI adapter', () => {
           t.name === 'reader' ? '/data/file' : '/system/file',
       };
 
-      const wrapped = withSteleTools([tool1, tool2], opts) as ToolLike[];
+      const wrapped = withKovaTools([tool1, tool2], opts) as ToolLike[];
 
       expect(Array.isArray(wrapped)).toBe(true);
       expect(wrapped).toHaveLength(2);
@@ -569,7 +569,7 @@ describe('Vercel AI adapter', () => {
       expect(result1).toBe('r1');
 
       // writer is denied (write on /system/**)
-      await expect(wrapped[1]!.execute!()).rejects.toThrow(SteleAccessDeniedError);
+      await expect(wrapped[1]!.execute!()).rejects.toThrow(KovaAccessDeniedError);
     });
 
     it('wraps a record of tools', async () => {
@@ -592,7 +592,7 @@ describe('Vercel AI adapter', () => {
           t.name === 'read' ? '/data/records' : '/system/records',
       };
 
-      const wrapped = withSteleTools(tools, opts) as Record<string, ToolLike>;
+      const wrapped = withKovaTools(tools, opts) as Record<string, ToolLike>;
 
       expect(wrapped).toHaveProperty('search');
       expect(wrapped).toHaveProperty('delete');
@@ -602,7 +602,7 @@ describe('Vercel AI adapter', () => {
       expect(result).toBe('found');
 
       // delete -> write on /system/records -> denied
-      await expect(wrapped['delete']!.execute!()).rejects.toThrow(SteleAccessDeniedError);
+      await expect(wrapped['delete']!.execute!()).rejects.toThrow(KovaAccessDeniedError);
     });
 
     it('handles tools without execute in a record', () => {
@@ -610,7 +610,7 @@ describe('Vercel AI adapter', () => {
         passive: { name: 'passive', description: 'No execute' },
       };
 
-      const wrapped = withSteleTools(tools, { client, covenant }) as Record<string, ToolLike>;
+      const wrapped = withKovaTools(tools, { client, covenant }) as Record<string, ToolLike>;
 
       expect(wrapped['passive']!.execute).toBeUndefined();
       expect(wrapped['passive']!.name).toBe('passive');
@@ -638,7 +638,7 @@ describe('Vercel AI adapter', () => {
       expect(tool.execute).toHaveBeenCalledTimes(1);
     });
 
-    it('throws SteleAccessDeniedError for denied actions', async () => {
+    it('throws KovaAccessDeniedError for denied actions', async () => {
       const guard = createToolGuard({
         client,
         covenant,
@@ -651,7 +651,7 @@ describe('Vercel AI adapter', () => {
         execute: vi.fn(async () => 'nope'),
       };
 
-      await expect(guard(tool)).rejects.toThrow(SteleAccessDeniedError);
+      await expect(guard(tool)).rejects.toThrow(KovaAccessDeniedError);
       expect(tool.execute).not.toHaveBeenCalled();
     });
 
@@ -694,11 +694,11 @@ describe('Vercel AI adapter', () => {
 // ===========================================================================
 
 describe('LangChain adapter', () => {
-  // ── SteleCallbackHandler ────────────────────────────────────────────────
+  // ── KovaCallbackHandler ────────────────────────────────────────────────
 
-  describe('SteleCallbackHandler', () => {
+  describe('KovaCallbackHandler', () => {
     it('records tool:start events', async () => {
-      const handler = new SteleCallbackHandler({ client, covenant });
+      const handler = new KovaCallbackHandler({ client, covenant });
 
       await handler.handleToolStart({ name: 'search' }, 'query text');
 
@@ -712,7 +712,7 @@ describe('LangChain adapter', () => {
     });
 
     it('records tool:end events', async () => {
-      const handler = new SteleCallbackHandler({ client, covenant });
+      const handler = new KovaCallbackHandler({ client, covenant });
 
       await handler.handleToolEnd({ result: 42 });
 
@@ -722,7 +722,7 @@ describe('LangChain adapter', () => {
     });
 
     it('records tool:error events', async () => {
-      const handler = new SteleCallbackHandler({ client, covenant });
+      const handler = new KovaCallbackHandler({ client, covenant });
 
       await handler.handleToolError(new Error('tool broke'));
 
@@ -732,7 +732,7 @@ describe('LangChain adapter', () => {
     });
 
     it('records chain:start events', async () => {
-      const handler = new SteleCallbackHandler({ client, covenant });
+      const handler = new KovaCallbackHandler({ client, covenant });
 
       await handler.handleChainStart({ name: 'qa-chain' }, { question: 'why?' });
 
@@ -745,7 +745,7 @@ describe('LangChain adapter', () => {
     });
 
     it('records chain:end events', async () => {
-      const handler = new SteleCallbackHandler({ client, covenant });
+      const handler = new KovaCallbackHandler({ client, covenant });
 
       await handler.handleChainEnd({ answer: 'because' });
 
@@ -755,7 +755,7 @@ describe('LangChain adapter', () => {
     });
 
     it('records chain:error events', async () => {
-      const handler = new SteleCallbackHandler({ client, covenant });
+      const handler = new KovaCallbackHandler({ client, covenant });
 
       await handler.handleChainError(new Error('chain crashed'));
 
@@ -765,7 +765,7 @@ describe('LangChain adapter', () => {
     });
 
     it('records all event types in order across multiple calls', async () => {
-      const handler = new SteleCallbackHandler({ client, covenant });
+      const handler = new KovaCallbackHandler({ client, covenant });
 
       await handler.handleChainStart({ name: 'pipeline' }, 'input');
       await handler.handleToolStart({ name: 'search' }, 'query');
@@ -787,14 +787,14 @@ describe('LangChain adapter', () => {
     });
 
     it('stores client and covenant references', () => {
-      const handler = new SteleCallbackHandler({ client, covenant });
+      const handler = new KovaCallbackHandler({ client, covenant });
 
       expect(handler.client).toBe(client);
       expect(handler.covenant).toBe(covenant);
     });
 
     it('produces ISO 8601 timestamps', async () => {
-      const handler = new SteleCallbackHandler({ client, covenant });
+      const handler = new KovaCallbackHandler({ client, covenant });
       await handler.handleToolStart({ name: 'ts-test' }, null);
 
       const ts = handler.events[0]!.timestamp;
@@ -803,16 +803,16 @@ describe('LangChain adapter', () => {
     });
   });
 
-  // ── withSteleTool ──────────────────────────────────────────────────────
+  // ── withKovaTool ──────────────────────────────────────────────────────
 
-  describe('withSteleTool', () => {
+  describe('withKovaTool', () => {
     it('wraps call method with enforcement', async () => {
       const tool: LangChainToolLike = {
         name: 'read',
         call: vi.fn(async (input) => `called:${input}`),
       };
 
-      const wrapped = withSteleTool(tool, {
+      const wrapped = withKovaTool(tool, {
         client,
         covenant,
         actionFromTool: () => 'read',
@@ -829,7 +829,7 @@ describe('LangChain adapter', () => {
         invoke: vi.fn(async (input) => `invoked:${input}`),
       };
 
-      const wrapped = withSteleTool(tool, {
+      const wrapped = withKovaTool(tool, {
         client,
         covenant,
         actionFromTool: () => 'read',
@@ -846,7 +846,7 @@ describe('LangChain adapter', () => {
         _call: vi.fn(async (input) => `_called:${input}`),
       };
 
-      const wrapped = withSteleTool(tool, {
+      const wrapped = withKovaTool(tool, {
         client,
         covenant,
         actionFromTool: () => 'read',
@@ -865,7 +865,7 @@ describe('LangChain adapter', () => {
         _call: vi.fn(async () => '_c'),
       };
 
-      const wrapped = withSteleTool(tool, {
+      const wrapped = withKovaTool(tool, {
         client,
         covenant,
         actionFromTool: () => 'read',
@@ -877,54 +877,54 @@ describe('LangChain adapter', () => {
       expect(await wrapped._call!('z')).toBe('_c');
     });
 
-    it('throws SteleAccessDeniedError on denied call', async () => {
+    it('throws KovaAccessDeniedError on denied call', async () => {
       const tool: LangChainToolLike = {
         name: 'write',
         call: vi.fn(async () => 'nope'),
       };
 
-      const wrapped = withSteleTool(tool, {
+      const wrapped = withKovaTool(tool, {
         client,
         covenant,
         actionFromTool: () => 'write',
         resourceFromTool: () => '/system/data',
       });
 
-      await expect(wrapped.call!('input')).rejects.toThrow(SteleAccessDeniedError);
+      await expect(wrapped.call!('input')).rejects.toThrow(KovaAccessDeniedError);
       expect(tool.call).not.toHaveBeenCalled();
     });
 
-    it('throws SteleAccessDeniedError on denied invoke', async () => {
+    it('throws KovaAccessDeniedError on denied invoke', async () => {
       const tool: LangChainToolLike = {
         name: 'write',
         invoke: vi.fn(async () => 'nope'),
       };
 
-      const wrapped = withSteleTool(tool, {
+      const wrapped = withKovaTool(tool, {
         client,
         covenant,
         actionFromTool: () => 'write',
         resourceFromTool: () => '/system/config',
       });
 
-      await expect(wrapped.invoke!('input')).rejects.toThrow(SteleAccessDeniedError);
+      await expect(wrapped.invoke!('input')).rejects.toThrow(KovaAccessDeniedError);
       expect(tool.invoke).not.toHaveBeenCalled();
     });
 
-    it('throws SteleAccessDeniedError on denied _call', async () => {
+    it('throws KovaAccessDeniedError on denied _call', async () => {
       const tool: LangChainToolLike = {
         name: 'write',
         _call: vi.fn(async () => 'nope'),
       };
 
-      const wrapped = withSteleTool(tool, {
+      const wrapped = withKovaTool(tool, {
         client,
         covenant,
         actionFromTool: () => 'write',
         resourceFromTool: () => '/system/internal',
       });
 
-      await expect(wrapped._call!('input')).rejects.toThrow(SteleAccessDeniedError);
+      await expect(wrapped._call!('input')).rejects.toThrow(KovaAccessDeniedError);
       expect(tool._call).not.toHaveBeenCalled();
     });
 
@@ -935,7 +935,7 @@ describe('LangChain adapter', () => {
         call: vi.fn(async () => 'nope'),
       };
 
-      const wrapped = withSteleTool(tool, {
+      const wrapped = withKovaTool(tool, {
         client,
         covenant,
         actionFromTool: () => 'write',
@@ -961,9 +961,9 @@ describe('LangChain adapter', () => {
         call: vi.fn(async () => 'result'),
       };
 
-      const wrapped = withSteleTool(tool, { client, covenant });
+      const wrapped = withKovaTool(tool, { client, covenant });
 
-      await expect(wrapped.call!('input')).rejects.toThrow(SteleAccessDeniedError);
+      await expect(wrapped.call!('input')).rejects.toThrow(KovaAccessDeniedError);
     });
 
     it('does not wrap methods that do not exist on the original tool', () => {
@@ -971,7 +971,7 @@ describe('LangChain adapter', () => {
         name: 'minimal',
       };
 
-      const wrapped = withSteleTool(tool, {
+      const wrapped = withKovaTool(tool, {
         client,
         covenant,
         actionFromTool: () => 'read',
@@ -1006,7 +1006,7 @@ describe('LangChain adapter', () => {
       // But action 'data/file' won't match 'read' in the CCL.
       // Actually, for this test we can create a dedicated guard with custom options
       // to use actionFromTool. But createChainGuard doesn't have actionFromTool the same way.
-      // Wait, let me re-read the source... createChainGuard does accept SteleLangChainOptions
+      // Wait, let me re-read the source... createChainGuard does accept KovaLangChainOptions
       // but ignores actionFromTool and resourceFromTool, hardcoding action=chainName and resource='/'+chainName.
       // Hmm, actually it only uses onDenied from options. Let me re-check.
       // Yes: const action = chainName; const resource = '/' + chainName;
@@ -1033,17 +1033,17 @@ describe('LangChain adapter', () => {
       expect(fn).toHaveBeenCalledTimes(1);
     });
 
-    it('throws SteleAccessDeniedError for denied chain names', async () => {
+    it('throws KovaAccessDeniedError for denied chain names', async () => {
       const guard = createChainGuard({ client, covenant });
       const fn = vi.fn(async () => 'should-not-reach');
 
       // chainName = 'write', resource = '/write'. Neither matches any permit rule.
       // Also doesn't match deny rule (/system/**). But default deny applies.
-      await expect(guard('write', 'input', fn)).rejects.toThrow(SteleAccessDeniedError);
+      await expect(guard('write', 'input', fn)).rejects.toThrow(KovaAccessDeniedError);
       expect(fn).not.toHaveBeenCalled();
     });
 
-    it('throws SteleAccessDeniedError when chain name triggers explicit deny', async () => {
+    it('throws KovaAccessDeniedError when chain name triggers explicit deny', async () => {
       // Create a covenant that explicitly denies 'write' on '/write'
       const localKp = await client.generateKeyPair();
       const localKp2 = await generateKeyPair();
@@ -1056,7 +1056,7 @@ describe('LangChain adapter', () => {
       const guard = createChainGuard({ client, covenant: localCovenant });
       const fn = vi.fn(async () => 'nope');
 
-      await expect(guard('write', 'data', fn)).rejects.toThrow(SteleAccessDeniedError);
+      await expect(guard('write', 'data', fn)).rejects.toThrow(KovaAccessDeniedError);
       expect(fn).not.toHaveBeenCalled();
     });
 

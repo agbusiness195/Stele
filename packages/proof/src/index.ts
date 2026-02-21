@@ -91,15 +91,15 @@ export function computeConstraintCommitment(constraints: string): HashHex {
  */
 const GROTH16_DOMAIN = {
   /** Domain separator for the alpha*beta pairing term */
-  ALPHA_BETA: poseidonHash([BigInt('0x' + sha256String('stele:groth16:alpha_beta').slice(0, 60)) % FIELD_PRIME]),
+  ALPHA_BETA: poseidonHash([BigInt('0x' + sha256String('kova:groth16:alpha_beta').slice(0, 60)) % FIELD_PRIME]),
   /** Domain separator for the gamma term (public input accumulation) */
-  GAMMA: poseidonHash([BigInt('0x' + sha256String('stele:groth16:gamma').slice(0, 60)) % FIELD_PRIME]),
+  GAMMA: poseidonHash([BigInt('0x' + sha256String('kova:groth16:gamma').slice(0, 60)) % FIELD_PRIME]),
   /** Domain separator for the delta term (proof element C) */
-  DELTA: poseidonHash([BigInt('0x' + sha256String('stele:groth16:delta').slice(0, 60)) % FIELD_PRIME]),
+  DELTA: poseidonHash([BigInt('0x' + sha256String('kova:groth16:delta').slice(0, 60)) % FIELD_PRIME]),
   /** Domain separator for blinding factor generation */
-  BLINDING: poseidonHash([BigInt('0x' + sha256String('stele:groth16:blinding').slice(0, 60)) % FIELD_PRIME]),
+  BLINDING: poseidonHash([BigInt('0x' + sha256String('kova:groth16:blinding').slice(0, 60)) % FIELD_PRIME]),
   /** Domain separator for verification key derivation */
-  VK: poseidonHash([BigInt('0x' + sha256String('stele:groth16:vk').slice(0, 60)) % FIELD_PRIME]),
+  VK: poseidonHash([BigInt('0x' + sha256String('kova:groth16:vk').slice(0, 60)) % FIELD_PRIME]),
 } as const;
 
 /**

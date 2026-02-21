@@ -1,4 +1,4 @@
-//! Integration tests for the Stele protocol Rust implementation.
+//! Integration tests for the Kova protocol Rust implementation.
 //!
 //! These tests exercise all core operations: key generation, signing,
 //! CCL parsing/evaluation, covenant building/verification/chaining,
@@ -6,16 +6,16 @@
 
 use std::collections::HashMap;
 
-use stele::ccl;
-use stele::covenant::{
+use kova::ccl;
+use kova::covenant::{
     self, ChainReference, CovenantBuilderOptions, CovenantDocument, Party,
     PROTOCOL_VERSION, MAX_CHAIN_DEPTH,
 };
-use stele::crypto;
-use stele::identity::{
+use kova::crypto;
+use kova::identity::{
     self, CreateIdentityOptions, DeploymentInfo, EvolveIdentityOptions, ModelInfo,
 };
-use stele::store::{MemoryStore, Store};
+use kova::store::{MemoryStore, Store};
 
 // ---------------------------------------------------------------------------
 // Helpers

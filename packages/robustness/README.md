@@ -1,6 +1,6 @@
 # @usekova/robustness
 
-Robustness analysis for Stele covenants: fuzz testing, formal verification, adversarial input generation, and composite scoring.
+Robustness analysis for Kova covenants: fuzz testing, formal verification, adversarial input generation, and composite scoring.
 
 ## Installation
 
@@ -56,4 +56,4 @@ console.log(result.recommendations);
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

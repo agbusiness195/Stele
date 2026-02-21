@@ -51,4 +51,4 @@ for (const norm of analysis.emergentNorms) {
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

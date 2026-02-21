@@ -1,4 +1,4 @@
-# STELE
+# KOVA
 
 **The accountability primitive for AI agents.**
 
@@ -9,7 +9,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
 ![Node](https://img.shields.io/badge/node-18%20%7C%2020%20%7C%2022-green)
 
-## What Stele Does
+## What Kova Does
 
 Agents publish signed **Covenants** -- cryptographic behavioral commitments declaring
 what they will do, what they will not do, and what happens when they violate.
@@ -24,9 +24,9 @@ npm install @usekova/sdk
 ```
 
 ```typescript
-import { SteleClient } from '@usekova/sdk';
+import { KovaClient } from '@usekova/sdk';
 
-const client = new SteleClient();
+const client = new KovaClient();
 await client.generateKeyPair();
 
 // Create a covenant
@@ -47,7 +47,7 @@ console.log(eval.permitted); // true
 
 ## The Protocol
 
-Stele works in three steps:
+Kova works in three steps:
 
 1. **Inscribe** -- An agent publishes a signed Covenant: a cryptographic document
    specifying behavioral constraints, the issuer who operates the agent, and the
@@ -80,7 +80,7 @@ Stele works in three steps:
 
 | Package | Description |
 |---------|-------------|
-| `@usekova/sdk` | SteleClient unified API, QuickCovenant builders, event system |
+| `@usekova/sdk` | KovaClient unified API, QuickCovenant builders, event system |
 
 ### Enforcement
 
@@ -116,7 +116,7 @@ Stele works in three steps:
 
 | Package | Description |
 |---------|-------------|
-| `@usekova/discovery` | `.well-known/stele/` discovery protocol, key registry & negotiation |
+| `@usekova/discovery` | `.well-known/kova/` discovery protocol, key registry & negotiation |
 | `@usekova/schema` | JSON Schema (Draft 2020-12) validation for all document types |
 
 ### Platform
@@ -125,8 +125,8 @@ Stele works in three steps:
 |---------|-------------|
 | `@usekova/react` | Reactive UI primitives (Observable, CovenantState) |
 | `@usekova/evm` | EVM anchoring, ABI encoding & on-chain registry |
-| `@usekova/mcp-server` | JSON-RPC 2.0 MCP server exposing Stele tools |
-| `@usekova/cli` | Command-line interface for the Stele protocol |
+| `@usekova/mcp-server` | JSON-RPC 2.0 MCP server exposing Kova tools |
+| `@usekova/cli` | Command-line interface for the Kova protocol |
 
 ## CCL (Covenant Constraint Language)
 
@@ -170,7 +170,7 @@ layers below it:
 |              discovery  .  schema                     |
 +-----------------------------------------------------+
 |                        SDK                           |
-|           sdk (SteleClient, QuickCovenant)            |
+|           sdk (KovaClient, QuickCovenant)            |
 +-----------------------------------------------------+
 |                      Protocol                        |
 |    attestation . canary . gametheory . composition    |
@@ -200,7 +200,7 @@ composition, antifragility, negotiation, consensus, robustness, temporal
 evolution, recursive meta-covenants, alignment verification, emergent norms,
 cross-substrate translation, trust derivatives, and legal compliance.
 
-**SDK** is a thin unification layer (`SteleClient`) that wraps Foundation
+**SDK** is a thin unification layer (`KovaClient`) that wraps Foundation
 packages into a single ergonomic API with a typed event system.
 
 **Platform** provides integration adapters: reactive UI primitives, EVM
@@ -210,8 +210,8 @@ blockchain anchoring, a JSON-RPC MCP server, and a CLI.
 
 ```bash
 # Clone the repository
-git clone https://github.com/agbusiness195/stele.git
-cd stele
+git clone https://github.com/agbusiness195/kova.git
+cd kova
 
 # Install all dependencies (npm workspaces)
 npm install

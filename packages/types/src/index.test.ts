@@ -11,7 +11,7 @@ import {
   validateRange,
   validateHex,
   validateProbability,
-  STELE_VERSION,
+  KOVA_VERSION,
   DEFAULT_SEVERITY,
   SUPPORTED_HASH_ALGORITHMS,
   SUPPORTED_SIGNATURE_SCHEMES,
@@ -373,9 +373,9 @@ describe('validateProbability', () => {
 // Protocol constants
 // ---------------------------------------------------------------------------
 describe('protocol constants', () => {
-  it('STELE_VERSION is a semver string', () => {
-    expect(typeof STELE_VERSION).toBe('string');
-    expect(/^\d+\.\d+\.\d+/.test(STELE_VERSION)).toBe(true);
+  it('KOVA_VERSION is a semver string', () => {
+    expect(typeof KOVA_VERSION).toBe('string');
+    expect(/^\d+\.\d+\.\d+/.test(KOVA_VERSION)).toBe(true);
   });
 
   it('DEFAULT_SEVERITY is "must"', () => {

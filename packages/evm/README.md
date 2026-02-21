@@ -22,7 +22,7 @@ npm install @usekova/evm
 - **checksumAddress()**: EIP-55 mixed-case checksum encoding.
 - **isValidAddress()**: Validate EVM addresses.
 - **keccak256()**: Keccak-256 hashing for EVM-compatible use cases.
-- **STELE_REGISTRY_ABI**: JSON ABI for the on-chain Stele registry contract.
+- **KOVA_REGISTRY_ABI**: JSON ABI for the on-chain Kova registry contract.
 
 ## Usage
 
@@ -48,4 +48,4 @@ const isAnchored = await client.verifyCovenant(anchor.covenantId);
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

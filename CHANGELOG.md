@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### Interop Layer
-- **@usekova/discovery**: `.well-known/stele/` discovery protocol with `DiscoveryServer`,
+- **@usekova/discovery**: `.well-known/kova/` discovery protocol with `DiscoveryServer`,
   `DiscoveryClient`, agent key registry, and capability negotiation.
 - **@usekova/schema**: JSON Schema (Draft 2020-12) for `CovenantDocument`,
   `DiscoveryDocument`, and `AgentKeyEntry` with `validateCovenantDocument()`,
@@ -26,12 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   histogram reporting.
 
 #### Developer Experience
-- **@usekova/cli**: Shell completions for Bash, Zsh, and Fish; `stele doctor`
+- **@usekova/cli**: Shell completions for Bash, Zsh, and Fish; `kova doctor`
   environment diagnostics; JSON/table output formatting; config file management.
 
 ### Changed
 - Raised coverage thresholds from 80/75/80/80 to 99/97/99/99.
-- Updated all error constructors to use `SteleErrorCode` enum consistently.
+- Updated all error constructors to use `KovaErrorCode` enum consistently.
 - Added `@types/node` for proper TypeScript type coverage of Node.js globals.
 - Fixed 224 TypeScript strict-mode errors across the entire codebase.
 - Updated README badges to reflect actual counts (5,158+ tests, 85 suites, 34 packages).
@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TypeScript `TextEncoder`, `btoa`, `atob`, `process`, `console` references now
   properly resolved via `@types/node`.
 - Strict null check errors in test and source files (TS2532, TS18048).
-- `SteleErrorCode` type mismatches in negotiation, consensus, and temporal packages.
+- `KovaErrorCode` type mismatches in negotiation, consensus, and temporal packages.
 - Removed `as any` casts from conformance suite in favour of proper type assertions.
 
 ## [0.1.0] - 2025-02-07
@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### Foundation Layer
-- **@usekova/types**: Shared error classes (`SteleError`, `ValidationError`, `CryptoError`,
+- **@usekova/types**: Shared error classes (`KovaError`, `ValidationError`, `CryptoError`,
   `CCLError`, `ChainError`, `StorageError`), validation utilities (`validateNonEmpty`,
   `validateRange`, `validateHex`, `validateProbability`), `Result<T, E>` type,
   runtime type guards, input sanitization, and structured logging with levels and
@@ -68,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   put/delete notifications; batch operations; filtered listing.
 - **@usekova/verifier**: Standalone `Verifier` class with single, chain, action, and
   batch verification; history tracking; strict mode with warning escalation.
-- **@usekova/sdk**: Unified `SteleClient` entry point combining key management,
+- **@usekova/sdk**: Unified `KovaClient` entry point combining key management,
   covenant lifecycle, identity management, chain operations, and CCL utilities;
   `QuickCovenant` convenience builders; typed event system with 8 event types.
 - **@usekova/identity**: Agent identity with model attestation, capabilities, deployment
@@ -84,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   trust graph management, and cryptographic verification.
 - **@usekova/reputation**: Reputation scoring with recency decay, breach penalties,
   staking, delegation, and endorsements.
-- **@usekova/mcp**: MCP guard wrapping MCP servers with Stele enforcement, audit
+- **@usekova/mcp**: MCP guard wrapping MCP servers with Kova enforcement, audit
   logging, identity creation, and compliance proof generation; named presets.
 
 #### Protocol Layer

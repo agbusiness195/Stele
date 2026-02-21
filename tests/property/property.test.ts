@@ -1,5 +1,5 @@
 /**
- * Property-based / fuzz tests for the Stele SDK.
+ * Property-based / fuzz tests for the Kova SDK.
  *
  * Uses a hand-rolled `property()` helper that runs a generator+predicate
  * function N times with random inputs and asserts the predicate holds

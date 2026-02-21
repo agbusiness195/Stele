@@ -1,6 +1,6 @@
 # @usekova/discovery
 
-Cross-platform discovery protocol for `.well-known/stele/` endpoints. Enables agent key discovery, covenant registry lookup, cross-platform verification, and protocol negotiation.
+Cross-platform discovery protocol for `.well-known/kova/` endpoints. Enables agent key discovery, covenant registry lookup, cross-platform verification, and protocol negotiation.
 
 ## Installation
 
@@ -10,13 +10,13 @@ npm install @usekova/discovery
 
 ## Key APIs
 
-- **buildDiscoveryDocument(options)**: Generate a `.well-known/stele/configuration` document
+- **buildDiscoveryDocument(options)**: Generate a `.well-known/kova/configuration` document
 - **validateDiscoveryDocument(doc)**: Validate a discovery document's structure and fields
 - **buildKeyEntry(...)**: Create an `AgentKeyEntry` for the key registry
 - **buildKeySet(...)**: Create an `AgentKeySet` grouping multiple keys for an agent
 - **DiscoveryClient**: Fetch and validate discovery documents, key sets, and covenant registries from remote hosts
 - **DiscoveryServer**: Serve discovery endpoints with configurable route handlers
-- **WELL_KNOWN_PATH** / **CONFIGURATION_PATH** / **STELE_MEDIA_TYPE** / **MAX_DOCUMENT_AGE_MS**: Protocol constants
+- **WELL_KNOWN_PATH** / **CONFIGURATION_PATH** / **KOVA_MEDIA_TYPE** / **MAX_DOCUMENT_AGE_MS**: Protocol constants
 
 ## Usage
 
@@ -34,9 +34,9 @@ import {
 const doc = buildDiscoveryDocument({
   platformId: 'my-platform',
   platformName: 'My Platform',
-  covenantEndpoint: 'https://example.com/.well-known/stele/covenants',
-  keyEndpoint: 'https://example.com/.well-known/stele/keys',
-  negotiationEndpoint: 'https://example.com/.well-known/stele/negotiate',
+  covenantEndpoint: 'https://example.com/.well-known/kova/covenants',
+  keyEndpoint: 'https://example.com/.well-known/kova/keys',
+  negotiationEndpoint: 'https://example.com/.well-known/kova/negotiate',
 });
 
 // Validate a discovery document
@@ -65,4 +65,4 @@ const server = new DiscoveryServer({
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

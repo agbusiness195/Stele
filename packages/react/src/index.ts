@@ -1,5 +1,5 @@
 /**
- * @usekova/react -- Reactive primitives for building Stele-powered UIs.
+ * @usekova/react -- Reactive primitives for building Kova-powered UIs.
  *
  * Provides framework-agnostic reactive state management that can be
  * adapted to React, Vue, Svelte, or vanilla JS. No external dependencies.

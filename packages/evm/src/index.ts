@@ -308,10 +308,10 @@ export function computeAnchorHash(anchor: CovenantAnchor): string {
 // ─── Contract ABI Definition ────────────────────────────────────────────────────
 
 /**
- * JSON ABI array for the Stele on-chain registry contract.
+ * JSON ABI array for the Kova on-chain registry contract.
  * Defines the methods: anchor(), verify(), and getAnchor().
  */
-export const STELE_REGISTRY_ABI = [
+export const KOVA_REGISTRY_ABI = [
   {
     name: 'anchor',
     type: 'function',
@@ -347,9 +347,9 @@ export const STELE_REGISTRY_ABI = [
 ] as const;
 
 /**
- * TypeScript interface matching the Stele on-chain registry contract ABI.
+ * TypeScript interface matching the Kova on-chain registry contract ABI.
  */
-export interface SteleRegistryInterface {
+export interface KovaRegistryInterface {
   /** Anchor a covenant on-chain. */
   anchor(
     covenantId: string,

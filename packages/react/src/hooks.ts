@@ -1,8 +1,7 @@
-// @ts-nocheck
 /**
- * React hooks for Stele.
+ * React hooks for Kova.
  *
- * Provides idiomatic React hooks for subscribing to Stele observables,
+ * Provides idiomatic React hooks for subscribing to Kova observables,
  * managing covenant state, identity state, and store queries.
  *
  * Requires React >= 18 as a peer dependency.
@@ -21,7 +20,7 @@ import { Observable, CovenantState, IdentityState, StoreState } from './index';
 // Defined here so the package compiles without @types/react installed.
 // At runtime, the actual React module provides these functions.
 
-interface ReactModule {
+export interface ReactModule {
   useState<T>(initial: T | (() => T)): [T, (v: T | ((prev: T) => T)) => void];
   useEffect(effect: () => void | (() => void), deps?: unknown[]): void;
   useRef<T>(initial: T): { current: T };
@@ -67,7 +66,7 @@ export function _resetReact(): void {
 // ─── useObservable ─────────────────────────────────────────────────────────────
 
 /**
- * Subscribe to a Stele {@link Observable} and re-render when it changes.
+ * Subscribe to a Kova {@link Observable} and re-render when it changes.
  *
  * Uses `useSyncExternalStore` for tear-free reads that are compatible
  * with React concurrent features.

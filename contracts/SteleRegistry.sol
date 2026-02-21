@@ -2,10 +2,10 @@
 pragma solidity ^0.8.24;
 
 /**
- * @title SteleRegistry
- * @author Stele Protocol
+ * @title KovaRegistry
+ * @author Kova Protocol
  * @notice On-chain registry for anchoring and verifying covenant constraints.
- * @dev Implements the interface defined by @stele/evm's STELE_REGISTRY_ABI.
+ * @dev Implements the interface defined by @kova/evm's KOVA_REGISTRY_ABI.
  *
  * Each covenant is identified by a unique bytes32 `covenantId`. An anchor
  * stores the constraints hash, issuer, beneficiary, and timestamp. Once
@@ -14,10 +14,10 @@ pragma solidity ^0.8.24;
  *
  * The contract is intentionally minimal and ownerless -- there is no admin
  * key, no upgrade proxy, and no pause mechanism. Immutability of the
- * registry logic is a design goal aligned with the Stele protocol's
+ * registry logic is a design goal aligned with the Kova protocol's
  * trust model.
  */
-contract SteleRegistry {
+contract KovaRegistry {
     // ─── Storage ────────────────────────────────────────────────────────────────
 
     /**

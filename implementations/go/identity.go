@@ -1,4 +1,4 @@
-package stele
+package kova
 
 import (
 	"crypto/ed25519"
@@ -157,16 +157,16 @@ func lineageSigningPayload(entry *LineageEntry) (string, error) {
 // single lineage entry of type "created", and signs the whole identity.
 func CreateIdentity(opts *CreateIdentityOptions) (*AgentIdentity, error) {
 	if opts == nil {
-		return nil, fmt.Errorf("stele: createIdentity requires options")
+		return nil, fmt.Errorf("kova: createIdentity requires options")
 	}
 	if opts.OperatorKeyPair == nil {
-		return nil, fmt.Errorf("stele: operatorKeyPair is required")
+		return nil, fmt.Errorf("kova: operatorKeyPair is required")
 	}
 	if opts.Model.Provider == "" || opts.Model.ModelID == "" {
-		return nil, fmt.Errorf("stele: model.provider and model.modelId are required")
+		return nil, fmt.Errorf("kova: model.provider and model.modelId are required")
 	}
 	if opts.Capabilities == nil {
-		return nil, fmt.Errorf("stele: capabilities array is required")
+		return nil, fmt.Errorf("kova: capabilities array is required")
 	}
 
 	now := Timestamp()
@@ -196,7 +196,7 @@ func CreateIdentity(opts *CreateIdentityOptions) (*AgentIdentity, error) {
 	// Compute identity hash
 	idHash, err := computeIdentityHash(identity)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to compute identity hash: %w", err)
+		return nil, fmt.Errorf("kova: failed to compute identity hash: %w", err)
 	}
 
 	// Create initial lineage entry
@@ -213,11 +213,11 @@ func CreateIdentity(opts *CreateIdentityOptions) (*AgentIdentity, error) {
 	// Sign lineage entry
 	lineagePayload, err := lineageSigningPayload(lineageEntry)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to compute lineage signing payload: %w", err)
+		return nil, fmt.Errorf("kova: failed to compute lineage signing payload: %w", err)
 	}
 	lineageSig, err := Sign([]byte(lineagePayload), opts.OperatorKeyPair.PrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to sign lineage entry: %w", err)
+		return nil, fmt.Errorf("kova: failed to sign lineage entry: %w", err)
 	}
 	lineageEntry.Signature = ToHex(lineageSig)
 
@@ -226,18 +226,18 @@ func CreateIdentity(opts *CreateIdentityOptions) (*AgentIdentity, error) {
 	// Recompute identity hash with lineage
 	idHash, err = computeIdentityHash(identity)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to recompute identity hash: %w", err)
+		return nil, fmt.Errorf("kova: failed to recompute identity hash: %w", err)
 	}
 	identity.ID = idHash
 
 	// Sign the identity
 	payload, err := identitySigningPayload(identity)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to compute identity signing payload: %w", err)
+		return nil, fmt.Errorf("kova: failed to compute identity signing payload: %w", err)
 	}
 	sig, err := Sign([]byte(payload), opts.OperatorKeyPair.PrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to sign identity: %w", err)
+		return nil, fmt.Errorf("kova: failed to sign identity: %w", err)
 	}
 	identity.Signature = ToHex(sig)
 
@@ -248,19 +248,19 @@ func CreateIdentity(opts *CreateIdentityOptions) (*AgentIdentity, error) {
 // The new identity is linked to the previous one via the lineage chain.
 func EvolveIdentity(current *AgentIdentity, opts *EvolveIdentityOptions) (*AgentIdentity, error) {
 	if current == nil {
-		return nil, fmt.Errorf("stele: current identity is required")
+		return nil, fmt.Errorf("kova: current identity is required")
 	}
 	if opts == nil {
-		return nil, fmt.Errorf("stele: evolve options are required")
+		return nil, fmt.Errorf("kova: evolve options are required")
 	}
 	if opts.OperatorKeyPair == nil {
-		return nil, fmt.Errorf("stele: operatorKeyPair is required")
+		return nil, fmt.Errorf("kova: operatorKeyPair is required")
 	}
 	if opts.ChangeType == "" {
-		return nil, fmt.Errorf("stele: changeType is required")
+		return nil, fmt.Errorf("kova: changeType is required")
 	}
 	if opts.Description == "" {
-		return nil, fmt.Errorf("stele: description is required")
+		return nil, fmt.Errorf("kova: description is required")
 	}
 
 	now := Timestamp()
@@ -312,7 +312,7 @@ func EvolveIdentity(current *AgentIdentity, opts *EvolveIdentityOptions) (*Agent
 	// Compute new identity hash
 	idHash, err := computeIdentityHash(newIdentity)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to compute identity hash: %w", err)
+		return nil, fmt.Errorf("kova: failed to compute identity hash: %w", err)
 	}
 
 	// Get parent hash from the last lineage entry
@@ -336,11 +336,11 @@ func EvolveIdentity(current *AgentIdentity, opts *EvolveIdentityOptions) (*Agent
 	// Sign lineage entry
 	lineagePayload, err := lineageSigningPayload(lineageEntry)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to compute lineage signing payload: %w", err)
+		return nil, fmt.Errorf("kova: failed to compute lineage signing payload: %w", err)
 	}
 	lineageSig, err := Sign([]byte(lineagePayload), opts.OperatorKeyPair.PrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to sign lineage entry: %w", err)
+		return nil, fmt.Errorf("kova: failed to sign lineage entry: %w", err)
 	}
 	lineageEntry.Signature = ToHex(lineageSig)
 
@@ -349,18 +349,18 @@ func EvolveIdentity(current *AgentIdentity, opts *EvolveIdentityOptions) (*Agent
 	// Recompute identity hash with updated lineage
 	idHash, err = computeIdentityHash(newIdentity)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to recompute identity hash: %w", err)
+		return nil, fmt.Errorf("kova: failed to recompute identity hash: %w", err)
 	}
 	newIdentity.ID = idHash
 
 	// Sign the identity
 	payload, err := identitySigningPayload(newIdentity)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to compute identity signing payload: %w", err)
+		return nil, fmt.Errorf("kova: failed to compute identity signing payload: %w", err)
 	}
 	sig, err := Sign([]byte(payload), opts.OperatorKeyPair.PrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("stele: failed to sign identity: %w", err)
+		return nil, fmt.Errorf("kova: failed to sign identity: %w", err)
 	}
 	newIdentity.Signature = ToHex(sig)
 
@@ -371,13 +371,13 @@ func EvolveIdentity(current *AgentIdentity, opts *EvolveIdentityOptions) (*Agent
 // over the canonical form.
 func VerifyIdentity(identity *AgentIdentity) (bool, error) {
 	if identity == nil {
-		return false, fmt.Errorf("stele: identity is required")
+		return false, fmt.Errorf("kova: identity is required")
 	}
 
 	// Verify the identity signature
 	payload, err := identitySigningPayload(identity)
 	if err != nil {
-		return false, fmt.Errorf("stele: failed to compute signing payload: %w", err)
+		return false, fmt.Errorf("kova: failed to compute signing payload: %w", err)
 	}
 
 	sigBytes, err := FromHex(identity.Signature)

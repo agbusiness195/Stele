@@ -1,4 +1,4 @@
-//! Stele: The accountability primitive for AI agents - Rust implementation.
+//! Kova: The accountability primitive for AI agents - Rust implementation.
 //!
 //! This crate provides the core protocol primitives for building, signing,
 //! verifying, and chaining Covenant documents. It includes:
@@ -15,9 +15,9 @@ pub mod crypto;
 pub mod identity;
 pub mod store;
 
-/// Errors that can occur throughout the Stele protocol.
+/// Errors that can occur throughout the Kova protocol.
 #[derive(Debug, thiserror::Error)]
-pub enum SteleError {
+pub enum KovaError {
     #[error("Invalid input: {0}")]
     InvalidInput(String),
 

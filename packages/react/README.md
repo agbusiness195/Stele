@@ -1,6 +1,6 @@
 # @usekova/react
 
-Reactive primitives and React hooks for building Stele-powered UIs with observable state management.
+Reactive primitives and React hooks for building Kova-powered UIs with observable state management.
 
 ## Installation
 
@@ -19,8 +19,8 @@ npm install @usekova/react
 
 ### Factory Functions
 
-- **createCovenantState(client)**: Create a `CovenantState` bound to a `SteleClient`
-- **createIdentityState(client)**: Create an `IdentityState` bound to a `SteleClient`
+- **createCovenantState(client)**: Create a `CovenantState` bound to a `KovaClient`
+- **createIdentityState(client)**: Create an `IdentityState` bound to a `KovaClient`
 - **createStoreState(store)**: Create a `StoreState` bound to a `CovenantStore`
 
 ### React Hooks (requires React >= 18)
@@ -34,11 +34,11 @@ npm install @usekova/react
 
 ```typescript
 import { useCovenant, useIdentity, useCovenantStore } from '@usekova/react';
-import { SteleClient } from '@usekova/sdk';
+import { KovaClient } from '@usekova/sdk';
 import { MemoryStore } from '@usekova/store';
 
 function CovenantPanel() {
-  const client = new SteleClient();
+  const client = new KovaClient();
   const { status, document, error, create, verify } = useCovenant(client);
 
   // status: 'idle' | 'creating' | 'created' | 'verifying' | 'verified' | 'error'
@@ -56,4 +56,4 @@ count.set(5); // logs "doubled: 10"
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

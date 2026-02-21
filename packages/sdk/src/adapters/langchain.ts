@@ -1,7 +1,7 @@
 /**
- * Stele adapter for LangChain.
+ * Kova adapter for LangChain.
  *
- * Provides a callback handler that logs agent actions to the Stele
+ * Provides a callback handler that logs agent actions to the Kova
  * audit trail, and tool/chain wrappers that enforce covenant constraints
  * before execution.
  *
@@ -11,20 +11,20 @@
  *
  * @example
  * ```typescript
- * import { KovaClient, SteleCallbackHandler, withSteleTool } from '@usekova/sdk';
+ * import { KovaClient, KovaCallbackHandler, withKovaTool } from '@usekova/sdk';
  *
- * const handler = new SteleCallbackHandler({ client, covenant });
- * const protectedTool = withSteleTool(myTool, { client, covenant });
+ * const handler = new KovaCallbackHandler({ client, covenant });
+ * const protectedTool = withKovaTool(myTool, { client, covenant });
  * ```
  */
 
 import type { KovaClient } from '../index.js';
 import type { CovenantDocument } from '@usekova/core';
 import type { EvaluationResult } from '../types.js';
-import { SteleAccessDeniedError } from './vercel-ai.js';
+import { KovaAccessDeniedError } from './vercel-ai.js';
 
 // Re-export the shared error so consumers can import from either adapter
-export { SteleAccessDeniedError } from './vercel-ai.js';
+export { KovaAccessDeniedError } from './vercel-ai.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -52,9 +52,9 @@ export interface LangChainToolLike {
 }
 
 /**
- * Options for wrapping LangChain tools with Stele enforcement.
+ * Options for wrapping LangChain tools with Kova enforcement.
  */
-export interface SteleLangChainOptions {
+export interface KovaLangChainOptions {
   /** The KovaClient instance for covenant evaluation. */
   client: KovaClient;
   /** The covenant document whose constraints are enforced. */
@@ -72,14 +72,14 @@ export interface SteleLangChainOptions {
   /**
    * Custom handler invoked when a tool call is denied. If provided,
    * its return value is returned instead of throwing. If not provided,
-   * a `SteleAccessDeniedError` is thrown.
+   * a `KovaAccessDeniedError` is thrown.
    */
   onDenied?: (tool: LangChainToolLike, result: EvaluationResult) => unknown;
 }
 
 // ─── Callback handler event ──────────────────────────────────────────────────
 
-/** A recorded event from the SteleCallbackHandler audit trail. */
+/** A recorded event from the KovaCallbackHandler audit trail. */
 export interface CallbackEvent {
   /** The event type (e.g. 'tool:start', 'chain:end', 'tool:error'). */
   type: string;
@@ -89,23 +89,23 @@ export interface CallbackEvent {
   timestamp: string;
 }
 
-// ─── SteleCallbackHandler ────────────────────────────────────────────────────
+// ─── KovaCallbackHandler ────────────────────────────────────────────────────
 
 /**
  * A LangChain-compatible callback handler that records agent actions
- * to a Stele audit trail.
+ * to a Kova audit trail.
  *
  * This handler does not enforce constraints; it only observes and
- * logs. Use it alongside `withSteleTool` for enforcement + auditing.
+ * logs. Use it alongside `withKovaTool` for enforcement + auditing.
  *
  * @example
  * ```typescript
- * const handler = new SteleCallbackHandler({ client, covenant });
+ * const handler = new KovaCallbackHandler({ client, covenant });
  * await handler.handleToolStart({ name: 'search' }, 'query');
  * console.log(handler.events); // [{ type: 'tool:start', ... }]
  * ```
  */
-export class SteleCallbackHandler {
+export class KovaCallbackHandler {
   /** The KovaClient used for event emission. */
   readonly client: KovaClient;
   /** The covenant document being audited. */
@@ -199,14 +199,14 @@ export class SteleCallbackHandler {
   }
 }
 
-// ─── withSteleTool ───────────────────────────────────────────────────────────
+// ─── withKovaTool ───────────────────────────────────────────────────────────
 
 /**
- * Wrap a LangChain-style tool with Stele covenant enforcement.
+ * Wrap a LangChain-style tool with Kova covenant enforcement.
  *
  * Wraps all three call patterns (`call`, `invoke`, `_call`) when present.
  * Before delegation, evaluates the action/resource against the covenant.
- * If denied, throws a `SteleAccessDeniedError` (or invokes `onDenied`).
+ * If denied, throws a `KovaAccessDeniedError` (or invokes `onDenied`).
  *
  * @param tool    - The LangChain tool to wrap.
  * @param options - Enforcement options including client and covenant.
@@ -214,13 +214,13 @@ export class SteleCallbackHandler {
  *
  * @example
  * ```typescript
- * const protectedTool = withSteleTool(searchTool, { client, covenant });
+ * const protectedTool = withKovaTool(searchTool, { client, covenant });
  * await protectedTool.invoke('my query'); // throws if denied
  * ```
  */
-export function withSteleTool<T extends LangChainToolLike>(
+export function withKovaTool<T extends LangChainToolLike>(
   tool: T,
-  options: SteleLangChainOptions,
+  options: KovaLangChainOptions,
 ): T {
   const { client, covenant, actionFromTool, resourceFromTool, onDenied } = options;
   const wrapped = { ...tool } as T;
@@ -238,7 +238,7 @@ export function withSteleTool<T extends LangChainToolLike>(
       if (onDenied) {
         return onDenied(tool, result);
       }
-      throw new SteleAccessDeniedError(
+      throw new KovaAccessDeniedError(
         `Action '${action}' on resource '${resource}' denied by covenant`,
         result,
       );
@@ -289,7 +289,7 @@ export function withSteleTool<T extends LangChainToolLike>(
  * ```
  */
 export function createChainGuard(
-  options: SteleLangChainOptions,
+  options: KovaLangChainOptions,
 ): (chainName: string, input: unknown, fn: () => Promise<unknown>) => Promise<unknown> {
   const { client, covenant, onDenied } = options;
 
@@ -307,7 +307,7 @@ export function createChainGuard(
       if (onDenied) {
         return onDenied({ name: chainName } as LangChainToolLike, result);
       }
-      throw new SteleAccessDeniedError(
+      throw new KovaAccessDeniedError(
         `Chain '${chainName}' on resource '${resource}' denied by covenant`,
         result,
       );

@@ -77,4 +77,4 @@ const restored = deserializeCovenant(json);
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Kova SDK root documentation](../../README.md) for the full API reference and architecture guide.

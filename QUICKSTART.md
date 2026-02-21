@@ -1,4 +1,4 @@
-# Stele: 5-Minute Quickstart
+# Kova: 5-Minute Quickstart
 
 Go from zero to enforcing your first covenant in under five minutes.
 
@@ -15,14 +15,14 @@ The SDK re-exports everything you need from the underlying packages (`@usekova/c
 Every party in a covenant needs an Ed25519 key pair. Generate one:
 
 ```typescript
-import { SteleClient } from '@usekova/sdk';
+import { KovaClient } from '@usekova/sdk';
 
-const issuerClient = new SteleClient();
+const issuerClient = new KovaClient();
 const issuerKeys = await issuerClient.generateKeyPair();
 console.log(issuerKeys.publicKeyHex); // 64-char hex-encoded public key
 
 // The beneficiary also needs keys — typically on a different machine
-const beneficiaryClient = new SteleClient();
+const beneficiaryClient = new KovaClient();
 const beneficiaryKeys = await beneficiaryClient.generateKeyPair();
 ```
 
@@ -156,25 +156,25 @@ You now have a working covenant pipeline: create, sign, verify, enforce. Here is
 
 **Express Middleware** -- Enforce covenants on every HTTP request:
 ```typescript
-import { steleMiddleware } from '@usekova/sdk';
-app.use(steleMiddleware({ covenant, client: issuerClient }));
+import { kovaMiddleware } from '@usekova/sdk';
+app.use(kovaMiddleware({ covenant, client: issuerClient }));
 ```
 
 **Vercel AI SDK** -- Wrap AI tools with covenant enforcement:
 ```typescript
-import { withStele } from '@usekova/sdk';
-const guardedTool = withStele(myTool, { covenant, client });
+import { withKova } from '@usekova/sdk';
+const guardedTool = withKova(myTool, { covenant, client });
 ```
 
 **LangChain** -- Add a callback handler to any chain:
 ```typescript
-import { SteleCallbackHandler } from '@usekova/sdk';
-const handler = new SteleCallbackHandler({ covenant, client });
+import { KovaCallbackHandler } from '@usekova/sdk';
+const handler = new KovaCallbackHandler({ covenant, client });
 ```
 
 **Key Rotation** -- Automatic key lifecycle management:
 ```typescript
-const client = new SteleClient({
+const client = new KovaClient({
   keyRotation: { maxAgeMs: 86_400_000, overlapPeriodMs: 3_600_000 },
 });
 await client.initializeKeyRotation();
@@ -194,7 +194,7 @@ console.log(chainResult.valid); // true — child only narrows
 
 **Countersignatures** -- Let auditors co-sign covenants:
 ```typescript
-const auditorClient = new SteleClient();
+const auditorClient = new KovaClient();
 const auditorKeys = await auditorClient.generateKeyPair();
 const audited = await auditorClient.countersign(covenant, 'auditor');
 ```

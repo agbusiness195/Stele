@@ -1,7 +1,7 @@
 /**
- * Cross-package integration tests for the Stele SDK.
+ * Cross-package integration tests for the Kova SDK.
  *
- * This test exercises the full lifecycle of the Stele protocol across
+ * This test exercises the full lifecycle of the Kova protocol across
  * all core packages:
  *
  *   @usekova/crypto     - Key generation and hashing primitives
@@ -102,7 +102,7 @@ const CONSTRAINTS = [
 // Top-level describe
 // ---------------------------------------------------------------------------
 
-describe('Stele SDK: Full cross-package integration flow', () => {
+describe('Kova SDK: Full cross-package integration flow', () => {
   // Shared state across sequential test blocks. Each describe block
   // produces artifacts consumed by the next one, mirroring a real
   // deployment lifecycle.

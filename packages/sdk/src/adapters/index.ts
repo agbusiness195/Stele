@@ -1,5 +1,5 @@
 /**
- * Framework adapters for the Stele SDK.
+ * Framework adapters for the Kova SDK.
  *
  * Re-exports all adapter factories and their associated types for
  * Express/HTTP, Vercel AI SDK, and LangChain integrations.
@@ -12,8 +12,8 @@
 // ─── Express / HTTP adapter (stable) ─────────────────────────────────────────
 
 export {
-  steleMiddleware,
-  steleGuardHandler,
+  kovaMiddleware,
+  kovaGuardHandler,
   createCovenantRouter,
 } from './express.js';
 
@@ -21,8 +21,8 @@ export type {
   IncomingRequest,
   OutgoingResponse,
   NextFunction,
-  SteleMiddlewareOptions,
-  SteleGuardHandlerOptions,
+  KovaMiddlewareOptions,
+  KovaGuardHandlerOptions,
   CovenantRouterOptions,
   CovenantRouter,
   AsyncHandler,
@@ -31,27 +31,27 @@ export type {
 // ─── Vercel AI SDK adapter (stable) ──────────────────────────────────────────
 
 export {
-  SteleAccessDeniedError,
-  withStele,
-  withSteleTools,
+  KovaAccessDeniedError,
+  withKova,
+  withKovaTools,
   createToolGuard,
 } from './vercel-ai.js';
 
 export type {
   ToolLike,
-  SteleToolOptions,
+  KovaToolOptions,
 } from './vercel-ai.js';
 
 // ─── LangChain adapter (stable) ──────────────────────────────────────────────
 
 export {
-  SteleCallbackHandler,
-  withSteleTool,
+  KovaCallbackHandler,
+  withKovaTool,
   createChainGuard,
 } from './langchain.js';
 
 export type {
   LangChainToolLike,
-  SteleLangChainOptions,
+  KovaLangChainOptions,
   CallbackEvent,
 } from './langchain.js';

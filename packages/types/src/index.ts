@@ -9,7 +9,7 @@
 
 // ─── Error codes ────────────────────────────────────────────────────────────────
 
-/** Enumeration of all error codes used across the Stele SDK. */
+/** Enumeration of all error codes used across the Kova SDK. */
 export enum KovaErrorCode {
   /** A required input was empty, missing, or otherwise invalid. */
   INVALID_INPUT = 'INVALID_INPUT',
@@ -36,17 +36,17 @@ export enum KovaErrorCode {
   /** A chain narrowing validation detected a broadening violation. */
   NARROWING_VIOLATION = 'NARROWING_VIOLATION',
   /** A protocol-layer function received invalid input. */
-  PROTOCOL_INVALID_INPUT = 'STELE_E940',
+  PROTOCOL_INVALID_INPUT = 'KOVA_E940',
   /** A protocol-layer computation failed (numerical, algorithmic, or convergence). */
-  PROTOCOL_COMPUTATION_FAILED = 'STELE_E941',
+  PROTOCOL_COMPUTATION_FAILED = 'KOVA_E941',
 }
 
 // ─── Error classes ──────────────────────────────────────────────────────────────
 
 /**
- * Base error class for the Stele SDK.
+ * Base error class for the Kova SDK.
  *
- * Every Stele error carries a {@link KovaErrorCode} so callers can
+ * Every Kova error carries a {@link KovaErrorCode} so callers can
  * programmatically distinguish error categories without parsing messages.
  */
 export class KovaError extends Error {
@@ -221,18 +221,18 @@ export function validateProbability(value: number, name: string): void {
 
 // ─── Protocol constants ─────────────────────────────────────────────────────────
 
-/** Current Stele SDK version string. */
-export const STELE_VERSION = '0.1.0';
+/** Current Kova SDK version string. */
+export const KOVA_VERSION = '0.1.0';
 
 /** Default severity level for CCL statements. */
 export const DEFAULT_SEVERITY = 'must';
 
-/** Hash algorithms supported by the Stele protocol. */
+/** Hash algorithms supported by the Kova protocol. */
 export const SUPPORTED_HASH_ALGORITHMS: readonly string[] = [
   'sha256',
 ] as const;
 
-/** Signature schemes supported by the Stele protocol. */
+/** Signature schemes supported by the Kova protocol. */
 export const SUPPORTED_SIGNATURE_SCHEMES: readonly string[] = [
   'ed25519',
 ] as const;
@@ -364,7 +364,7 @@ export type { HistogramSnapshot, MetricsSnapshot } from './metrics';
 // ─── Documented error codes ─────────────────────────────────────────────────────
 //
 // The comprehensive error code system in ./errors provides unique, documentable
-// error codes (STELE_Exxx). The legacy KovaErrorCode/KovaError above are
+// error codes (KOVA_Exxx). The legacy KovaErrorCode/KovaError above are
 // retained for backward compatibility. Import directly from './errors' for the
 // full documented error code system.
 export {

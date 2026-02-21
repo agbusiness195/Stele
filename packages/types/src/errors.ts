@@ -1,7 +1,7 @@
 /**
- * Comprehensive error code system for the Stele SDK.
+ * Comprehensive error code system for the Kova SDK.
  *
- * Every error has a unique, documentable code (STELE_Exxx) that maps
+ * Every error has a unique, documentable code (KOVA_Exxx) that maps
  * to a specific, documented failure mode. This enables structured error
  * handling, logging, and user-facing diagnostics.
  *
@@ -10,121 +10,121 @@
 
 // ─── Error codes ────────────────────────────────────────────────────────────────
 
-/** All Stele error codes. Each maps to a specific, documented failure mode. */
+/** All Kova error codes. Each maps to a specific, documented failure mode. */
 export enum KovaErrorCode {
   // Key management (1xx)
   /** A required private key was not provided or not available. */
-  NO_PRIVATE_KEY = 'STELE_E100',
+  NO_PRIVATE_KEY = 'KOVA_E100',
   /** A required key pair was not provided or not available. */
-  NO_KEY_PAIR = 'STELE_E101',
+  NO_KEY_PAIR = 'KOVA_E101',
   /** The key size does not meet the required specification. */
-  INVALID_KEY_SIZE = 'STELE_E102',
+  INVALID_KEY_SIZE = 'KOVA_E102',
   /** The key has exceeded its validity period and must be rotated. */
-  KEY_ROTATION_REQUIRED = 'STELE_E103',
+  KEY_ROTATION_REQUIRED = 'KOVA_E103',
 
   // Covenant building (2xx)
   /** The issuer field is required but was not provided. */
-  MISSING_ISSUER = 'STELE_E200',
+  MISSING_ISSUER = 'KOVA_E200',
   /** The beneficiary field is required but was not provided. */
-  MISSING_BENEFICIARY = 'STELE_E201',
+  MISSING_BENEFICIARY = 'KOVA_E201',
   /** At least one constraint must be specified. */
-  EMPTY_CONSTRAINTS = 'STELE_E202',
+  EMPTY_CONSTRAINTS = 'KOVA_E202',
   /** The expiry date is invalid (e.g., in the past or malformed). */
-  INVALID_EXPIRY = 'STELE_E203',
+  INVALID_EXPIRY = 'KOVA_E203',
   /** The constraints payload exceeds the maximum allowed size. */
-  CONSTRAINTS_TOO_LARGE = 'STELE_E204',
+  CONSTRAINTS_TOO_LARGE = 'KOVA_E204',
   /** The document exceeds the maximum allowed size. */
-  DOCUMENT_TOO_LARGE = 'STELE_E205',
+  DOCUMENT_TOO_LARGE = 'KOVA_E205',
 
   // Verification (3xx)
   /** The cryptographic signature did not verify. */
-  SIGNATURE_INVALID = 'STELE_E300',
+  SIGNATURE_INVALID = 'KOVA_E300',
   /** The document ID does not match the expected value. */
-  ID_MISMATCH = 'STELE_E301',
+  ID_MISMATCH = 'KOVA_E301',
   /** The document or token has expired. */
-  EXPIRED = 'STELE_E302',
+  EXPIRED = 'KOVA_E302',
   /** The document or token is not yet active (notBefore date in the future). */
-  NOT_YET_ACTIVE = 'STELE_E303',
+  NOT_YET_ACTIVE = 'KOVA_E303',
   /** The delegation chain exceeds the maximum allowed depth. */
-  CHAIN_DEPTH_EXCEEDED = 'STELE_E304',
+  CHAIN_DEPTH_EXCEEDED = 'KOVA_E304',
   /** The protocol version is not supported. */
-  VERSION_UNSUPPORTED = 'STELE_E305',
+  VERSION_UNSUPPORTED = 'KOVA_E305',
 
   // CCL (4xx)
   /** The CCL constraint text contains a syntax error. */
-  CCL_SYNTAX_ERROR = 'STELE_E400',
+  CCL_SYNTAX_ERROR = 'KOVA_E400',
   /** The CCL input was empty or missing. */
-  CCL_EMPTY_INPUT = 'STELE_E401',
+  CCL_EMPTY_INPUT = 'KOVA_E401',
   /** The action specified in the CCL rule is not valid. */
-  CCL_INVALID_ACTION = 'STELE_E402',
+  CCL_INVALID_ACTION = 'KOVA_E402',
   /** The resource specified in the CCL rule is not valid. */
-  CCL_INVALID_RESOURCE = 'STELE_E403',
+  CCL_INVALID_RESOURCE = 'KOVA_E403',
   /** A chain narrowing validation detected a broadening violation. */
-  CCL_NARROWING_VIOLATION = 'STELE_E404',
+  CCL_NARROWING_VIOLATION = 'KOVA_E404',
 
   // Store (5xx)
   /** The document was expected but not provided to the store operation. */
-  STORE_MISSING_DOC = 'STELE_E500',
+  STORE_MISSING_DOC = 'KOVA_E500',
   /** The document ID was expected but not provided. */
-  STORE_MISSING_ID = 'STELE_E501',
+  STORE_MISSING_ID = 'KOVA_E501',
   /** The requested document was not found in the store. */
-  STORE_NOT_FOUND = 'STELE_E502',
+  STORE_NOT_FOUND = 'KOVA_E502',
   /** The store write operation failed. */
-  STORE_WRITE_FAILED = 'STELE_E503',
+  STORE_WRITE_FAILED = 'KOVA_E503',
 
   // Identity (6xx)
   /** The identity document or format is invalid. */
-  IDENTITY_INVALID = 'STELE_E600',
+  IDENTITY_INVALID = 'KOVA_E600',
   /** An identity evolution operation failed. */
-  IDENTITY_EVOLUTION_FAILED = 'STELE_E601',
+  IDENTITY_EVOLUTION_FAILED = 'KOVA_E601',
 
   // Rate limiting / enforcement (7xx)
   /** The rate limit for the operation has been exceeded. */
-  RATE_LIMIT_EXCEEDED = 'STELE_E700',
+  RATE_LIMIT_EXCEEDED = 'KOVA_E700',
   /** The action was denied by enforcement policy. */
-  ACTION_DENIED = 'STELE_E701',
+  ACTION_DENIED = 'KOVA_E701',
   /** The audit chain integrity check failed (corrupted or tampered). */
-  AUDIT_CHAIN_CORRUPTED = 'STELE_E702',
+  AUDIT_CHAIN_CORRUPTED = 'KOVA_E702',
 
   // Auth (8xx)
   /** Authentication is required but was not provided. */
-  AUTH_REQUIRED = 'STELE_E800',
+  AUTH_REQUIRED = 'KOVA_E800',
   /** The provided authentication key is invalid. */
-  AUTH_INVALID_KEY = 'STELE_E801',
+  AUTH_INVALID_KEY = 'KOVA_E801',
   /** Authentication attempts have been rate limited. */
-  AUTH_RATE_LIMITED = 'STELE_E802',
+  AUTH_RATE_LIMITED = 'KOVA_E802',
 
   // Crypto (9xx)
   /** A hex-encoded string was malformed or invalid. */
-  CRYPTO_INVALID_HEX = 'STELE_E900',
+  CRYPTO_INVALID_HEX = 'KOVA_E900',
   /** A cryptographic key was invalid or malformed. */
-  CRYPTO_INVALID_KEY = 'STELE_E901',
+  CRYPTO_INVALID_KEY = 'KOVA_E901',
   /** A cryptographic signing operation failed. */
-  CRYPTO_SIGNATURE_FAILED = 'STELE_E902',
+  CRYPTO_SIGNATURE_FAILED = 'KOVA_E902',
 
   // Reputation (91x)
   /** A reputation receipt was invalid or malformed. */
-  REPUTATION_INVALID_RECEIPT = 'STELE_E910',
+  REPUTATION_INVALID_RECEIPT = 'KOVA_E910',
   /** A reputation computation failed. */
-  REPUTATION_COMPUTATION_FAILED = 'STELE_E911',
+  REPUTATION_COMPUTATION_FAILED = 'KOVA_E911',
 
   // Breach (92x)
   /** A breach attestation was invalid or malformed. */
-  BREACH_INVALID_ATTESTATION = 'STELE_E920',
+  BREACH_INVALID_ATTESTATION = 'KOVA_E920',
   /** A breach severity value was invalid. */
-  BREACH_INVALID_SEVERITY = 'STELE_E921',
+  BREACH_INVALID_SEVERITY = 'KOVA_E921',
 
   // Attestation (93x)
   /** An attestation was invalid or malformed. */
-  ATTESTATION_INVALID = 'STELE_E930',
+  ATTESTATION_INVALID = 'KOVA_E930',
   /** An attestation reconciliation operation failed. */
-  ATTESTATION_RECONCILIATION_FAILED = 'STELE_E931',
+  ATTESTATION_RECONCILIATION_FAILED = 'KOVA_E931',
 
   // Protocol general (94x)
   /** A protocol input was invalid or malformed. */
-  PROTOCOL_INVALID_INPUT = 'STELE_E940',
+  PROTOCOL_INVALID_INPUT = 'KOVA_E940',
   /** A protocol computation failed. */
-  PROTOCOL_COMPUTATION_FAILED = 'STELE_E941',
+  PROTOCOL_COMPUTATION_FAILED = 'KOVA_E941',
 }
 
 // ─── Error class ────────────────────────────────────────────────────────────────
@@ -140,7 +140,7 @@ export interface KovaErrorOptions {
 }
 
 /**
- * Base error class for all Stele errors.
+ * Base error class for all Kova errors.
  *
  * Includes a unique error code, optional context for structured logging,
  * and an optional hint for user-facing diagnostics.
@@ -190,18 +190,18 @@ export class KovaError extends Error {
 // ─── Utility functions ──────────────────────────────────────────────────────────
 
 /** Base URL for error documentation pages. */
-const DOCS_BASE_URL = 'https://stele.dev/errors';
+const DOCS_BASE_URL = 'https://usekova.dev/errors';
 
 /**
  * Look up the documentation URL for an error code.
  *
- * @param code - The Stele error code.
+ * @param code - The Kova error code.
  * @returns A URL pointing to the documentation page for this error code.
  *
  * @example
  * ```typescript
  * errorDocsUrl(KovaErrorCode.MISSING_ISSUER)
- * // => 'https://stele.dev/errors/STELE_E200'
+ * // => 'https://usekova.dev/errors/KOVA_E200'
  * ```
  */
 export function errorDocsUrl(code: KovaErrorCode): string {
@@ -225,9 +225,9 @@ export function errorDocsUrl(code: KovaErrorCode): string {
  *   { hint: 'Set the issuer field before calling build()' }
  * );
  * console.log(formatError(err));
- * // [STELE_E200] Covenant requires an issuer
+ * // [KOVA_E200] Covenant requires an issuer
  * // Hint: Set the issuer field before calling build()
- * // Docs: https://stele.dev/errors/STELE_E200
+ * // Docs: https://usekova.dev/errors/KOVA_E200
  * ```
  */
 export function formatError(error: KovaError): string {

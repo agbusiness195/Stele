@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * @usekova/cli -- Command-line interface for the Stele covenant protocol.
+ * @usekova/cli -- Command-line interface for the Kova covenant protocol.
  *
  * Provides commands for key generation, covenant creation, verification,
  * evaluation, inspection, CCL parsing, shell completions, diagnostics, and diff.
@@ -38,7 +38,7 @@ import {
   box,
 } from './format';
 import { loadConfig, saveConfig } from './config';
-import type { SteleConfig } from './config';
+import type { KovaConfig } from './config';
 import {
   bashCompletions,
   zshCompletions,
@@ -112,9 +112,9 @@ function hasFlag(flags: Record<string, string | boolean>, key: string): boolean 
 function buildMainHelp(): string {
   const lines: string[] = [];
   lines.push('');
-  lines.push(header('Stele CLI') + dim(' - Covenant Protocol Tool'));
+  lines.push(header('Kova CLI') + dim(' - Covenant Protocol Tool'));
   lines.push('');
-  lines.push(`${bold('Usage:')} stele <command> [options]`);
+  lines.push(`${bold('Usage:')} kova <command> [options]`);
   lines.push('');
   lines.push(bold('Commands:'));
   lines.push('');
@@ -129,7 +129,7 @@ function buildMainHelp(): string {
         ['inspect <json>', 'Pretty-print covenant details'],
         ['parse <ccl>', 'Parse CCL and output AST as JSON'],
         ['completions <shell>', 'Generate shell completion script (bash|zsh|fish)'],
-        ['doctor', 'Check Stele installation health'],
+        ['doctor', 'Check Kova installation health'],
         ['audit', 'Run compliance audit and generate report'],
         ['diff <doc1> <doc2>', 'Show differences between two covenant documents'],
         ['version', 'Print version information'],
@@ -154,17 +154,17 @@ function buildMainHelp(): string {
   return lines.join('\n');
 }
 
-const INIT_HELP = `stele init - Generate an Ed25519 key pair and write stele.config.json.
+const INIT_HELP = `kova init - Generate an Ed25519 key pair and write kova.config.json.
 
-Usage: stele init [--json]
+Usage: kova init [--json]
 
 Generates a new key pair, outputs the public key, and writes a
-stele.config.json configuration file in the current directory.
+kova.config.json configuration file in the current directory.
 With --json, outputs { publicKey, privateKey } as JSON.`;
 
-const CREATE_HELP = `stele create - Create and sign a covenant document.
+const CREATE_HELP = `kova create - Create and sign a covenant document.
 
-Usage: stele create --issuer <id> --beneficiary <id> --constraints <ccl> [--json]
+Usage: kova create --issuer <id> --beneficiary <id> --constraints <ccl> [--json]
 
 Options:
   --issuer <id>          Issuer identifier (required)
@@ -172,35 +172,35 @@ Options:
   --constraints <ccl>    CCL constraint string (required)
   --json                 Output raw JSON`;
 
-const VERIFY_HELP = `stele verify - Verify a covenant document.
+const VERIFY_HELP = `kova verify - Verify a covenant document.
 
-Usage: stele verify <json-string> [--json]
+Usage: kova verify <json-string> [--json]
 
 Runs all verification checks on the covenant and reports results.`;
 
-const EVALUATE_HELP = `stele evaluate - Evaluate an action against a covenant.
+const EVALUATE_HELP = `kova evaluate - Evaluate an action against a covenant.
 
-Usage: stele evaluate <json-string> <action> <resource> [--json]
+Usage: kova evaluate <json-string> <action> <resource> [--json]
 
 Parses the covenant's CCL constraints and evaluates the given action
 and resource against them.`;
 
-const INSPECT_HELP = `stele inspect - Pretty-print covenant details.
+const INSPECT_HELP = `kova inspect - Pretty-print covenant details.
 
-Usage: stele inspect <json-string> [--json]
+Usage: kova inspect <json-string> [--json]
 
 Displays covenant fields including parties, constraints, and metadata.`;
 
-const PARSE_HELP = `stele parse - Parse CCL source text and output AST.
+const PARSE_HELP = `kova parse - Parse CCL source text and output AST.
 
-Usage: stele parse <ccl-string> [--json]
+Usage: kova parse <ccl-string> [--json]
 
 Parses CCL and outputs the AST. With --json, outputs the full
 CCLDocument as JSON. Without --json, outputs a human-readable summary.`;
 
-const COMPLETIONS_HELP = `stele completions - Generate shell completion script.
+const COMPLETIONS_HELP = `kova completions - Generate shell completion script.
 
-Usage: stele completions <shell>
+Usage: kova completions <shell>
 
 Supported shells:
   bash    Generate Bash completion script
@@ -208,15 +208,15 @@ Supported shells:
   fish    Generate Fish completion script
 
 Pipe the output to the appropriate file:
-  stele completions bash > /etc/bash_completion.d/stele
-  stele completions zsh > ~/.zsh/completions/_stele
-  stele completions fish > ~/.config/fish/completions/stele.fish`;
+  kova completions bash > /etc/bash_completion.d/kova
+  kova completions zsh > ~/.zsh/completions/_kova
+  kova completions fish > ~/.config/fish/completions/kova.fish`;
 
-const DOCTOR_HELP = `stele doctor - Check Stele installation health.
+const DOCTOR_HELP = `kova doctor - Check Kova installation health.
 
-Usage: stele doctor [--json]
+Usage: kova doctor [--json]
 
-Runs diagnostic checks on the Stele installation:
+Runs diagnostic checks on the Kova installation:
   - Node.js version >= 18
   - All @usekova/* packages importable
   - Crypto key pair generation works
@@ -225,9 +225,9 @@ Runs diagnostic checks on the Stele installation:
   - Config file readable (if exists)
   - No stale dist files detected`;
 
-const AUDIT_HELP = `stele audit - Run compliance audit and generate report.
+const AUDIT_HELP = `kova audit - Run compliance audit and generate report.
 
-Usage: stele audit [options] [--json]
+Usage: kova audit [options] [--json]
 
 Options:
   --covenants <n>          Number of configured covenants (default: 0)
@@ -246,9 +246,9 @@ Runs a compliance audit that checks:
 
 Reports findings with severity levels, a 0-100 score, and a letter grade.`;
 
-const DIFF_HELP = `stele diff - Show differences between two covenant documents.
+const DIFF_HELP = `kova diff - Show differences between two covenant documents.
 
-Usage: stele diff <doc1-json> <doc2-json> [--json]
+Usage: kova diff <doc1-json> <doc2-json> [--json]
 
 Compares two covenant documents and highlights:
   - Changed fields (version, constraints, timestamps, etc.)
@@ -273,7 +273,7 @@ async function cmdInit(flags: Record<string, string | boolean>, configDir?: stri
   }
 
   // Write config file
-  const config: SteleConfig = {
+  const config: KovaConfig = {
     defaultIssuer: { id: 'default', publicKey: publicKeyHex },
     outputFormat: 'text',
   };
@@ -292,9 +292,9 @@ async function cmdInit(flags: Record<string, string | boolean>, configDir?: stri
       ['Public key', publicKeyHex],
     ]),
     '',
-    success('Wrote stele.config.json'),
+    success('Wrote kova.config.json'),
     '',
-    dim('Run "stele create" to build your first covenant.'),
+    dim('Run "kova create" to build your first covenant.'),
     '',
   ];
   return { stdout: lines.join('\n'), stderr: '', exitCode: 0 };
@@ -302,7 +302,7 @@ async function cmdInit(flags: Record<string, string | boolean>, configDir?: stri
 
 // ─── Command: create ──────────────────────────────────────────────────────────
 
-async function cmdCreate(flags: Record<string, string | boolean>, config?: SteleConfig): Promise<RunResult> {
+async function cmdCreate(flags: Record<string, string | boolean>, config?: KovaConfig): Promise<RunResult> {
   if (hasFlag(flags, 'help')) {
     return { stdout: CREATE_HELP, stderr: '', exitCode: 0 };
   }
@@ -723,7 +723,7 @@ async function cmdDoctor(
   }
 
   const lines: string[] = [''];
-  lines.push(header('Stele Doctor'));
+  lines.push(header('Kova Doctor'));
   lines.push('');
 
   for (const check of checks) {
@@ -1033,10 +1033,10 @@ function cmdHelp(): RunResult {
 // ─── Main run function ────────────────────────────────────────────────────────
 
 /**
- * Run the Stele CLI with the given argument list.
+ * Run the Kova CLI with the given argument list.
  *
  * @param args - The command-line arguments (without node/script prefix).
- * @param configDir - Optional directory to search for stele.config.json (defaults to cwd).
+ * @param configDir - Optional directory to search for kova.config.json (defaults to cwd).
  * @returns An object with stdout, stderr, and exitCode.
  */
 export async function run(args: string[], configDir?: string): Promise<RunResult> {
@@ -1048,7 +1048,7 @@ export async function run(args: string[], configDir?: string): Promise<RunResult
   setColorsEnabled(!noColor && !jsonMode);
 
   // Load config file (non-fatal if missing)
-  let config: SteleConfig | undefined;
+  let config: KovaConfig | undefined;
   try {
     config = loadConfig(configDir);
   } catch {
@@ -1095,7 +1095,7 @@ export async function run(args: string[], configDir?: string): Promise<RunResult
       default:
         return {
           stdout: '',
-          stderr: `Error: Unknown command '${parsed.command}'. Run 'stele help' for usage.`,
+          stderr: `Error: Unknown command '${parsed.command}'. Run 'kova help' for usage.`,
           exitCode: 1,
         };
     }

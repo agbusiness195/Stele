@@ -1,7 +1,7 @@
 /**
  * @usekova/cli doctor command.
  *
- * Checks the health of the Stele installation by running a series of
+ * Checks the health of the Kova installation by running a series of
  * diagnostic tests: Node.js version, package importability, crypto
  * operations, covenant build/verify round-trip, CCL parsing, config
  * file readability, and stale dist file detection.
@@ -209,7 +209,7 @@ function checkConfig(configDir?: string): DoctorCheck {
       return {
         name: 'Config',
         status: 'warn',
-        message: 'No stele.config.json found (optional)',
+        message: 'No kova.config.json found (optional)',
       };
     }
 
@@ -284,7 +284,7 @@ function checkStaleDist(): DoctorCheck {
  * - Config file is readable (if exists)
  * - No stale dist files detected
  *
- * @param configDir - Optional directory to search for stele.config.json.
+ * @param configDir - Optional directory to search for kova.config.json.
  * @returns An array of DoctorCheck results.
  *
  * @example

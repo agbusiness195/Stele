@@ -1,6 +1,6 @@
-# Stele SDK Examples
+# Kova SDK Examples
 
-Runnable TypeScript examples demonstrating the Stele protocol SDK.
+Runnable TypeScript examples demonstrating the Kova protocol SDK.
 
 ## Running
 

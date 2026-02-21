@@ -72,7 +72,7 @@ export function runAudit(params: {
       severity: 'critical',
       title: 'No covenants configured',
       description: 'No covenants have been configured. Without covenants, agent behavior is unconstrained.',
-      recommendation: 'Create at least one covenant with appropriate constraints using "stele create".',
+      recommendation: 'Create at least one covenant with appropriate constraints using "kova create".',
       autoFixable: false,
     });
     coverageGaps.push('No covenants configured');
@@ -128,7 +128,7 @@ export function runAudit(params: {
       severity: 'error',
       title: 'Identity not verified',
       description: 'Agent identity has not been verified. This is required for compliance and trust establishment.',
-      recommendation: 'Complete identity verification using "stele init" and register with a discovery server.',
+      recommendation: 'Complete identity verification using "kova init" and register with a discovery server.',
       autoFixable: false,
     });
     coverageGaps.push('Identity not verified');

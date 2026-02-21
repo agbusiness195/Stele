@@ -67,4 +67,4 @@ console.log(curve.logistic(0.8)); // S-curve response at stress level 0.8
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

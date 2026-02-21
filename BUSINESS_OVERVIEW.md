@@ -1,6 +1,6 @@
-# Stele SDK - Business & Product Overview
+# Kova SDK - Business & Product Overview
 
-**Company**: Stele Labs, Inc. (2026)
+**Company**: Kova Labs, Inc. (2026)
 **Product**: Open-source accountability framework for AI agents
 **License**: MIT
 
@@ -8,9 +8,9 @@
 
 ## Executive Summary
 
-Stele is an open-source **accountability framework for AI agents** that uses cryptographic behavioral commitments (called "Covenants") to solve the trust and compliance problem in AI deployment: how do you prove an AI agent is actually following its stated policies?
+Kova is an open-source **accountability framework for AI agents** that uses cryptographic behavioral commitments (called "Covenants") to solve the trust and compliance problem in AI deployment: how do you prove an AI agent is actually following its stated policies?
 
-Traditional solutions (firewalls, API rate limits, audit logs) are insufficient because they're reactive, centralized, and forgeable. Stele inverts the trust model: agents publish cryptographic behavioral commitments signed with their private keys, which anyone can verify without a trusted third party.
+Traditional solutions (firewalls, API rate limits, audit logs) are insufficient because they're reactive, centralized, and forgeable. Kova inverts the trust model: agents publish cryptographic behavioral commitments signed with their private keys, which anyone can verify without a trusted third party.
 
 ---
 
@@ -103,7 +103,7 @@ limit api.call 500 per 3600 seconds
 +---------------------------------------------+
 |  Interop (Discovery, Schema)                 |
 +---------------------------------------------+
-|  SDK (SteleClient - Unified API)             |
+|  SDK (KovaClient - Unified API)             |
 +---------------------------------------------+
 |  Protocol (17 advanced modules)              |
 +---------------------------------------------+
@@ -137,10 +137,10 @@ Advanced features for enterprise use:
 - Trust derivatives, Legal compliance mapping
 
 ### SDK & Interop (4 packages)
-- **@usekova/sdk**: Unified SteleClient API, QuickCovenant builders, event system
-- **@usekova/discovery**: `.well-known/stele/` protocol, key registry, cross-platform negotiation
+- **@usekova/sdk**: Unified KovaClient API, QuickCovenant builders, event system
+- **@usekova/discovery**: `.well-known/kova/` protocol, key registry, cross-platform negotiation
 - **@usekova/schema**: JSON Schema (Draft 2020-12) for all document types
-- **@usekova/mcp-server**: JSON-RPC 2.0 MCP server exposing Stele as tools
+- **@usekova/mcp-server**: JSON-RPC 2.0 MCP server exposing Kova as tools
 
 ### Platform Integrations (4 packages)
 - **@usekova/react**: Reactive UI primitives
@@ -154,9 +154,9 @@ Advanced features for enterprise use:
 
 | Framework | Adapter | Description |
 |-----------|---------|-------------|
-| **Vercel AI SDK** | `withStele()` / `withSteleTools()` | Wraps AI SDK tool calls for enforcement |
-| **LangChain** | `SteleCallbackHandler` / `withSteleTool()` | Enforces tool constraints in chains |
-| **Express/Node.js** | `steleMiddleware()` | Zero-config HTTP covenant enforcement |
+| **Vercel AI SDK** | `withKova()` / `withKovaTools()` | Wraps AI SDK tool calls for enforcement |
+| **LangChain** | `KovaCallbackHandler` / `withKovaTool()` | Enforces tool constraints in chains |
+| **Express/Node.js** | `kovaMiddleware()` | Zero-config HTTP covenant enforcement |
 | **OpenTelemetry** | `telemetryMiddleware()` | Bring-your-own-tracer integration |
 | **Ethereum/EVM** | `@usekova/evm` | On-chain covenant registry |
 | **MCP (Claude)** | `@usekova/mcp-server` | Model Context Protocol integration |
@@ -253,14 +253,14 @@ Advanced features for enterprise use:
 
 ### Indirect Competitors
 
-| Category | Players | Stele's Advantage |
+| Category | Players | Kova's Advantage |
 |----------|---------|-------------------|
-| API Gateways | Kong, Traefik | Stele is agent-centric, semantic, cryptographic |
-| Identity/IAM | Okta, Auth0 | Stele covers AI agent policy, not just human users |
-| Audit/Logging | Datadog, Splunk | Stele is real-time + non-repudiable + immutable |
-| Policy Engines | OPA, Kyverno | Stele is AI-specific + cryptographic + decentralized |
-| AI Safety | Constitutional AI, RLHF | Stele is deployment-layer; complements model safety |
-| Container Security | Docker, K8s | Stele is policy-layer; orthogonal |
+| API Gateways | Kong, Traefik | Kova is agent-centric, semantic, cryptographic |
+| Identity/IAM | Okta, Auth0 | Kova covers AI agent policy, not just human users |
+| Audit/Logging | Datadog, Splunk | Kova is real-time + non-repudiable + immutable |
+| Policy Engines | OPA, Kyverno | Kova is AI-specific + cryptographic + decentralized |
+| AI Safety | Constitutional AI, RLHF | Kova is deployment-layer; complements model safety |
+| Container Security | Docker, K8s | Kova is policy-layer; orthogonal |
 
 ### Competitive Moats
 
@@ -275,7 +275,7 @@ Advanced features for enterprise use:
 
 ## Regulatory Alignment
 
-| Regulation | How Stele Helps |
+| Regulation | How Kova Helps |
 |------------|-----------------|
 | **EU AI Act** | Verifiable compliance trail (Article 6 requirements) |
 | **US Executive Orders on AI** | Aligns with "algorithmic accountability" requirements |
@@ -360,16 +360,16 @@ Advanced features for enterprise use:
 
 ---
 
-## Why Stele Could Be Big
+## Why Kova Could Be Big
 
-Stele sits at the intersection of four accelerating mega-trends:
+Kova sits at the intersection of four accelerating mega-trends:
 
 1. **AI Adoption**: Enterprise AI deployments growing exponentially
 2. **Regulatory Tightening**: Governments moving from principles to requirements
 3. **Zero-Trust Security**: Shift from perimeter defense to continuous verification
 4. **Cryptographic Verification**: Blockchain-era trust primitives going mainstream
 
-The AI governance crisis is coming. As AI agents become more autonomous, the cost of unaccountable AI grows exponentially. Stele is the missing infrastructure layer -- the cryptographic accountability primitive that the entire ecosystem will need.
+The AI governance crisis is coming. As AI agents become more autonomous, the cost of unaccountable AI grows exponentially. Kova is the missing infrastructure layer -- the cryptographic accountability primitive that the entire ecosystem will need.
 
 ---
 
@@ -389,5 +389,5 @@ The AI governance crisis is coming. As AI agents become more autonomous, the cos
 ---
 
 *Prepared for financial analysis and valuation purposes.*
-*Product: Stele SDK by Stele Labs, Inc.*
+*Product: Kova SDK by Kova Labs, Inc.*
 *Date: February 2026*

@@ -14,7 +14,7 @@ import {
 import type { CovenantDocument } from '@usekova/core';
 import { evaluate, parse } from '@usekova/ccl';
 import { Monitor, MonitorDeniedError } from '@usekova/enforcement';
-import { SteleGuard } from '@usekova/mcp';
+import { KovaGuard } from '@usekova/mcp';
 import type { MCPServer, WrappedMCPServer, ViolationDetails, ToolCallDetails } from '@usekova/mcp';
 import { createReceipt, verifyReceipt, computeReputationScore, createEndorsement, verifyEndorsement } from '@usekova/reputation';
 import type { ExecutionReceipt } from '@usekova/reputation';
@@ -420,12 +420,12 @@ describe('Scenario 2: MCP Server Wrap, Execute, Receipt, and Reputation', () => 
     };
   }
 
-  // ── Step 1: Wrap the MCP server with SteleGuard ───────────────────────
+  // ── Step 1: Wrap the MCP server with KovaGuard ───────────────────────
 
-  it('Step 1: wraps the MCP server with SteleGuard and constraints', async () => {
+  it('Step 1: wraps the MCP server with KovaGuard and constraints', async () => {
     operatorKeyPair = await generateKeyPair();
 
-    wrappedServer = await SteleGuard.wrap(createMockMCPServer(), {
+    wrappedServer = await KovaGuard.wrap(createMockMCPServer(), {
       constraints: SERVER_CONSTRAINTS,
       mode: 'enforce',
       operatorKeyPair,

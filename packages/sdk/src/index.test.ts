@@ -56,7 +56,7 @@ import type {
   CreateIdentityOptions,
   EvolveOptions,
   ChainValidationResult,
-  SteleEventType,
+  KovaEventType,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   CovenantCountersignedEvent,

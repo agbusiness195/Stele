@@ -1,6 +1,6 @@
 # @usekova/crypto
 
-Ed25519 cryptography, SHA-256 hashing, and encoding utilities for the Stele protocol. Built on [@noble/ed25519](https://github.com/paulmillr/noble-ed25519) and [@noble/hashes](https://github.com/paulmillr/noble-hashes).
+Ed25519 cryptography, SHA-256 hashing, and encoding utilities for the Kova protocol. Built on [@noble/ed25519](https://github.com/paulmillr/noble-ed25519) and [@noble/hashes](https://github.com/paulmillr/noble-hashes).
 
 ## Installation
 
@@ -75,4 +75,4 @@ console.log(managed.keyPair.publicKeyHex);
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Kova SDK root documentation](../../README.md) for the full API reference and architecture guide.

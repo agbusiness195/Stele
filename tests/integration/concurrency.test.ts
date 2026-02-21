@@ -1,5 +1,5 @@
 /**
- * Concurrency and stress tests for the Stele SDK.
+ * Concurrency and stress tests for the Kova SDK.
  *
  * Exercises parallel operations, race conditions, and high-volume
  * scenarios across crypto, core, store, verifier, identity,

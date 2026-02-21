@@ -1,11 +1,11 @@
 /**
- * Stele SDK - MCP Server Wrapping
+ * Kova SDK - MCP Server Wrapping
  *
- * Demonstrates wrapping a Model Context Protocol server with SteleGuard
+ * Demonstrates wrapping a Model Context Protocol server with KovaGuard
  * to enforce constraints on every tool call, generate compliance proofs,
  * and produce execution receipts.
  */
-import { SteleGuard } from '@usekova/mcp';
+import { KovaGuard } from '@usekova/mcp';
 import type { MCPServer } from '@usekova/mcp';
 import { MonitorDeniedError } from '@usekova/enforcement';
 import { verifyComplianceProof } from '@usekova/proof';
@@ -32,10 +32,10 @@ async function main() {
     },
   };
 
-  // 2. Wrap with SteleGuard using data-isolation preset
+  // 2. Wrap with KovaGuard using data-isolation preset
   //    This preset permits file.read on /data/**, denies file.write and
   //    network.send on all resources, and requires audit logging.
-  const server = await SteleGuard.wrap(mockServer, {
+  const server = await KovaGuard.wrap(mockServer, {
     constraints: 'standard:data-isolation',
     mode: 'enforce',
   });

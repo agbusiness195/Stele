@@ -1,6 +1,6 @@
-# Stele API Reference
+# Kova API Reference
 
-Complete API reference for all packages in the Stele monorepo. Packages are grouped
+Complete API reference for all packages in the Kova monorepo. Packages are grouped
 by layer: **Foundation**, **Enforcement**, **Protocol**, and **Platform**.
 
 ---
@@ -8,41 +8,41 @@ by layer: **Foundation**, **Enforcement**, **Protocol**, and **Platform**.
 ## Table of Contents
 
 - [Foundation](#foundation)
-  - [@usekova/types](#steletypes)
-  - [@usekova/crypto](#stelecrypto)
-  - [@usekova/ccl](#steleccl)
-  - [@usekova/core](#stelecore)
-  - [@usekova/store](#stelestore)
-  - [@usekova/verifier](#steleverifier)
-  - [@usekova/sdk](#stelesdk)
-  - [@usekova/identity](#steleidentity)
+  - [@usekova/types](#kovatypes)
+  - [@usekova/crypto](#kovacrypto)
+  - [@usekova/ccl](#kovaccl)
+  - [@usekova/core](#kovacore)
+  - [@usekova/store](#kovastore)
+  - [@usekova/verifier](#kovaverifier)
+  - [@usekova/sdk](#kovasdk)
+  - [@usekova/identity](#kovaidentity)
 - [Enforcement](#enforcement)
-  - [@usekova/enforcement](#steleenforcement)
-  - [@usekova/proof](#steleproof)
-  - [@usekova/breach](#stelebreach)
-  - [@usekova/reputation](#stelereputation)
-  - [@usekova/mcp](#stelemcp)
+  - [@usekova/enforcement](#kovaenforcement)
+  - [@usekova/proof](#kovaproof)
+  - [@usekova/breach](#kovabreach)
+  - [@usekova/reputation](#kovareputation)
+  - [@usekova/mcp](#kovamcp)
 - [Protocol](#protocol)
-  - [@usekova/attestation](#steleattestation)
-  - [@usekova/canary](#stelecanary)
-  - [@usekova/gametheory](#stelegametheory)
-  - [@usekova/composition](#stelecomposition)
-  - [@usekova/antifragile](#steleantifragile)
-  - [@usekova/negotiation](#stelenegotiation)
-  - [@usekova/consensus](#steleconsensus)
-  - [@usekova/robustness](#stelerobustness)
-  - [@usekova/temporal](#steletemporal)
-  - [@usekova/recursive](#stelerecursive)
-  - [@usekova/alignment](#stelealignment)
-  - [@usekova/norms](#stelenorms)
-  - [@usekova/substrate](#stelesubstrate)
-  - [@usekova/derivatives](#stelederivatives)
-  - [@usekova/legal](#stelelegal)
+  - [@usekova/attestation](#kovaattestation)
+  - [@usekova/canary](#kovacanary)
+  - [@usekova/gametheory](#kovagametheory)
+  - [@usekova/composition](#kovacomposition)
+  - [@usekova/antifragile](#kovaantifragile)
+  - [@usekova/negotiation](#kovanegotiation)
+  - [@usekova/consensus](#kovaconsensus)
+  - [@usekova/robustness](#kovarobustness)
+  - [@usekova/temporal](#kovatemporal)
+  - [@usekova/recursive](#kovarecursive)
+  - [@usekova/alignment](#kovaalignment)
+  - [@usekova/norms](#kovanorms)
+  - [@usekova/substrate](#kovasubstrate)
+  - [@usekova/derivatives](#kovaderivatives)
+  - [@usekova/legal](#kovalegal)
 - [Platform](#platform)
-  - [@usekova/react](#stelereact)
-  - [@usekova/evm](#steleevm)
-  - [@usekova/mcp-server](#stelemcp-server)
-  - [@usekova/cli](#stelecli)
+  - [@usekova/react](#kovareact)
+  - [@usekova/evm](#kovaevm)
+  - [@usekova/mcp-server](#kovamcp-server)
+  - [@usekova/cli](#kovacli)
 
 ---
 
@@ -56,13 +56,13 @@ Shared TypeScript type definitions, error classes, validation utilities, and pro
 
 | Export | Kind | Description |
 |--------|------|-------------|
-| `SteleError` | class | Base error class carrying a `SteleErrorCode` for programmatic error handling. |
+| `KovaError` | class | Base error class carrying a `KovaErrorCode` for programmatic error handling. |
 | `ValidationError` | class | Thrown when an input fails validation; includes a `field` property. |
 | `CryptoError` | class | Thrown when a cryptographic operation fails. |
 | `CCLError` | class | Thrown when CCL parsing or evaluation fails. |
 | `ChainError` | class | Thrown when a chain operation violates protocol rules. |
 | `StorageError` | class | Thrown when a storage operation fails. |
-| `SteleErrorCode` | enum | Enumeration of all error codes (`INVALID_INPUT`, `CRYPTO_FAILURE`, `CCL_PARSE_ERROR`, etc.). |
+| `KovaErrorCode` | enum | Enumeration of all error codes (`INVALID_INPUT`, `CRYPTO_FAILURE`, `CCL_PARSE_ERROR`, etc.). |
 | `validateNonEmpty(value, name)` | function | Assert a string is non-empty; throws `ValidationError`. |
 | `validateRange(value, min, max, name)` | function | Assert a number is within `[min, max]`. |
 | `validateHex(value, name)` | function | Assert a string is valid hex (even length, `[0-9a-fA-F]`). |
@@ -75,7 +75,7 @@ Shared TypeScript type definitions, error classes, validation utilities, and pro
 | `sanitizeJsonInput(input)` | function | Sanitize raw JSON input. |
 | `freezeDeep(obj)` | function | Recursively freeze an object. |
 | `Logger`, `createLogger`, `defaultLogger` | class/function | Structured logging with levels and child loggers. |
-| `STELE_VERSION` | const | Current SDK version string (`"0.1.0"`). |
+| `KOVA_VERSION` | const | Current SDK version string (`"0.1.0"`). |
 | `DEFAULT_SEVERITY` | const | Default CCL severity level (`"must"`). |
 | `Identifiable`, `Timestamped`, `Hashable`, `Serializable<T>` | interface | Common structural interfaces. |
 
@@ -275,26 +275,26 @@ const batchReport = await verifyBatch(docs);
 
 ### @usekova/sdk
 
-High-level unified SDK that ties together all foundation packages into a single `SteleClient` entry point with an event system.
+High-level unified SDK that ties together all foundation packages into a single `KovaClient` entry point with an event system.
 
 #### Key Exports
 
 | Export | Kind | Description |
 |--------|------|-------------|
-| `SteleClient` | class | Main entry point. Provides `generateKeyPair()`, `createCovenant(options)`, `verifyCovenant(doc)`, `countersign(doc, role?, keyPair?)`, `evaluateAction(doc, action, resource, context?)`, `createIdentity(options)`, `evolveIdentity(identity, options)`, `resolveChain(doc, knownDocs?)`, `validateChain(docs)`, `parseCCL(source)`, `mergeCCL(a, b)`, `serializeCCL(doc)`, `on(event, handler)`, `off(event, handler)`, `removeAllListeners(event?)`. |
+| `KovaClient` | class | Main entry point. Provides `generateKeyPair()`, `createCovenant(options)`, `verifyCovenant(doc)`, `countersign(doc, role?, keyPair?)`, `evaluateAction(doc, action, resource, context?)`, `createIdentity(options)`, `evolveIdentity(identity, options)`, `resolveChain(doc, knownDocs?)`, `validateChain(docs)`, `parseCCL(source)`, `mergeCCL(a, b)`, `serializeCCL(doc)`, `on(event, handler)`, `off(event, handler)`, `removeAllListeners(event?)`. |
 | `QuickCovenant` | class | Convenience builders: `permit(action, resource, issuer, beneficiary, privateKey)`, `deny(...)`, `standard(issuer, beneficiary, privateKey)`. |
-| `SteleClientOptions` | type | `{ keyPair?, agentId?, strictMode? }` |
+| `KovaClientOptions` | type | `{ keyPair?, agentId?, strictMode? }` |
 | `CreateCovenantOptions` | type | Options for `createCovenant`: issuer, beneficiary, constraints, privateKey, obligations, chain, enforcement, proof, revocation, metadata, expiresAt, activatesAt. |
-| `SteleEventType` | type | `'covenant:created' | 'covenant:verified' | 'covenant:countersigned' | 'identity:created' | 'identity:evolved' | 'chain:resolved' | 'chain:validated' | 'evaluation:completed'` |
+| `KovaEventType` | type | `'covenant:created' | 'covenant:verified' | 'covenant:countersigned' | 'identity:created' | 'identity:evolved' | 'chain:resolved' | 'chain:validated' | 'evaluation:completed'` |
 
 Also re-exports all types and functions from `@usekova/core`, `@usekova/crypto`, `@usekova/ccl`, and `@usekova/identity`.
 
 #### Usage
 
 ```typescript
-import { SteleClient, QuickCovenant } from '@usekova/sdk';
+import { KovaClient, QuickCovenant } from '@usekova/sdk';
 
-const client = new SteleClient();
+const client = new KovaClient();
 const kp = await client.generateKeyPair();
 const doc = await client.createCovenant({
   issuer, beneficiary, constraints,
@@ -476,24 +476,24 @@ console.log(score.overall); // 0.0 - 1.0
 
 ### @usekova/mcp
 
-MCP (Model Context Protocol) guard that wraps an MCP server with Stele covenant enforcement, audit logging, identity creation, and compliance proof generation.
+MCP (Model Context Protocol) guard that wraps an MCP server with Kova covenant enforcement, audit logging, identity creation, and compliance proof generation.
 
 #### Key Exports
 
 | Export | Kind | Description |
 |--------|------|-------------|
-| `steleGuard(server, options)` | function | Wrap an MCP server with Stele enforcement. Returns `WrappedMCPServer` with audit log, identity, and compliance proof. |
+| `kovaGuard(server, options)` | function | Wrap an MCP server with Kova enforcement. Returns `WrappedMCPServer` with audit log, identity, and compliance proof. |
 | `PRESETS` | const | Named constraint presets (e.g., `"standard:data-isolation"`, `"standard:read-only"`). |
 | `MCPServer`, `WrappedMCPServer` | type | MCP server interfaces. |
-| `SteleGuardOptions` | type | Guard configuration: constraints, key pair, operator identifier, model, capabilities, deployment. |
+| `KovaGuardOptions` | type | Guard configuration: constraints, key pair, operator identifier, model, capabilities, deployment. |
 | `ViolationDetails`, `ToolCallDetails` | type | Event detail types for monitoring. |
 
 #### Usage
 
 ```typescript
-import { steleGuard, PRESETS } from '@usekova/mcp';
+import { kovaGuard, PRESETS } from '@usekova/mcp';
 
-const wrapped = await steleGuard(mcpServer, {
+const wrapped = await kovaGuard(mcpServer, {
   constraints: 'standard:data-isolation',
   keyPair,
   model: { provider: 'anthropic', modelId: 'claude-3' },
@@ -571,7 +571,7 @@ console.log(result.passed);
 
 ### @usekova/gametheory
 
-Game-theoretic analysis proving that honest behavior is the dominant strategy under Stele's incentive structure.
+Game-theoretic analysis proving that honest behavior is the dominant strategy under Kova's incentive structure.
 
 #### Key Exports
 
@@ -965,7 +965,7 @@ console.log(compliance.compliant, compliance.gaps);
 
 ### @usekova/react
 
-Framework-agnostic reactive primitives (Observable, CovenantState, IdentityState) for building Stele-powered UIs.
+Framework-agnostic reactive primitives (Observable, CovenantState, IdentityState) for building Kova-powered UIs.
 
 #### Key Exports
 
@@ -1009,7 +1009,7 @@ EVM anchoring utilities for on-chain covenant verification: ABI encoding/decodin
 | `computeFunctionSelector(signature)` | function | Compute the 4-byte function selector from a signature string. |
 | `anchorCovenant(doc)` | function | Prepare a covenant for on-chain anchoring (returns encoded calldata). |
 | `verifyAnchor(anchorData, doc)` | function | Verify that anchor data matches a covenant document. |
-| `STELE_CONTRACT_ABI` | const | ABI definition for the Stele covenant anchor contract. |
+| `KOVA_CONTRACT_ABI` | const | ABI definition for the Kova covenant anchor contract. |
 
 #### Usage
 
@@ -1025,22 +1025,22 @@ const encoded = encodeUint256(42n);
 
 ### @usekova/mcp-server
 
-Model Context Protocol server exposing Stele tools to AI agents via JSON-RPC 2.0 over stdio.
+Model Context Protocol server exposing Kova tools to AI agents via JSON-RPC 2.0 over stdio.
 
 #### Key Exports
 
 | Export | Kind | Description |
 |--------|------|-------------|
-| `MCPSteleServer` | class | JSON-RPC 2.0 server with 6 built-in tools: `create_covenant`, `verify_covenant`, `evaluate_action`, `create_identity`, `parse_ccl`, `list_covenants`. Methods: `handleRequest(json)`, `getToolDefinitions()`, `start()`. |
+| `MCPKovaServer` | class | JSON-RPC 2.0 server with 6 built-in tools: `create_covenant`, `verify_covenant`, `evaluate_action`, `create_identity`, `parse_ccl`, `list_covenants`. Methods: `handleRequest(json)`, `getToolDefinitions()`, `start()`. |
 | `JSON_RPC_ERRORS` | const | Standard JSON-RPC 2.0 error codes. |
 | `JsonRpcRequest`, `JsonRpcResponse`, `ToolDefinition`, `ToolResult`, `MCPServerOptions` | type | JSON-RPC and MCP types. |
 
 #### Usage
 
 ```typescript
-import { MCPSteleServer } from '@usekova/mcp-server';
+import { MCPKovaServer } from '@usekova/mcp-server';
 
-const server = new MCPSteleServer({ storePath: './covenants' });
+const server = new MCPKovaServer({ storePath: './covenants' });
 const response = await server.handleRequest({
   jsonrpc: '2.0', id: 1,
   method: 'tools/call',
@@ -1052,36 +1052,36 @@ const response = await server.handleRequest({
 
 ### @usekova/cli
 
-Command-line interface for Stele operations: key generation, covenant management, identity management, CCL parsing, and verification.
+Command-line interface for Kova operations: key generation, covenant management, identity management, CCL parsing, and verification.
 
 #### Commands
 
 | Command | Description |
 |---------|-------------|
-| `stele keygen` | Generate a new Ed25519 key pair and write to files. |
-| `stele build --issuer <file> --beneficiary <file> --constraints <ccl> --key <file>` | Build and sign a new covenant document. |
-| `stele verify <file>` | Verify a covenant document from a JSON file. |
-| `stele inspect <file>` | Display details of a covenant document. |
-| `stele resign <file> --key <file>` | Re-sign a covenant with a new nonce. |
-| `stele parse <ccl>` | Parse CCL source text and display the AST. |
-| `stele identity create --key <file> --model <json> --capabilities <list> --deployment <json>` | Create a new agent identity. |
-| `stele identity evolve <file> --key <file> --change-type <type> --description <text>` | Evolve an existing agent identity. |
+| `kova keygen` | Generate a new Ed25519 key pair and write to files. |
+| `kova build --issuer <file> --beneficiary <file> --constraints <ccl> --key <file>` | Build and sign a new covenant document. |
+| `kova verify <file>` | Verify a covenant document from a JSON file. |
+| `kova inspect <file>` | Display details of a covenant document. |
+| `kova resign <file> --key <file>` | Re-sign a covenant with a new nonce. |
+| `kova parse <ccl>` | Parse CCL source text and display the AST. |
+| `kova identity create --key <file> --model <json> --capabilities <list> --deployment <json>` | Create a new agent identity. |
+| `kova identity evolve <file> --key <file> --change-type <type> --description <text>` | Evolve an existing agent identity. |
 
 #### Usage
 
 ```bash
 # Generate a key pair
-stele keygen --output ./keys
+kova keygen --output ./keys
 
 # Build a covenant
-stele build --issuer issuer.json --beneficiary beneficiary.json \
+kova build --issuer issuer.json --beneficiary beneficiary.json \
   --constraints "permit read on '**'" --key ./keys/private.hex
 
 # Verify a covenant
-stele verify covenant.json
+kova verify covenant.json
 
 # Parse CCL
-stele parse "deny write on '/system/**'"
+kova parse "deny write on '/system/**'"
 ```
 
 ---
@@ -1096,7 +1096,7 @@ stele parse "deny write on '/system/**'"
 | `AgentIdentity` | identity | Agent identity with model attestation, capabilities, lineage. |
 | `VerificationResult` | core | `{ valid: boolean, checks: VerificationCheck[], document }`. |
 | `EvaluationResult` | ccl | `{ permitted: boolean, matchedRule?, allMatches[], reason?, severity? }`. |
-| `SteleError` | types | Base error with `code: SteleErrorCode`. |
+| `KovaError` | types | Base error with `code: KovaErrorCode`. |
 | `Result<T, E>` | types | Discriminated union for fallible operations. |
 
 ---
@@ -1109,5 +1109,5 @@ stele parse "deny write on '/system/**'"
 | `MAX_CONSTRAINTS` | core | `100` | Maximum CCL statements per document. |
 | `MAX_CHAIN_DEPTH` | core | `16` | Maximum delegation chain depth. |
 | `MAX_DOCUMENT_SIZE` | core | `1048576` | Maximum serialized document size (1 MB). |
-| `STELE_VERSION` | types | `"0.1.0"` | SDK version string. |
+| `KOVA_VERSION` | types | `"0.1.0"` | SDK version string. |
 | `DEFAULT_SEVERITY` | types | `"must"` | Default CCL severity level. |

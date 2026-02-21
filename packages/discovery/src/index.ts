@@ -1,7 +1,7 @@
 /**
- * @usekova/discovery — Cross-platform discovery protocol for Stele.
+ * @usekova/discovery — Cross-platform discovery protocol for Kova.
  *
- * Implements the `.well-known/stele/` endpoint specification,
+ * Implements the `.well-known/kova/` endpoint specification,
  * enabling cross-platform agent verification, key discovery,
  * and protocol negotiation.
  *
@@ -30,7 +30,7 @@ export {
   buildKeySet,
   WELL_KNOWN_PATH,
   CONFIGURATION_PATH,
-  STELE_MEDIA_TYPE,
+  KOVA_MEDIA_TYPE,
   MAX_DOCUMENT_AGE_MS,
 } from './well-known.js';
 export type { BuildDiscoveryDocumentOptions, DiscoveryValidationResult } from './well-known.js';

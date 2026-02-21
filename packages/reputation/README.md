@@ -1,6 +1,6 @@
 # @usekova/reputation
 
-Reputation scoring, stake management, endorsements, and receipt-chain verification for Stele covenant agents.
+Reputation scoring, stake management, endorsements, and receipt-chain verification for Kova covenant agents.
 
 ## Installation
 
@@ -69,4 +69,4 @@ const stake = await createStake(agentIdentityHash, covenantId, 0.5, keys);
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

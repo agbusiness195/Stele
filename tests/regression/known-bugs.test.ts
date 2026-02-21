@@ -1,6 +1,6 @@
 /**
  * Regression test suite for known bugs and gotchas discovered during
- * development of the Stele SDK.
+ * development of the Kova SDK.
  *
  * Each test documents a specific issue that was encountered, along with
  * the correct behavior, to prevent future regressions.

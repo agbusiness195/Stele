@@ -1,6 +1,6 @@
 # @usekova/consensus
 
-Byzantine fault-tolerant consensus protocols for the Stele covenant framework. Includes accountability scoring, BFT analysis, quorum computation, latency estimation, a HotStuff-inspired pipelined BFT implementation, dynamic quorum reconfiguration, pipeline simulation, and quorum intersection verification.
+Byzantine fault-tolerant consensus protocols for the Kova covenant framework. Includes accountability scoring, BFT analysis, quorum computation, latency estimation, a HotStuff-inspired pipelined BFT implementation, dynamic quorum reconfiguration, pipeline simulation, and quorum intersection verification.
 
 ## Installation
 
@@ -74,4 +74,4 @@ dq.transition(['n1', 'n2', 'n3']);
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

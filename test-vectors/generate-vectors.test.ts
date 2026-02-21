@@ -796,7 +796,7 @@ describe('Canonical Test Vector Generation', () => {
         protocol_version: PROTOCOL_VERSION,
         generator: '@usekova/test-vectors',
         description:
-          'Canonical test vectors for the Stele protocol. Any conformant implementation MUST produce identical results for these inputs.',
+          'Canonical test vectors for the Kova protocol. Any conformant implementation MUST produce identical results for these inputs.',
         total_vectors: vectors.length,
         categories: Object.keys(grouped),
         category_counts: Object.fromEntries(

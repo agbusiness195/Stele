@@ -1,7 +1,7 @@
 /**
  * Example 01: Basic Covenant
  *
- * Getting started with the Stele SDK. Demonstrates:
+ * Getting started with the Kova SDK. Demonstrates:
  * - Generating Ed25519 key pairs for issuer and beneficiary
  * - Creating a simple permit/deny covenant
  * - Verifying the covenant's cryptographic integrity

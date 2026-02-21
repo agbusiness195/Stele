@@ -35,7 +35,7 @@ function makeDoc(overrides: Partial<CovenantDocument> & { id: string }): Covenan
 let testDir: string;
 
 beforeEach(async () => {
-  testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'stele-filestore-test-'));
+  testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'kova-filestore-test-'));
 });
 
 afterEach(async () => {

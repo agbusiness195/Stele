@@ -1,6 +1,6 @@
 # @usekova/ccl
 
-Covenant Constraint Language (CCL) parser and evaluator. CCL is a domain-specific language for expressing access control policies in Stele covenants.
+Covenant Constraint Language (CCL) parser and evaluator. CCL is a domain-specific language for expressing access control policies in Kova covenants.
 
 ## Installation
 
@@ -76,4 +76,4 @@ const text = serialize(merged);
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Kova SDK root documentation](../../README.md) for the full API reference and architecture guide.

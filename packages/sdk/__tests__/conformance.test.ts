@@ -1,7 +1,7 @@
 /**
  * Kova Protocol Conformance Test Suite
  *
- * Runs the conformance suite against the real Stele implementation
+ * Runs the conformance suite against the real Kova implementation
  * to prove that the reference implementation is spec-compliant.
  */
 import { describe, it, expect } from 'vitest';
@@ -21,7 +21,7 @@ import { parse, evaluate } from '@usekova/ccl';
 
 // ─── Wire up the ConformanceTarget ──────────────────────────────────────────
 
-const steleTarget: ConformanceTarget = {
+const kovaTarget: ConformanceTarget = {
   buildCovenant: (options: unknown) => buildCovenant(options as Parameters<typeof buildCovenant>[0]),
   verifyCovenant: (doc: unknown) => verifyCovenant(doc as Parameters<typeof verifyCovenant>[0]),
   evaluateAction: async (doc: unknown, action, resource, context) => {
@@ -48,7 +48,7 @@ function formatFailures(failures: Array<{ test: string; message: string }>): str
 
 describe('Kova Protocol Conformance Suite', () => {
   it('passes the full conformance suite', async () => {
-    const result = await runConformanceSuite(steleTarget);
+    const result = await runConformanceSuite(kovaTarget);
 
     if (!result.passed) {
       const details = formatFailures(result.failures);
@@ -70,7 +70,7 @@ describe('Kova Protocol Conformance Suite', () => {
 
 describe('Conformance: Crypto', () => {
   it('passes all cryptographic primitive checks', async () => {
-    const result = await cryptoConformance(steleTarget);
+    const result = await cryptoConformance(kovaTarget);
 
     if (result.failures.length > 0) {
       const details = formatFailures(result.failures);
@@ -127,7 +127,7 @@ describe('Conformance: Crypto', () => {
 
 describe('Conformance: CCL', () => {
   it('passes all CCL parsing and evaluation checks', async () => {
-    const result = await cclConformance(steleTarget);
+    const result = await cclConformance(kovaTarget);
 
     if (result.failures.length > 0) {
       const details = formatFailures(result.failures);
@@ -194,7 +194,7 @@ describe('Conformance: CCL', () => {
 
 describe('Conformance: Covenant', () => {
   it('passes all covenant lifecycle checks', async () => {
-    const result = await covenantConformance(steleTarget);
+    const result = await covenantConformance(kovaTarget);
 
     if (result.failures.length > 0) {
       const details = formatFailures(result.failures);
@@ -250,7 +250,7 @@ describe('Conformance: Covenant', () => {
 
 describe('Conformance: Interop', () => {
   it('passes all interoperability checks', async () => {
-    const result = await interopConformance(steleTarget);
+    const result = await interopConformance(kovaTarget);
 
     if (result.failures.length > 0) {
       const details = formatFailures(result.failures);
@@ -321,7 +321,7 @@ describe('Conformance: Interop', () => {
 
 describe('Conformance: Security', () => {
   it('passes all security invariant checks', async () => {
-    const result = await securityConformance(steleTarget);
+    const result = await securityConformance(kovaTarget);
 
     if (result.failures.length > 0) {
       const details = formatFailures(result.failures);

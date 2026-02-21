@@ -1,8 +1,8 @@
-# Stele Adoption Strategy
+# Kova Adoption Strategy
 
 ## 1. The Problem in Plain English
 
-AI agents are being deployed into production with no standardized way to make verifiable commitments about their behavior. Today, when an AI system promises "I will not delete your data," that promise exists only as a prompt string -- unsigned, unverifiable, and silently changeable. As agents gain access to real infrastructure (databases, APIs, financial systems), the gap between what they claim they will do and what they can provably commit to becomes a liability. Stele closes this gap with cryptographic covenants: signed, content-addressed constraint documents that any party can independently verify.
+AI agents are being deployed into production with no standardized way to make verifiable commitments about their behavior. Today, when an AI system promises "I will not delete your data," that promise exists only as a prompt string -- unsigned, unverifiable, and silently changeable. As agents gain access to real infrastructure (databases, APIs, financial systems), the gap between what they claim they will do and what they can provably commit to becomes a liability. Kova closes this gap with cryptographic covenants: signed, content-addressed constraint documents that any party can independently verify.
 
 ## 2. Adoption Tiers
 
@@ -13,8 +13,8 @@ AI agents are being deployed into production with no standardized way to make ve
 - Install `@usekova/sdk` (single dependency, zero native modules)
 - Generate an Ed25519 key pair
 - Write CCL constraints for your agent's permitted actions
-- Build and sign a covenant with `SteleClient.createCovenant()`
-- Evaluate actions at runtime with `SteleClient.evaluateAction()`
+- Build and sign a covenant with `KovaClient.createCovenant()`
+- Evaluate actions at runtime with `KovaClient.evaluateAction()`
 
 **What you get**: Your agent's permissions are cryptographically signed and auditable. You can prove to yourself (or a user) exactly what the agent is allowed to do. Default-deny semantics mean an uncovered action is never silently permitted.
 
@@ -22,7 +22,7 @@ AI agents are being deployed into production with no standardized way to make ve
 
 **Goal**: Enforce covenants across your HTTP services and share covenant state across team members.
 
-- Use `steleMiddleware()` to enforce covenants on Express/Fastify routes
+- Use `kovaMiddleware()` to enforce covenants on Express/Fastify routes
 - Store covenants in `SqliteStore` or `FileStore` for persistence
 - Use `Verifier` for batch verification in CI pipelines
 - Use chain delegation to grant sub-agents narrower permissions than the parent
@@ -34,7 +34,7 @@ AI agents are being deployed into production with no standardized way to make ve
 
 **Goal**: Compliance-grade covenant infrastructure with key lifecycle management, audit trails, and integration with existing security tooling.
 
-- Enable `keyRotation` on `SteleClient` for automatic key lifecycle management
+- Enable `keyRotation` on `KovaClient` for automatic key lifecycle management
 - Use the `Monitor` class in enforce mode with `onViolation` callbacks wired to your SIEM
 - Generate capability manifests (`CapabilityGate.generateManifest()`) as compliance artifacts
 - Use `telemetryMiddleware()` with your existing OpenTelemetry collector
@@ -47,18 +47,18 @@ AI agents are being deployed into production with no standardized way to make ve
 
 ### What exists today
 
-There is no direct competitor to Stele. The concept of cryptographically signed, pre-operative constraint commitments for AI agents does not exist as a shipping product or open standard. This is a new category.
+There is no direct competitor to Kova. The concept of cryptographically signed, pre-operative constraint commitments for AI agents does not exist as a shipping product or open standard. This is a new category.
 
 The closest conceptual precedent is X.509 certificate chains (binding an identity to a public key with constraints), but X.509 was designed for TLS endpoints, not for governing AI agent behavior with a domain-specific constraint language.
 
-### Adjacent solutions and how Stele differs
+### Adjacent solutions and how Kova differs
 
-| Approach | What it does | How Stele differs |
+| Approach | What it does | How Kova differs |
 |---|---|---|
-| **Guardrails (Guardrails AI, NeMo)** | Runtime input/output filtering on LLM calls | Stele governs actions, not text. Constraints are signed commitments, not runtime filters. A guardrail can be silently disabled; a covenant cannot be silently modified. |
-| **RBAC / ACL systems** | Post-hoc policy enforcement by an authority | The authority can change rules at any time without the subject's knowledge. Stele's covenants are pre-operative commitments: the issuer signs before execution, and modification requires a new signature. |
-| **Sandboxing (gVisor, Firecracker)** | OS-level isolation of processes | Sandboxing restricts what a process *can* do at the kernel level. Stele restricts what an agent *is committed* to doing at the application level. They are complementary: a sandbox enforces; a covenant commits. |
-| **Policy engines (OPA, Cedar)** | Centralized policy evaluation | OPA evaluates policies but does not sign them. There is no cryptographic binding between the policy author and the policy content. Stele adds non-repudiation and content-addressing on top of policy evaluation. |
+| **Guardrails (Guardrails AI, NeMo)** | Runtime input/output filtering on LLM calls | Kova governs actions, not text. Constraints are signed commitments, not runtime filters. A guardrail can be silently disabled; a covenant cannot be silently modified. |
+| **RBAC / ACL systems** | Post-hoc policy enforcement by an authority | The authority can change rules at any time without the subject's knowledge. Kova's covenants are pre-operative commitments: the issuer signs before execution, and modification requires a new signature. |
+| **Sandboxing (gVisor, Firecracker)** | OS-level isolation of processes | Sandboxing restricts what a process *can* do at the kernel level. Kova restricts what an agent *is committed* to doing at the application level. They are complementary: a sandbox enforces; a covenant commits. |
+| **Policy engines (OPA, Cedar)** | Centralized policy evaluation | OPA evaluates policies but does not sign them. There is no cryptographic binding between the policy author and the policy content. Kova adds non-repudiation and content-addressing on top of policy evaluation. |
 
 ### Why "just use ACLs" is not enough
 
@@ -68,16 +68,16 @@ ACLs answer the question "is this principal allowed to do this?" at the moment o
 - **Can a third party verify these permissions without access to the authority?** (Independent verifiability)
 - **Can the subject prove what it was committed to?** (Beneficiary-verifiable commitments)
 
-Stele answers all four. The covenant is the commitment; the signature is the proof; the CCL document is the constraint.
+Kova answers all four. The covenant is the commitment; the signature is the proof; the CCL document is the constraint.
 
 ## 4. Integration Paths
 
 ### Express / Fastify
 
 ```typescript
-import { steleMiddleware } from '@usekova/sdk';
+import { kovaMiddleware } from '@usekova/sdk';
 
-app.use(steleMiddleware({ covenant, client }));
+app.use(kovaMiddleware({ covenant, client }));
 // Every request is evaluated against the covenant's CCL constraints.
 // Denied requests receive a 403 with the denial reason.
 ```
@@ -85,34 +85,34 @@ app.use(steleMiddleware({ covenant, client }));
 ### Vercel AI SDK
 
 ```typescript
-import { withStele, withSteleTools } from '@usekova/sdk';
+import { withKova, withKovaTools } from '@usekova/sdk';
 
 // Wrap a single tool
-const guardedTool = withStele(myTool, { covenant, client });
+const guardedTool = withKova(myTool, { covenant, client });
 
 // Or wrap all tools in a tool set
-const guardedTools = withSteleTools(toolSet, { covenant, client });
+const guardedTools = withKovaTools(toolSet, { covenant, client });
 ```
 
 ### LangChain
 
 ```typescript
-import { SteleCallbackHandler, withSteleTool } from '@usekova/sdk';
+import { KovaCallbackHandler, withKovaTool } from '@usekova/sdk';
 
 // Callback handler for chain-level enforcement
-const handler = new SteleCallbackHandler({ covenant, client });
+const handler = new KovaCallbackHandler({ covenant, client });
 const chain = myChain.withConfig({ callbacks: [handler] });
 
 // Or wrap individual tools
-const guardedTool = withSteleTool(myTool, { covenant, client });
+const guardedTool = withKovaTool(myTool, { covenant, client });
 ```
 
 ### Direct SDK Usage
 
 ```typescript
-import { SteleClient } from '@usekova/sdk';
+import { KovaClient } from '@usekova/sdk';
 
-const client = new SteleClient();
+const client = new KovaClient();
 await client.generateKeyPair();
 
 const covenant = await client.createCovenant({ /* ... */ });
@@ -125,7 +125,7 @@ if (!result.permitted) {
 
 ### MCP Server
 
-The `@usekova/mcp-server` package exposes Stele operations as MCP tools, allowing AI agents to create, verify, and evaluate covenants through the Model Context Protocol.
+The `@usekova/mcp-server` package exposes Kova operations as MCP tools, allowing AI agents to create, verify, and evaluate covenants through the Model Context Protocol.
 
 ## 5. Stability Tiers
 
@@ -138,7 +138,7 @@ These packages have comprehensive test coverage, stable APIs, and are safe for p
 | `@usekova/crypto` | Ed25519 key generation, signing, verification, hashing |
 | `@usekova/ccl` | Constraint Commitment Language parser and evaluator |
 | `@usekova/core` | Covenant build, verify, countersign, chain operations |
-| `@usekova/sdk` | High-level SteleClient unifying all operations |
+| `@usekova/sdk` | High-level KovaClient unifying all operations |
 | `@usekova/store` | MemoryStore, FileStore, SqliteStore |
 | `@usekova/identity` | Agent identity creation, evolution, verification |
 | `@usekova/verifier` | Standalone verification engine with history and batch support |
@@ -153,9 +153,9 @@ APIs may change in minor versions. Functional and tested, but integration patter
 | `@usekova/react` | React hooks and components for covenant UI |
 | `@usekova/evm` | Ethereum/EVM covenant anchoring |
 | `@usekova/mcp-server` | Model Context Protocol server for AI agent access |
-| Express middleware | `steleMiddleware()` in `@usekova/sdk` adapters |
-| Vercel AI adapter | `withStele()` / `withSteleTools()` in `@usekova/sdk` adapters |
-| LangChain adapter | `SteleCallbackHandler` / `withSteleTool()` in `@usekova/sdk` adapters |
+| Express middleware | `kovaMiddleware()` in `@usekova/sdk` adapters |
+| Vercel AI adapter | `withKova()` / `withKovaTools()` in `@usekova/sdk` adapters |
+| LangChain adapter | `KovaCallbackHandler` / `withKovaTool()` in `@usekova/sdk` adapters |
 
 ### Experimental
 
@@ -185,7 +185,7 @@ These packages explore advanced protocol concepts. APIs will change. Not recomme
 
 ### Near-term (next release)
 
-1. **npm publish**: Publish all stable-tier packages to npm under the `@stele` scope.
+1. **npm publish**: Publish all stable-tier packages to npm under the `@usekova` scope.
 2. **Security audit**: Engage an external firm to audit `@usekova/crypto`, `@usekova/ccl`, and `@usekova/core`. The threat model (THREAT_MODEL.md) defines the scope.
 3. **API documentation site**: Generate and host TypeDoc output for all stable packages.
 

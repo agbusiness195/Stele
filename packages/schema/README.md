@@ -1,6 +1,6 @@
 # @usekova/schema
 
-JSON Schema definitions (Draft 2020-12) for Stele protocol documents, enabling cross-language validation without the TypeScript SDK.
+JSON Schema definitions (Draft 2020-12) for Kova protocol documents, enabling cross-language validation without the TypeScript SDK.
 
 ## Installation
 
@@ -12,7 +12,7 @@ npm install @usekova/schema
 
 ### Schema Constants
 - **COVENANT_SCHEMA**: JSON Schema for `CovenantDocument` objects
-- **DISCOVERY_DOCUMENT_SCHEMA**: JSON Schema for `.well-known/stele/` discovery documents
+- **DISCOVERY_DOCUMENT_SCHEMA**: JSON Schema for `.well-known/kova/` discovery documents
 - **AGENT_KEY_SCHEMA**: JSON Schema for `AgentKeyEntry` objects
 - **CCL_EVALUATION_CONTEXT_SCHEMA**: JSON Schema for CCL evaluation contexts
 
@@ -61,4 +61,4 @@ console.log(Object.keys(all)); // ['covenant', 'discovery', 'agentKey', 'cclCont
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Kova SDK root documentation](../../README.md) for the full API reference.

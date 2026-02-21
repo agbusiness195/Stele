@@ -1,5 +1,5 @@
 /**
- * Lightweight schema validation for Stele documents.
+ * Lightweight schema validation for Kova documents.
  *
  * Provides validation against the formal JSON Schema definitions
  * without requiring external dependencies (no Ajv).

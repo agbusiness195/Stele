@@ -1,6 +1,6 @@
 # @usekova/types
 
-Shared type definitions, error classes, validation utilities, and protocol constants for the Stele SDK.
+Shared type definitions, error classes, validation utilities, and protocol constants for the Kova SDK.
 
 ## Installation
 
@@ -13,12 +13,12 @@ npm install @usekova/types
 ### Error Classes
 
 ```typescript
-import { SteleError, SteleErrorCode, ValidationError } from '@usekova/types';
+import { KovaError, KovaErrorCode, ValidationError } from '@usekova/types';
 
 try {
-  throw new SteleError('Something went wrong', SteleErrorCode.INVALID_INPUT);
+  throw new KovaError('Something went wrong', KovaErrorCode.INVALID_INPUT);
 } catch (err) {
-  if (err instanceof SteleError) {
+  if (err instanceof KovaError) {
     console.log(err.code); // 'INVALID_INPUT'
   }
 }
@@ -65,15 +65,15 @@ const safe = sanitizeString(userInput, { maxLength: 256 });
 
 ## Key APIs
 
-- **Error classes**: `SteleError`, `ValidationError`, `CryptoError`, `CCLError`, `ChainError`, `StorageError`
+- **Error classes**: `KovaError`, `ValidationError`, `CryptoError`, `CCLError`, `ChainError`, `StorageError`
 - **Result type**: `Result<T, E>`, `ok()`, `err()`
 - **Validation**: `validateNonEmpty()`, `validateRange()`, `validateHex()`, `validateProbability()`
 - **Type guards**: `isNonEmptyString()`, `isValidHex()`, `isValidPublicKey()`, `isPlainObject()`
 - **Sanitization**: `sanitizeString()`, `sanitizeJsonInput()`, `freezeDeep()`
 - **Observability**: `Logger`, `createLogger()`, `Tracer`, `Counter`, `Gauge`, `Histogram`
 - **Resilience**: `withRetry()`, `CircuitBreaker`, `HealthChecker`
-- **Constants**: `STELE_VERSION`, `DEFAULT_SEVERITY`, `SUPPORTED_HASH_ALGORITHMS`
+- **Constants**: `KOVA_VERSION`, `DEFAULT_SEVERITY`, `SUPPORTED_HASH_ALGORITHMS`
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Kova SDK root documentation](../../README.md) for the full API reference and architecture guide.

@@ -1,5 +1,5 @@
 /**
- * Trust-gated access control for the Stele protocol.
+ * Trust-gated access control for the Kova protocol.
  *
  * Agents without Kova covenant compliance get no access to premium APIs.
  * Trust scores determine the access tier: denied, basic, standard, or premium.
