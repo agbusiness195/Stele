@@ -1,3 +1,3 @@
-module github.com/agbusiness195/kova/implementations/go
+module github.com/agbusiness195/grith/implementations/go
 
 go 1.21

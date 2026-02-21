@@ -1,7 +1,7 @@
 {
-  "name": "@usekova/discovery",
+  "name": "@grith/discovery",
   "version": "2.0.0",
-  "description": "Cross-platform discovery protocol for .well-known/kova/ endpoints",
+  "description": "Cross-platform discovery protocol for .well-known/grith/ endpoints",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,9 +27,9 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@usekova/core": "2.0.0",
-    "@usekova/crypto": "2.0.0",
-    "@usekova/types": "2.0.0"
+    "@grith/core": "2.0.0",
+    "@grith/crypto": "2.0.0",
+    "@grith/types": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -40,16 +40,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kova.git",
+    "url": "https://github.com/agbusiness195/grith.git",
     "directory": "packages/discovery"
   },
-  "homepage": "https://usekova.dev",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kova/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
-  "author": "Kova Labs, Inc.",
+  "author": "Grith Labs, Inc.",
   "keywords": [
-    "kova",
+    "grith",
     "discovery",
     "well-known",
     "cross-platform",

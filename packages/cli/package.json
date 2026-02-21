@@ -1,7 +1,7 @@
 {
-  "name": "@usekova/cli",
+  "name": "@grith/cli",
   "version": "2.0.0",
-  "description": "Command-line interface for the Kova covenant framework",
+  "description": "Command-line interface for the Grith covenant framework",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "kova": "./dist/index.js"
+    "grith": "./dist/index.js"
   },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
@@ -29,15 +29,15 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@usekova/crypto": "2.0.0",
-    "@usekova/ccl": "2.0.0",
-    "@usekova/core": "2.0.0",
-    "@usekova/identity": "2.0.0",
-    "@usekova/enforcement": "2.0.0",
-    "@usekova/proof": "2.0.0",
-    "@usekova/reputation": "2.0.0",
-    "@usekova/breach": "2.0.0",
-    "@usekova/mcp": "2.0.0"
+    "@grith/crypto": "2.0.0",
+    "@grith/ccl": "2.0.0",
+    "@grith/core": "2.0.0",
+    "@grith/identity": "2.0.0",
+    "@grith/enforcement": "2.0.0",
+    "@grith/proof": "2.0.0",
+    "@grith/reputation": "2.0.0",
+    "@grith/breach": "2.0.0",
+    "@grith/mcp": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -48,16 +48,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kova.git",
+    "url": "https://github.com/agbusiness195/grith.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://usekova.dev",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kova/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
-  "author": "Kova Labs, Inc.",
+  "author": "Grith Labs, Inc.",
   "keywords": [
-    "kova",
+    "grith",
     "covenant",
     "ai-accountability",
     "cli",

@@ -1,5 +1,5 @@
 /**
- * Deprecation warning system for the Kova SDK.
+ * Deprecation warning system for the Grith SDK.
  *
  * Provides utilities to emit deprecation warnings to stderr (once per API
  * per process), wrap functions with deprecation notices, and inspect
@@ -12,13 +12,13 @@
 
 /** Describes a deprecated API and its replacement. */
 export interface DeprecationWarning {
-  /** The name of the deprecated API (e.g., `'KovaSDK.sign'`). */
+  /** The name of the deprecated API (e.g., `'GrithSDK.sign'`). */
   api: string;
   /** The version in which the API was deprecated (e.g., `'0.2.0'`). */
   since: string;
   /** The version in which the API will be removed (e.g., `'1.0.0'`). */
   removeIn: string;
-  /** What to use instead (e.g., `'Use KovaSDK.signCovenant() instead'`). */
+  /** What to use instead (e.g., `'Use GrithSDK.signCovenant() instead'`). */
   alternative: string;
 }
 
@@ -56,10 +56,10 @@ function formatWarning(warning: DeprecationWarning): string {
  * @example
  * ```typescript
  * deprecated({
- *   api: 'KovaSDK.sign',
+ *   api: 'GrithSDK.sign',
  *   since: '0.2.0',
  *   removeIn: '1.0.0',
- *   alternative: 'Use KovaSDK.signCovenant() instead',
+ *   alternative: 'Use GrithSDK.signCovenant() instead',
  * });
  * ```
  */

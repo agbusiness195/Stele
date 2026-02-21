@@ -1,7 +1,7 @@
 {
-  "name": "@usekova/crypto",
+  "name": "@grith/crypto",
   "version": "2.0.0",
-  "description": "Cryptographic primitives for the Kova covenant framework",
+  "description": "Cryptographic primitives for the Grith covenant framework",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,16 +27,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kova.git",
+    "url": "https://github.com/agbusiness195/grith.git",
     "directory": "packages/crypto"
   },
-  "homepage": "https://usekova.dev",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kova/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
-  "author": "Kova Labs, Inc.",
+  "author": "Grith Labs, Inc.",
   "keywords": [
-    "kova",
+    "grith",
     "covenant",
     "ai-accountability",
     "cryptography",
@@ -55,6 +55,6 @@
   "dependencies": {
     "@noble/ed25519": "^2.1.0",
     "@noble/hashes": "^1.4.0",
-    "@usekova/types": "2.0.0"
+    "@grith/types": "2.0.0"
   }
 }

@@ -1,22 +1,22 @@
-import { generateKeyPair, timestamp, sha256Object } from '@usekova/crypto';
-import type { KeyPair, HashHex } from '@usekova/crypto';
-import { parse } from '@usekova/ccl';
-import type { Severity } from '@usekova/ccl';
-import { buildCovenant } from '@usekova/core';
-import type { CovenantDocument } from '@usekova/core';
-import { Monitor } from '@usekova/enforcement';
-import type { AuditLog, AuditEntry } from '@usekova/enforcement';
-import { createIdentity } from '@usekova/identity';
-import type { AgentIdentity, ModelAttestation } from '@usekova/identity';
-import { createReceipt } from '@usekova/reputation';
-import type { ExecutionReceipt } from '@usekova/reputation';
-import { generateComplianceProof } from '@usekova/proof';
-import type { ComplianceProof, AuditEntryData } from '@usekova/proof';
+import { generateKeyPair, timestamp, sha256Object } from '@grith/crypto';
+import type { KeyPair, HashHex } from '@grith/crypto';
+import { parse } from '@grith/ccl';
+import type { Severity } from '@grith/ccl';
+import { buildCovenant } from '@grith/core';
+import type { CovenantDocument } from '@grith/core';
+import { Monitor } from '@grith/enforcement';
+import type { AuditLog, AuditEntry } from '@grith/enforcement';
+import { createIdentity } from '@grith/identity';
+import type { AgentIdentity, ModelAttestation } from '@grith/identity';
+import { createReceipt } from '@grith/reputation';
+import type { ExecutionReceipt } from '@grith/reputation';
+import { generateComplianceProof } from '@grith/proof';
+import type { ComplianceProof, AuditEntryData } from '@grith/proof';
 
 import { PRESETS } from './presets.js';
 import type {
   MCPServer,
-  KovaGuardOptions,
+  GrithGuardOptions,
   WrappedMCPServer,
   ViolationDetails,
   ToolCallDetails,
@@ -26,7 +26,7 @@ import type {
 export type {
   MCPServer,
   MCPTool,
-  KovaGuardOptions,
+  GrithGuardOptions,
   WrappedMCPServer,
   ViolationDetails,
   ToolCallDetails,
@@ -111,24 +111,24 @@ function extractConstraint(matchedRule: unknown): string {
 }
 
 // ---------------------------------------------------------------------------
-// KovaGuard
+// GrithGuard
 // ---------------------------------------------------------------------------
 
 /**
- * KovaGuard wraps any MCP server with Kova accountability.
+ * GrithGuard wraps any MCP server with Grith accountability.
  *
  * Usage (2 lines):
  * ```ts
- * import { KovaGuard } from '@usekova/mcp';
- * const server = await KovaGuard.wrap(myMcpServer, { constraints: 'standard:data-isolation' });
+ * import { GrithGuard } from '@grith/mcp';
+ * const server = await GrithGuard.wrap(myMcpServer, { constraints: 'standard:data-isolation' });
  * ```
  */
-export class KovaGuard {
+export class GrithGuard {
   // Private constructor - use static factory methods
   private constructor() {}
 
   /**
-   * Wrap an MCP server with Kova accountability using constraint text
+   * Wrap an MCP server with Grith accountability using constraint text
    * (either a preset name or raw CCL).
    *
    * Generates a keypair if one is not provided, creates an agent identity,
@@ -137,7 +137,7 @@ export class KovaGuard {
    */
   static async wrap(
     server: MCPServer,
-    options: KovaGuardOptions,
+    options: GrithGuardOptions,
   ): Promise<WrappedMCPServer> {
     // 1. Resolve constraints
     const constraintSource = resolveConstraints(options.constraints);
@@ -195,7 +195,7 @@ export class KovaGuard {
     });
 
     // 6. Build the wrapped server
-    return KovaGuard.buildWrappedServer(
+    return GrithGuard.buildWrappedServer(
       server,
       monitor,
       identity,
@@ -240,7 +240,7 @@ export class KovaGuard {
       mode,
     });
 
-    return KovaGuard.buildWrappedServer(
+    return GrithGuard.buildWrappedServer(
       server,
       monitor,
       identity,
@@ -260,7 +260,7 @@ export class KovaGuard {
     identity: AgentIdentity,
     covenant: CovenantDocument,
     operatorKeyPair: KeyPair,
-    options: Partial<KovaGuardOptions>,
+    options: Partial<GrithGuardOptions>,
   ): WrappedMCPServer {
     // Track state for receipt generation
     let totalToolCalls = 0;
@@ -391,7 +391,7 @@ export class KovaGuard {
     };
 
     // Build the wrapped server object by copying all original properties
-    // and adding the Kova methods
+    // and adding the Grith methods
     const wrapped: WrappedMCPServer = Object.create(null);
 
     // Copy all properties from the original server
@@ -410,7 +410,7 @@ export class KovaGuard {
     // Set the intercepted handler
     wrapped.handleToolCall = interceptedHandleToolCall;
 
-    // Expose Kova accessors
+    // Expose Grith accessors
     wrapped.getMonitor = (): Monitor => monitor;
     wrapped.getIdentity = (): AgentIdentity => identity;
     wrapped.getAuditLog = (): AuditLog => monitor.getAuditLog();

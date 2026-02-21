@@ -1,7 +1,7 @@
 {
-  "name": "@usekova/mcp-server",
+  "name": "@grith/mcp-server",
   "version": "2.0.0",
-  "description": "Model Context Protocol server with stdio transport that exposes Kova covenant tools to AI agents",
+  "description": "Model Context Protocol server with stdio transport that exposes Grith covenant tools to AI agents",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "kova-mcp": "dist/bin.js"
+    "grith-mcp": "dist/bin.js"
   },
   "files": [
     "dist",
@@ -27,12 +27,12 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@usekova/types": "2.0.0",
-    "@usekova/crypto": "2.0.0",
-    "@usekova/core": "2.0.0",
-    "@usekova/store": "2.0.0",
-    "@usekova/verifier": "2.0.0",
-    "@usekova/sdk": "2.0.0"
+    "@grith/types": "2.0.0",
+    "@grith/crypto": "2.0.0",
+    "@grith/core": "2.0.0",
+    "@grith/store": "2.0.0",
+    "@grith/verifier": "2.0.0",
+    "@grith/sdk": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -43,16 +43,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kova.git",
+    "url": "https://github.com/agbusiness195/grith.git",
     "directory": "packages/mcp-server"
   },
-  "homepage": "https://usekova.dev",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kova/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
-  "author": "Kova Labs, Inc.",
+  "author": "Grith Labs, Inc.",
   "keywords": [
-    "kova",
+    "grith",
     "covenant",
     "ai-accountability",
     "mcp",

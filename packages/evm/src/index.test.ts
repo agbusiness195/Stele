@@ -15,7 +15,7 @@ import {
   isValidAddress,
   checksumAddress,
   covenantIdToBytes32,
-  KOVA_REGISTRY_ABI,
+  GRITH_REGISTRY_ABI,
   EVMClient,
   keccak256,
   type CovenantAnchor,
@@ -561,18 +561,18 @@ describe('covenantIdToBytes32', () => {
   });
 });
 
-// ─── KOVA_REGISTRY_ABI ────────────────────────────────────────────────────────
+// ─── GRITH_REGISTRY_ABI ────────────────────────────────────────────────────────
 
-describe('KOVA_REGISTRY_ABI', () => {
+describe('GRITH_REGISTRY_ABI', () => {
   it('contains exactly 3 function definitions', () => {
-    expect(KOVA_REGISTRY_ABI.length).toBe(3);
-    for (const entry of KOVA_REGISTRY_ABI) {
+    expect(GRITH_REGISTRY_ABI.length).toBe(3);
+    for (const entry of GRITH_REGISTRY_ABI) {
       expect(entry.type).toBe('function');
     }
   });
 
   it('has an anchor function with 5 inputs and 0 outputs', () => {
-    const anchor = KOVA_REGISTRY_ABI.find((e) => e.name === 'anchor');
+    const anchor = GRITH_REGISTRY_ABI.find((e) => e.name === 'anchor');
     expect(anchor).toBeDefined();
     expect(anchor!.inputs.length).toBe(5);
     expect(anchor!.outputs.length).toBe(0);
@@ -580,13 +580,13 @@ describe('KOVA_REGISTRY_ABI', () => {
   });
 
   it('anchor function has correct input types', () => {
-    const anchor = KOVA_REGISTRY_ABI.find((e) => e.name === 'anchor')!;
+    const anchor = GRITH_REGISTRY_ABI.find((e) => e.name === 'anchor')!;
     const types = anchor.inputs.map((i) => i.type);
     expect(types).toEqual(['bytes32', 'bytes32', 'address', 'address', 'uint256']);
   });
 
   it('has a verify function with 1 input and bool output', () => {
-    const verify = KOVA_REGISTRY_ABI.find((e) => e.name === 'verify');
+    const verify = GRITH_REGISTRY_ABI.find((e) => e.name === 'verify');
     expect(verify).toBeDefined();
     expect(verify!.inputs.length).toBe(1);
     expect(verify!.inputs[0]!.type).toBe('bytes32');
@@ -596,7 +596,7 @@ describe('KOVA_REGISTRY_ABI', () => {
   });
 
   it('has a getAnchor function with 1 input and 4 outputs', () => {
-    const getAnchor = KOVA_REGISTRY_ABI.find((e) => e.name === 'getAnchor');
+    const getAnchor = GRITH_REGISTRY_ABI.find((e) => e.name === 'getAnchor');
     expect(getAnchor).toBeDefined();
     expect(getAnchor!.inputs.length).toBe(1);
     expect(getAnchor!.inputs[0]!.type).toBe('bytes32');
@@ -607,7 +607,7 @@ describe('KOVA_REGISTRY_ABI', () => {
   });
 
   it('all functions have name and type fields', () => {
-    for (const entry of KOVA_REGISTRY_ABI) {
+    for (const entry of GRITH_REGISTRY_ABI) {
       expect(typeof entry.name).toBe('string');
       expect(entry.name.length).toBeGreaterThan(0);
       expect(entry.type).toBe('function');

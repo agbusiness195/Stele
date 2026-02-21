@@ -96,7 +96,7 @@ This is not an indictment of the people building these systems. They are buildin
 
 Now it does.
 
-Kova is the accountability primitive for AI agents. A covenant is a signed, immutable behavioral commitment. An action log is a tamper-evident Merkle tree. A proof is a zero-knowledge demonstration that an agent honored its commitments. Verification is trustless, deterministic, and independent. No oracle. No intermediary. No trust assumption.
+Grith is the accountability primitive for AI agents. A covenant is a signed, immutable behavioral commitment. An action log is a tamper-evident Merkle tree. A proof is a zero-knowledge demonstration that an agent honored its commitments. Verification is trustless, deterministic, and independent. No oracle. No intermediary. No trust assumption.
 
 The protocol is open. The specification is public. The code is available. The standard exists for anyone to adopt, extend, and build on.
 

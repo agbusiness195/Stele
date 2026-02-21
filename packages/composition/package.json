@@ -1,5 +1,5 @@
 {
-  "name": "@usekova/composition",
+  "name": "@grith/composition",
   "version": "2.0.0",
   "description": "Covenant composition with merge, intersect, and chain operations",
   "sideEffects": false,
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@usekova/crypto": "2.0.0",
-    "@usekova/ccl": "2.0.0"
+    "@grith/crypto": "2.0.0",
+    "@grith/ccl": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -39,16 +39,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kova.git",
+    "url": "https://github.com/agbusiness195/grith.git",
     "directory": "packages/composition"
   },
-  "homepage": "https://usekova.dev",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kova/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
-  "author": "Kova Labs, Inc.",
+  "author": "Grith Labs, Inc.",
   "keywords": [
-    "kova",
+    "grith",
     "covenant",
     "ai-accountability",
     "composition",

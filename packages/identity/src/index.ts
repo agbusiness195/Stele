@@ -7,10 +7,10 @@ import {
   toHex,
   fromHex,
   timestamp,
-} from '@usekova/crypto';
-import type { HashHex, KeyPair } from '@usekova/crypto';
-import { DocumentedKovaError as KovaError, DocumentedErrorCode as KovaErrorCode } from '@usekova/types';
-import { poseidonHash, hashToField, fieldToHex } from '@usekova/proof';
+} from '@grith/crypto';
+import type { HashHex, KeyPair } from '@grith/crypto';
+import { DocumentedGrithError as GrithError, DocumentedErrorCode as GrithErrorCode } from '@grith/types';
+import { poseidonHash, hashToField, fieldToHex } from '@grith/proof';
 
 export type {
   RuntimeType,
@@ -151,37 +151,37 @@ export async function createIdentity(
   options: CreateIdentityOptions
 ): Promise<AgentIdentity> {
   if (!options || typeof options !== 'object') {
-    throw new KovaError(
-      KovaErrorCode.IDENTITY_INVALID,
+    throw new GrithError(
+      GrithErrorCode.IDENTITY_INVALID,
       'createIdentity() requires a valid options object',
       { hint: 'Pass an object with operatorKeyPair, model, capabilities, and deployment fields.' }
     );
   }
   const { operatorKeyPair, operatorIdentifier, model, capabilities, deployment } = options;
   if (!operatorKeyPair || !operatorKeyPair.privateKey || !operatorKeyPair.publicKey || !operatorKeyPair.publicKeyHex) {
-    throw new KovaError(
-      KovaErrorCode.IDENTITY_INVALID,
+    throw new GrithError(
+      GrithErrorCode.IDENTITY_INVALID,
       'createIdentity() requires a valid operatorKeyPair with privateKey, publicKey, and publicKeyHex',
-      { hint: 'Generate a key pair with generateKeyPair() from @usekova/crypto.' }
+      { hint: 'Generate a key pair with generateKeyPair() from @grith/crypto.' }
     );
   }
   if (!model || typeof model !== 'object') {
-    throw new KovaError(
-      KovaErrorCode.IDENTITY_INVALID,
+    throw new GrithError(
+      GrithErrorCode.IDENTITY_INVALID,
       'createIdentity() requires a valid model attestation object',
       { hint: 'Provide a model object with at least provider and modelId fields.' }
     );
   }
   if (!Array.isArray(capabilities)) {
-    throw new KovaError(
-      KovaErrorCode.IDENTITY_INVALID,
+    throw new GrithError(
+      GrithErrorCode.IDENTITY_INVALID,
       'createIdentity() requires a capabilities array',
       { hint: 'Provide a capabilities array (e.g. ["read", "write"]).' }
     );
   }
   if (!deployment || typeof deployment !== 'object') {
-    throw new KovaError(
-      KovaErrorCode.IDENTITY_INVALID,
+    throw new GrithError(
+      GrithErrorCode.IDENTITY_INVALID,
       'createIdentity() requires a valid deployment context object',
       { hint: 'Provide a deployment object with at least a runtime field.' }
     );
@@ -730,8 +730,8 @@ export function serializeIdentity(identity: AgentIdentity): string {
  */
 export function deserializeIdentity(json: string): AgentIdentity {
   if (typeof json !== 'string' || json.trim().length === 0) {
-    throw new KovaError(
-      KovaErrorCode.IDENTITY_INVALID,
+    throw new GrithError(
+      GrithErrorCode.IDENTITY_INVALID,
       'deserializeIdentity() requires a non-empty JSON string',
       { hint: 'Pass the JSON string output of serializeIdentity().' }
     );
@@ -741,16 +741,16 @@ export function deserializeIdentity(json: string): AgentIdentity {
   try {
     parsed = JSON.parse(json);
   } catch (e) {
-    throw new KovaError(
-      KovaErrorCode.IDENTITY_INVALID,
+    throw new GrithError(
+      GrithErrorCode.IDENTITY_INVALID,
       `Invalid identity JSON: ${e instanceof Error ? e.message : 'parse error'}`,
       { hint: 'Ensure the input is valid JSON. Use serializeIdentity() to produce well-formed output.', cause: e instanceof Error ? e : undefined }
     );
   }
 
   if (typeof parsed !== 'object' || parsed === null) {
-    throw new KovaError(
-      KovaErrorCode.IDENTITY_INVALID,
+    throw new GrithError(
+      GrithErrorCode.IDENTITY_INVALID,
       'Invalid identity JSON: expected an object',
       { hint: 'The top-level JSON value must be an object, not an array or primitive.' }
     );
@@ -775,8 +775,8 @@ export function deserializeIdentity(json: string): AgentIdentity {
 
   for (const field of requiredFields) {
     if (!(field in obj)) {
-      throw new KovaError(
-        KovaErrorCode.IDENTITY_INVALID,
+      throw new GrithError(
+        GrithErrorCode.IDENTITY_INVALID,
         `Invalid identity JSON: missing required field "${field}"`,
         { hint: `Ensure the identity object includes the "${field}" field.` }
       );
@@ -784,24 +784,24 @@ export function deserializeIdentity(json: string): AgentIdentity {
   }
 
   if (!Array.isArray(obj['lineage'])) {
-    throw new KovaError(
-      KovaErrorCode.IDENTITY_INVALID,
+    throw new GrithError(
+      GrithErrorCode.IDENTITY_INVALID,
       'Invalid identity JSON: lineage must be an array',
       { hint: 'The lineage field must be an array of LineageEntry objects.' }
     );
   }
 
   if (!Array.isArray(obj['capabilities'])) {
-    throw new KovaError(
-      KovaErrorCode.IDENTITY_INVALID,
+    throw new GrithError(
+      GrithErrorCode.IDENTITY_INVALID,
       'Invalid identity JSON: capabilities must be an array',
       { hint: 'The capabilities field must be an array of capability strings.' }
     );
   }
 
   if (typeof obj['version'] !== 'number') {
-    throw new KovaError(
-      KovaErrorCode.IDENTITY_INVALID,
+    throw new GrithError(
+      GrithErrorCode.IDENTITY_INVALID,
       'Invalid identity JSON: version must be a number',
       { hint: 'The version field must be a positive integer.' }
     );
@@ -849,8 +849,8 @@ export class AdaptiveCarryForward {
    */
   constructor(alpha: number = 0.1, basePolicy: EvolutionPolicy = DEFAULT_EVOLUTION_POLICY) {
     if (alpha <= 0 || alpha >= 1) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'AdaptiveCarryForward alpha must be in (0, 1)',
       );
     }
@@ -876,8 +876,8 @@ export class AdaptiveCarryForward {
    */
   observe(observation: CarryForwardObservation): void {
     if (observation.postEvolutionPerformance < 0 || observation.postEvolutionPerformance > 1) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'postEvolutionPerformance must be in [0, 1]',
       );
     }
@@ -1015,14 +1015,14 @@ export class LineageCompactor {
    */
   compact(lineage: LineageEntry[], retainCount: number): CompactedLineage {
     if (!Array.isArray(lineage) || lineage.length === 0) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'lineage must be a non-empty array',
       );
     }
     if (retainCount < 1 || !Number.isInteger(retainCount)) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'retainCount must be a positive integer',
       );
     }
@@ -1205,8 +1205,8 @@ export class SemanticVersion {
   constructor(initial?: SemVer) {
     this.version = initial ? { ...initial } : { major: 1, minor: 0, patch: 0 };
     if (this.version.major < 0 || this.version.minor < 0 || this.version.patch < 0) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'Version components must be non-negative',
       );
     }
@@ -1281,21 +1281,21 @@ export class SemanticVersion {
   static parse(versionString: string): SemVer {
     const parts = versionString.split('.');
     if (parts.length !== 3) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         `Invalid version string: "${versionString}". Expected format: "major.minor.patch"`,
       );
     }
     const [major, minor, patch] = parts.map(Number);
     if (isNaN(major!) || isNaN(minor!) || isNaN(patch!)) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         `Invalid version string: "${versionString}". Components must be numeric.`,
       );
     }
     if (major! < 0 || minor! < 0 || patch! < 0) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'Version components must be non-negative',
       );
     }
@@ -1360,8 +1360,8 @@ export class IdentitySimilarity {
 
     const total = this.capabilityWeight + this.lineageWeight + this.profileWeight;
     if (Math.abs(total - 1.0) > 0.001) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         `Similarity weights must sum to 1.0, got ${total}`,
       );
     }
@@ -1608,8 +1608,8 @@ const AUTO_DECAY_RATE: Record<ModelUpdateEvent['updateType'], number> = {
  */
 export function triggerReverification(event: ModelUpdateEvent): ReverificationRequirement {
   if (!event.agentId || typeof event.agentId !== 'string') {
-    throw new KovaError(
-      KovaErrorCode.IDENTITY_INVALID,
+    throw new GrithError(
+      GrithErrorCode.IDENTITY_INVALID,
       'triggerReverification() requires a valid agentId',
       { hint: 'Provide a non-empty string as the agentId in the ModelUpdateEvent.' },
     );
@@ -1805,8 +1805,8 @@ export class IdentityCommitment {
    */
   commit(identity: AgentIdentity): string {
     if (!identity || typeof identity !== 'object') {
-      throw new KovaError(
-        KovaErrorCode.IDENTITY_INVALID,
+      throw new GrithError(
+        GrithErrorCode.IDENTITY_INVALID,
         'IdentityCommitment.commit() requires a valid AgentIdentity',
         { hint: 'Pass a fully formed AgentIdentity object.' },
       );
@@ -1845,8 +1845,8 @@ export class IdentityCommitment {
    */
   commitField(identity: AgentIdentity, field: string): string {
     if (!identity || typeof identity !== 'object') {
-      throw new KovaError(
-        KovaErrorCode.IDENTITY_INVALID,
+      throw new GrithError(
+        GrithErrorCode.IDENTITY_INVALID,
         'IdentityCommitment.commitField() requires a valid AgentIdentity',
         { hint: 'Pass a fully formed AgentIdentity object.' },
       );
@@ -1873,8 +1873,8 @@ export class IdentityCommitment {
    */
   commitOperator(identity: AgentIdentity): string {
     if (!identity || typeof identity !== 'object') {
-      throw new KovaError(
-        KovaErrorCode.IDENTITY_INVALID,
+      throw new GrithError(
+        GrithErrorCode.IDENTITY_INVALID,
         'IdentityCommitment.commitOperator() requires a valid AgentIdentity',
         { hint: 'Pass a fully formed AgentIdentity object.' },
       );
@@ -1915,8 +1915,8 @@ export class IdentityCommitment {
       case 'updatedAt':
         return identity.updatedAt;
       default:
-        throw new KovaError(
-          KovaErrorCode.IDENTITY_INVALID,
+        throw new GrithError(
+          GrithErrorCode.IDENTITY_INVALID,
           `Unknown identity field: "${field}"`,
           {
             hint:
@@ -1978,8 +1978,8 @@ export class SelectiveDisclosure {
    */
   constructor(identity: AgentIdentity) {
     if (!identity || typeof identity !== 'object') {
-      throw new KovaError(
-        KovaErrorCode.IDENTITY_INVALID,
+      throw new GrithError(
+        GrithErrorCode.IDENTITY_INVALID,
         'SelectiveDisclosure requires a valid AgentIdentity',
         { hint: 'Pass a fully formed AgentIdentity object.' },
       );
@@ -2002,8 +2002,8 @@ export class SelectiveDisclosure {
    */
   proveProperty(property: string, value: unknown): DisclosureProof {
     if (!property || typeof property !== 'string') {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'proveProperty() requires a non-empty property name',
       );
     }
@@ -2063,20 +2063,20 @@ export class SelectiveDisclosure {
    */
   proveThreshold(dimension: string, threshold: number, actualValue: number): DisclosureProof {
     if (!dimension || typeof dimension !== 'string') {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'proveThreshold() requires a non-empty dimension name',
       );
     }
     if (typeof threshold !== 'number' || typeof actualValue !== 'number') {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'proveThreshold() requires numeric threshold and actualValue',
       );
     }
     if (actualValue < threshold) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         `Cannot prove threshold: actualValue (${actualValue}) is below threshold (${threshold})`,
         { hint: 'The actual value must be >= the threshold to generate a valid proof.' },
       );
@@ -2134,20 +2134,20 @@ export class SelectiveDisclosure {
    */
   proveSetMembership(property: string, actualValue: string, validSet: string[]): DisclosureProof {
     if (!property || typeof property !== 'string') {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'proveSetMembership() requires a non-empty property name',
       );
     }
     if (!Array.isArray(validSet) || validSet.length === 0) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'proveSetMembership() requires a non-empty validSet array',
       );
     }
     if (!validSet.includes(actualValue)) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         `Cannot prove set membership: actualValue is not in the validSet`,
         { hint: 'The actual value must be a member of the valid set.' },
       );
@@ -2209,20 +2209,20 @@ export class SelectiveDisclosure {
    */
   proveNonMembership(property: string, actualValue: string, excludedSet: string[]): DisclosureProof {
     if (!property || typeof property !== 'string') {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'proveNonMembership() requires a non-empty property name',
       );
     }
     if (!Array.isArray(excludedSet) || excludedSet.length === 0) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'proveNonMembership() requires a non-empty excludedSet array',
       );
     }
     if (excludedSet.includes(actualValue)) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'Cannot prove non-membership: actualValue is in the excludedSet',
         { hint: 'The actual value must NOT be a member of the excluded set.' },
       );
@@ -2282,14 +2282,14 @@ export class SelectiveDisclosure {
    */
   proveHistoryClean(lineage: LineageEntry[], breachTypes: string[]): DisclosureProof {
     if (!Array.isArray(lineage)) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'proveHistoryClean() requires a lineage array',
       );
     }
     if (!Array.isArray(breachTypes) || breachTypes.length === 0) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'proveHistoryClean() requires a non-empty breachTypes array',
       );
     }
@@ -2301,8 +2301,8 @@ export class SelectiveDisclosure {
           entry.changeType === breachType ||
           entry.description.toLowerCase().includes(breachType.toLowerCase())
         ) {
-          throw new KovaError(
-            KovaErrorCode.PROTOCOL_INVALID_INPUT,
+          throw new GrithError(
+            GrithErrorCode.PROTOCOL_INVALID_INPUT,
             `Cannot prove clean history: lineage entry matches breach type "${breachType}"`,
             { hint: `Entry "${entry.description}" at ${entry.timestamp} matches the breach pattern.` },
           );
@@ -2381,8 +2381,8 @@ export class SelectiveDisclosure {
     actualValue: number,
   ): DisclosureProof {
     if (!dimension || typeof dimension !== 'string') {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'proveRange() requires a non-empty dimension name',
       );
     }
@@ -2391,21 +2391,21 @@ export class SelectiveDisclosure {
       typeof upperBound !== 'number' ||
       typeof actualValue !== 'number'
     ) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'proveRange() requires numeric lowerBound, upperBound, and actualValue',
       );
     }
     if (lowerBound > upperBound) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         `Cannot prove range: lowerBound (${lowerBound}) is greater than upperBound (${upperBound})`,
         { hint: 'lowerBound must be <= upperBound.' },
       );
     }
     if (actualValue < lowerBound || actualValue > upperBound) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         `Cannot prove range: actualValue (${actualValue}) is outside [${lowerBound}, ${upperBound}]`,
         { hint: 'The actual value must satisfy lowerBound <= actualValue <= upperBound.' },
       );
@@ -2462,8 +2462,8 @@ export class SelectiveDisclosure {
     claims: Array<{ method: string; args: unknown[] }>,
   ): DisclosureProof {
     if (!Array.isArray(claims) || claims.length === 0) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'proveComposite() requires a non-empty claims array',
       );
     }
@@ -2472,8 +2472,8 @@ export class SelectiveDisclosure {
 
     for (const entry of claims) {
       if (!entry || typeof entry.method !== 'string' || !Array.isArray(entry.args)) {
-        throw new KovaError(
-          KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        throw new GrithError(
+          GrithErrorCode.PROTOCOL_INVALID_INPUT,
           'Each composite claim must have a string "method" and an array "args"',
         );
       }
@@ -2509,8 +2509,8 @@ export class SelectiveDisclosure {
           );
           break;
         default:
-          throw new KovaError(
-            KovaErrorCode.PROTOCOL_INVALID_INPUT,
+          throw new GrithError(
+            GrithErrorCode.PROTOCOL_INVALID_INPUT,
             `Unsupported composite claim method: "${entry.method}"`,
             {
               hint:

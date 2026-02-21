@@ -1,5 +1,5 @@
 /**
- * Framework adapters for the Kova SDK.
+ * Framework adapters for the Grith SDK.
  *
  * Re-exports all adapter factories and their associated types for
  * Express/HTTP, Vercel AI SDK, and LangChain integrations.
@@ -12,8 +12,8 @@
 // ─── Express / HTTP adapter (stable) ─────────────────────────────────────────
 
 export {
-  kovaMiddleware,
-  kovaGuardHandler,
+  grithMiddleware,
+  grithGuardHandler,
   createCovenantRouter,
 } from './express.js';
 
@@ -21,8 +21,8 @@ export type {
   IncomingRequest,
   OutgoingResponse,
   NextFunction,
-  KovaMiddlewareOptions,
-  KovaGuardHandlerOptions,
+  GrithMiddlewareOptions,
+  GrithGuardHandlerOptions,
   CovenantRouterOptions,
   CovenantRouter,
   AsyncHandler,
@@ -31,27 +31,27 @@ export type {
 // ─── Vercel AI SDK adapter (stable) ──────────────────────────────────────────
 
 export {
-  KovaAccessDeniedError,
-  withKova,
-  withKovaTools,
+  GrithAccessDeniedError,
+  withGrith,
+  withGrithTools,
   createToolGuard,
 } from './vercel-ai.js';
 
 export type {
   ToolLike,
-  KovaToolOptions,
+  GrithToolOptions,
 } from './vercel-ai.js';
 
 // ─── LangChain adapter (stable) ──────────────────────────────────────────────
 
 export {
-  KovaCallbackHandler,
-  withKovaTool,
+  GrithCallbackHandler,
+  withGrithTool,
   createChainGuard,
 } from './langchain.js';
 
 export type {
   LangChainToolLike,
-  KovaLangChainOptions,
+  GrithLangChainOptions,
   CallbackEvent,
 } from './langchain.js';

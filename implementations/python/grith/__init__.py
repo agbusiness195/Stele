@@ -1,5 +1,5 @@
 """
-Kova protocol Python implementation.
+Grith protocol Python implementation.
 
 Provides the core primitives for AI covenant management:
 crypto, CCL (Constraint Commitment Language), covenants,

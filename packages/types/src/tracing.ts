@@ -1,11 +1,11 @@
 /**
- * Lightweight tracing utilities for the Kova SDK.
+ * Lightweight tracing utilities for the Grith SDK.
  * Provides Span-based instrumentation without OpenTelemetry dependency.
  *
  * @packageDocumentation
  */
 
-import { generateId } from '@usekova/crypto';
+import { generateId } from '@grith/crypto';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 

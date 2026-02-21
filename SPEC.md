@@ -1,6 +1,6 @@
-# Kova Protocol Specification
+# Grith Protocol Specification
 
-The full Kova Covenant Protocol specification lives in [SPECIFICATION.md](./SPECIFICATION.md).
+The full Grith Covenant Protocol specification lives in [SPECIFICATION.md](./SPECIFICATION.md).
 
 It covers:
 

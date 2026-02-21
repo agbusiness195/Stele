@@ -1,9 +1,9 @@
 /**
- * Typed event emitter for the Kova SDK lifecycle.
+ * Typed event emitter for the Grith SDK lifecycle.
  *
  * Provides a fully typed, zero-dependency event emitter that tracks
  * covenant creation, verification, signing, action evaluation, and errors.
- * All event payloads are strictly typed via {@link KovaEventMap}.
+ * All event payloads are strictly typed via {@link GrithEventMap}.
  *
  * @packageDocumentation
  */
@@ -16,7 +16,7 @@
  * Each key is a lifecycle event emitted by the SDK; the corresponding
  * value type describes the data delivered to listeners.
  */
-export type KovaLifecycleEventMap = {
+export type GrithLifecycleEventMap = {
   /** Emitted when a new covenant document is created. */
   'covenant:created': { documentId: string; issuerId: string };
   /** Emitted when a covenant document has been verified. */
@@ -49,17 +49,17 @@ interface ListenerEntry<T> {
   once: boolean;
 }
 
-// ─── KovaEventEmitter ──────────────────────────────────────────────────────────
+// ─── GrithEventEmitter ──────────────────────────────────────────────────────────
 
 /**
- * A strongly-typed event emitter for Kova SDK lifecycle events.
+ * A strongly-typed event emitter for Grith SDK lifecycle events.
  *
  * This implementation has **no dependency on Node's `events` module** and
  * can run in any JavaScript environment (Node, Deno, browser, edge workers).
  *
  * @example
  * ```typescript
- * const emitter = new KovaEventEmitter();
+ * const emitter = new GrithEventEmitter();
  *
  * emitter.on('covenant:created', (data) => {
  *   console.log(`Created: ${data.documentId} by ${data.issuerId}`);
@@ -71,13 +71,13 @@ interface ListenerEntry<T> {
  * });
  * ```
  */
-export class KovaEventEmitter {
+export class GrithEventEmitter {
   /**
    * Internal map of event names to their ordered listener entries.
    * Uses an array (rather than a Set) to preserve insertion order and
    * to allow the same function reference to be registered more than once.
    */
-  private readonly _listeners = new Map<keyof KovaLifecycleEventMap, ListenerEntry<KovaLifecycleEventMap[keyof KovaLifecycleEventMap]>[]>();
+  private readonly _listeners = new Map<keyof GrithLifecycleEventMap, ListenerEntry<GrithLifecycleEventMap[keyof GrithLifecycleEventMap]>[]>();
 
   // ── on ──────────────────────────────────────────────────────────────────
 
@@ -96,16 +96,16 @@ export class KovaEventEmitter {
    * });
    * ```
    */
-  on<K extends keyof KovaLifecycleEventMap>(
+  on<K extends keyof GrithLifecycleEventMap>(
     event: K,
-    listener: Listener<KovaLifecycleEventMap[K]>,
+    listener: Listener<GrithLifecycleEventMap[K]>,
   ): this {
     let entries = this._listeners.get(event);
     if (!entries) {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener as Listener<KovaLifecycleEventMap[keyof KovaLifecycleEventMap]>, once: false });
+    entries.push({ fn: listener as Listener<GrithLifecycleEventMap[keyof GrithLifecycleEventMap]>, once: false });
     return this;
   }
 
@@ -129,9 +129,9 @@ export class KovaEventEmitter {
    * emitter.off('covenant:signed', handler);
    * ```
    */
-  off<K extends keyof KovaLifecycleEventMap>(
+  off<K extends keyof GrithLifecycleEventMap>(
     event: K,
-    listener: Listener<KovaLifecycleEventMap[K]>,
+    listener: Listener<GrithLifecycleEventMap[K]>,
   ): this {
     const entries = this._listeners.get(event);
     if (!entries) return this;
@@ -164,16 +164,16 @@ export class KovaEventEmitter {
    * });
    * ```
    */
-  once<K extends keyof KovaLifecycleEventMap>(
+  once<K extends keyof GrithLifecycleEventMap>(
     event: K,
-    listener: Listener<KovaLifecycleEventMap[K]>,
+    listener: Listener<GrithLifecycleEventMap[K]>,
   ): this {
     let entries = this._listeners.get(event);
     if (!entries) {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener as Listener<KovaLifecycleEventMap[keyof KovaLifecycleEventMap]>, once: true });
+    entries.push({ fn: listener as Listener<GrithLifecycleEventMap[keyof GrithLifecycleEventMap]>, once: true });
     return this;
   }
 
@@ -198,9 +198,9 @@ export class KovaEventEmitter {
    * });
    * ```
    */
-  emit<K extends keyof KovaLifecycleEventMap>(
+  emit<K extends keyof GrithLifecycleEventMap>(
     event: K,
-    data: KovaLifecycleEventMap[K],
+    data: GrithLifecycleEventMap[K],
   ): boolean {
     const entries = this._listeners.get(event);
     if (!entries || entries.length === 0) return false;
@@ -244,7 +244,7 @@ export class KovaEventEmitter {
    * console.log(emitter.listenerCount('error')); // 1
    * ```
    */
-  listenerCount(event: keyof KovaLifecycleEventMap): number {
+  listenerCount(event: keyof GrithLifecycleEventMap): number {
     const entries = this._listeners.get(event);
     return entries ? entries.length : 0;
   }
@@ -265,7 +265,7 @@ export class KovaEventEmitter {
    * emitter.removeAllListeners();              // clear everything
    * ```
    */
-  removeAllListeners(event?: keyof KovaLifecycleEventMap): this {
+  removeAllListeners(event?: keyof GrithLifecycleEventMap): this {
     if (event !== undefined) {
       this._listeners.delete(event);
     } else {

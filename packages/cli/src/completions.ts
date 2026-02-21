@@ -1,5 +1,5 @@
 /**
- * @usekova/cli shell completion generators.
+ * @grith/cli shell completion generators.
  *
  * Generates completion scripts for bash, zsh, and fish shells.
  * Each generator produces a self-contained script that can be
@@ -33,17 +33,17 @@ const SHELLS = ['bash', 'zsh', 'fish'] as const;
 // ─── Bash ─────────────────────────────────────────────────────────────────────
 
 /**
- * Generate bash completion script for the kova CLI.
+ * Generate bash completion script for the grith CLI.
  *
- * The script registers a `_kova_completions` function via `complete -F`.
+ * The script registers a `_grith_completions` function via `complete -F`.
  * It autocompletes commands, flags, evaluate actions, and shell names.
  *
  * @returns A bash completion script as a string.
  *
  * @example
  * ```bash
- * kova completions bash > /etc/bash_completion.d/kova
- * source /etc/bash_completion.d/kova
+ * grith completions bash > /etc/bash_completion.d/grith
+ * source /etc/bash_completion.d/grith
  * ```
  */
 export function bashCompletions(): string {
@@ -52,10 +52,10 @@ export function bashCompletions(): string {
   const evaluateActionList = EVALUATE_ACTIONS.join(' ');
   const shellList = SHELLS.join(' ');
 
-  return `# Bash completion for kova CLI
-# Source this file or copy to /etc/bash_completion.d/kova
+  return `# Bash completion for grith CLI
+# Source this file or copy to /etc/bash_completion.d/grith
 
-_kova_completions() {
+_grith_completions() {
     local cur prev commands global_flags
     COMPREPLY=()
     cur="\${COMP_WORDS[COMP_CWORD]}"
@@ -92,30 +92,30 @@ _kova_completions() {
     return 0
 }
 
-complete -F _kova_completions kova`;
+complete -F _grith_completions grith`;
 }
 
 // ─── Zsh ──────────────────────────────────────────────────────────────────────
 
 /**
- * Generate zsh completion script for the kova CLI.
+ * Generate zsh completion script for the grith CLI.
  *
- * The script registers a `_kova` completion function using zsh's
+ * The script registers a `_grith` completion function using zsh's
  * `_arguments` and `_describe` builtins for rich contextual completions.
  *
  * @returns A zsh completion script as a string.
  *
  * @example
  * ```bash
- * kova completions zsh > ~/.zsh/completions/_kova
+ * grith completions zsh > ~/.zsh/completions/_grith
  * ```
  */
 export function zshCompletions(): string {
-  return `#compdef kova
-# Zsh completion for kova CLI
-# Copy to a directory in your $fpath (e.g. ~/.zsh/completions/_kova)
+  return `#compdef grith
+# Zsh completion for grith CLI
+# Copy to a directory in your $fpath (e.g. ~/.zsh/completions/_grith)
 
-_kova() {
+_grith() {
     local -a commands
     commands=(
         'init:Generate an Ed25519 key pair and config file'
@@ -125,7 +125,7 @@ _kova() {
         'inspect:Pretty-print covenant details'
         'parse:Parse CCL and output AST'
         'completions:Generate shell completion script'
-        'doctor:Check Kova installation health'
+        'doctor:Check Grith installation health'
         'diff:Show differences between two covenant documents'
         'version:Print version information'
         'help:Show help message'
@@ -141,7 +141,7 @@ _kova() {
 
     case $state in
         command)
-            _describe 'kova command' commands
+            _describe 'grith command' commands
             ;;
         args)
             case $words[1] in
@@ -168,13 +168,13 @@ _kova() {
     esac
 }
 
-_kova "$@"`;
+_grith "$@"`;
 }
 
 // ─── Fish ─────────────────────────────────────────────────────────────────────
 
 /**
- * Generate fish completion script for the kova CLI.
+ * Generate fish completion script for the grith CLI.
  *
  * The script uses fish's `complete` builtin to register completions
  * for commands, flags, and context-specific arguments.
@@ -183,7 +183,7 @@ _kova "$@"`;
  *
  * @example
  * ```fish
- * kova completions fish > ~/.config/fish/completions/kova.fish
+ * grith completions fish > ~/.config/fish/completions/grith.fish
  * ```
  */
 export function fishCompletions(): string {
@@ -195,52 +195,52 @@ export function fishCompletions(): string {
     ['inspect', 'Pretty-print covenant details'],
     ['parse', 'Parse CCL and output AST'],
     ['completions', 'Generate shell completion script'],
-    ['doctor', 'Check Kova installation health'],
+    ['doctor', 'Check Grith installation health'],
     ['diff', 'Show differences between two covenant documents'],
     ['version', 'Print version information'],
     ['help', 'Show help message'],
   ];
 
   const lines: string[] = [
-    '# Fish completion for kova CLI',
-    '# Copy to ~/.config/fish/completions/kova.fish',
+    '# Fish completion for grith CLI',
+    '# Copy to ~/.config/fish/completions/grith.fish',
     '',
     '# Disable file completions by default',
-    'complete -c kova -f',
+    'complete -c grith -f',
     '',
     '# Commands',
   ];
 
   for (const [cmd, desc] of commandDescriptions) {
     lines.push(
-      `complete -c kova -n "not __fish_seen_subcommand_from ${COMMANDS.join(' ')}" -a "${cmd}" -d "${desc}"`,
+      `complete -c grith -n "not __fish_seen_subcommand_from ${COMMANDS.join(' ')}" -a "${cmd}" -d "${desc}"`,
     );
   }
 
   lines.push('');
   lines.push('# Global flags');
-  lines.push('complete -c kova -l json -d "Machine-readable JSON output"');
-  lines.push('complete -c kova -l no-color -d "Disable colored output"');
-  lines.push('complete -c kova -l help -d "Show help"');
-  lines.push('complete -c kova -l config -d "Path to config file"');
+  lines.push('complete -c grith -l json -d "Machine-readable JSON output"');
+  lines.push('complete -c grith -l no-color -d "Disable colored output"');
+  lines.push('complete -c grith -l help -d "Show help"');
+  lines.push('complete -c grith -l config -d "Path to config file"');
 
   lines.push('');
   lines.push('# create flags');
   lines.push(
-    'complete -c kova -n "__fish_seen_subcommand_from create" -l issuer -d "Issuer identifier"',
+    'complete -c grith -n "__fish_seen_subcommand_from create" -l issuer -d "Issuer identifier"',
   );
   lines.push(
-    'complete -c kova -n "__fish_seen_subcommand_from create" -l beneficiary -d "Beneficiary identifier"',
+    'complete -c grith -n "__fish_seen_subcommand_from create" -l beneficiary -d "Beneficiary identifier"',
   );
   lines.push(
-    'complete -c kova -n "__fish_seen_subcommand_from create" -l constraints -d "CCL constraint string"',
+    'complete -c grith -n "__fish_seen_subcommand_from create" -l constraints -d "CCL constraint string"',
   );
 
   lines.push('');
   lines.push('# evaluate action suggestions');
   for (const action of EVALUATE_ACTIONS) {
     lines.push(
-      `complete -c kova -n "__fish_seen_subcommand_from evaluate" -a "${action}" -d "Action: ${action}"`,
+      `complete -c grith -n "__fish_seen_subcommand_from evaluate" -a "${action}" -d "Action: ${action}"`,
     );
   }
 
@@ -248,7 +248,7 @@ export function fishCompletions(): string {
   lines.push('# completions shell suggestions');
   for (const shell of SHELLS) {
     lines.push(
-      `complete -c kova -n "__fish_seen_subcommand_from completions" -a "${shell}" -d "${shell} shell"`,
+      `complete -c grith -n "__fish_seen_subcommand_from completions" -a "${shell}" -d "${shell} shell"`,
     );
   }
 

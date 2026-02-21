@@ -1,5 +1,5 @@
 /**
- * OpenTelemetry-compatible instrumentation for the Kova SDK.
+ * OpenTelemetry-compatible instrumentation for the Grith SDK.
  *
  * Follows the "bring your own tracer" pattern: all OTel interfaces are
  * defined inline so consumers can plug in their own OTel SDK without
@@ -8,11 +8,11 @@
  * @packageDocumentation
  */
 
-import type { KovaMiddleware, MiddlewareContext, MiddlewareResult } from './middleware.js';
+import type { GrithMiddleware, MiddlewareContext, MiddlewareResult } from './middleware.js';
 import type {
-  KovaEventType,
-  KovaEventMap,
-  KovaEvent,
+  GrithEventType,
+  GrithEventMap,
+  GrithEvent,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   EvaluationCompletedEvent,
@@ -102,30 +102,30 @@ export interface TelemetryMiddlewareOptions {
 }
 
 /**
- * Create a KovaMiddleware that wraps each operation with an OTel span.
+ * Create a GrithMiddleware that wraps each operation with an OTel span.
  *
  * For every operation that passes through the middleware pipeline, this
  * middleware:
- * - Creates a span named after the operation (e.g. `kova.createCovenant`)
- * - Sets attributes: `kova.operation`, and any result-specific attributes
- *   such as `kova.covenant.id`, `kova.evaluation.permitted`
- * - Records duration via `kova.duration_ms`
+ * - Creates a span named after the operation (e.g. `grith.createCovenant`)
+ * - Sets attributes: `grith.operation`, and any result-specific attributes
+ *   such as `grith.covenant.id`, `grith.evaluation.permitted`
+ * - Records duration via `grith.duration_ms`
  * - Sets the span status to OK or ERROR
  * - Records exceptions on failure
  *
  * @param options - Optional configuration with a custom tracer.
- * @returns A KovaMiddleware instance.
+ * @returns A GrithMiddleware instance.
  */
-export function telemetryMiddleware(options?: TelemetryMiddlewareOptions): KovaMiddleware {
+export function telemetryMiddleware(options?: TelemetryMiddlewareOptions): GrithMiddleware {
   const tracer = options?.tracer ?? new NoopTracer();
 
   return {
     name: 'telemetry',
 
     async before(ctx: MiddlewareContext): Promise<MiddlewareResult> {
-      const span = tracer.startSpan(`kova.${ctx.operation}`, {
+      const span = tracer.startSpan(`grith.${ctx.operation}`, {
         attributes: {
-          'kova.operation': ctx.operation,
+          'grith.operation': ctx.operation,
         },
       });
       ctx.metadata._telemetrySpan = span;
@@ -138,19 +138,19 @@ export function telemetryMiddleware(options?: TelemetryMiddlewareOptions): KovaM
       if (span) {
         const start = ctx.metadata._telemetryStart as number;
         const durationMs = performance.now() - start;
-        span.setAttribute('kova.duration_ms', durationMs);
+        span.setAttribute('grith.duration_ms', durationMs);
 
         // Set result-specific attributes
         if (result && typeof result === 'object') {
           const r = result as Record<string, unknown>;
           if ('id' in r && typeof r.id === 'string') {
-            span.setAttribute('kova.covenant.id', r.id);
+            span.setAttribute('grith.covenant.id', r.id);
           }
           if ('valid' in r && typeof r.valid === 'boolean') {
-            span.setAttribute('kova.verification.valid', r.valid);
+            span.setAttribute('grith.verification.valid', r.valid);
           }
           if ('permitted' in r && typeof r.permitted === 'boolean') {
-            span.setAttribute('kova.evaluation.permitted', r.permitted);
+            span.setAttribute('grith.evaluation.permitted', r.permitted);
           }
         }
 
@@ -168,7 +168,7 @@ export function telemetryMiddleware(options?: TelemetryMiddlewareOptions): KovaM
       if (span) {
         const start = ctx.metadata._telemetryStart as number;
         const durationMs = performance.now() - start;
-        span.setAttribute('kova.duration_ms', durationMs);
+        span.setAttribute('grith.duration_ms', durationMs);
         span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
         span.recordException(error);
         span.end();
@@ -180,25 +180,25 @@ export function telemetryMiddleware(options?: TelemetryMiddlewareOptions): KovaM
   };
 }
 
-// ─── KovaMetrics ───────────────────────────────────────────────────────────
+// ─── GrithMetrics ───────────────────────────────────────────────────────────
 
 /**
  * A minimal interface for an object that exposes `on()` for event subscription.
  *
- * This matches KovaClient's public API without importing the class directly,
+ * This matches GrithClient's public API without importing the class directly,
  * keeping the telemetry module loosely coupled.
  */
 export interface EventSource {
-  on<T extends KovaEventType>(event: T, handler: (data: KovaEventMap[T]) => void): () => void;
+  on<T extends GrithEventType>(event: T, handler: (data: GrithEventMap[T]) => void): () => void;
 }
 
 /**
- * Metrics collector for Kova SDK operations.
+ * Metrics collector for Grith SDK operations.
  *
  * Creates OTel-compatible counters and histograms and exposes a `record()`
- * method to update them from KovaClient lifecycle events.
+ * method to update them from GrithClient lifecycle events.
  */
-export class KovaMetrics {
+export class GrithMetrics {
   private readonly _covenantsCreated: Counter;
   private readonly _covenantsVerified: Counter;
   private readonly _evaluationsTotal: Counter;
@@ -206,29 +206,29 @@ export class KovaMetrics {
   private readonly _operationDuration: Histogram;
 
   constructor(meter: Meter) {
-    this._covenantsCreated = meter.createCounter('kova.covenants.created', {
+    this._covenantsCreated = meter.createCounter('grith.covenants.created', {
       description: 'Number of covenants created',
     });
-    this._covenantsVerified = meter.createCounter('kova.covenants.verified', {
+    this._covenantsVerified = meter.createCounter('grith.covenants.verified', {
       description: 'Number of covenants verified',
     });
-    this._evaluationsTotal = meter.createCounter('kova.evaluations.total', {
+    this._evaluationsTotal = meter.createCounter('grith.evaluations.total', {
       description: 'Total number of evaluations performed',
     });
-    this._evaluationsDenied = meter.createCounter('kova.evaluations.denied', {
+    this._evaluationsDenied = meter.createCounter('grith.evaluations.denied', {
       description: 'Number of evaluations that were denied',
     });
-    this._operationDuration = meter.createHistogram('kova.operation.duration', {
+    this._operationDuration = meter.createHistogram('grith.operation.duration', {
       description: 'Duration of operations in milliseconds',
     });
   }
 
   /**
-   * Record a KovaClient event, updating the appropriate metrics.
+   * Record a GrithClient event, updating the appropriate metrics.
    *
-   * @param event - A KovaClient lifecycle event (from the `on()` callback).
+   * @param event - A GrithClient lifecycle event (from the `on()` callback).
    */
-  record(event: KovaEvent): void {
+  record(event: GrithEvent): void {
     switch (event.type) {
       case 'covenant:created':
         this._covenantsCreated.add(1);
@@ -264,15 +264,15 @@ export class KovaMetrics {
   }
 
   /**
-   * Subscribe to all KovaClient events and automatically record metrics.
+   * Subscribe to all GrithClient events and automatically record metrics.
    *
-   * @param client - An object with an `on()` method matching KovaClient's API.
+   * @param client - An object with an `on()` method matching GrithClient's API.
    * @returns An array of disposal functions that unsubscribe all listeners.
    */
   bindToClient(client: EventSource): (() => void)[] {
     const disposers: (() => void)[] = [];
 
-    const eventTypes: KovaEventType[] = [
+    const eventTypes: GrithEventType[] = [
       'covenant:created',
       'covenant:verified',
       'covenant:countersigned',
@@ -285,7 +285,7 @@ export class KovaMetrics {
 
     for (const eventType of eventTypes) {
       const dispose = client.on(eventType, (data) => {
-        this.record(data as KovaEvent);
+        this.record(data as GrithEvent);
       });
       disposers.push(dispose);
     }
@@ -307,7 +307,7 @@ export interface CreateTelemetryOptions {
 /**
  * Create a matched pair of telemetry middleware and metrics collector.
  *
- * This is the recommended entry point for instrumenting the Kova SDK.
+ * This is the recommended entry point for instrumenting the Grith SDK.
  * If no tracer or meter is provided, no-op implementations are used
  * so that application code compiles and runs without any OTel dependency.
  *
@@ -316,7 +316,7 @@ export interface CreateTelemetryOptions {
  *
  * @example
  * ```typescript
- * import { createTelemetry } from '@usekova/sdk';
+ * import { createTelemetry } from '@grith/sdk';
  *
  * // With real OTel SDK:
  * const { middleware, metrics } = createTelemetry({
@@ -329,14 +329,14 @@ export interface CreateTelemetryOptions {
  * ```
  */
 export function createTelemetry(options?: CreateTelemetryOptions): {
-  middleware: KovaMiddleware;
-  metrics: KovaMetrics;
+  middleware: GrithMiddleware;
+  metrics: GrithMetrics;
 } {
   const tracer = options?.tracer ?? new NoopTracer();
   const meter = options?.meter ?? new NoopMeter();
 
   return {
     middleware: telemetryMiddleware({ tracer }),
-    metrics: new KovaMetrics(meter),
+    metrics: new GrithMetrics(meter),
   };
 }

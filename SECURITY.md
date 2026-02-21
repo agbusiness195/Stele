@@ -11,9 +11,9 @@ the most recent version.
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in Kova, please report it responsibly.
+If you discover a security vulnerability in Grith, please report it responsibly.
 
-**Email**: security@usekova.dev
+**Email**: security@grith.dev
 
 Please include:
 
@@ -32,13 +32,13 @@ anonymity is requested.
 
 ### Cryptographic Primitives
 
-Kova relies on the following cryptographic building blocks:
+Grith relies on the following cryptographic building blocks:
 
 | Primitive | Library | Purpose |
 |-----------|---------|---------|
 | **Ed25519** | `@noble/ed25519` | Covenant signing, identity signing, countersignatures, breach attestations |
 | **SHA-256** | `@noble/hashes/sha256` | Document IDs, canonical hashing, content-addressed identifiers |
-| **Poseidon** | `@usekova/proof` (internal) | Zero-knowledge-style compliance proof commitments |
+| **Poseidon** | `@grith/proof` (internal) | Zero-knowledge-style compliance proof commitments |
 | **CSPRNG** | `@noble/hashes/utils` (`randomBytes`) | Nonce generation, key generation |
 
 All cryptographic operations use audited, pure-JavaScript implementations from the
@@ -49,7 +49,7 @@ Web3 ecosystem and have undergone independent security reviews.
 
 - **Canonical JSON (JCS / RFC 8785)**: All document hashing and signing uses
   deterministic JSON serialization to prevent signature malleability.
-- **Constant-time comparison**: The `constantTimeEqual()` function in `@usekova/crypto`
+- **Constant-time comparison**: The `constantTimeEqual()` function in `@grith/crypto`
   prevents timing side-channel attacks when comparing signatures or hashes.
 - **Immutable documents**: Functions like `countersignCovenant()` and `resignCovenant()`
   return new document copies rather than mutating the input, preventing accidental
@@ -66,13 +66,13 @@ Web3 ecosystem and have undergone independent security reviews.
 - CCL constraint evaluation with deny-wins merge semantics
 - Chain narrowing validation (children cannot broaden parent constraints)
 - Countersignature verification
-- Input validation and sanitization (`@usekova/types` guards)
+- Input validation and sanitization (`@grith/types` guards)
 - Constant-time comparison for cryptographic values
 - Poseidon-based compliance proof generation and verification
 
 ### What Is NOT Covered
 
-- **Network transport**: Kova does not include TLS or transport-layer security.
+- **Network transport**: Grith does not include TLS or transport-layer security.
   Documents should be transmitted over secure channels.
 - **Key storage**: Private keys are handled as raw `Uint8Array` values. Secure key
   storage (HSM, KMS, encrypted keyring) is the responsibility of the integrator.
@@ -91,10 +91,10 @@ Web3 ecosystem and have undergone independent security reviews.
   encrypted storage backend for sensitive deployments.
 - **No key rotation protocol**: While `resignCovenant()` supports re-signing with a
   new key, there is no built-in key rotation ceremony or revocation list.
-- **Poseidon proofs are not full ZK-SNARKs**: The `@usekova/proof` package uses
+- **Poseidon proofs are not full ZK-SNARKs**: The `@grith/proof` package uses
   Poseidon hashing for commitment schemes, but does not generate or verify
   zero-knowledge proofs in the formal cryptographic sense.
-- **EVM anchoring is offline**: The `@usekova/evm` package produces ABI-encoded
+- **EVM anchoring is offline**: The `@grith/evm` package produces ABI-encoded
   calldata but does not submit transactions. On-chain verification requires a
   deployed smart contract (not included).
 
@@ -110,5 +110,5 @@ the attack surface. We pin exact versions and review updates before merging.
 
 ## Security Contacts
 
-- **Primary**: security@usekova.dev
-- **GitHub**: https://github.com/agbusiness195/kova/security
+- **Primary**: security@grith.dev
+- **GitHub**: https://github.com/agbusiness195/grith/security

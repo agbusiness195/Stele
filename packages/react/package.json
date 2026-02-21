@@ -1,7 +1,7 @@
 {
-  "name": "@usekova/react",
+  "name": "@grith/react",
   "version": "2.0.0",
-  "description": "React hooks and reactive primitives for Kova-powered UIs",
+  "description": "React hooks and reactive primitives for Grith-powered UIs",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,12 +24,12 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@usekova/ccl": "2.0.0",
-    "@usekova/core": "2.0.0",
-    "@usekova/identity": "2.0.0",
-    "@usekova/sdk": "2.0.0",
-    "@usekova/store": "2.0.0",
-    "@usekova/types": "2.0.0"
+    "@grith/ccl": "2.0.0",
+    "@grith/core": "2.0.0",
+    "@grith/identity": "2.0.0",
+    "@grith/sdk": "2.0.0",
+    "@grith/store": "2.0.0",
+    "@grith/types": "2.0.0"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
@@ -48,16 +48,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kova.git",
+    "url": "https://github.com/agbusiness195/grith.git",
     "directory": "packages/react"
   },
-  "homepage": "https://usekova.dev",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kova/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
-  "author": "Kova Labs, Inc.",
+  "author": "Grith Labs, Inc.",
   "keywords": [
-    "kova",
+    "grith",
     "covenant",
     "ai-accountability",
     "react",

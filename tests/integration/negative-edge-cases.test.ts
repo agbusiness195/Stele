@@ -1,6 +1,6 @@
 /**
  * Comprehensive negative / edge-case / boundary-condition integration tests
- * for the Kova SDK.
+ * for the Grith SDK.
  *
  * Covers: crypto, CCL, core covenant operations, store, identity, enforcement.
  * Target: ~75 tests exercising malformed input, corruption, and boundary scenarios.
@@ -23,7 +23,7 @@ import {
   generateId,
   keyPairFromPrivateKey,
   keyPairFromPrivateKeyHex,
-} from '@usekova/crypto';
+} from '@grith/crypto';
 
 import {
   parse,
@@ -33,7 +33,7 @@ import {
   validateNarrowing,
   tokenize,
   CCLSyntaxError,
-} from '@usekova/ccl';
+} from '@grith/ccl';
 
 import {
   buildCovenant,
@@ -46,10 +46,10 @@ import {
   MemoryChainResolver,
   resolveChain,
   validateChainNarrowing,
-} from '@usekova/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
+} from '@grith/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
 
-import { MemoryStore } from '@usekova/store';
+import { MemoryStore } from '@grith/store';
 
 import {
   createIdentity,
@@ -58,14 +58,14 @@ import {
   serializeIdentity,
   deserializeIdentity,
   computeIdentityHash,
-} from '@usekova/identity';
+} from '@grith/identity';
 
 import {
   Monitor,
   CapabilityGate,
   MonitorDeniedError,
   verifyMerkleProof,
-} from '@usekova/enforcement';
+} from '@grith/enforcement';
 
 // ---------------------------------------------------------------------------
 // Shared helpers

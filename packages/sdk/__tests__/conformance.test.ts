@@ -1,7 +1,7 @@
 /**
- * Kova Protocol Conformance Test Suite
+ * Grith Protocol Conformance Test Suite
  *
- * Runs the conformance suite against the real Kova implementation
+ * Runs the conformance suite against the real Grith implementation
  * to prove that the reference implementation is spec-compliant.
  */
 import { describe, it, expect } from 'vitest';
@@ -15,13 +15,13 @@ import {
 } from '../src/conformance';
 import type { ConformanceTarget } from '../src/conformance';
 
-import { buildCovenant, verifyCovenant } from '@usekova/core';
-import { generateKeyPair, sign, verify, sha256 } from '@usekova/crypto';
-import { parse, evaluate } from '@usekova/ccl';
+import { buildCovenant, verifyCovenant } from '@grith/core';
+import { generateKeyPair, sign, verify, sha256 } from '@grith/crypto';
+import { parse, evaluate } from '@grith/ccl';
 
 // ─── Wire up the ConformanceTarget ──────────────────────────────────────────
 
-const kovaTarget: ConformanceTarget = {
+const grithTarget: ConformanceTarget = {
   buildCovenant: (options: unknown) => buildCovenant(options as Parameters<typeof buildCovenant>[0]),
   verifyCovenant: (doc: unknown) => verifyCovenant(doc as Parameters<typeof verifyCovenant>[0]),
   evaluateAction: async (doc: unknown, action, resource, context) => {
@@ -46,9 +46,9 @@ function formatFailures(failures: Array<{ test: string; message: string }>): str
 // Full suite
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe('Kova Protocol Conformance Suite', () => {
+describe('Grith Protocol Conformance Suite', () => {
   it('passes the full conformance suite', async () => {
-    const result = await runConformanceSuite(kovaTarget);
+    const result = await runConformanceSuite(grithTarget);
 
     if (!result.passed) {
       const details = formatFailures(result.failures);
@@ -70,7 +70,7 @@ describe('Kova Protocol Conformance Suite', () => {
 
 describe('Conformance: Crypto', () => {
   it('passes all cryptographic primitive checks', async () => {
-    const result = await cryptoConformance(kovaTarget);
+    const result = await cryptoConformance(grithTarget);
 
     if (result.failures.length > 0) {
       const details = formatFailures(result.failures);
@@ -127,7 +127,7 @@ describe('Conformance: Crypto', () => {
 
 describe('Conformance: CCL', () => {
   it('passes all CCL parsing and evaluation checks', async () => {
-    const result = await cclConformance(kovaTarget);
+    const result = await cclConformance(grithTarget);
 
     if (result.failures.length > 0) {
       const details = formatFailures(result.failures);
@@ -194,7 +194,7 @@ describe('Conformance: CCL', () => {
 
 describe('Conformance: Covenant', () => {
   it('passes all covenant lifecycle checks', async () => {
-    const result = await covenantConformance(kovaTarget);
+    const result = await covenantConformance(grithTarget);
 
     if (result.failures.length > 0) {
       const details = formatFailures(result.failures);
@@ -250,7 +250,7 @@ describe('Conformance: Covenant', () => {
 
 describe('Conformance: Interop', () => {
   it('passes all interoperability checks', async () => {
-    const result = await interopConformance(kovaTarget);
+    const result = await interopConformance(grithTarget);
 
     if (result.failures.length > 0) {
       const details = formatFailures(result.failures);
@@ -321,7 +321,7 @@ describe('Conformance: Interop', () => {
 
 describe('Conformance: Security', () => {
   it('passes all security invariant checks', async () => {
-    const result = await securityConformance(kovaTarget);
+    const result = await securityConformance(grithTarget);
 
     if (result.failures.length > 0) {
       const details = formatFailures(result.failures);

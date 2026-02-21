@@ -1,5 +1,5 @@
 """
-Kova protocol cryptographic primitives.
+Grith protocol cryptographic primitives.
 
 Provides Ed25519 signing/verification, SHA-256 hashing, JCS canonicalization
 (RFC 8785), and related utility functions.

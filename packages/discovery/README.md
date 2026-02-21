@@ -1,22 +1,22 @@
-# @usekova/discovery
+# @grith/discovery
 
-Cross-platform discovery protocol for `.well-known/kova/` endpoints. Enables agent key discovery, covenant registry lookup, cross-platform verification, and protocol negotiation.
+Cross-platform discovery protocol for `.well-known/grith/` endpoints. Enables agent key discovery, covenant registry lookup, cross-platform verification, and protocol negotiation.
 
 ## Installation
 
 ```bash
-npm install @usekova/discovery
+npm install @grith/discovery
 ```
 
 ## Key APIs
 
-- **buildDiscoveryDocument(options)**: Generate a `.well-known/kova/configuration` document
+- **buildDiscoveryDocument(options)**: Generate a `.well-known/grith/configuration` document
 - **validateDiscoveryDocument(doc)**: Validate a discovery document's structure and fields
 - **buildKeyEntry(...)**: Create an `AgentKeyEntry` for the key registry
 - **buildKeySet(...)**: Create an `AgentKeySet` grouping multiple keys for an agent
 - **DiscoveryClient**: Fetch and validate discovery documents, key sets, and covenant registries from remote hosts
 - **DiscoveryServer**: Serve discovery endpoints with configurable route handlers
-- **WELL_KNOWN_PATH** / **CONFIGURATION_PATH** / **KOVA_MEDIA_TYPE** / **MAX_DOCUMENT_AGE_MS**: Protocol constants
+- **WELL_KNOWN_PATH** / **CONFIGURATION_PATH** / **GRITH_MEDIA_TYPE** / **MAX_DOCUMENT_AGE_MS**: Protocol constants
 
 ## Usage
 
@@ -28,15 +28,15 @@ import {
   DiscoveryClient,
   DiscoveryServer,
   WELL_KNOWN_PATH,
-} from '@usekova/discovery';
+} from '@grith/discovery';
 
 // Build a discovery document
 const doc = buildDiscoveryDocument({
   platformId: 'my-platform',
   platformName: 'My Platform',
-  covenantEndpoint: 'https://example.com/.well-known/kova/covenants',
-  keyEndpoint: 'https://example.com/.well-known/kova/keys',
-  negotiationEndpoint: 'https://example.com/.well-known/kova/negotiate',
+  covenantEndpoint: 'https://example.com/.well-known/grith/covenants',
+  keyEndpoint: 'https://example.com/.well-known/grith/keys',
+  negotiationEndpoint: 'https://example.com/.well-known/grith/negotiate',
 });
 
 // Validate a discovery document
@@ -65,4 +65,4 @@ const server = new DiscoveryServer({
 
 ## Docs
 
-See the [Kova SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

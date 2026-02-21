@@ -1,5 +1,5 @@
 {
-  "name": "@usekova/legal",
+  "name": "@grith/legal",
   "version": "2.0.0",
   "description": "Legal document templates and regulatory compliance mapping",
   "sideEffects": false,
@@ -27,14 +27,14 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@usekova/crypto": "2.0.0",
-    "@usekova/types": "2.0.0"
+    "@grith/crypto": "2.0.0",
+    "@grith/types": "2.0.0"
   },
   "license": "MIT",
-  "author": "Kova Labs, Inc.",
-  "homepage": "https://usekova.dev",
+  "author": "Grith Labs, Inc.",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kova/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
   "engines": {
     "node": ">=18"
@@ -44,11 +44,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kova.git",
+    "url": "https://github.com/agbusiness195/grith.git",
     "directory": "packages/legal"
   },
   "keywords": [
-    "kova",
+    "grith",
     "covenant",
     "ai-accountability",
     "legal",

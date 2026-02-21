@@ -1,5 +1,5 @@
 {
-  "name": "kova",
+  "name": "grith",
   "private": true,
   "version": "2.0.0",
   "description": "The accountability primitive for AI agents",
@@ -53,13 +53,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kova"
+    "url": "https://github.com/agbusiness195/grith"
   },
-  "homepage": "https://usekova.dev",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kova/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
-  "author": "Kova Labs, Inc.",
+  "author": "Grith Labs, Inc.",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^25.2.3",

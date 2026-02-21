@@ -1,6 +1,6 @@
-# Kova SDK - Business & Product Overview
+# Grith SDK - Business & Product Overview
 
-**Company**: Kova Labs, Inc. (2026)
+**Company**: Grith Labs, Inc. (2026)
 **Product**: Open-source accountability framework for AI agents
 **License**: MIT
 
@@ -8,9 +8,9 @@
 
 ## Executive Summary
 
-Kova is an open-source **accountability framework for AI agents** that uses cryptographic behavioral commitments (called "Covenants") to solve the trust and compliance problem in AI deployment: how do you prove an AI agent is actually following its stated policies?
+Grith is an open-source **accountability framework for AI agents** that uses cryptographic behavioral commitments (called "Covenants") to solve the trust and compliance problem in AI deployment: how do you prove an AI agent is actually following its stated policies?
 
-Traditional solutions (firewalls, API rate limits, audit logs) are insufficient because they're reactive, centralized, and forgeable. Kova inverts the trust model: agents publish cryptographic behavioral commitments signed with their private keys, which anyone can verify without a trusted third party.
+Traditional solutions (firewalls, API rate limits, audit logs) are insufficient because they're reactive, centralized, and forgeable. Grith inverts the trust model: agents publish cryptographic behavioral commitments signed with their private keys, which anyone can verify without a trusted third party.
 
 ---
 
@@ -103,7 +103,7 @@ limit api.call 500 per 3600 seconds
 +---------------------------------------------+
 |  Interop (Discovery, Schema)                 |
 +---------------------------------------------+
-|  SDK (KovaClient - Unified API)             |
+|  SDK (GrithClient - Unified API)             |
 +---------------------------------------------+
 |  Protocol (17 advanced modules)              |
 +---------------------------------------------+
@@ -113,20 +113,20 @@ limit api.call 500 per 3600 seconds
 ```
 
 ### Foundation Layer (7 packages)
-- **@usekova/types**: Error codes, validation, Result type, type guards
-- **@usekova/crypto**: Ed25519, SHA-256, JCS canonicalization, hex encoding
-- **@usekova/ccl**: CCL parser & evaluator (deny-wins, resource globs, rate limits)
-- **@usekova/core**: Covenant build/sign/verify/chain/serialize (11-check verification)
-- **@usekova/store**: MemoryStore + FileStore + SQLite (pluggable, queryable, event system)
-- **@usekova/verifier**: Stateful verification with caching
-- **@usekova/identity**: Agent identity lifecycle & lineage tracking
+- **@grith/types**: Error codes, validation, Result type, type guards
+- **@grith/crypto**: Ed25519, SHA-256, JCS canonicalization, hex encoding
+- **@grith/ccl**: CCL parser & evaluator (deny-wins, resource globs, rate limits)
+- **@grith/core**: Covenant build/sign/verify/chain/serialize (11-check verification)
+- **@grith/store**: MemoryStore + FileStore + SQLite (pluggable, queryable, event system)
+- **@grith/verifier**: Stateful verification with caching
+- **@grith/identity**: Agent identity lifecycle & lineage tracking
 
 ### Enforcement Layer (5 packages)
-- **@usekova/enforcement**: Real-time constraint evaluation + audit trail
-- **@usekova/proof**: ZK proof generation (compliance proof)
-- **@usekova/breach**: Breach detection, attestation, trust graph propagation
-- **@usekova/reputation**: Trust scoring, decay curves, stake-weighted reputation
-- **@usekova/mcp**: MCP middleware guard for tool-call enforcement
+- **@grith/enforcement**: Real-time constraint evaluation + audit trail
+- **@grith/proof**: ZK proof generation (compliance proof)
+- **@grith/breach**: Breach detection, attestation, trust graph propagation
+- **@grith/reputation**: Trust scoring, decay curves, stake-weighted reputation
+- **@grith/mcp**: MCP middleware guard for tool-call enforcement
 
 ### Protocol Layer (17 packages)
 Advanced features for enterprise use:
@@ -137,16 +137,16 @@ Advanced features for enterprise use:
 - Trust derivatives, Legal compliance mapping
 
 ### SDK & Interop (4 packages)
-- **@usekova/sdk**: Unified KovaClient API, QuickCovenant builders, event system
-- **@usekova/discovery**: `.well-known/kova/` protocol, key registry, cross-platform negotiation
-- **@usekova/schema**: JSON Schema (Draft 2020-12) for all document types
-- **@usekova/mcp-server**: JSON-RPC 2.0 MCP server exposing Kova as tools
+- **@grith/sdk**: Unified GrithClient API, QuickCovenant builders, event system
+- **@grith/discovery**: `.well-known/grith/` protocol, key registry, cross-platform negotiation
+- **@grith/schema**: JSON Schema (Draft 2020-12) for all document types
+- **@grith/mcp-server**: JSON-RPC 2.0 MCP server exposing Grith as tools
 
 ### Platform Integrations (4 packages)
-- **@usekova/react**: Reactive UI primitives
-- **@usekova/evm**: Ethereum/blockchain anchoring
-- **@usekova/cli**: Command-line interface
-- **@usekova/mcp-server**: MCP server integration
+- **@grith/react**: Reactive UI primitives
+- **@grith/evm**: Ethereum/blockchain anchoring
+- **@grith/cli**: Command-line interface
+- **@grith/mcp-server**: MCP server integration
 
 ---
 
@@ -154,12 +154,12 @@ Advanced features for enterprise use:
 
 | Framework | Adapter | Description |
 |-----------|---------|-------------|
-| **Vercel AI SDK** | `withKova()` / `withKovaTools()` | Wraps AI SDK tool calls for enforcement |
-| **LangChain** | `KovaCallbackHandler` / `withKovaTool()` | Enforces tool constraints in chains |
-| **Express/Node.js** | `kovaMiddleware()` | Zero-config HTTP covenant enforcement |
+| **Vercel AI SDK** | `withGrith()` / `withGrithTools()` | Wraps AI SDK tool calls for enforcement |
+| **LangChain** | `GrithCallbackHandler` / `withGrithTool()` | Enforces tool constraints in chains |
+| **Express/Node.js** | `grithMiddleware()` | Zero-config HTTP covenant enforcement |
 | **OpenTelemetry** | `telemetryMiddleware()` | Bring-your-own-tracer integration |
-| **Ethereum/EVM** | `@usekova/evm` | On-chain covenant registry |
-| **MCP (Claude)** | `@usekova/mcp-server` | Model Context Protocol integration |
+| **Ethereum/EVM** | `@grith/evm` | On-chain covenant registry |
+| **MCP (Claude)** | `@grith/mcp-server` | Model Context Protocol integration |
 
 ---
 
@@ -253,14 +253,14 @@ Advanced features for enterprise use:
 
 ### Indirect Competitors
 
-| Category | Players | Kova's Advantage |
+| Category | Players | Grith's Advantage |
 |----------|---------|-------------------|
-| API Gateways | Kong, Traefik | Kova is agent-centric, semantic, cryptographic |
-| Identity/IAM | Okta, Auth0 | Kova covers AI agent policy, not just human users |
-| Audit/Logging | Datadog, Splunk | Kova is real-time + non-repudiable + immutable |
-| Policy Engines | OPA, Kyverno | Kova is AI-specific + cryptographic + decentralized |
-| AI Safety | Constitutional AI, RLHF | Kova is deployment-layer; complements model safety |
-| Container Security | Docker, K8s | Kova is policy-layer; orthogonal |
+| API Gateways | Kong, Traefik | Grith is agent-centric, semantic, cryptographic |
+| Identity/IAM | Okta, Auth0 | Grith covers AI agent policy, not just human users |
+| Audit/Logging | Datadog, Splunk | Grith is real-time + non-repudiable + immutable |
+| Policy Engines | OPA, Kyverno | Grith is AI-specific + cryptographic + decentralized |
+| AI Safety | Constitutional AI, RLHF | Grith is deployment-layer; complements model safety |
+| Container Security | Docker, K8s | Grith is policy-layer; orthogonal |
 
 ### Competitive Moats
 
@@ -275,7 +275,7 @@ Advanced features for enterprise use:
 
 ## Regulatory Alignment
 
-| Regulation | How Kova Helps |
+| Regulation | How Grith Helps |
 |------------|-----------------|
 | **EU AI Act** | Verifiable compliance trail (Article 6 requirements) |
 | **US Executive Orders on AI** | Aligns with "algorithmic accountability" requirements |
@@ -360,16 +360,16 @@ Advanced features for enterprise use:
 
 ---
 
-## Why Kova Could Be Big
+## Why Grith Could Be Big
 
-Kova sits at the intersection of four accelerating mega-trends:
+Grith sits at the intersection of four accelerating mega-trends:
 
 1. **AI Adoption**: Enterprise AI deployments growing exponentially
 2. **Regulatory Tightening**: Governments moving from principles to requirements
 3. **Zero-Trust Security**: Shift from perimeter defense to continuous verification
 4. **Cryptographic Verification**: Blockchain-era trust primitives going mainstream
 
-The AI governance crisis is coming. As AI agents become more autonomous, the cost of unaccountable AI grows exponentially. Kova is the missing infrastructure layer -- the cryptographic accountability primitive that the entire ecosystem will need.
+The AI governance crisis is coming. As AI agents become more autonomous, the cost of unaccountable AI grows exponentially. Grith is the missing infrastructure layer -- the cryptographic accountability primitive that the entire ecosystem will need.
 
 ---
 
@@ -389,5 +389,5 @@ The AI governance crisis is coming. As AI agents become more autonomous, the cos
 ---
 
 *Prepared for financial analysis and valuation purposes.*
-*Product: Kova SDK by Kova Labs, Inc.*
+*Product: Grith SDK by Grith Labs, Inc.*
 *Date: February 2026*

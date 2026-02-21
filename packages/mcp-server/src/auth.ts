@@ -12,7 +12,7 @@ import {
   fromHex,
   sha256String,
   timestamp,
-} from '@usekova/crypto';
+} from '@grith/crypto';
 
 /**
  * Options for configuring the authentication middleware.

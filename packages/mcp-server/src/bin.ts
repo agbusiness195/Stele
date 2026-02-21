@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 /**
- * Kova MCP Server — stdio transport.
+ * Grith MCP Server — stdio transport.
  *
  * Reads newline-delimited JSON-RPC 2.0 messages from stdin,
- * dispatches them to the KovaServer, and writes responses to stdout.
+ * dispatches them to the GrithServer, and writes responses to stdout.
  *
  * Usage:
- *   npx kova-mcp
- *   echo '{"jsonrpc":"2.0","method":"initialize","id":1}' | npx kova-mcp
+ *   npx grith-mcp
+ *   echo '{"jsonrpc":"2.0","method":"initialize","id":1}' | npx grith-mcp
  */
 
-import { KovaServer } from './index';
-import { MemoryStore } from '@usekova/store';
+import { GrithServer } from './index';
+import { MemoryStore } from '@grith/store';
 import type { JsonRpcRequest } from './types';
 
 const store = new MemoryStore();
-const server = new KovaServer(store);
+const server = new GrithServer(store);
 
 let buffer = '';
 

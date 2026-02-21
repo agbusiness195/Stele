@@ -1,4 +1,4 @@
-import type { HashHex } from '@usekova/crypto';
+import type { HashHex } from '@grith/crypto';
 
 /**
  * A zero-knowledge compliance proof attesting that audit log entries

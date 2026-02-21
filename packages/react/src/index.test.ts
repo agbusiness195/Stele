@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { generateKeyPair } from '@usekova/crypto';
-import type { KeyPair } from '@usekova/crypto';
-import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
-import { MemoryStore } from '@usekova/store';
-import { KovaClient } from '@usekova/sdk';
-import type { CreateCovenantOptions, CreateIdentityOptions } from '@usekova/sdk';
+import { generateKeyPair } from '@grith/crypto';
+import type { KeyPair } from '@grith/crypto';
+import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
+import { MemoryStore } from '@grith/store';
+import { GrithClient } from '@grith/sdk';
+import type { CreateCovenantOptions, CreateIdentityOptions } from '@grith/sdk';
 import type { ReactModule } from './hooks';
 
 import {
@@ -78,7 +78,7 @@ function makeIdentityOptions(kp: KeyPair): CreateIdentityOptions {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('@usekova/react', () => {
+describe('@grith/react', () => {
   // ========================================================================
   // Observable
   // ========================================================================
@@ -229,7 +229,7 @@ describe('@usekova/react', () => {
   // ========================================================================
 
   describe('CovenantState', () => {
-    let client: KovaClient;
+    let client: GrithClient;
     let issuerKeyPair: KeyPair;
     let beneficiaryKeyPair: KeyPair;
     let issuer: Issuer;
@@ -241,7 +241,7 @@ describe('@usekova/react', () => {
       beneficiaryKeyPair = parties.beneficiaryKeyPair;
       issuer = parties.issuer;
       beneficiary = parties.beneficiary;
-      client = new KovaClient({ keyPair: issuerKeyPair });
+      client = new GrithClient({ keyPair: issuerKeyPair });
     });
 
     it('starts in idle state with null values', () => {
@@ -385,12 +385,12 @@ describe('@usekova/react', () => {
   // ========================================================================
 
   describe('IdentityState', () => {
-    let client: KovaClient;
+    let client: GrithClient;
     let keyPair: KeyPair;
 
     beforeEach(async () => {
       keyPair = await generateKeyPair();
-      client = new KovaClient({ keyPair });
+      client = new GrithClient({ keyPair });
     });
 
     it('starts in idle state with null identity', () => {
@@ -531,7 +531,7 @@ describe('@usekova/react', () => {
 
   describe('StoreState', () => {
     let store: MemoryStore;
-    let client: KovaClient;
+    let client: GrithClient;
     let issuerKeyPair: KeyPair;
     let issuer: Issuer;
     let beneficiary: Beneficiary;
@@ -542,7 +542,7 @@ describe('@usekova/react', () => {
       issuerKeyPair = parties.issuerKeyPair;
       issuer = parties.issuer;
       beneficiary = parties.beneficiary;
-      client = new KovaClient({ keyPair: issuerKeyPair });
+      client = new GrithClient({ keyPair: issuerKeyPair });
     });
 
     it('starts with empty documents and loading=false', () => {
@@ -727,12 +727,12 @@ describe('@usekova/react', () => {
   // ========================================================================
 
   describe('factory functions', () => {
-    let client: KovaClient;
+    let client: GrithClient;
     let store: MemoryStore;
 
     beforeEach(async () => {
       const kp = await generateKeyPair();
-      client = new KovaClient({ keyPair: kp });
+      client = new GrithClient({ keyPair: kp });
       store = new MemoryStore();
     });
 
@@ -757,7 +757,7 @@ describe('@usekova/react', () => {
 
     it('createCovenantState is usable for full lifecycle', async () => {
       const parties = await makeParties();
-      const covenantClient = new KovaClient({
+      const covenantClient = new GrithClient({
         keyPair: parties.issuerKeyPair,
       });
       const state = createCovenantState(covenantClient);
@@ -778,7 +778,7 @@ describe('@usekova/react', () => {
 
     it('createIdentityState is usable for full lifecycle', async () => {
       const kp = await generateKeyPair();
-      const identityClient = new KovaClient({ keyPair: kp });
+      const identityClient = new GrithClient({ keyPair: kp });
       const state = createIdentityState(identityClient);
 
       const identity = await state.create(makeIdentityOptions(kp));
@@ -797,7 +797,7 @@ describe('@usekova/react', () => {
 
     it('createStoreState is usable for refresh and filter', async () => {
       const parties = await makeParties();
-      const storeClient = new KovaClient({
+      const storeClient = new GrithClient({
         keyPair: parties.issuerKeyPair,
       });
       const doc = await storeClient.createCovenant(
@@ -823,7 +823,7 @@ describe('@usekova/react', () => {
   describe('integration', () => {
     it('Observable.map with CovenantState status', async () => {
       const parties = await makeParties();
-      const client = new KovaClient({ keyPair: parties.issuerKeyPair });
+      const client = new GrithClient({ keyPair: parties.issuerKeyPair });
       const state = new CovenantState(client);
 
       const isReady = state.status.map(
@@ -843,7 +843,7 @@ describe('@usekova/react', () => {
 
     it('Observable.map with IdentityState', async () => {
       const kp = await generateKeyPair();
-      const client = new KovaClient({ keyPair: kp });
+      const client = new GrithClient({ keyPair: kp });
       const state = new IdentityState(client);
 
       const hasIdentity = state.identity.map((id) => id !== null);
@@ -860,7 +860,7 @@ describe('@usekova/react', () => {
       expect(count.get()).toBe(0);
 
       const parties = await makeParties();
-      const client = new KovaClient({ keyPair: parties.issuerKeyPair });
+      const client = new GrithClient({ keyPair: parties.issuerKeyPair });
       const doc = await client.createCovenant(
         makeCovenantOptions(
           parties.issuer,
@@ -876,7 +876,7 @@ describe('@usekova/react', () => {
 
     it('error observable works with map', async () => {
       const parties = await makeParties();
-      const client = new KovaClient({ keyPair: parties.issuerKeyPair });
+      const client = new GrithClient({ keyPair: parties.issuerKeyPair });
       const state = new CovenantState(client);
 
       const errorMessage = state.error.map((e) => e?.message ?? '');
@@ -998,7 +998,7 @@ describe('@usekova/react', () => {
       it('returns initial idle state', async () => {
         const { useCovenant } = await import('./hooks');
         const kp = await generateKeyPair();
-        const client = new KovaClient({ keyPair: kp });
+        const client = new GrithClient({ keyPair: kp });
         const result = useCovenant(client);
         expect(result.status).toBe('idle');
         expect(result.document).toBeNull();
@@ -1009,7 +1009,7 @@ describe('@usekova/react', () => {
       it('provides create, verify, and evaluateAction functions', async () => {
         const { useCovenant } = await import('./hooks');
         const kp = await generateKeyPair();
-        const client = new KovaClient({ keyPair: kp });
+        const client = new GrithClient({ keyPair: kp });
         const result = useCovenant(client);
         expect(typeof result.create).toBe('function');
         expect(typeof result.verify).toBe('function');
@@ -1019,7 +1019,7 @@ describe('@usekova/react', () => {
       it('create function creates a covenant document', async () => {
         const { useCovenant } = await import('./hooks');
         const parties = await makeParties();
-        const client = new KovaClient({ keyPair: parties.issuerKeyPair });
+        const client = new GrithClient({ keyPair: parties.issuerKeyPair });
         const hook = useCovenant(client);
 
         const doc = await hook.create(
@@ -1034,7 +1034,7 @@ describe('@usekova/react', () => {
       it('returns initial idle state', async () => {
         const { useIdentity } = await import('./hooks');
         const kp = await generateKeyPair();
-        const client = new KovaClient({ keyPair: kp });
+        const client = new GrithClient({ keyPair: kp });
         const result = useIdentity(client);
         expect(result.status).toBe('idle');
         expect(result.identity).toBeNull();
@@ -1044,7 +1044,7 @@ describe('@usekova/react', () => {
       it('provides create and evolve functions', async () => {
         const { useIdentity } = await import('./hooks');
         const kp = await generateKeyPair();
-        const client = new KovaClient({ keyPair: kp });
+        const client = new GrithClient({ keyPair: kp });
         const result = useIdentity(client);
         expect(typeof result.create).toBe('function');
         expect(typeof result.evolve).toBe('function');
@@ -1053,7 +1053,7 @@ describe('@usekova/react', () => {
       it('create function creates an identity', async () => {
         const { useIdentity } = await import('./hooks');
         const kp = await generateKeyPair();
-        const client = new KovaClient({ keyPair: kp });
+        const client = new GrithClient({ keyPair: kp });
         const hook = useIdentity(client);
 
         const identity = await hook.create(makeIdentityOptions(kp));
@@ -1089,7 +1089,7 @@ describe('@usekova/react', () => {
         const { useCovenantStore } = await import('./hooks');
         const testStore = new MemoryStore();
         const parties = await makeParties();
-        const client = new KovaClient({ keyPair: parties.issuerKeyPair });
+        const client = new GrithClient({ keyPair: parties.issuerKeyPair });
         const doc = await client.createCovenant(
           makeCovenantOptions(parties.issuer, parties.beneficiary, parties.issuerKeyPair.privateKey),
         );

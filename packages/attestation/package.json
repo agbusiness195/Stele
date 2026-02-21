@@ -1,5 +1,5 @@
 {
-  "name": "@usekova/attestation",
+  "name": "@grith/attestation",
   "version": "2.0.0",
   "description": "Multi-party attestation creation and reconciliation",
   "sideEffects": false,
@@ -27,7 +27,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@usekova/crypto": "2.0.0"
+    "@grith/crypto": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -38,16 +38,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kova.git",
+    "url": "https://github.com/agbusiness195/grith.git",
     "directory": "packages/attestation"
   },
-  "homepage": "https://usekova.dev",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kova/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
-  "author": "Kova Labs, Inc.",
+  "author": "Grith Labs, Inc.",
   "keywords": [
-    "kova",
+    "grith",
     "covenant",
     "ai-accountability",
     "attestation",

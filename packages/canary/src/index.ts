@@ -1,7 +1,7 @@
-import { sha256Object } from '@usekova/crypto';
-import { parse, evaluate, checkRateLimit } from '@usekova/ccl';
-import type { CCLDocument, Statement } from '@usekova/ccl';
-import { DocumentedKovaError as KovaError, DocumentedErrorCode as KovaErrorCode } from '@usekova/types';
+import { sha256Object } from '@grith/crypto';
+import { parse, evaluate, checkRateLimit } from '@grith/ccl';
+import type { CCLDocument, Statement } from '@grith/ccl';
+import { DocumentedGrithError as GrithError, DocumentedErrorCode as GrithErrorCode } from '@grith/types';
 
 export type {
   ChallengePayload,
@@ -96,7 +96,7 @@ export function generateCanary(
 ): Canary {
   // --- Validation ---
   if (ttlMs !== undefined && ttlMs !== null && ttlMs <= 0) {
-    throw new KovaError(KovaErrorCode.PROTOCOL_INVALID_INPUT, 'ttlMs must be positive', { hint: 'Set ttlMs to a positive number of milliseconds.' });
+    throw new GrithError(GrithErrorCode.PROTOCOL_INVALID_INPUT, 'ttlMs must be positive', { hint: 'Set ttlMs to a positive number of milliseconds.' });
   }
 
   // --- Parse constraint as CCL ---
@@ -222,10 +222,10 @@ export function detectionProbability(
   coverageRatio: number,
 ): number {
   if (canaryFrequency < 0) {
-    throw new KovaError(KovaErrorCode.PROTOCOL_INVALID_INPUT, 'canaryFrequency must be >= 0', { hint: 'Set canaryFrequency to zero or a positive number.' });
+    throw new GrithError(GrithErrorCode.PROTOCOL_INVALID_INPUT, 'canaryFrequency must be >= 0', { hint: 'Set canaryFrequency to zero or a positive number.' });
   }
   if (coverageRatio < 0 || coverageRatio > 1) {
-    throw new KovaError(KovaErrorCode.PROTOCOL_INVALID_INPUT, 'coverageRatio must be in [0, 1]', { hint: 'Set coverageRatio to a number between 0 and 1 inclusive.' });
+    throw new GrithError(GrithErrorCode.PROTOCOL_INVALID_INPUT, 'coverageRatio must be in [0, 1]', { hint: 'Set coverageRatio to a number between 0 and 1 inclusive.' });
   }
 
   const raw = 1 - Math.pow(1 - coverageRatio, canaryFrequency);
@@ -261,7 +261,7 @@ export function canarySchedule(
   maxCanaries?: number,
 ): CanaryScheduleResult {
   if (totalDurationMs <= 0) {
-    throw new KovaError(KovaErrorCode.PROTOCOL_INVALID_INPUT, 'totalDurationMs must be positive', { hint: 'Set totalDurationMs to a positive number of milliseconds.' });
+    throw new GrithError(GrithErrorCode.PROTOCOL_INVALID_INPUT, 'totalDurationMs must be positive', { hint: 'Set totalDurationMs to a positive number of milliseconds.' });
   }
 
   if (covenants.length === 0) {
@@ -381,10 +381,10 @@ export function canaryCorrelation(
   actualBreaches: Array<{ covenantId: string; breached: boolean }>,
 ): CanaryCorrelationResult {
   if (canaryResults.length === 0) {
-    throw new KovaError(KovaErrorCode.PROTOCOL_INVALID_INPUT, 'canaryResults must not be empty', { hint: 'Provide at least one canary result to compute correlation.' });
+    throw new GrithError(GrithErrorCode.PROTOCOL_INVALID_INPUT, 'canaryResults must not be empty', { hint: 'Provide at least one canary result to compute correlation.' });
   }
   if (actualBreaches.length === 0) {
-    throw new KovaError(KovaErrorCode.PROTOCOL_INVALID_INPUT, 'actualBreaches must not be empty', { hint: 'Provide at least one actual breach record to compute correlation.' });
+    throw new GrithError(GrithErrorCode.PROTOCOL_INVALID_INPUT, 'actualBreaches must not be empty', { hint: 'Provide at least one actual breach record to compute correlation.' });
   }
 
   // Compute canary pass rates per covenant

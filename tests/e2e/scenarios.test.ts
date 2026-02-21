@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, sha256String, toHex } from '@usekova/crypto';
-import type { KeyPair, HashHex } from '@usekova/crypto';
+import { generateKeyPair, sha256String, toHex } from '@grith/crypto';
+import type { KeyPair, HashHex } from '@grith/crypto';
 import {
   buildCovenant,
   verifyCovenant,
@@ -10,17 +10,17 @@ import {
   validateChainNarrowing,
   serializeCovenant,
   deserializeCovenant,
-} from '@usekova/core';
-import type { CovenantDocument } from '@usekova/core';
-import { evaluate, parse } from '@usekova/ccl';
-import { Monitor, MonitorDeniedError } from '@usekova/enforcement';
-import { KovaGuard } from '@usekova/mcp';
-import type { MCPServer, WrappedMCPServer, ViolationDetails, ToolCallDetails } from '@usekova/mcp';
-import { createReceipt, verifyReceipt, computeReputationScore, createEndorsement, verifyEndorsement } from '@usekova/reputation';
-import type { ExecutionReceipt } from '@usekova/reputation';
-import { generateComplianceProof, verifyComplianceProof } from '@usekova/proof';
-import { createIdentity, evolveIdentity, verifyIdentity, serializeIdentity, deserializeIdentity } from '@usekova/identity';
-import { createBreachAttestation, verifyBreachAttestation, TrustGraph } from '@usekova/breach';
+} from '@grith/core';
+import type { CovenantDocument } from '@grith/core';
+import { evaluate, parse } from '@grith/ccl';
+import { Monitor, MonitorDeniedError } from '@grith/enforcement';
+import { GrithGuard } from '@grith/mcp';
+import type { MCPServer, WrappedMCPServer, ViolationDetails, ToolCallDetails } from '@grith/mcp';
+import { createReceipt, verifyReceipt, computeReputationScore, createEndorsement, verifyEndorsement } from '@grith/reputation';
+import type { ExecutionReceipt } from '@grith/reputation';
+import { generateComplianceProof, verifyComplianceProof } from '@grith/proof';
+import { createIdentity, evolveIdentity, verifyIdentity, serializeIdentity, deserializeIdentity } from '@grith/identity';
+import { createBreachAttestation, verifyBreachAttestation, TrustGraph } from '@grith/breach';
 
 // ---------------------------------------------------------------------------
 // Scenario 1: Chain Delegation with Constraint Narrowing (3 levels)
@@ -420,12 +420,12 @@ describe('Scenario 2: MCP Server Wrap, Execute, Receipt, and Reputation', () => 
     };
   }
 
-  // ── Step 1: Wrap the MCP server with KovaGuard ───────────────────────
+  // ── Step 1: Wrap the MCP server with GrithGuard ───────────────────────
 
-  it('Step 1: wraps the MCP server with KovaGuard and constraints', async () => {
+  it('Step 1: wraps the MCP server with GrithGuard and constraints', async () => {
     operatorKeyPair = await generateKeyPair();
 
-    wrappedServer = await KovaGuard.wrap(createMockMCPServer(), {
+    wrappedServer = await GrithGuard.wrap(createMockMCPServer(), {
       constraints: SERVER_CONSTRAINTS,
       mode: 'enforce',
       operatorKeyPair,

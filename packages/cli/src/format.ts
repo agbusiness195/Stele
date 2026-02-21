@@ -1,5 +1,5 @@
 /**
- * @usekova/cli formatting utilities.
+ * @grith/cli formatting utilities.
  *
  * Pure ANSI-code based terminal formatting with zero external dependencies.
  *

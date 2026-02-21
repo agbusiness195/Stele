@@ -1,11 +1,11 @@
 /**
- * @usekova/sdk type definitions.
+ * @grith/sdk type definitions.
  *
  * SDK-specific types that wrap and extend the lower-level package types
  * into a unified, ergonomic API surface.
  */
 
-import type { KeyPair } from '@usekova/crypto';
+import type { KeyPair } from '@grith/crypto';
 import type {
   CovenantDocument,
   VerificationResult,
@@ -19,24 +19,24 @@ import type {
   CovenantMetadata,
   Obligation,
   PartyRole,
-} from '@usekova/core';
+} from '@grith/core';
 import type {
   CCLDocument,
   EvaluationResult as CCLEvaluationResult,
   Statement,
   Severity,
-} from '@usekova/ccl';
+} from '@grith/ccl';
 import type {
   AgentIdentity,
   ModelAttestation,
   DeploymentContext,
   LineageEntry,
-} from '@usekova/identity';
+} from '@grith/identity';
 
 // ─── Client options ─────────────────────────────────────────────────────────
 
-/** Options for constructing a KovaClient instance. */
-export interface KovaClientOptions {
+/** Options for constructing a GrithClient instance. */
+export interface GrithClientOptions {
   /** Optional pre-generated key pair for signing operations. */
   keyPair?: KeyPair;
   /** Optional agent identifier for identity operations. */
@@ -167,8 +167,8 @@ export interface NarrowingViolationEntry {
 
 // ─── Events ─────────────────────────────────────────────────────────────────
 
-/** Event types emitted by KovaClient. */
-export type KovaEventType =
+/** Event types emitted by GrithClient. */
+export type GrithEventType =
   | 'covenant:created'
   | 'covenant:verified'
   | 'covenant:countersigned'
@@ -180,59 +180,59 @@ export type KovaEventType =
   | 'key:rotated';
 
 /** Base event payload. */
-export interface KovaEvent {
+export interface GrithEvent {
   /** The event type. */
-  type: KovaEventType;
+  type: GrithEventType;
   /** ISO 8601 timestamp of when the event occurred. */
   timestamp: string;
 }
 
 /** Event emitted when a covenant is created. */
-export interface CovenantCreatedEvent extends KovaEvent {
+export interface CovenantCreatedEvent extends GrithEvent {
   type: 'covenant:created';
   document: CovenantDocument;
 }
 
 /** Event emitted when a covenant is verified. */
-export interface CovenantVerifiedEvent extends KovaEvent {
+export interface CovenantVerifiedEvent extends GrithEvent {
   type: 'covenant:verified';
   result: VerificationResult;
 }
 
 /** Event emitted when a covenant is countersigned. */
-export interface CovenantCountersignedEvent extends KovaEvent {
+export interface CovenantCountersignedEvent extends GrithEvent {
   type: 'covenant:countersigned';
   document: CovenantDocument;
   signerRole: PartyRole;
 }
 
 /** Event emitted when an identity is created. */
-export interface IdentityCreatedEvent extends KovaEvent {
+export interface IdentityCreatedEvent extends GrithEvent {
   type: 'identity:created';
   identity: AgentIdentity;
 }
 
 /** Event emitted when an identity is evolved. */
-export interface IdentityEvolvedEvent extends KovaEvent {
+export interface IdentityEvolvedEvent extends GrithEvent {
   type: 'identity:evolved';
   identity: AgentIdentity;
   changeType: LineageEntry['changeType'];
 }
 
 /** Event emitted when a chain is resolved. */
-export interface ChainResolvedEvent extends KovaEvent {
+export interface ChainResolvedEvent extends GrithEvent {
   type: 'chain:resolved';
   documents: CovenantDocument[];
 }
 
 /** Event emitted when a chain is validated. */
-export interface ChainValidatedEvent extends KovaEvent {
+export interface ChainValidatedEvent extends GrithEvent {
   type: 'chain:validated';
   result: ChainValidationResult;
 }
 
 /** Event emitted when an action is evaluated. */
-export interface EvaluationCompletedEvent extends KovaEvent {
+export interface EvaluationCompletedEvent extends GrithEvent {
   type: 'evaluation:completed';
   result: EvaluationResult;
   action: string;
@@ -240,14 +240,14 @@ export interface EvaluationCompletedEvent extends KovaEvent {
 }
 
 /** Event emitted when a key rotation occurs. */
-export interface KeyRotatedEvent extends KovaEvent {
+export interface KeyRotatedEvent extends GrithEvent {
   type: 'key:rotated';
   previousPublicKey: string;
   currentPublicKey: string;
 }
 
 /** Map of event types to their payloads. */
-export interface KovaEventMap {
+export interface GrithEventMap {
   'covenant:created': CovenantCreatedEvent;
   'covenant:verified': CovenantVerifiedEvent;
   'covenant:countersigned': CovenantCountersignedEvent;
@@ -260,7 +260,7 @@ export interface KovaEventMap {
 }
 
 /** Event handler function type. */
-export type KovaEventHandler<T extends KovaEventType> = (event: KovaEventMap[T]) => void;
+export type GrithEventHandler<T extends GrithEventType> = (event: GrithEventMap[T]) => void;
 
 // ─── Re-exports for convenience ─────────────────────────────────────────────
 

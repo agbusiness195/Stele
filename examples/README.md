@@ -1,6 +1,6 @@
-# Kova SDK Examples
+# Grith SDK Examples
 
-Runnable TypeScript examples demonstrating the Kova protocol SDK.
+Runnable TypeScript examples demonstrating the Grith protocol SDK.
 
 ## Running
 

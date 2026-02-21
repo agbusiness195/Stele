@@ -6,10 +6,10 @@ import {
   toHex,
   fromHex,
   timestamp,
-} from '@usekova/crypto';
-import type { KeyPair, HashHex } from '@usekova/crypto';
-import type { Severity } from '@usekova/ccl';
-import { KovaError, KovaErrorCode } from '@usekova/types';
+} from '@grith/crypto';
+import type { KeyPair, HashHex } from '@grith/crypto';
+import type { Severity } from '@grith/ccl';
+import { GrithError, GrithErrorCode } from '@grith/types';
 
 export type {
   ExecutionReceipt,
@@ -842,20 +842,20 @@ export class ReceiptDAG {
    * Add a receipt to the DAG.
    * @param receipt - The execution receipt.
    * @param parentHashes - Hashes of parent receipts (empty for root nodes).
-   * @throws KovaError if any parent hash is not in the DAG.
+   * @throws GrithError if any parent hash is not in the DAG.
    */
   addNode(receipt: ExecutionReceipt, parentHashes: HashHex[] = []): void {
     if (this.nodes.has(receipt.receiptHash)) {
-      throw new KovaError(
+      throw new GrithError(
         `Receipt ${receipt.receiptHash} already exists in DAG`,
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     for (const parentHash of parentHashes) {
       if (!this.nodes.has(parentHash)) {
-        throw new KovaError(
+        throw new GrithError(
           `Parent receipt ${parentHash} not found in DAG`,
-          KovaErrorCode.PROTOCOL_INVALID_INPUT,
+          GrithErrorCode.PROTOCOL_INVALID_INPUT,
         );
       }
     }
@@ -927,15 +927,15 @@ export class ReceiptDAG {
    */
   findCommonAncestors(hashA: HashHex, hashB: HashHex): HashHex[] {
     if (!this.nodes.has(hashA)) {
-      throw new KovaError(
+      throw new GrithError(
         `Node ${hashA} not found in DAG`,
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!this.nodes.has(hashB)) {
-      throw new KovaError(
+      throw new GrithError(
         `Node ${hashB} not found in DAG`,
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1166,9 +1166,9 @@ export class ReputationDecayModel {
       case 'exponential': {
         const lambda = this.params['lambda'];
         if (lambda === undefined || lambda <= 0) {
-          throw new KovaError(
+          throw new GrithError(
             'Exponential decay requires lambda > 0',
-            KovaErrorCode.PROTOCOL_INVALID_INPUT,
+            GrithErrorCode.PROTOCOL_INVALID_INPUT,
           );
         }
         break;
@@ -1177,15 +1177,15 @@ export class ReputationDecayModel {
         const k = this.params['k'];
         const lambda = this.params['lambda'];
         if (k === undefined || k <= 0) {
-          throw new KovaError(
+          throw new GrithError(
             'Weibull decay requires k > 0',
-            KovaErrorCode.PROTOCOL_INVALID_INPUT,
+            GrithErrorCode.PROTOCOL_INVALID_INPUT,
           );
         }
         if (lambda === undefined || lambda <= 0) {
-          throw new KovaError(
+          throw new GrithError(
             'Weibull decay requires lambda > 0',
-            KovaErrorCode.PROTOCOL_INVALID_INPUT,
+            GrithErrorCode.PROTOCOL_INVALID_INPUT,
           );
         }
         break;
@@ -1194,23 +1194,23 @@ export class ReputationDecayModel {
         const alpha = this.params['alpha'];
         const beta = this.params['beta'];
         if (alpha === undefined || alpha <= 0) {
-          throw new KovaError(
+          throw new GrithError(
             'Gamma decay requires alpha > 0',
-            KovaErrorCode.PROTOCOL_INVALID_INPUT,
+            GrithErrorCode.PROTOCOL_INVALID_INPUT,
           );
         }
         if (beta === undefined || beta <= 0) {
-          throw new KovaError(
+          throw new GrithError(
             'Gamma decay requires beta > 0',
-            KovaErrorCode.PROTOCOL_INVALID_INPUT,
+            GrithErrorCode.PROTOCOL_INVALID_INPUT,
           );
         }
         break;
       }
       default:
-        throw new KovaError(
+        throw new GrithError(
           `Unknown decay model: ${config.model}`,
-          KovaErrorCode.PROTOCOL_INVALID_INPUT,
+          GrithErrorCode.PROTOCOL_INVALID_INPUT,
         );
     }
   }
@@ -1222,9 +1222,9 @@ export class ReputationDecayModel {
    */
   decay(t: number): number {
     if (t < 0) {
-      throw new KovaError(
+      throw new GrithError(
         'Time t must be non-negative',
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (t === 0) return 1;
@@ -1404,27 +1404,27 @@ export class GraduatedBurner {
     this.config = { ...DEFAULT_BURN_CONFIG, ...config };
 
     if (this.config.minBurnFraction < 0 || this.config.minBurnFraction > 1) {
-      throw new KovaError(
+      throw new GrithError(
         'minBurnFraction must be in [0, 1]',
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.maxBurnFraction < this.config.minBurnFraction || this.config.maxBurnFraction > 1) {
-      throw new KovaError(
+      throw new GrithError(
         'maxBurnFraction must be in [minBurnFraction, 1]',
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.curveExponent <= 0) {
-      throw new KovaError(
+      throw new GrithError(
         'curveExponent must be > 0',
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.historyWeight < 0 || this.config.historyWeight > 1) {
-      throw new KovaError(
+      throw new GrithError(
         'historyWeight must be in [0, 1]',
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
   }
@@ -1445,21 +1445,21 @@ export class GraduatedBurner {
     totalPastExecutions: number,
   ): { burnAmount: number; burnFraction: number } {
     if (stakeAmount < 0) {
-      throw new KovaError(
+      throw new GrithError(
         'stakeAmount must be non-negative',
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (pastBreachCount < 0 || !Number.isInteger(pastBreachCount)) {
-      throw new KovaError(
+      throw new GrithError(
         'pastBreachCount must be a non-negative integer',
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (totalPastExecutions < 0 || !Number.isInteger(totalPastExecutions)) {
-      throw new KovaError(
+      throw new GrithError(
         'totalPastExecutions must be a non-negative integer',
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1534,27 +1534,27 @@ export class ReputationAggregator {
    *
    * @param sources - Array of reputation sources with scores and weights.
    * @returns The weighted median score.
-   * @throws KovaError if sources is empty or contains invalid values.
+   * @throws GrithError if sources is empty or contains invalid values.
    */
   aggregate(sources: ReputationSource[]): number {
     if (sources.length === 0) {
-      throw new KovaError(
+      throw new GrithError(
         'At least one reputation source is required',
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
     for (const source of sources) {
       if (source.score < 0 || source.score > 1) {
-        throw new KovaError(
+        throw new GrithError(
           `Invalid score ${source.score} for source ${source.sourceId}: must be in [0, 1]`,
-          KovaErrorCode.PROTOCOL_INVALID_INPUT,
+          GrithErrorCode.PROTOCOL_INVALID_INPUT,
         );
       }
       if (source.weight < 0) {
-        throw new KovaError(
+        throw new GrithError(
           `Invalid weight ${source.weight} for source ${source.sourceId}: must be non-negative`,
-          KovaErrorCode.PROTOCOL_INVALID_INPUT,
+          GrithErrorCode.PROTOCOL_INVALID_INPUT,
         );
       }
     }
@@ -1562,9 +1562,9 @@ export class ReputationAggregator {
     // Filter out zero-weight sources
     const nonZero = sources.filter((s) => s.weight > 0);
     if (nonZero.length === 0) {
-      throw new KovaError(
+      throw new GrithError(
         'At least one source must have positive weight',
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 

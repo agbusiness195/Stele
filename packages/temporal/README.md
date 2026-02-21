@@ -1,11 +1,11 @@
-# @usekova/temporal
+# @grith/temporal
 
 Temporal constraint modeling -- decay functions, evolution policies, continuous trigger scoring, violation forecasting, and temporal constraint algebra.
 
 ## Installation
 
 ```bash
-npm install @usekova/temporal
+npm install @grith/temporal
 ```
 
 ## Key APIs
@@ -27,7 +27,7 @@ npm install @usekova/temporal
 ### Decay modeling
 
 ```typescript
-import { DecayModel, computeDecaySchedule } from '@usekova/temporal';
+import { DecayModel, computeDecaySchedule } from '@grith/temporal';
 
 // Simple exponential decay schedule
 const schedule = computeDecaySchedule(1.0, 2.0, 86_400_000, 10);
@@ -44,7 +44,7 @@ const threshold = model.findThresholdTime(1.0, 0.1); // when weight drops below 
 ### Evolution policies
 
 ```typescript
-import { defineEvolution, evaluateTriggers, evolve } from '@usekova/temporal';
+import { defineEvolution, evaluateTriggers, evolve } from '@grith/temporal';
 
 const policy = defineEvolution('cov-123', [
   { type: 'breach_event', action: 'tighten', condition: 'any', constraintId: 'strict-mode' },
@@ -62,7 +62,7 @@ if (fired.length > 0) {
 ### Violation forecasting
 
 ```typescript
-import { ViolationForecaster } from '@usekova/temporal';
+import { ViolationForecaster } from '@grith/temporal';
 
 const forecaster = new ViolationForecaster({
   alpha: 0.3,
@@ -78,7 +78,7 @@ const result = forecaster.forecast([2, 3, 5, 4, 7, 6, 9]);
 ### Temporal constraint algebra
 
 ```typescript
-import { TemporalConstraintAlgebra } from '@usekova/temporal';
+import { TemporalConstraintAlgebra } from '@grith/temporal';
 
 const algebra = new TemporalConstraintAlgebra();
 const result = algebra.intersection(
@@ -90,4 +90,4 @@ const result = algebra.intersection(
 
 ## Docs
 
-See the [Kova SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

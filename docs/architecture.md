@@ -1,8 +1,8 @@
-# Kova Architecture
+# Grith Architecture
 
 ## Overview
 
-Kova is a digital accountability protocol for AI agents. It provides a cryptographically
+Grith is a digital accountability protocol for AI agents. It provides a cryptographically
 signed covenant system that defines what an AI agent may and may not do, with mechanisms
 for verification, enforcement, identity tracking, reputation scoring, and legal compliance.
 
@@ -13,7 +13,7 @@ an **issuer** (typically the operator) and references a **beneficiary** (the par
 interests are protected). Every action the agent takes can be evaluated against its
 covenant constraints, producing a verifiable audit trail.
 
-Kova is designed to be:
+Grith is designed to be:
 
 - **Cryptographically verifiable**: All documents are signed with Ed25519 and content-addressed with SHA-256.
 - **Composable**: Covenants can form delegation chains where each child narrows the parent's constraints.
@@ -31,7 +31,7 @@ layers below it:
 │       react  ·  evm  ·  mcp-server  ·  cli           │
 ├─────────────────────────────────────────────────────┤
 │                       SDK                            │
-│          sdk (KovaClient, QuickCovenant)             │
+│          sdk (GrithClient, QuickCovenant)             │
 ├─────────────────────────────────────────────────────┤
 │                    Protocol                          │
 │   attestation · canary · gametheory · composition     │
@@ -71,7 +71,7 @@ and legal compliance.
 
 ### SDK
 
-A thin unification layer (`KovaClient`) that re-exports and wraps Foundation
+A thin unification layer (`GrithClient`) that re-exports and wraps Foundation
 packages into a single, ergonomic API with an event system.
 
 ### Platform
@@ -81,7 +81,7 @@ JSON-RPC MCP server, and a command-line interface.
 
 ## Data Flow
 
-A typical Kova workflow follows this sequence:
+A typical Grith workflow follows this sequence:
 
 ```
 1. Key Generation
@@ -319,9 +319,9 @@ interface ChainResolver {
 }
 ```
 
-### KovaClient Events
+### GrithClient Events
 
-The `KovaClient` emits typed events throughout the covenant lifecycle:
+The `GrithClient` emits typed events throughout the covenant lifecycle:
 
 | Event | Emitted When |
 |-------|-------------|
@@ -335,7 +335,7 @@ The `KovaClient` emits typed events throughout the covenant lifecycle:
 | `evaluation:completed` | An action is evaluated against constraints |
 
 ```typescript
-const client = new KovaClient();
+const client = new GrithClient();
 client.on('covenant:created', (event) => {
   console.log('New covenant:', event.document.id);
 });

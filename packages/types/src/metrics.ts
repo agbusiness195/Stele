@@ -1,5 +1,5 @@
 /**
- * Lightweight metrics collection for the Kova SDK.
+ * Lightweight metrics collection for the Grith SDK.
  *
  * Provides Counter, Gauge, Histogram, and a MetricsRegistry for
  * collecting operational metrics without any external dependencies.

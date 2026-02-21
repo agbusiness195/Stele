@@ -1,13 +1,13 @@
 /**
- * Kova SDK Quickstart
+ * Grith SDK Quickstart
  *
  * Demonstrates the basic flow: generate keys, build a covenant,
  * verify it, enforce constraints through a Monitor, and inspect
  * the tamper-evident audit log.
  */
-import { generateKeyPair } from '@usekova/crypto';
-import { buildCovenant, verifyCovenant } from '@usekova/core';
-import { Monitor, MonitorDeniedError } from '@usekova/enforcement';
+import { generateKeyPair } from '@grith/crypto';
+import { buildCovenant, verifyCovenant } from '@grith/core';
+import { Monitor, MonitorDeniedError } from '@grith/enforcement';
 
 async function main() {
   // 1. Generate an Ed25519 key pair

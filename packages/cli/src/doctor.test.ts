@@ -23,7 +23,7 @@ afterEach(() => {
 });
 
 function makeTmpDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'kova-doctor-'));
+  const dir = mkdtempSync(join(tmpdir(), 'grith-doctor-'));
   tempDirs.push(dir);
   return dir;
 }
@@ -126,13 +126,13 @@ describe('Config check', () => {
     expect(configCheck).toBeDefined();
     // No config file in temp dir, should be warn
     expect(configCheck!.status).toBe('warn');
-    expect(configCheck!.message).toContain('No kova.config.json');
+    expect(configCheck!.message).toContain('No grith.config.json');
   });
 
   it('reports ok when config file exists and is valid', async () => {
     const tmp = makeTmpDir();
     writeFileSync(
-      join(tmp, 'kova.config.json'),
+      join(tmp, 'grith.config.json'),
       JSON.stringify({
         defaultIssuer: { id: 'test', publicKey: 'a'.repeat(64) },
         outputFormat: 'text',

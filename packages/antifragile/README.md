@@ -1,11 +1,11 @@
-# @usekova/antifragile
+# @grith/antifragile
 
 Antifragility analysis with stress testing, recovery metrics, and evolutionary antibody fitness.
 
 ## Installation
 
 ```bash
-npm install @usekova/antifragile
+npm install @grith/antifragile
 ```
 
 ## Key APIs
@@ -35,7 +35,7 @@ import {
   stressTest,
   antifragilityIndex,
   StressResponseCurve,
-} from '@usekova/antifragile';
+} from '@grith/antifragile';
 
 // Generate an antibody from a detected breach
 const antibody = generateAntibody({
@@ -67,4 +67,4 @@ console.log(curve.logistic(0.8)); // S-curve response at stress level 0.8
 
 ## Docs
 
-See the [Kova SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

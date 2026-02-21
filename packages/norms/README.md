@@ -1,11 +1,11 @@
-# @usekova/norms
+# @grith/norms
 
 Social norm modeling with emergence detection, conflict resolution, and governance proposal generation from covenant data.
 
 ## Installation
 
 ```bash
-npm install @usekova/norms
+npm install @grith/norms
 ```
 
 ## Key APIs
@@ -20,8 +20,8 @@ npm install @usekova/norms
 ## Usage
 
 ```typescript
-import { analyzeNorms, proposeStandard, normConflictDetection } from '@usekova/norms';
-import type { CovenantData } from '@usekova/norms';
+import { analyzeNorms, proposeStandard, normConflictDetection } from '@grith/norms';
+import type { CovenantData } from '@grith/norms';
 
 const covenants: CovenantData[] = [
   {
@@ -51,4 +51,4 @@ for (const norm of analysis.emergentNorms) {
 
 ## Docs
 
-See the [Kova SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

@@ -6,7 +6,7 @@ import {
   verify,
   sha256,
   canonicalizeJson,
-} from '@usekova/crypto';
+} from '@grith/crypto';
 
 import {
   parse,
@@ -14,7 +14,7 @@ import {
   merge,
   serialize,
   validateNarrowing,
-} from '@usekova/ccl';
+} from '@grith/ccl';
 
 import {
   buildCovenant,
@@ -23,9 +23,9 @@ import {
   resolveChain,
   computeEffectiveConstraints,
   MemoryChainResolver,
-} from '@usekova/core';
+} from '@grith/core';
 
-import { MemoryStore } from '@usekova/store';
+import { MemoryStore } from '@grith/store';
 
 // ---------------------------------------------------------------------------
 // Benchmark helper

@@ -8,7 +8,7 @@ import {
   verify,
   toHex,
   fromHex,
-} from '@usekova/crypto';
+} from '@grith/crypto';
 import {
   buildCovenant,
   verifyCovenant,
@@ -17,8 +17,8 @@ import {
   canonicalForm,
   computeId,
   PROTOCOL_VERSION,
-} from '@usekova/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
+} from '@grith/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
 import {
   parse,
   evaluate,
@@ -26,11 +26,11 @@ import {
   matchResource,
   checkRateLimit,
   serialize,
-} from '@usekova/ccl';
-import { createIdentity, evolveIdentity } from '@usekova/identity';
+} from '@grith/ccl';
+import { createIdentity, evolveIdentity } from '@grith/identity';
 
 /**
- * Canonical Test Vectors for the Kova Protocol.
+ * Canonical Test Vectors for the Grith Protocol.
  *
  * These vectors enable cross-implementation verification.
  * Any conformant implementation in any language MUST produce
@@ -120,7 +120,7 @@ describe('Canonical Test Vector Generation', () => {
 
     const messages = [
       'hello world',
-      'The Kova Protocol',
+      'The Grith Protocol',
       JSON.stringify({ action: 'read', resource: '/data' }),
     ];
 
@@ -794,9 +794,9 @@ describe('Canonical Test Vector Generation', () => {
       _meta: {
         generated_at: '2026-01-01T00:00:00.000Z',
         protocol_version: PROTOCOL_VERSION,
-        generator: '@usekova/test-vectors',
+        generator: '@grith/test-vectors',
         description:
-          'Canonical test vectors for the Kova protocol. Any conformant implementation MUST produce identical results for these inputs.',
+          'Canonical test vectors for the Grith protocol. Any conformant implementation MUST produce identical results for these inputs.',
         total_vectors: vectors.length,
         categories: Object.keys(grouped),
         category_counts: Object.fromEntries(

@@ -1,7 +1,7 @@
 {
-  "name": "@usekova/core",
+  "name": "@grith/core",
   "version": "2.0.0",
-  "description": "Core covenant lifecycle management for the Kova framework",
+  "description": "Core covenant lifecycle management for the Grith framework",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,16 +27,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kova.git",
+    "url": "https://github.com/agbusiness195/grith.git",
     "directory": "packages/core"
   },
-  "homepage": "https://usekova.dev",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kova/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
-  "author": "Kova Labs, Inc.",
+  "author": "Grith Labs, Inc.",
   "keywords": [
-    "kova",
+    "grith",
     "covenant",
     "ai-accountability",
     "core",
@@ -52,7 +52,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@usekova/crypto": "2.0.0",
-    "@usekova/ccl": "2.0.0"
+    "@grith/crypto": "2.0.0",
+    "@grith/ccl": "2.0.0"
   }
 }

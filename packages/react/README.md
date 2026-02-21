@@ -1,11 +1,11 @@
-# @usekova/react
+# @grith/react
 
-Reactive primitives and React hooks for building Kova-powered UIs with observable state management.
+Reactive primitives and React hooks for building Grith-powered UIs with observable state management.
 
 ## Installation
 
 ```bash
-npm install @usekova/react
+npm install @grith/react
 ```
 
 ## Key APIs
@@ -19,8 +19,8 @@ npm install @usekova/react
 
 ### Factory Functions
 
-- **createCovenantState(client)**: Create a `CovenantState` bound to a `KovaClient`
-- **createIdentityState(client)**: Create an `IdentityState` bound to a `KovaClient`
+- **createCovenantState(client)**: Create a `CovenantState` bound to a `GrithClient`
+- **createIdentityState(client)**: Create an `IdentityState` bound to a `GrithClient`
 - **createStoreState(store)**: Create a `StoreState` bound to a `CovenantStore`
 
 ### React Hooks (requires React >= 18)
@@ -33,12 +33,12 @@ npm install @usekova/react
 ## Usage
 
 ```typescript
-import { useCovenant, useIdentity, useCovenantStore } from '@usekova/react';
-import { KovaClient } from '@usekova/sdk';
-import { MemoryStore } from '@usekova/store';
+import { useCovenant, useIdentity, useCovenantStore } from '@grith/react';
+import { GrithClient } from '@grith/sdk';
+import { MemoryStore } from '@grith/store';
 
 function CovenantPanel() {
-  const client = new KovaClient();
+  const client = new GrithClient();
   const { status, document, error, create, verify } = useCovenant(client);
 
   // status: 'idle' | 'creating' | 'created' | 'verifying' | 'verified' | 'error'
@@ -46,7 +46,7 @@ function CovenantPanel() {
 }
 
 // Framework-agnostic usage
-import { Observable, createCovenantState } from '@usekova/react';
+import { Observable, createCovenantState } from '@grith/react';
 
 const count = new Observable(0);
 const doubled = count.map(n => n * 2);
@@ -56,4 +56,4 @@ count.set(5); // logs "doubled: 10"
 
 ## Docs
 
-See the [Kova SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

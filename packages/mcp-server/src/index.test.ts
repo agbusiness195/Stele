@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { KovaServer, JSON_RPC_ERRORS } from './index';
+import { GrithServer, JSON_RPC_ERRORS } from './index';
 import type {
   JsonRpcRequest,
   JsonRpcSuccessResponse,
@@ -7,11 +7,11 @@ import type {
   ToolDefinition,
   ToolResult,
 } from './index';
-import { MemoryStore } from '@usekova/store';
-import { generateKeyPair, toHex } from '@usekova/crypto';
-import type { KeyPair } from '@usekova/crypto';
-import { buildCovenant } from '@usekova/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
+import { MemoryStore } from '@grith/store';
+import { generateKeyPair, toHex } from '@grith/crypto';
+import type { KeyPair } from '@grith/crypto';
+import { buildCovenant } from '@grith/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -84,26 +84,26 @@ async function createAndStoreCovenant(
 
 // ─── Tests ──────────────────────────────────────────────────────────────────────
 
-describe('KovaServer', () => {
+describe('GrithServer', () => {
   let store: MemoryStore;
-  let server: KovaServer;
+  let server: GrithServer;
 
   beforeEach(() => {
     store = new MemoryStore();
-    server = new KovaServer(store);
+    server = new GrithServer(store);
   });
 
   // ── Server initialization ───────────────────────────────────────────────
 
   describe('initialization', () => {
     it('should create a server with default options', () => {
-      expect(server).toBeInstanceOf(KovaServer);
-      expect(server.name).toBe('kova-mcp-server');
+      expect(server).toBeInstanceOf(GrithServer);
+      expect(server.name).toBe('grith-mcp-server');
       expect(server.version).toBe('0.1.0');
     });
 
     it('should create a server with custom name and version', () => {
-      const custom = new KovaServer(store, { name: 'my-server', version: '2.0.0' });
+      const custom = new GrithServer(store, { name: 'my-server', version: '2.0.0' });
       expect(custom.name).toBe('my-server');
       expect(custom.version).toBe('2.0.0');
     });
@@ -119,7 +119,7 @@ describe('KovaServer', () => {
       expect(result.protocolVersion).toBe('2024-11-05');
       expect(result.capabilities).toBeDefined();
       expect(result.serverInfo).toEqual({
-        name: 'kova-mcp-server',
+        name: 'grith-mcp-server',
         version: '0.1.0',
       });
     });

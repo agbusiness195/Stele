@@ -1,5 +1,5 @@
 /**
- * @usekova/cli audit command.
+ * @grith/cli audit command.
  *
  * Provides compliance audit functionality that inspects covenant coverage,
  * enforcement configuration, attestation coverage, identity verification,
@@ -72,7 +72,7 @@ export function runAudit(params: {
       severity: 'critical',
       title: 'No covenants configured',
       description: 'No covenants have been configured. Without covenants, agent behavior is unconstrained.',
-      recommendation: 'Create at least one covenant with appropriate constraints using "kova create".',
+      recommendation: 'Create at least one covenant with appropriate constraints using "grith create".',
       autoFixable: false,
     });
     coverageGaps.push('No covenants configured');
@@ -128,7 +128,7 @@ export function runAudit(params: {
       severity: 'error',
       title: 'Identity not verified',
       description: 'Agent identity has not been verified. This is required for compliance and trust establishment.',
-      recommendation: 'Complete identity verification using "kova init" and register with a discovery server.',
+      recommendation: 'Complete identity verification using "grith init" and register with a discovery server.',
       autoFixable: false,
     });
     coverageGaps.push('Identity not verified');

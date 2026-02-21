@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { sha256Object } from '@usekova/crypto';
+import { sha256Object } from '@grith/crypto';
 import {
   generateCanary,
   evaluateCanary,

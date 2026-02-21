@@ -1,7 +1,7 @@
 {
-  "name": "@usekova/schema",
+  "name": "@grith/schema",
   "version": "2.0.0",
-  "description": "Formal JSON Schema definitions for Kova protocol documents",
+  "description": "Formal JSON Schema definitions for Grith protocol documents",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,13 +27,13 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@usekova/types": "2.0.0"
+    "@grith/types": "2.0.0"
   },
   "license": "MIT",
-  "author": "Kova Labs, Inc.",
-  "homepage": "https://usekova.dev",
+  "author": "Grith Labs, Inc.",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kova/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
   "engines": {
     "node": ">=18"
@@ -43,11 +43,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kova.git",
+    "url": "https://github.com/agbusiness195/grith.git",
     "directory": "packages/schema"
   },
   "keywords": [
-    "kova",
+    "grith",
     "schema",
     "json-schema",
     "covenant",

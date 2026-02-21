@@ -1,5 +1,5 @@
 /**
- * Trust resolution as transaction execution for the Kova protocol.
+ * Trust resolution as transaction execution for the Grith protocol.
  *
  * Merges trust verification with transaction execution into one atomic
  * operation. Trust resolution IS the transaction -- there is no separate

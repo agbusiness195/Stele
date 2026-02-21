@@ -1,17 +1,17 @@
 /**
  * Regression test suite for known bugs and gotchas discovered during
- * development of the Kova SDK.
+ * development of the Grith SDK.
  *
  * Each test documents a specific issue that was encountered, along with
  * the correct behavior, to prevent future regressions.
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { generateKeyPair, toHex } from '@usekova/crypto';
-import { buildCovenant, verifyCovenant, resignCovenant, countersignCovenant, computeId, canonicalForm } from '@usekova/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
-import { parse, evaluate, merge, validateNarrowing } from '@usekova/ccl';
-import { MemoryStore } from '@usekova/store';
+import { generateKeyPair, toHex } from '@grith/crypto';
+import { buildCovenant, verifyCovenant, resignCovenant, countersignCovenant, computeId, canonicalForm } from '@grith/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
+import { parse, evaluate, merge, validateNarrowing } from '@grith/ccl';
+import { MemoryStore } from '@grith/store';
 
 // ---------------------------------------------------------------------------
 // Helpers

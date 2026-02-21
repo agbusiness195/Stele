@@ -6,10 +6,10 @@ import {
   fromHex,
   verify,
   canonicalizeJson,
-} from '@usekova/crypto';
-import type { KeyPair } from '@usekova/crypto';
-import { buildCovenant, PROTOCOL_VERSION } from '@usekova/core';
-import type { CovenantDocument } from '@usekova/core';
+} from '@grith/crypto';
+import type { KeyPair } from '@grith/crypto';
+import { buildCovenant, PROTOCOL_VERSION } from '@grith/core';
+import type { CovenantDocument } from '@grith/core';
 
 import {
   buildDiscoveryDocument,
@@ -18,7 +18,7 @@ import {
   buildKeySet,
   WELL_KNOWN_PATH,
   CONFIGURATION_PATH,
-  KOVA_MEDIA_TYPE,
+  GRITH_MEDIA_TYPE,
   MAX_DOCUMENT_AGE_MS,
   DiscoveryClient,
   DiscoveryServer,
@@ -54,8 +54,8 @@ const TEST_ISSUER = 'https://platform.example';
 function makeMinimalDoc(): DiscoveryDocument {
   return {
     issuer: TEST_ISSUER,
-    keys_endpoint: `${TEST_ISSUER}/.well-known/kova/keys`,
-    covenants_endpoint: `${TEST_ISSUER}/.well-known/kova/covenants`,
+    keys_endpoint: `${TEST_ISSUER}/.well-known/grith/keys`,
+    covenants_endpoint: `${TEST_ISSUER}/.well-known/grith/covenants`,
     protocol_versions_supported: ['1.0'],
     signature_schemes_supported: ['ed25519'],
     hash_algorithms_supported: ['sha256'],
@@ -108,16 +108,16 @@ async function buildTestCovenant(kp: KeyPair): Promise<CovenantDocument> {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 describe('Constants', () => {
-  it('WELL_KNOWN_PATH is /.well-known/kova', () => {
-    expect(WELL_KNOWN_PATH).toBe('/.well-known/kova');
+  it('WELL_KNOWN_PATH is /.well-known/grith', () => {
+    expect(WELL_KNOWN_PATH).toBe('/.well-known/grith');
   });
 
-  it('CONFIGURATION_PATH is /.well-known/kova/configuration', () => {
-    expect(CONFIGURATION_PATH).toBe('/.well-known/kova/configuration');
+  it('CONFIGURATION_PATH is /.well-known/grith/configuration', () => {
+    expect(CONFIGURATION_PATH).toBe('/.well-known/grith/configuration');
   });
 
-  it('KOVA_MEDIA_TYPE is application/kova+json', () => {
-    expect(KOVA_MEDIA_TYPE).toBe('application/kova+json');
+  it('GRITH_MEDIA_TYPE is application/grith+json', () => {
+    expect(GRITH_MEDIA_TYPE).toBe('application/grith+json');
   });
 
   it('MAX_DOCUMENT_AGE_MS is 24 hours in milliseconds', () => {
@@ -132,11 +132,11 @@ describe('buildDiscoveryDocument', () => {
     const doc = await buildDiscoveryDocument({ issuer: TEST_ISSUER });
 
     expect(doc.issuer).toBe(TEST_ISSUER);
-    expect(doc.keys_endpoint).toBe(`${TEST_ISSUER}/.well-known/kova/keys`);
-    expect(doc.covenants_endpoint).toBe(`${TEST_ISSUER}/.well-known/kova/covenants`);
-    expect(doc.verification_endpoint).toBe(`${TEST_ISSUER}/.well-known/kova/verify`);
-    expect(doc.reputation_endpoint).toBe(`${TEST_ISSUER}/.well-known/kova/reputation`);
-    expect(doc.breach_endpoint).toBe(`${TEST_ISSUER}/.well-known/kova/breach`);
+    expect(doc.keys_endpoint).toBe(`${TEST_ISSUER}/.well-known/grith/keys`);
+    expect(doc.covenants_endpoint).toBe(`${TEST_ISSUER}/.well-known/grith/covenants`);
+    expect(doc.verification_endpoint).toBe(`${TEST_ISSUER}/.well-known/grith/verify`);
+    expect(doc.reputation_endpoint).toBe(`${TEST_ISSUER}/.well-known/grith/reputation`);
+    expect(doc.breach_endpoint).toBe(`${TEST_ISSUER}/.well-known/grith/breach`);
     expect(doc.protocol_versions_supported).toContain(PROTOCOL_VERSION);
     expect(doc.signature_schemes_supported).toContain('ed25519');
     expect(doc.hash_algorithms_supported).toContain('sha256');
@@ -785,19 +785,19 @@ describe('DiscoveryServer', () => {
       const handlers = server.getRouteHandlers();
 
       expect(handlers).toBeInstanceOf(Map);
-      expect(handlers.has('GET /.well-known/kova/configuration')).toBe(true);
-      expect(handlers.has('GET /.well-known/kova/keys')).toBe(true);
-      expect(handlers.has('GET /.well-known/kova/covenants')).toBe(true);
-      expect(handlers.has('POST /.well-known/kova/verify')).toBe(true);
+      expect(handlers.has('GET /.well-known/grith/configuration')).toBe(true);
+      expect(handlers.has('GET /.well-known/grith/keys')).toBe(true);
+      expect(handlers.has('GET /.well-known/grith/covenants')).toBe(true);
+      expect(handlers.has('POST /.well-known/grith/verify')).toBe(true);
     });
 
     it('configuration handler returns the discovery document', async () => {
       const handlers = server.getRouteHandlers();
-      const handler = handlers.get('GET /.well-known/kova/configuration')!;
+      const handler = handlers.get('GET /.well-known/grith/configuration')!;
 
       const result = await handler();
       expect(result.status).toBe(200);
-      expect(result.headers['Content-Type']).toBe(KOVA_MEDIA_TYPE);
+      expect(result.headers['Content-Type']).toBe(GRITH_MEDIA_TYPE);
       expect((result.body as DiscoveryDocument).issuer).toBe(TEST_ISSUER);
     });
 
@@ -806,7 +806,7 @@ describe('DiscoveryServer', () => {
       server.registerAgentKey('agent-1', kp.publicKeyHex);
 
       const handlers = server.getRouteHandlers();
-      const handler = handlers.get('GET /.well-known/kova/keys')!;
+      const handler = handlers.get('GET /.well-known/grith/keys')!;
 
       const result = await handler({ agent_id: 'agent-1' });
       expect(result.status).toBe(200);
@@ -820,7 +820,7 @@ describe('DiscoveryServer', () => {
       server.registerCovenant(cov);
 
       const handlers = server.getRouteHandlers();
-      const handler = handlers.get('GET /.well-known/kova/covenants')!;
+      const handler = handlers.get('GET /.well-known/grith/covenants')!;
 
       const result = await handler();
       expect(result.status).toBe(200);
@@ -834,7 +834,7 @@ describe('DiscoveryServer', () => {
       server.registerCovenant(cov);
 
       const handlers = server.getRouteHandlers();
-      const handler = handlers.get('POST /.well-known/kova/verify')!;
+      const handler = handlers.get('POST /.well-known/grith/verify')!;
 
       const request: CrossPlatformVerificationRequest = {
         covenant_id: cov.id,
@@ -926,13 +926,13 @@ describe('DiscoveryClient', () => {
       expect(calledUrl).toBe(`${TEST_ISSUER}${CONFIGURATION_PATH}`);
     });
 
-    it('passes Accept header with kova media type', async () => {
+    it('passes Accept header with grith media type', async () => {
       mockFetch.mockResolvedValueOnce(mockResponse(validDoc));
 
       await client.discover(TEST_ISSUER);
 
       const calledInit = mockFetch.mock.calls[0]![1];
-      expect(calledInit.headers.Accept).toContain('application/kova+json');
+      expect(calledInit.headers.Accept).toContain('application/grith+json');
     });
 
     it('verifies signature when configured to do so', async () => {
@@ -1030,7 +1030,7 @@ describe('DiscoveryClient', () => {
             created_at: new Date().toISOString(),
             status: 'active',
             protocol_version: '1.0',
-            document_url: `${TEST_ISSUER}/.well-known/kova/covenants/cov-1`,
+            document_url: `${TEST_ISSUER}/.well-known/grith/covenants/cov-1`,
           },
         ],
         total: 1,
@@ -1113,7 +1113,7 @@ describe('DiscoveryClient', () => {
 
       const postInit = mockFetch.mock.calls[1]![1];
       expect(postInit.method).toBe('POST');
-      expect(postInit.headers['Content-Type']).toBe('application/kova+json');
+      expect(postInit.headers['Content-Type']).toBe('application/grith+json');
     });
 
     it('throws when verification endpoint returns error', async () => {

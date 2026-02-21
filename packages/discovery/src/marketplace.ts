@@ -1,5 +1,5 @@
 /**
- * @usekova/discovery/marketplace — Trust-Gated Marketplace.
+ * @grith/discovery/marketplace — Trust-Gated Marketplace.
  *
  * Agent-to-agent discovery layer with trust-based access tiers,
  * premium placement, escrow, and transaction fees.

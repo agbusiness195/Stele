@@ -1,11 +1,11 @@
 /**
- * Caching middleware plugin for the Kova SDK.
+ * Caching middleware plugin for the Grith SDK.
  *
  * Caches verification and evaluation results to avoid redundant crypto
  * operations. Uses LRU eviction and TTL-based expiration.
  */
 
-import type { KovaMiddleware, MiddlewareContext } from '../middleware.js';
+import type { GrithMiddleware, MiddlewareContext } from '../middleware.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -190,17 +190,17 @@ function buildCacheKey(ctx: MiddlewareContext): string | undefined {
  * with configurable max size and TTL-based expiration.
  *
  * @param options - Optional cache configuration.
- * @returns A KovaMiddleware with additional `stats()` and `clear()` methods.
+ * @returns A GrithMiddleware with additional `stats()` and `clear()` methods.
  */
 export function cachingMiddleware(
   options?: CacheOptions,
-): KovaMiddleware & { stats(): CacheStats; clear(): void } {
+): GrithMiddleware & { stats(): CacheStats; clear(): void } {
   const maxSize = options?.maxSize ?? 1000;
   const ttlMs = options?.ttlMs ?? 300_000;
 
   const cache = new LRUCache(maxSize, ttlMs);
 
-  const middleware: KovaMiddleware & { stats(): CacheStats; clear(): void } = {
+  const middleware: GrithMiddleware & { stats(): CacheStats; clear(): void } = {
     name: 'cache',
 
     async before(ctx: MiddlewareContext) {

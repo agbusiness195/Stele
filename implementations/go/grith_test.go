@@ -1,4 +1,4 @@
-package kova
+package grith
 
 import (
 	"crypto/ed25519"
@@ -57,7 +57,7 @@ func TestSignVerifyRoundTrip(t *testing.T) {
 		t.Fatalf("GenerateKeyPair() error: %v", err)
 	}
 
-	message := []byte("hello kova protocol")
+	message := []byte("hello grith protocol")
 	sig, err := Sign(message, kp.PrivateKey)
 	if err != nil {
 		t.Fatalf("Sign() error: %v", err)

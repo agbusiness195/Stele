@@ -1,14 +1,14 @@
 /**
- * Kova SDK - MCP Server Wrapping
+ * Grith SDK - MCP Server Wrapping
  *
- * Demonstrates wrapping a Model Context Protocol server with KovaGuard
+ * Demonstrates wrapping a Model Context Protocol server with GrithGuard
  * to enforce constraints on every tool call, generate compliance proofs,
  * and produce execution receipts.
  */
-import { KovaGuard } from '@usekova/mcp';
-import type { MCPServer } from '@usekova/mcp';
-import { MonitorDeniedError } from '@usekova/enforcement';
-import { verifyComplianceProof } from '@usekova/proof';
+import { GrithGuard } from '@grith/mcp';
+import type { MCPServer } from '@grith/mcp';
+import { MonitorDeniedError } from '@grith/enforcement';
+import { verifyComplianceProof } from '@grith/proof';
 
 async function main() {
   // 1. Create a mock MCP server with three tools
@@ -32,10 +32,10 @@ async function main() {
     },
   };
 
-  // 2. Wrap with KovaGuard using data-isolation preset
+  // 2. Wrap with GrithGuard using data-isolation preset
   //    This preset permits file.read on /data/**, denies file.write and
   //    network.send on all resources, and requires audit logging.
-  const server = await KovaGuard.wrap(mockServer, {
+  const server = await GrithGuard.wrap(mockServer, {
     constraints: 'standard:data-isolation',
     mode: 'enforce',
   });

@@ -12,10 +12,10 @@ import type { DeprecationWarning } from './deprecation';
 // ---------------------------------------------------------------------------
 
 const sampleWarning: DeprecationWarning = {
-  api: 'KovaSDK.sign',
+  api: 'GrithSDK.sign',
   since: '0.2.0',
   removeIn: '1.0.0',
-  alternative: 'Use KovaSDK.signCovenant() instead',
+  alternative: 'Use GrithSDK.signCovenant() instead',
 };
 
 let warnSpy: ReturnType<typeof vi.spyOn>;
@@ -41,7 +41,7 @@ describe('deprecated', () => {
   it('warning message includes the API name', () => {
     deprecated(sampleWarning);
     const msg = warnSpy.mock.calls[0][0] as string;
-    expect(msg).toContain('KovaSDK.sign');
+    expect(msg).toContain('GrithSDK.sign');
   });
 
   it('warning message includes the since version', () => {
@@ -59,7 +59,7 @@ describe('deprecated', () => {
   it('warning message includes the alternative', () => {
     deprecated(sampleWarning);
     const msg = warnSpy.mock.calls[0][0] as string;
-    expect(msg).toContain('Use KovaSDK.signCovenant() instead');
+    expect(msg).toContain('Use GrithSDK.signCovenant() instead');
   });
 
   it('warning message starts with [DEPRECATED]', () => {
@@ -78,10 +78,10 @@ describe('deprecated', () => {
   it('emits separately for different APIs', () => {
     deprecated(sampleWarning);
     deprecated({
-      api: 'KovaSDK.verify',
+      api: 'GrithSDK.verify',
       since: '0.3.0',
       removeIn: '1.0.0',
-      alternative: 'Use KovaSDK.verifyCovenant() instead',
+      alternative: 'Use GrithSDK.verifyCovenant() instead',
     });
     expect(warnSpy).toHaveBeenCalledTimes(2);
   });
@@ -190,21 +190,21 @@ describe('getEmittedWarnings', () => {
     deprecated(sampleWarning);
     const warnings = getEmittedWarnings();
     expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toContain('KovaSDK.sign');
+    expect(warnings[0]).toContain('GrithSDK.sign');
   });
 
   it('returns multiple warnings in order', () => {
     deprecated(sampleWarning);
     deprecated({
-      api: 'KovaSDK.verify',
+      api: 'GrithSDK.verify',
       since: '0.3.0',
       removeIn: '1.0.0',
       alternative: 'Use verifyCovenant() instead',
     });
     const warnings = getEmittedWarnings();
     expect(warnings).toHaveLength(2);
-    expect(warnings[0]).toContain('KovaSDK.sign');
-    expect(warnings[1]).toContain('KovaSDK.verify');
+    expect(warnings[0]).toContain('GrithSDK.sign');
+    expect(warnings[1]).toContain('GrithSDK.verify');
   });
 
   it('returns a copy (modifying the array does not affect internal state)', () => {

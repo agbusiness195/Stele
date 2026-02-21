@@ -1,4 +1,4 @@
-package kova
+package grith
 
 import (
 	"encoding/json"
@@ -47,16 +47,16 @@ func NewMemoryStore() *MemoryStore {
 // caller's reference is not retained.
 func (s *MemoryStore) Put(id string, doc *CovenantDocument) error {
 	if id == "" {
-		return fmt.Errorf("kova: store.Put: id must be a non-empty string")
+		return fmt.Errorf("grith: store.Put: id must be a non-empty string")
 	}
 	if doc == nil {
-		return fmt.Errorf("kova: store.Put: document is required")
+		return fmt.Errorf("grith: store.Put: document is required")
 	}
 
 	// Deep copy via JSON round-trip
 	copied, err := deepCopyDocument(doc)
 	if err != nil {
-		return fmt.Errorf("kova: store.Put: failed to copy document: %w", err)
+		return fmt.Errorf("grith: store.Put: failed to copy document: %w", err)
 	}
 
 	s.mu.Lock()
@@ -69,7 +69,7 @@ func (s *MemoryStore) Put(id string, doc *CovenantDocument) error {
 // so callers cannot mutate the stored data. Returns nil if not found.
 func (s *MemoryStore) Get(id string) (*CovenantDocument, error) {
 	if id == "" {
-		return nil, fmt.Errorf("kova: store.Get: id must be a non-empty string")
+		return nil, fmt.Errorf("grith: store.Get: id must be a non-empty string")
 	}
 
 	s.mu.RLock()
@@ -82,7 +82,7 @@ func (s *MemoryStore) Get(id string) (*CovenantDocument, error) {
 
 	copied, err := deepCopyDocument(doc)
 	if err != nil {
-		return nil, fmt.Errorf("kova: store.Get: failed to copy document: %w", err)
+		return nil, fmt.Errorf("grith: store.Get: failed to copy document: %w", err)
 	}
 	return copied, nil
 }
@@ -91,14 +91,14 @@ func (s *MemoryStore) Get(id string) (*CovenantDocument, error) {
 // does not exist.
 func (s *MemoryStore) Delete(id string) error {
 	if id == "" {
-		return fmt.Errorf("kova: store.Delete: id must be a non-empty string")
+		return fmt.Errorf("grith: store.Delete: id must be a non-empty string")
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if _, ok := s.data[id]; !ok {
-		return fmt.Errorf("kova: store.Delete: document not found: %s", id)
+		return fmt.Errorf("grith: store.Delete: document not found: %s", id)
 	}
 
 	delete(s.data, id)
@@ -114,7 +114,7 @@ func (s *MemoryStore) List() ([]*CovenantDocument, error) {
 	for _, doc := range s.data {
 		copied, err := deepCopyDocument(doc)
 		if err != nil {
-			return nil, fmt.Errorf("kova: store.List: failed to copy document: %w", err)
+			return nil, fmt.Errorf("grith: store.List: failed to copy document: %w", err)
 		}
 		result = append(result, copied)
 	}

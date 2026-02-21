@@ -1,11 +1,11 @@
-# @usekova/negotiation
+# @grith/negotiation
 
 Multi-party covenant negotiation with Nash bargaining, Zeuthen strategies, Pareto frontier analysis, and concession protocols.
 
 ## Installation
 
 ```bash
-npm install @usekova/negotiation
+npm install @grith/negotiation
 ```
 
 ## Key APIs
@@ -27,8 +27,8 @@ npm install @usekova/negotiation
 ## Usage
 
 ```typescript
-import { initiate, propose, evaluate, agree } from '@usekova/negotiation';
-import type { NegotiationPolicy, Proposal } from '@usekova/negotiation';
+import { initiate, propose, evaluate, agree } from '@grith/negotiation';
+import type { NegotiationPolicy, Proposal } from '@grith/negotiation';
 
 const policy: NegotiationPolicy = {
   requiredConstraints: ['deny:exfiltrate-data'],
@@ -61,4 +61,4 @@ if (decision === 'accept') {
 
 ## Docs
 
-See the [Kova SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

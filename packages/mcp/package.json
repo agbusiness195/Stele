@@ -1,5 +1,5 @@
 {
-  "name": "@usekova/mcp",
+  "name": "@grith/mcp",
   "version": "2.0.0",
   "description": "Model Context Protocol integration utilities",
   "sideEffects": false,
@@ -27,19 +27,19 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@usekova/crypto": "2.0.0",
-    "@usekova/ccl": "2.0.0",
-    "@usekova/core": "2.0.0",
-    "@usekova/enforcement": "2.0.0",
-    "@usekova/identity": "2.0.0",
-    "@usekova/reputation": "2.0.0",
-    "@usekova/proof": "2.0.0"
+    "@grith/crypto": "2.0.0",
+    "@grith/ccl": "2.0.0",
+    "@grith/core": "2.0.0",
+    "@grith/enforcement": "2.0.0",
+    "@grith/identity": "2.0.0",
+    "@grith/reputation": "2.0.0",
+    "@grith/proof": "2.0.0"
   },
   "license": "MIT",
-  "author": "Kova Labs, Inc.",
-  "homepage": "https://usekova.dev",
+  "author": "Grith Labs, Inc.",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kova/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
   "engines": {
     "node": ">=18"
@@ -49,11 +49,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kova.git",
+    "url": "https://github.com/agbusiness195/grith.git",
     "directory": "packages/mcp"
   },
   "keywords": [
-    "kova",
+    "grith",
     "covenant",
     "ai-accountability",
     "mcp",

@@ -6,7 +6,7 @@ import {
   createTracer,
 } from './tracing';
 import type { Span, SpanEvent, SpanStatus, SpanCollector } from './tracing';
-import { generateId } from '@usekova/crypto';
+import { generateId } from '@grith/crypto';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 

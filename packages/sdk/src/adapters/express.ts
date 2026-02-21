@@ -1,8 +1,8 @@
 /**
- * Express/HTTP middleware adapter for the Kova SDK.
+ * Express/HTTP middleware adapter for the Grith SDK.
  *
  * Provides zero-config HTTP middleware that wraps any Express/Connect-compatible
- * handler with Kova covenant enforcement. Uses generic request/response types
+ * handler with Grith covenant enforcement. Uses generic request/response types
  * so it works with Express, Koa, Hono, Fastify, and any Connect-compatible server.
  *
  * **Status: Stable** (promoted from beta in v1.0.0)
@@ -10,13 +10,13 @@
  * @packageDocumentation
  */
 
-import type { CovenantDocument } from '@usekova/core';
+import type { CovenantDocument } from '@grith/core';
 import type { EvaluationResult } from '../types.js';
 
 /**
- * Minimal interface for covenant evaluation. KovaClient satisfies this.
+ * Minimal interface for covenant evaluation. GrithClient satisfies this.
  */
-export interface KovaEvaluator {
+export interface GrithEvaluator {
   evaluateAction(
     covenant: CovenantDocument,
     action: string,
@@ -64,11 +64,11 @@ export type NextFunction = (err?: unknown) => void;
 // ─── Middleware options ──────────────────────────────────────────────────────
 
 /**
- * Options for the kovaMiddleware factory.
+ * Options for the grithMiddleware factory.
  */
-export interface KovaMiddlewareOptions {
-  /** The KovaClient (or any KovaEvaluator) instance to use for covenant evaluation. */
-  client: KovaEvaluator;
+export interface GrithMiddlewareOptions {
+  /** The GrithClient (or any GrithEvaluator) instance to use for covenant evaluation. */
+  client: GrithEvaluator;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
   /**
@@ -96,11 +96,11 @@ export interface KovaMiddlewareOptions {
 // ─── Guard handler options ───────────────────────────────────────────────────
 
 /**
- * Options for the kovaGuardHandler factory.
+ * Options for the grithGuardHandler factory.
  */
-export interface KovaGuardHandlerOptions {
-  /** The KovaClient (or any KovaEvaluator) instance to use for covenant evaluation. */
-  client: KovaEvaluator;
+export interface GrithGuardHandlerOptions {
+  /** The GrithClient (or any GrithEvaluator) instance to use for covenant evaluation. */
+  client: GrithEvaluator;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
   /**
@@ -131,8 +131,8 @@ export interface KovaGuardHandlerOptions {
  * Options for the createCovenantRouter factory.
  */
 export interface CovenantRouterOptions {
-  /** The KovaClient (or any KovaEvaluator) instance to use for covenant evaluation. */
-  client: KovaEvaluator;
+  /** The GrithClient (or any GrithEvaluator) instance to use for covenant evaluation. */
+  client: GrithEvaluator;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
 }
@@ -166,7 +166,7 @@ function defaultOnDenied(
   }
   if (res.setHeader) {
     res.setHeader('content-type', 'application/json');
-    res.setHeader('x-kova-permitted', 'false');
+    res.setHeader('x-grith-permitted', 'false');
   }
   if (res.end) {
     res.end(JSON.stringify({
@@ -199,16 +199,16 @@ function defaultOnError(
   }
 }
 
-// ─── kovaMiddleware ─────────────────────────────────────────────────────────
+// ─── grithMiddleware ─────────────────────────────────────────────────────────
 
 /**
- * Connect-compatible middleware factory that enforces a Kova covenant
+ * Connect-compatible middleware factory that enforces a Grith covenant
  * on every incoming HTTP request.
  *
  * For each request:
  * - Extracts the action and resource using configurable extractors
  * - Evaluates them against the covenant's CCL constraints
- * - If permitted: sets `x-kova-permitted: true` header and calls `next()`
+ * - If permitted: sets `x-grith-permitted: true` header and calls `next()`
  * - If denied: calls `onDenied` handler (default: 403 JSON response)
  * - On error: calls `onError` handler (default: 500 JSON response)
  *
@@ -218,12 +218,12 @@ function defaultOnError(
  * @example
  * ```typescript
  * import express from 'express';
- * import { KovaClient, kovaMiddleware } from '@usekova/sdk';
+ * import { GrithClient, grithMiddleware } from '@grith/sdk';
  *
- * const client = new KovaClient();
+ * const client = new GrithClient();
  * const app = express();
  *
- * app.use(kovaMiddleware({
+ * app.use(grithMiddleware({
  *   client,
  *   covenant: myCovenantDoc,
  * }));
@@ -233,8 +233,8 @@ function defaultOnError(
  * });
  * ```
  */
-export function kovaMiddleware(
-  options: KovaMiddlewareOptions,
+export function grithMiddleware(
+  options: GrithMiddlewareOptions,
 ): (req: IncomingRequest, res: OutgoingResponse, next: NextFunction) => void {
   const {
     client,
@@ -254,7 +254,7 @@ export function kovaMiddleware(
       .then((result: EvaluationResult) => {
         if (result.permitted) {
           if (res.setHeader) {
-            res.setHeader('x-kova-permitted', 'true');
+            res.setHeader('x-grith-permitted', 'true');
           }
           next();
         } else {
@@ -267,7 +267,7 @@ export function kovaMiddleware(
   };
 }
 
-// ─── kovaGuardHandler ───────────────────────────────────────────────────────
+// ─── grithGuardHandler ───────────────────────────────────────────────────────
 
 /**
  * Async handler type compatible with any HTTP framework.
@@ -275,7 +275,7 @@ export function kovaMiddleware(
 export type AsyncHandler = (req: IncomingRequest, res: OutgoingResponse) => Promise<void>;
 
 /**
- * Wraps an async handler with Kova covenant enforcement for standalone use
+ * Wraps an async handler with Grith covenant enforcement for standalone use
  * (no next function required).
  *
  * Evaluates the request against the covenant before invoking the handler.
@@ -287,7 +287,7 @@ export type AsyncHandler = (req: IncomingRequest, res: OutgoingResponse) => Prom
  *
  * @example
  * ```typescript
- * const guardedHandler = kovaGuardHandler(
+ * const guardedHandler = grithGuardHandler(
  *   { client, covenant: myDoc },
  *   async (req, res) => {
  *     res.end(JSON.stringify({ data: 'success' }));
@@ -298,8 +298,8 @@ export type AsyncHandler = (req: IncomingRequest, res: OutgoingResponse) => Prom
  * http.createServer(guardedHandler);
  * ```
  */
-export function kovaGuardHandler(
-  options: KovaGuardHandlerOptions,
+export function grithGuardHandler(
+  options: GrithGuardHandlerOptions,
   handler: AsyncHandler,
 ): (req: IncomingRequest, res: OutgoingResponse) => Promise<void> {
   const {
@@ -320,7 +320,7 @@ export function kovaGuardHandler(
 
       if (result.permitted) {
         if (res.setHeader) {
-          res.setHeader('x-kova-permitted', 'true');
+          res.setHeader('x-grith-permitted', 'true');
         }
         await handler(req, res);
       } else {
@@ -341,7 +341,7 @@ export interface CovenantRouter {
   /**
    * Returns middleware that enforces a specific action/resource pair.
    *
-   * Unlike `kovaMiddleware` which extracts action/resource from the request,
+   * Unlike `grithMiddleware` which extracts action/resource from the request,
    * this allows you to specify exact values for route-level enforcement.
    *
    * @param action - The action to enforce (e.g., `"read"`, `"write"`).
@@ -416,7 +416,7 @@ export function createCovenantRouter(options: CovenantRouterOptions): CovenantRo
           .then((result: EvaluationResult) => {
             if (result.permitted) {
               if (res.setHeader) {
-                res.setHeader('x-kova-permitted', 'true');
+                res.setHeader('x-grith-permitted', 'true');
               }
               next();
             } else {

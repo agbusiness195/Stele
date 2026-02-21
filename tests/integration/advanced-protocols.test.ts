@@ -1,5 +1,5 @@
 /**
- * Advanced protocol integration tests for the Kova SDK.
+ * Advanced protocol integration tests for the Grith SDK.
  *
  * Covers:
  *   1. Canary System     - Canary generation, evaluation, scheduling, correlation
@@ -16,8 +16,8 @@ import {
   sha256Object,
   canonicalizeJson,
   toHex,
-} from '@usekova/crypto';
-import type { KeyPair } from '@usekova/crypto';
+} from '@grith/crypto';
+import type { KeyPair } from '@grith/crypto';
 
 import {
   buildCovenant,
@@ -26,18 +26,18 @@ import {
   deserializeCovenant,
   computeId,
   canonicalForm,
-} from '@usekova/core';
-import type { CovenantDocument } from '@usekova/core';
+} from '@grith/core';
+import type { CovenantDocument } from '@grith/core';
 
-import { parse, serialize, evaluate } from '@usekova/ccl';
+import { parse, serialize, evaluate } from '@grith/ccl';
 
 import {
   createIdentity,
   serializeIdentity,
   deserializeIdentity,
-} from '@usekova/identity';
+} from '@grith/identity';
 
-import { MemoryStore } from '@usekova/store';
+import { MemoryStore } from '@grith/store';
 
 import {
   generateCanary,
@@ -46,7 +46,7 @@ import {
   isExpired,
   canarySchedule,
   canaryCorrelation,
-} from '@usekova/canary';
+} from '@grith/canary';
 
 import {
   proveHonesty,
@@ -58,7 +58,7 @@ import {
   repeatedGameEquilibrium,
   coalitionStability,
   mechanismDesign,
-} from '@usekova/gametheory';
+} from '@grith/gametheory';
 
 import {
   compose,
@@ -68,7 +68,7 @@ import {
   decomposeCovenants,
   compositionComplexity,
   proveSystemProperty,
-} from '@usekova/composition';
+} from '@grith/composition';
 
 // ---------------------------------------------------------------------------
 // Helpers

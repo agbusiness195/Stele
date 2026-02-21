@@ -1,10 +1,10 @@
 /**
- * Kova adapter for Vercel AI SDK.
+ * Grith adapter for Vercel AI SDK.
  *
  * Wraps AI SDK tool definitions with covenant enforcement.
  * Before a tool's `execute()` is called, the action/resource pair is
  * evaluated against the covenant's CCL constraints. If denied, a
- * `KovaAccessDeniedError` is thrown (or the custom `onDenied` handler
+ * `GrithAccessDeniedError` is thrown (or the custom `onDenied` handler
  * is invoked). If permitted, the original `execute()` runs normally.
  *
  * **Status: Stable** (promoted from beta in v1.0.0)
@@ -13,32 +13,32 @@
  *
  * @example
  * ```typescript
- * import { KovaClient, withKova, withKovaTools } from '@usekova/sdk';
+ * import { GrithClient, withGrith, withGrithTools } from '@grith/sdk';
  *
- * const protectedTool = withKova(myTool, { client, covenant });
- * const protectedTools = withKovaTools({ search, browse }, { client, covenant });
+ * const protectedTool = withGrith(myTool, { client, covenant });
+ * const protectedTools = withGrithTools({ search, browse }, { client, covenant });
  * ```
  */
 
-import type { KovaClient } from '../index.js';
-import type { CovenantDocument } from '@usekova/core';
+import type { GrithClient } from '../index.js';
+import type { CovenantDocument } from '@grith/core';
 import type { EvaluationResult } from '../types.js';
 
 // ─── Error ───────────────────────────────────────────────────────────────────
 
 /**
- * Error thrown when a tool call is denied by a Kova covenant.
+ * Error thrown when a tool call is denied by a Grith covenant.
  *
  * Carries the full `EvaluationResult` so callers can inspect the
  * matched rule, severity, and reason for the denial.
  */
-export class KovaAccessDeniedError extends Error {
+export class GrithAccessDeniedError extends Error {
   /** The evaluation result that triggered the denial. */
   readonly evaluationResult: EvaluationResult;
 
   constructor(message: string, result: EvaluationResult) {
     super(message);
-    this.name = 'KovaAccessDeniedError';
+    this.name = 'GrithAccessDeniedError';
     this.evaluationResult = result;
   }
 }
@@ -59,11 +59,11 @@ export interface ToolLike {
 }
 
 /**
- * Options for wrapping Vercel AI SDK tools with Kova enforcement.
+ * Options for wrapping Vercel AI SDK tools with Grith enforcement.
  */
-export interface KovaToolOptions {
-  /** The KovaClient instance for covenant evaluation. */
-  client: KovaClient;
+export interface GrithToolOptions {
+  /** The GrithClient instance for covenant evaluation. */
+  client: GrithClient;
   /** The covenant document whose constraints are enforced. */
   covenant: CovenantDocument;
   /**
@@ -79,15 +79,15 @@ export interface KovaToolOptions {
   /**
    * Custom handler invoked when a tool call is denied. If provided,
    * its return value is returned instead of throwing. If not provided,
-   * a `KovaAccessDeniedError` is thrown.
+   * a `GrithAccessDeniedError` is thrown.
    */
   onDenied?: (tool: ToolLike, result: EvaluationResult) => unknown;
 }
 
-// ─── withKova ───────────────────────────────────────────────────────────────
+// ─── withGrith ───────────────────────────────────────────────────────────────
 
 /**
- * Wrap a single Vercel AI SDK tool with Kova covenant enforcement.
+ * Wrap a single Vercel AI SDK tool with Grith covenant enforcement.
  *
  * Returns a new tool object whose `execute()` evaluates the
  * action/resource against the covenant before delegating to the
@@ -99,11 +99,11 @@ export interface KovaToolOptions {
  *
  * @example
  * ```typescript
- * const protectedTool = withKova(myTool, { client, covenant });
+ * const protectedTool = withGrith(myTool, { client, covenant });
  * await protectedTool.execute('arg1'); // throws if denied
  * ```
  */
-export function withKova<T extends ToolLike>(tool: T, options: KovaToolOptions): T {
+export function withGrith<T extends ToolLike>(tool: T, options: GrithToolOptions): T {
   const { client, covenant, actionFromTool, resourceFromTool, onDenied } = options;
 
   const originalExecute = tool.execute;
@@ -127,7 +127,7 @@ export function withKova<T extends ToolLike>(tool: T, options: KovaToolOptions):
       if (onDenied) {
         return onDenied(tool, result);
       }
-      throw new KovaAccessDeniedError(
+      throw new GrithAccessDeniedError(
         `Action '${action}' on resource '${resource}' denied by covenant`,
         result,
       );
@@ -139,43 +139,43 @@ export function withKova<T extends ToolLike>(tool: T, options: KovaToolOptions):
   return wrapped;
 }
 
-// ─── withKovaTools ──────────────────────────────────────────────────────────
+// ─── withGrithTools ──────────────────────────────────────────────────────────
 
 /**
- * Wrap an array of tools with Kova covenant enforcement.
+ * Wrap an array of tools with Grith covenant enforcement.
  *
  * @param tools   - Array of tools to wrap.
  * @param options - Enforcement options.
  * @returns A new array of wrapped tools.
  */
-export function withKovaTools(
+export function withGrithTools(
   tools: ToolLike[],
-  options: KovaToolOptions,
+  options: GrithToolOptions,
 ): ToolLike[];
 
 /**
- * Wrap a record of tools with Kova covenant enforcement.
+ * Wrap a record of tools with Grith covenant enforcement.
  *
  * @param tools   - Record of named tools to wrap.
  * @param options - Enforcement options.
  * @returns A new record with the same keys and wrapped tool values.
  */
-export function withKovaTools(
+export function withGrithTools(
   tools: Record<string, ToolLike>,
-  options: KovaToolOptions,
+  options: GrithToolOptions,
 ): Record<string, ToolLike>;
 
-export function withKovaTools(
+export function withGrithTools(
   tools: ToolLike[] | Record<string, ToolLike>,
-  options: KovaToolOptions,
+  options: GrithToolOptions,
 ): ToolLike[] | Record<string, ToolLike> {
   if (Array.isArray(tools)) {
-    return tools.map((tool) => withKova(tool, options));
+    return tools.map((tool) => withGrith(tool, options));
   }
 
   const wrapped: Record<string, ToolLike> = {};
   for (const [key, tool] of Object.entries(tools)) {
-    wrapped[key] = withKova(tool, options);
+    wrapped[key] = withGrith(tool, options);
   }
   return wrapped;
 }
@@ -185,7 +185,7 @@ export function withKovaTools(
 /**
  * Create a reusable guard function that enforces a covenant on any tool call.
  *
- * Unlike `withKova` which returns a new tool, `createToolGuard` returns a
+ * Unlike `withGrith` which returns a new tool, `createToolGuard` returns a
  * function you call manually, passing the tool and arguments each time.
  *
  * @param options - Enforcement options.
@@ -199,7 +199,7 @@ export function withKovaTools(
  * ```
  */
 export function createToolGuard(
-  options: KovaToolOptions,
+  options: GrithToolOptions,
 ): (tool: ToolLike, ...args: unknown[]) => Promise<unknown> {
   const { client, covenant, actionFromTool, resourceFromTool, onDenied } = options;
 
@@ -217,7 +217,7 @@ export function createToolGuard(
       if (onDenied) {
         return onDenied(tool, result);
       }
-      throw new KovaAccessDeniedError(
+      throw new GrithAccessDeniedError(
         `Action '${action}' on resource '${resource}' denied by covenant`,
         result,
       );

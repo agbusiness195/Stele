@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateKeyPair } from '@usekova/crypto';
-import type { KeyPair } from '@usekova/crypto';
-import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
-import { verifyCovenant as coreVerifyCovenant } from '@usekova/core';
-import { verifyIdentity } from '@usekova/identity';
+import { generateKeyPair } from '@grith/crypto';
+import type { KeyPair } from '@grith/crypto';
+import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
+import { verifyCovenant as coreVerifyCovenant } from '@grith/core';
+import { verifyIdentity } from '@grith/identity';
 
 import {
-  KovaClient,
+  GrithClient,
   QuickCovenant,
 
   // Re-exports: core
@@ -50,13 +50,13 @@ import {
 } from './index';
 
 import type {
-  KovaClientOptions,
+  GrithClientOptions,
   CreateCovenantOptions,
   EvaluationResult,
   CreateIdentityOptions,
   EvolveOptions,
   ChainValidationResult,
-  KovaEventType,
+  GrithEventType,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   CovenantCountersignedEvent,
@@ -115,12 +115,12 @@ function makeIdentityOptions(kp: KeyPair): CreateIdentityOptions {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('@usekova/sdk', () => {
-  // ── KovaClient constructor ───────────────────────────────────────────
+describe('@grith/sdk', () => {
+  // ── GrithClient constructor ───────────────────────────────────────────
 
-  describe('KovaClient constructor', () => {
+  describe('GrithClient constructor', () => {
     it('creates a client with default options', () => {
-      const client = new KovaClient();
+      const client = new GrithClient();
       expect(client.keyPair).toBeUndefined();
       expect(client.agentId).toBeUndefined();
       expect(client.strictMode).toBe(false);
@@ -128,23 +128,23 @@ describe('@usekova/sdk', () => {
 
     it('accepts a pre-existing key pair', async () => {
       const kp = await generateKeyPair();
-      const client = new KovaClient({ keyPair: kp });
+      const client = new GrithClient({ keyPair: kp });
       expect(client.keyPair).toBe(kp);
     });
 
     it('accepts an agentId', () => {
-      const client = new KovaClient({ agentId: 'agent-42' });
+      const client = new GrithClient({ agentId: 'agent-42' });
       expect(client.agentId).toBe('agent-42');
     });
 
     it('accepts strictMode flag', () => {
-      const client = new KovaClient({ strictMode: true });
+      const client = new GrithClient({ strictMode: true });
       expect(client.strictMode).toBe(true);
     });
 
     it('sets all options at once', async () => {
       const kp = await generateKeyPair();
-      const client = new KovaClient({
+      const client = new GrithClient({
         keyPair: kp,
         agentId: 'my-agent',
         strictMode: true,
@@ -157,9 +157,9 @@ describe('@usekova/sdk', () => {
 
   // ── Key management ────────────────────────────────────────────────────
 
-  describe('KovaClient.generateKeyPair', () => {
+  describe('GrithClient.generateKeyPair', () => {
     it('generates a valid key pair', async () => {
-      const client = new KovaClient();
+      const client = new GrithClient();
       const kp = await client.generateKeyPair();
 
       expect(kp.privateKey).toBeInstanceOf(Uint8Array);
@@ -169,7 +169,7 @@ describe('@usekova/sdk', () => {
     });
 
     it('sets the generated key pair on the client', async () => {
-      const client = new KovaClient();
+      const client = new GrithClient();
       expect(client.keyPair).toBeUndefined();
 
       const kp = await client.generateKeyPair();
@@ -177,7 +177,7 @@ describe('@usekova/sdk', () => {
     });
 
     it('overwrites previous key pair when called again', async () => {
-      const client = new KovaClient();
+      const client = new GrithClient();
       const kp1 = await client.generateKeyPair();
       const kp2 = await client.generateKeyPair();
 
@@ -188,10 +188,10 @@ describe('@usekova/sdk', () => {
 
   // ── Covenant creation ─────────────────────────────────────────────────
 
-  describe('KovaClient.createCovenant', () => {
+  describe('GrithClient.createCovenant', () => {
     it('creates a valid covenant document', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -209,7 +209,7 @@ describe('@usekova/sdk', () => {
     it('uses explicit privateKey over client keyPair', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
       const otherKp = await generateKeyPair();
-      const client = new KovaClient({ keyPair: otherKp });
+      const client = new GrithClient({ keyPair: otherKp });
 
       const doc = await client.createCovenant({
         issuer,
@@ -225,7 +225,7 @@ describe('@usekova/sdk', () => {
 
     it('throws when no private key is available', async () => {
       const { issuer, beneficiary } = await makeParties();
-      const client = new KovaClient();
+      const client = new GrithClient();
 
       await expect(
         client.createCovenant({
@@ -238,7 +238,7 @@ describe('@usekova/sdk', () => {
 
     it('passes optional fields through to buildCovenant', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -256,7 +256,7 @@ describe('@usekova/sdk', () => {
 
     it('throws a helpful error for empty constraints', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       await expect(
         client.createCovenant({
@@ -269,7 +269,7 @@ describe('@usekova/sdk', () => {
 
     it('propagates CovenantBuildError for invalid CCL syntax', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       await expect(
         client.createCovenant({
@@ -283,10 +283,10 @@ describe('@usekova/sdk', () => {
 
   // ── Covenant verification ─────────────────────────────────────────────
 
-  describe('KovaClient.verifyCovenant', () => {
+  describe('GrithClient.verifyCovenant', () => {
     it('returns valid for a well-formed covenant', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -301,7 +301,7 @@ describe('@usekova/sdk', () => {
 
     it('returns invalid for a tampered covenant', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -316,7 +316,7 @@ describe('@usekova/sdk', () => {
 
     it('throws in strict mode on verification failure', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({
+      const client = new GrithClient({
         keyPair: issuerKeyPair,
         strictMode: true,
       });
@@ -335,7 +335,7 @@ describe('@usekova/sdk', () => {
 
     it('does not throw in non-strict mode on verification failure', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -351,12 +351,12 @@ describe('@usekova/sdk', () => {
 
   // ── Countersign ───────────────────────────────────────────────────────
 
-  describe('KovaClient.countersign', () => {
+  describe('GrithClient.countersign', () => {
     it('adds a valid countersignature using client key pair', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
       const auditorKp = await generateKeyPair();
-      const createClient = new KovaClient({ keyPair: issuerKeyPair });
-      const auditClient = new KovaClient({ keyPair: auditorKp });
+      const createClient = new GrithClient({ keyPair: issuerKeyPair });
+      const auditClient = new GrithClient({ keyPair: auditorKp });
 
       const doc = await createClient.createCovenant({
         issuer,
@@ -375,7 +375,7 @@ describe('@usekova/sdk', () => {
     it('adds a countersignature with an explicit key pair', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
       const auditorKp = await generateKeyPair();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -390,7 +390,7 @@ describe('@usekova/sdk', () => {
 
     it('defaults to auditor role', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -404,8 +404,8 @@ describe('@usekova/sdk', () => {
 
     it('throws when no key pair is available', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const createClient = new KovaClient({ keyPair: issuerKeyPair });
-      const noKeyClient = new KovaClient();
+      const createClient = new GrithClient({ keyPair: issuerKeyPair });
+      const noKeyClient = new GrithClient();
 
       const doc = await createClient.createCovenant({
         issuer,
@@ -421,10 +421,10 @@ describe('@usekova/sdk', () => {
 
   // ── Evaluate action ───────────────────────────────────────────────────
 
-  describe('KovaClient.evaluateAction', () => {
+  describe('GrithClient.evaluateAction', () => {
     it('permits an action that matches a permit rule', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -438,7 +438,7 @@ describe('@usekova/sdk', () => {
 
     it('denies an action that matches a deny rule', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -452,7 +452,7 @@ describe('@usekova/sdk', () => {
 
     it('denies by default when no rules match', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -466,7 +466,7 @@ describe('@usekova/sdk', () => {
 
     it('respects deny-wins over permit at equal specificity', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -480,7 +480,7 @@ describe('@usekova/sdk', () => {
 
     it('supports evaluation context', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -498,10 +498,10 @@ describe('@usekova/sdk', () => {
 
   // ── Identity ──────────────────────────────────────────────────────────
 
-  describe('KovaClient.createIdentity', () => {
+  describe('GrithClient.createIdentity', () => {
     it('creates a valid agent identity', async () => {
       const kp = await generateKeyPair();
-      const client = new KovaClient({ keyPair: kp });
+      const client = new GrithClient({ keyPair: kp });
 
       const identity = await client.createIdentity({
         model: {
@@ -527,7 +527,7 @@ describe('@usekova/sdk', () => {
     it('uses explicit operatorKeyPair when provided', async () => {
       const clientKp = await generateKeyPair();
       const operatorKp = await generateKeyPair();
-      const client = new KovaClient({ keyPair: clientKp });
+      const client = new GrithClient({ keyPair: clientKp });
 
       const identity = await client.createIdentity({
         operatorKeyPair: operatorKp,
@@ -544,7 +544,7 @@ describe('@usekova/sdk', () => {
     });
 
     it('throws when no key pair is available', async () => {
-      const client = new KovaClient();
+      const client = new GrithClient();
 
       await expect(
         client.createIdentity({
@@ -559,10 +559,10 @@ describe('@usekova/sdk', () => {
     });
   });
 
-  describe('KovaClient.evolveIdentity', () => {
+  describe('GrithClient.evolveIdentity', () => {
     it('evolves an identity with new capabilities', async () => {
       const kp = await generateKeyPair();
-      const client = new KovaClient({ keyPair: kp });
+      const client = new GrithClient({ keyPair: kp });
 
       const identity = await client.createIdentity(makeIdentityOptions(kp));
 
@@ -584,10 +584,10 @@ describe('@usekova/sdk', () => {
 
     it('throws when no key pair is available', async () => {
       const kp = await generateKeyPair();
-      const identityClient = new KovaClient({ keyPair: kp });
+      const identityClient = new GrithClient({ keyPair: kp });
       const identity = await identityClient.createIdentity(makeIdentityOptions(kp));
 
-      const noKeyClient = new KovaClient();
+      const noKeyClient = new GrithClient();
       await expect(
         noKeyClient.evolveIdentity(identity, {
           changeType: 'capability_change',
@@ -600,10 +600,10 @@ describe('@usekova/sdk', () => {
 
   // ── Chain operations ──────────────────────────────────────────────────
 
-  describe('KovaClient.resolveChain', () => {
+  describe('GrithClient.resolveChain', () => {
     it('resolves a parent-child chain', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const root = await client.createCovenant({
         issuer,
@@ -625,7 +625,7 @@ describe('@usekova/sdk', () => {
 
     it('returns empty array for root covenant', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const root = await client.createCovenant({
         issuer,
@@ -638,10 +638,10 @@ describe('@usekova/sdk', () => {
     });
   });
 
-  describe('KovaClient.validateChain', () => {
+  describe('GrithClient.validateChain', () => {
     it('validates a proper narrowing chain', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const root = await client.createCovenant({
         issuer,
@@ -664,7 +664,7 @@ describe('@usekova/sdk', () => {
 
     it('detects narrowing violations', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const root = await client.createCovenant({
         issuer,
@@ -686,7 +686,7 @@ describe('@usekova/sdk', () => {
 
     it('validates each document individually', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -703,21 +703,21 @@ describe('@usekova/sdk', () => {
 
   // ── CCL utilities ─────────────────────────────────────────────────────
 
-  describe('KovaClient CCL utilities', () => {
+  describe('GrithClient CCL utilities', () => {
     it('parseCCL parses valid CCL', () => {
-      const client = new KovaClient();
+      const client = new GrithClient();
       const doc = client.parseCCL("permit read on '/data'");
       expect(doc.permits).toHaveLength(1);
       expect(doc.permits[0]!.action).toBe('read');
     });
 
     it('parseCCL throws on invalid CCL', () => {
-      const client = new KovaClient();
+      const client = new GrithClient();
       expect(() => client.parseCCL('!!! invalid !!!')).toThrow();
     });
 
     it('mergeCCL merges two CCL documents', () => {
-      const client = new KovaClient();
+      const client = new GrithClient();
       const a = client.parseCCL("permit read on '/data'");
       const b = client.parseCCL("deny write on '/system'");
 
@@ -727,7 +727,7 @@ describe('@usekova/sdk', () => {
     });
 
     it('serializeCCL round-trips with parseCCL', () => {
-      const client = new KovaClient();
+      const client = new GrithClient();
       const source = "permit read on '/data'";
       const doc = client.parseCCL(source);
       const serialized = client.serializeCCL(doc);
@@ -741,10 +741,10 @@ describe('@usekova/sdk', () => {
 
   // ── Event system ──────────────────────────────────────────────────────
 
-  describe('KovaClient event system', () => {
+  describe('GrithClient event system', () => {
     it('emits covenant:created event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const events: CovenantCreatedEvent[] = [];
       client.on('covenant:created', (e) => events.push(e));
@@ -763,7 +763,7 @@ describe('@usekova/sdk', () => {
 
     it('emits covenant:verified event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -783,7 +783,7 @@ describe('@usekova/sdk', () => {
 
     it('emits covenant:countersigned event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -802,7 +802,7 @@ describe('@usekova/sdk', () => {
 
     it('emits identity:created event', async () => {
       const kp = await generateKeyPair();
-      const client = new KovaClient({ keyPair: kp });
+      const client = new GrithClient({ keyPair: kp });
 
       const events: IdentityCreatedEvent[] = [];
       client.on('identity:created', (e) => events.push(e));
@@ -816,7 +816,7 @@ describe('@usekova/sdk', () => {
 
     it('emits identity:evolved event', async () => {
       const kp = await generateKeyPair();
-      const client = new KovaClient({ keyPair: kp });
+      const client = new GrithClient({ keyPair: kp });
       const identity = await client.createIdentity(makeIdentityOptions(kp));
 
       const events: IdentityEvolvedEvent[] = [];
@@ -835,7 +835,7 @@ describe('@usekova/sdk', () => {
 
     it('emits chain:resolved event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const root = await client.createCovenant({
         issuer,
@@ -855,7 +855,7 @@ describe('@usekova/sdk', () => {
 
     it('emits chain:validated event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -875,7 +875,7 @@ describe('@usekova/sdk', () => {
 
     it('emits evaluation:completed event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const doc = await client.createCovenant({
         issuer,
@@ -897,7 +897,7 @@ describe('@usekova/sdk', () => {
 
     it('on() returns a disposer function', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       let count = 0;
       const dispose = client.on('covenant:created', () => { count++; });
@@ -921,7 +921,7 @@ describe('@usekova/sdk', () => {
 
     it('off() removes a specific handler', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       let count = 0;
       const handler = () => { count++; };
@@ -946,7 +946,7 @@ describe('@usekova/sdk', () => {
 
     it('removeAllListeners() clears handlers for a specific event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       let count = 0;
       client.on('covenant:created', () => { count++; });
@@ -970,7 +970,7 @@ describe('@usekova/sdk', () => {
     });
 
     it('removeAllListeners() without args clears all events', async () => {
-      const client = new KovaClient();
+      const client = new GrithClient();
       let created = 0;
       let verified = 0;
 
@@ -987,7 +987,7 @@ describe('@usekova/sdk', () => {
 
     it('supports multiple handlers for the same event', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const calls: string[] = [];
       client.on('covenant:created', () => calls.push('handler1'));
@@ -1106,9 +1106,9 @@ describe('@usekova/sdk', () => {
     });
   });
 
-  // ── Re-exports from @usekova/core ───────────────────────────────────────
+  // ── Re-exports from @grith/core ───────────────────────────────────────
 
-  describe('re-exports from @usekova/core', () => {
+  describe('re-exports from @grith/core', () => {
     it('exports PROTOCOL_VERSION constant', () => {
       expect(PROTOCOL_VERSION).toBe('1.0');
     });
@@ -1171,9 +1171,9 @@ describe('@usekova/sdk', () => {
     });
   });
 
-  // ── Re-exports from @usekova/crypto ─────────────────────────────────────
+  // ── Re-exports from @grith/crypto ─────────────────────────────────────
 
-  describe('re-exports from @usekova/crypto', () => {
+  describe('re-exports from @grith/crypto', () => {
     it('exports sha256String', () => {
       const hash = sha256String('hello');
       expect(hash).toMatch(/^[0-9a-f]{64}$/);
@@ -1199,9 +1199,9 @@ describe('@usekova/sdk', () => {
     });
   });
 
-  // ── Re-exports from @usekova/ccl ────────────────────────────────────────
+  // ── Re-exports from @grith/ccl ────────────────────────────────────────
 
-  describe('re-exports from @usekova/ccl', () => {
+  describe('re-exports from @grith/ccl', () => {
     it('exports parseCCL', () => {
       const doc = parseCCL("permit read on '/data'");
       expect(doc.permits).toHaveLength(1);
@@ -1240,9 +1240,9 @@ describe('@usekova/sdk', () => {
     });
   });
 
-  // ── Re-exports from @usekova/identity ───────────────────────────────────
+  // ── Re-exports from @grith/identity ───────────────────────────────────
 
-  describe('re-exports from @usekova/identity', () => {
+  describe('re-exports from @grith/identity', () => {
     it('exports DEFAULT_EVOLUTION_POLICY', () => {
       expect(DEFAULT_EVOLUTION_POLICY.minorUpdate).toBe(0.95);
       expect(DEFAULT_EVOLUTION_POLICY.modelVersionChange).toBe(0.80);
@@ -1251,7 +1251,7 @@ describe('@usekova/sdk', () => {
 
     it('exports getLineage', async () => {
       const kp = await generateKeyPair();
-      const client = new KovaClient({ keyPair: kp });
+      const client = new GrithClient({ keyPair: kp });
       const identity = await client.createIdentity(makeIdentityOptions(kp));
 
       const lineage = getLineage(identity);
@@ -1261,7 +1261,7 @@ describe('@usekova/sdk', () => {
 
     it('exports serializeIdentity and deserializeIdentity', async () => {
       const kp = await generateKeyPair();
-      const client = new KovaClient({ keyPair: kp });
+      const client = new GrithClient({ keyPair: kp });
       const identity = await client.createIdentity(makeIdentityOptions(kp));
 
       const json = serializeIdentity(identity);
@@ -1278,7 +1278,7 @@ describe('@usekova/sdk', () => {
     it('create -> verify -> countersign -> verify -> evaluate', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
       const auditorKp = await generateKeyPair();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       // Create
       const doc = await client.createCovenant({
@@ -1311,7 +1311,7 @@ describe('@usekova/sdk', () => {
 
     it('create chain -> validate -> resolve', async () => {
       const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-      const client = new KovaClient({ keyPair: issuerKeyPair });
+      const client = new GrithClient({ keyPair: issuerKeyPair });
 
       const root = await client.createCovenant({
         issuer,

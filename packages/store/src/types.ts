@@ -1,11 +1,11 @@
 /**
- * Type definitions for the @usekova/store package.
+ * Type definitions for the @grith/store package.
  *
  * Defines the CovenantStore interface, query/filter types, event system,
  * and batch operation contracts.
  */
 
-import type { CovenantDocument } from '@usekova/core';
+import type { CovenantDocument } from '@grith/core';
 
 // ─── Query / filter types ───────────────────────────────────────────────────────
 

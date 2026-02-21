@@ -3,7 +3,7 @@
   "entryPointStrategy": "packages",
   "entryPoints": ["packages/*"],
   "out": "docs/api-generated",
-  "name": "Kova Protocol — API Reference",
+  "name": "Grith Protocol — API Reference",
   "excludePrivate": true,
   "excludeInternal": true,
   "readme": "README.md",

@@ -1,5 +1,5 @@
 /**
- * @usekova/verifier type definitions.
+ * @grith/verifier type definitions.
  *
  * Report types, options, and records used by the Verifier class
  * and the standalone `verifyBatch` function.
@@ -9,9 +9,9 @@ import type {
   CovenantDocument,
   VerificationResult,
   VerificationCheck,
-} from '@usekova/core';
+} from '@grith/core';
 
-import type { Statement, NarrowingViolation, EvaluationContext, Severity } from '@usekova/ccl';
+import type { Statement, NarrowingViolation, EvaluationContext, Severity } from '@grith/ccl';
 
 // ─── Options ────────────────────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ export interface VerifierOptions {
 
   /**
    * Optional maximum chain depth override.
-   * Defaults to MAX_CHAIN_DEPTH from @usekova/core (16).
+   * Defaults to MAX_CHAIN_DEPTH from @grith/core (16).
    */
   maxChainDepth?: number;
 }

@@ -1,5 +1,5 @@
 /**
- * Kova Marketplace Example
+ * Grith Marketplace Example
  *
  * Shows agent discovery and trust-gated marketplace interactions.
  * Agents are listed, searched, and evaluated for marketplace access.
@@ -38,7 +38,7 @@ const AGENTS: MarketplaceAgent[] = [
 
 function main() {
   console.log('========================================');
-  console.log('  Kova Marketplace Example');
+  console.log('  Grith Marketplace Example');
   console.log('========================================\n');
 
   // ── Step 1: List available agents ────────────────────────────────────
@@ -81,15 +81,15 @@ function main() {
 
   const revenue = calculateRevenueLift({
     totalAgents: 1000,
-    kovaAdoptionRate: 0.6,
+    grithAdoptionRate: 0.6,
     premiumRate: 0.3,
     premiumPriceMultiplier: 5,
   });
 
   console.log(`  Total agents:    1000`);
-  console.log(`  Kova adoption:   60%`);
+  console.log(`  Grith adoption:   60%`);
   console.log(`  Total revenue:   $${revenue.totalRevenue.toFixed(0)}`);
-  console.log(`  Kova revenue:    $${revenue.kovaRevenue.toFixed(0)}`);
+  console.log(`  Grith revenue:    $${revenue.grithRevenue.toFixed(0)}`);
   console.log(`  Revenue lift:    ${revenue.liftPercentage.toFixed(1)}%`);
 
   console.log('\n========================================');

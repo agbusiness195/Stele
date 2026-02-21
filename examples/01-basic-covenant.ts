@@ -1,7 +1,7 @@
 /**
  * Example 01: Basic Covenant
  *
- * Getting started with the Kova SDK. Demonstrates:
+ * Getting started with the Grith SDK. Demonstrates:
  * - Generating Ed25519 key pairs for issuer and beneficiary
  * - Creating a simple permit/deny covenant
  * - Verifying the covenant's cryptographic integrity
@@ -12,11 +12,11 @@
  */
 
 import {
-  KovaClient,
+  GrithClient,
   generateKeyPair,
   type Issuer,
   type Beneficiary,
-} from '@usekova/sdk';
+} from '@grith/sdk';
 
 async function main() {
   console.log('========================================');
@@ -52,10 +52,10 @@ async function main() {
     name: 'Data Analyst Agent v1',
   };
 
-  // ── Step 3: Create the KovaClient ─────────────────────────────────────
+  // ── Step 3: Create the GrithClient ─────────────────────────────────────
   // The client manages key pairs and provides the high-level API.
 
-  const client = new KovaClient({ keyPair: issuerKeys });
+  const client = new GrithClient({ keyPair: issuerKeys });
 
   // ── Step 4: Create a covenant ──────────────────────────────────────────
   // Constraints are written in CCL (Covenant Constraint Language).

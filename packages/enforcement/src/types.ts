@@ -1,5 +1,5 @@
-import type { HashHex } from '@usekova/crypto';
-import type { Statement, Severity, EvaluationResult } from '@usekova/ccl';
+import type { HashHex } from '@grith/crypto';
+import type { Statement, Severity, EvaluationResult } from '@grith/ccl';
 
 export type ExecutionOutcome = 'EXECUTED' | 'DENIED' | 'IMPOSSIBLE';
 

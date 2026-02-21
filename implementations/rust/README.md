@@ -1,10 +1,10 @@
-# Kova - Rust Implementation
+# Grith - Rust Implementation
 
 The accountability primitive for AI agents, implemented in Rust.
 
 ## Overview
 
-This crate provides a complete Rust implementation of the Kova protocol, covering
+This crate provides a complete Rust implementation of the Grith protocol, covering
 all core primitives needed for interoperability with the reference TypeScript
 implementation.
 
@@ -37,11 +37,11 @@ cargo test
 ## Usage
 
 ```rust
-use kova::crypto;
-use kova::covenant::{self, CovenantBuilderOptions, Party};
-use kova::ccl;
-use kova::identity::{self, CreateIdentityOptions, ModelInfo, DeploymentInfo};
-use kova::store::{MemoryStore, Store};
+use grith::crypto;
+use grith::covenant::{self, CovenantBuilderOptions, Party};
+use grith::ccl;
+use grith::identity::{self, CreateIdentityOptions, ModelInfo, DeploymentInfo};
+use grith::store::{MemoryStore, Store};
 
 // Generate key pairs
 let issuer_kp = crypto::generate_key_pair().unwrap();
@@ -80,7 +80,7 @@ assert!(eval.permitted);
 
 ## Protocol Version
 
-This implementation targets Kova Protocol v1.0.
+This implementation targets Grith Protocol v1.0.
 
 ## License
 

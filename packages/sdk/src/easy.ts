@@ -1,5 +1,5 @@
-import { buildCovenant, verifyCovenant } from '@usekova/core';
-import { generateKeyPair } from '@usekova/crypto';
+import { buildCovenant, verifyCovenant } from '@grith/core';
+import { generateKeyPair } from '@grith/crypto';
 
 // ── Presets ────────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ export interface ProtectedAgent {
  *
  * @example
  * ```typescript
- * import { protect } from '@usekova/sdk';
+ * import { protect } from '@grith/sdk';
  *
  * const agent = await protect({
  *   name: 'my-agent',

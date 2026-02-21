@@ -1,28 +1,28 @@
-# Kova: 5-Minute Quickstart
+# Grith: 5-Minute Quickstart
 
 Go from zero to enforcing your first covenant in under five minutes.
 
 ## 1. Install
 
 ```bash
-npm install @usekova/sdk
+npm install @grith/sdk
 ```
 
-The SDK re-exports everything you need from the underlying packages (`@usekova/crypto`, `@usekova/ccl`, `@usekova/core`, `@usekova/identity`, `@usekova/enforcement`). One import covers the full API.
+The SDK re-exports everything you need from the underlying packages (`@grith/crypto`, `@grith/ccl`, `@grith/core`, `@grith/identity`, `@grith/enforcement`). One import covers the full API.
 
 ## 2. Create Keys
 
 Every party in a covenant needs an Ed25519 key pair. Generate one:
 
 ```typescript
-import { KovaClient } from '@usekova/sdk';
+import { GrithClient } from '@grith/sdk';
 
-const issuerClient = new KovaClient();
+const issuerClient = new GrithClient();
 const issuerKeys = await issuerClient.generateKeyPair();
 console.log(issuerKeys.publicKeyHex); // 64-char hex-encoded public key
 
 // The beneficiary also needs keys — typically on a different machine
-const beneficiaryClient = new KovaClient();
+const beneficiaryClient = new GrithClient();
 const beneficiaryKeys = await beneficiaryClient.generateKeyPair();
 ```
 
@@ -156,25 +156,25 @@ You now have a working covenant pipeline: create, sign, verify, enforce. Here is
 
 **Express Middleware** -- Enforce covenants on every HTTP request:
 ```typescript
-import { kovaMiddleware } from '@usekova/sdk';
-app.use(kovaMiddleware({ covenant, client: issuerClient }));
+import { grithMiddleware } from '@grith/sdk';
+app.use(grithMiddleware({ covenant, client: issuerClient }));
 ```
 
 **Vercel AI SDK** -- Wrap AI tools with covenant enforcement:
 ```typescript
-import { withKova } from '@usekova/sdk';
-const guardedTool = withKova(myTool, { covenant, client });
+import { withGrith } from '@grith/sdk';
+const guardedTool = withGrith(myTool, { covenant, client });
 ```
 
 **LangChain** -- Add a callback handler to any chain:
 ```typescript
-import { KovaCallbackHandler } from '@usekova/sdk';
-const handler = new KovaCallbackHandler({ covenant, client });
+import { GrithCallbackHandler } from '@grith/sdk';
+const handler = new GrithCallbackHandler({ covenant, client });
 ```
 
 **Key Rotation** -- Automatic key lifecycle management:
 ```typescript
-const client = new KovaClient({
+const client = new GrithClient({
   keyRotation: { maxAgeMs: 86_400_000, overlapPeriodMs: 3_600_000 },
 });
 await client.initializeKeyRotation();
@@ -194,9 +194,9 @@ console.log(chainResult.valid); // true — child only narrows
 
 **Countersignatures** -- Let auditors co-sign covenants:
 ```typescript
-const auditorClient = new KovaClient();
+const auditorClient = new GrithClient();
 const auditorKeys = await auditorClient.generateKeyPair();
 const audited = await auditorClient.countersign(covenant, 'auditor');
 ```
 
-Full API reference: see the JSDoc comments in `@usekova/sdk` or run `npx typedoc`.
+Full API reference: see the JSDoc comments in `@grith/sdk` or run `npx typedoc`.

@@ -1,12 +1,12 @@
 /**
- * Middleware system for the Kova SDK.
+ * Middleware system for the Grith SDK.
  *
- * Provides a composable pipeline that intercepts KovaClient operations
+ * Provides a composable pipeline that intercepts GrithClient operations
  * (create, verify, evaluate, etc.) for cross-cutting concerns like
  * logging, metrics, validation, caching, and rate limiting.
  */
 
-import { Logger, defaultLogger } from '@usekova/types';
+import { Logger, defaultLogger } from '@grith/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ export type MiddlewareFn = (
 ) => Promise<unknown>;
 
 /** Structured middleware with named lifecycle hooks. */
-export interface KovaMiddleware {
+export interface GrithMiddleware {
   /** Unique name identifying this middleware. */
   name: string;
   /** Called before the operation executes. Can modify args or prevent execution. */
@@ -53,16 +53,16 @@ export interface KovaMiddleware {
 // ─── Pipeline ────────────────────────────────────────────────────────────────
 
 /**
- * Composable middleware pipeline for intercepting KovaClient operations.
+ * Composable middleware pipeline for intercepting GrithClient operations.
  *
  * Middleware is executed in registration order for `before` hooks,
  * and in reverse order for `after` hooks (onion model).
  */
 export class MiddlewarePipeline {
-  private readonly _middlewares: KovaMiddleware[] = [];
+  private readonly _middlewares: GrithMiddleware[] = [];
 
   /** Add a middleware to the end of the pipeline. Returns `this` for chaining. */
-  use(middleware: KovaMiddleware): this {
+  use(middleware: GrithMiddleware): this {
     // Prevent duplicate names
     const existing = this._middlewares.findIndex((m) => m.name === middleware.name);
     if (existing !== -1) {
@@ -173,15 +173,15 @@ export class MiddlewarePipeline {
 /**
  * Creates a logging middleware that logs operation start, completion, and errors.
  *
- * @param logger - Optional Logger instance. Defaults to the @usekova/types defaultLogger.
+ * @param logger - Optional Logger instance. Defaults to the @grith/types defaultLogger.
  */
-export function loggingMiddleware(logger?: Logger): KovaMiddleware {
+export function loggingMiddleware(logger?: Logger): GrithMiddleware {
   const log = logger ?? defaultLogger;
 
   return {
     name: 'logging',
     async before(ctx) {
-      log.info(`[kova] ${ctx.operation} started`, {
+      log.info(`[grith] ${ctx.operation} started`, {
         operation: ctx.operation,
         args: ctx.args,
         timestamp: ctx.timestamp,
@@ -189,14 +189,14 @@ export function loggingMiddleware(logger?: Logger): KovaMiddleware {
       return { proceed: true };
     },
     async after(ctx, result) {
-      log.info(`[kova] ${ctx.operation} completed`, {
+      log.info(`[grith] ${ctx.operation} completed`, {
         operation: ctx.operation,
         timestamp: ctx.timestamp,
       });
       return result;
     },
     async onError(ctx, error) {
-      log.error(`[kova] ${ctx.operation} failed: ${error.message}`, {
+      log.error(`[grith] ${ctx.operation} failed: ${error.message}`, {
         operation: ctx.operation,
         error: error.message,
         timestamp: ctx.timestamp,
@@ -212,7 +212,7 @@ export function loggingMiddleware(logger?: Logger): KovaMiddleware {
  * - `constraints` argument is a non-empty string (if present)
  * - `privateKey` argument has valid size (32 or 64 bytes for Ed25519, if present)
  */
-export function validationMiddleware(): KovaMiddleware {
+export function validationMiddleware(): GrithMiddleware {
   return {
     name: 'validation',
     async before(ctx) {
@@ -249,7 +249,7 @@ export function validationMiddleware(): KovaMiddleware {
  * After execution, `ctx.metadata.durationMs` contains the elapsed time
  * in milliseconds.
  */
-export function timingMiddleware(): KovaMiddleware {
+export function timingMiddleware(): GrithMiddleware {
   return {
     name: 'timing',
     async before(ctx) {
@@ -271,7 +271,7 @@ export function timingMiddleware(): KovaMiddleware {
  * @param options - Rate limit configuration.
  * @param options.maxPerSecond - Maximum number of operations allowed per second.
  */
-export function rateLimitMiddleware(options: { maxPerSecond: number }): KovaMiddleware {
+export function rateLimitMiddleware(options: { maxPerSecond: number }): GrithMiddleware {
   const { maxPerSecond } = options;
   let tokens = maxPerSecond;
   let lastRefill = Date.now();

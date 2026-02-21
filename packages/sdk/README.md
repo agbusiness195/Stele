@@ -1,21 +1,21 @@
-# @usekova/sdk
+# @grith/sdk
 
-High-level unified SDK for the Kova protocol. This is the **main entry point** -- it re-exports everything from `@usekova/core`, `@usekova/crypto`, `@usekova/ccl`, `@usekova/identity`, `@usekova/store`, `@usekova/verifier`, and more.
+High-level unified SDK for the Grith protocol. This is the **main entry point** -- it re-exports everything from `@grith/core`, `@grith/crypto`, `@grith/ccl`, `@grith/identity`, `@grith/store`, `@grith/verifier`, and more.
 
 ## Installation
 
 ```bash
-npm install @usekova/sdk
+npm install @grith/sdk
 ```
 
 ## Usage
 
-### KovaClient
+### GrithClient
 
 ```typescript
-import { KovaClient } from '@usekova/sdk';
+import { GrithClient } from '@grith/sdk';
 
-const client = new KovaClient();
+const client = new GrithClient();
 await client.generateKeyPair();
 
 // Create a covenant
@@ -47,7 +47,7 @@ const identity = await client.createIdentity({
 ### Quick Covenants
 
 ```typescript
-import { QuickCovenant } from '@usekova/sdk';
+import { QuickCovenant } from '@grith/sdk';
 
 const doc = await QuickCovenant.permit('read', '/data/**', issuer, beneficiary, kp.privateKey);
 const standard = await QuickCovenant.standard(issuer, beneficiary, kp.privateKey);
@@ -56,7 +56,7 @@ const standard = await QuickCovenant.standard(issuer, beneficiary, kp.privateKey
 ### Key Rotation and Events
 
 ```typescript
-const client = new KovaClient({
+const client = new GrithClient({
   keyRotation: { maxAgeMs: 86_400_000, overlapPeriodMs: 3_600_000 },
 });
 await client.initializeKeyRotation();
@@ -66,14 +66,14 @@ const off = client.on('covenant:created', (e) => console.log('Created:', e.docum
 
 ## Key APIs
 
-- **KovaClient**: `createCovenant()`, `verifyCovenant()`, `countersign()`, `evaluateAction()`, `createIdentity()`, `evolveIdentity()`, `resolveChain()`, `validateChain()`
+- **GrithClient**: `createCovenant()`, `verifyCovenant()`, `countersign()`, `evaluateAction()`, `createIdentity()`, `evolveIdentity()`, `resolveChain()`, `validateChain()`
 - **QuickCovenant**: `permit()`, `deny()`, `standard()`
 - **CCL utilities**: `parseCCL()`, `mergeCCL()`, `serializeCCL()`
 - **Events**: `on()`, `off()`, `removeAllListeners()`
-- **Re-exports**: All APIs from `@usekova/core`, `@usekova/crypto`, `@usekova/ccl`, `@usekova/identity`, `@usekova/store`, `@usekova/verifier`, `@usekova/breach`, `@usekova/reputation`, `@usekova/attestation`, `@usekova/proof`
+- **Re-exports**: All APIs from `@grith/core`, `@grith/crypto`, `@grith/ccl`, `@grith/identity`, `@grith/store`, `@grith/verifier`, `@grith/breach`, `@grith/reputation`, `@grith/attestation`, `@grith/proof`
 - **Adapters**: Vercel AI, LangChain, Express middleware, OpenTelemetry
 - **Testing**: `runConformanceSuite()`, middleware pipeline
 
 ## Docs
 
-See the [Kova SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Grith SDK root documentation](../../README.md) for the full API reference and architecture guide.

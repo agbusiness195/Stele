@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { generateKeyPair, sha256String } from '@usekova/crypto';
-import type { KeyPair, HashHex } from '@usekova/crypto';
-import type { Severity } from '@usekova/ccl';
+import { generateKeyPair, sha256String } from '@grith/crypto';
+import type { KeyPair, HashHex } from '@grith/crypto';
+import type { Severity } from '@grith/ccl';
 import {
   createBreachAttestation,
   verifyBreachAttestation,

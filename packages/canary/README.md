@@ -1,11 +1,11 @@
-# @usekova/canary
+# @grith/canary
 
 Canary token generation, tripwire evaluation, scheduling, and breach correlation analysis.
 
 ## Installation
 
 ```bash
-npm install @usekova/canary
+npm install @grith/canary
 ```
 
 ## Key APIs
@@ -26,7 +26,7 @@ import {
   detectionProbability,
   canarySchedule,
   canaryCorrelation,
-} from '@usekova/canary';
+} from '@grith/canary';
 
 // Generate a canary from a CCL constraint
 const canary = generateCanary(
@@ -64,4 +64,4 @@ console.log(correlation.meaningful);  // true if sample size >= 3
 
 ## Docs
 
-See the [Kova SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

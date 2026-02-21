@@ -7,19 +7,19 @@ import {
   fromHex,
   generateNonce,
   timestamp,
-} from '@usekova/crypto';
+} from '@grith/crypto';
 
-import type { KeyPair, HashHex } from '@usekova/crypto';
+import type { KeyPair, HashHex } from '@grith/crypto';
 
-import { DocumentedKovaError as KovaError, DocumentedErrorCode as KovaErrorCode } from '@usekova/types';
+import { DocumentedGrithError as GrithError, DocumentedErrorCode as GrithErrorCode } from '@grith/types';
 
 import {
   parse as cclParse,
   merge as cclMerge,
   validateNarrowing as cclValidateNarrowing,
-} from '@usekova/ccl';
+} from '@grith/ccl';
 
-import type { CCLDocument, NarrowingViolation } from '@usekova/ccl';
+import type { CCLDocument, NarrowingViolation } from '@grith/ccl';
 
 import {
   PROTOCOL_VERSION,
@@ -37,7 +37,7 @@ import type {
   PartyRole,
 } from './types.js';
 
-// Re-export all types so consumers only need @usekova/core
+// Re-export all types so consumers only need @grith/core
 export type {
   EnforcementType,
   ProofType,
@@ -764,16 +764,16 @@ export async function resolveChain(
   maxDepth: number = MAX_CHAIN_DEPTH,
 ): Promise<CovenantDocument[]> {
   if (doc == null) {
-    throw new KovaError(
-      KovaErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new GrithError(
+      GrithErrorCode.PROTOCOL_INVALID_INPUT,
       'doc must not be null or undefined',
       { hint: 'Provide a valid CovenantDocument to resolveChain.' }
     );
   }
 
   if (typeof maxDepth !== 'number' || !Number.isFinite(maxDepth) || maxDepth < 0) {
-    throw new KovaError(
-      KovaErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new GrithError(
+      GrithErrorCode.PROTOCOL_INVALID_INPUT,
       'maxDepth must be a non-negative number',
       { hint: 'Provide a non-negative number for maxDepth.' }
     );

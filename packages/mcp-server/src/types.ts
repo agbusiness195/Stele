@@ -1,5 +1,5 @@
 /**
- * @usekova/mcp-server type definitions.
+ * @grith/mcp-server type definitions.
  *
  * Provides JSON-RPC 2.0, MCP tool definition, and server option types
  * for the Model Context Protocol server implementation.
@@ -117,7 +117,7 @@ export interface ToolResult {
 
 // ─── MCP Server Options ─────────────────────────────────────────────────────────
 
-/** Options for constructing a KovaServer instance. */
+/** Options for constructing a GrithServer instance. */
 export interface MCPServerOptions {
   /** A human-readable name for this server instance. */
   name?: string;

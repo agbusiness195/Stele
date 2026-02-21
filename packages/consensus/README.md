@@ -1,11 +1,11 @@
-# @usekova/consensus
+# @grith/consensus
 
-Byzantine fault-tolerant consensus protocols for the Kova covenant framework. Includes accountability scoring, BFT analysis, quorum computation, latency estimation, a HotStuff-inspired pipelined BFT implementation, dynamic quorum reconfiguration, pipeline simulation, and quorum intersection verification.
+Byzantine fault-tolerant consensus protocols for the Grith covenant framework. Includes accountability scoring, BFT analysis, quorum computation, latency estimation, a HotStuff-inspired pipelined BFT implementation, dynamic quorum reconfiguration, pipeline simulation, and quorum intersection verification.
 
 ## Installation
 
 ```bash
-npm install @usekova/consensus
+npm install @grith/consensus
 ```
 
 ## Key APIs
@@ -29,7 +29,7 @@ import {
   quorumSize,
   StreamlinedBFT,
   DynamicQuorum,
-} from '@usekova/consensus';
+} from '@grith/consensus';
 
 // Compute accountability score
 const score = computeAccountability('agent-1', {
@@ -74,4 +74,4 @@ dq.transition(['n1', 'n2', 'n3']);
 
 ## Docs
 
-See the [Kova SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

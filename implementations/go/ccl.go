@@ -1,4 +1,4 @@
-package kova
+package grith
 
 import (
 	"encoding/json"

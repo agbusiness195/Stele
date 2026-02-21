@@ -1,11 +1,11 @@
 /**
- * Cross-package lifecycle integration tests for the Kova SDK.
+ * Cross-package lifecycle integration tests for the Grith SDK.
  *
  * Tests FULL LIFECYCLE flows that span multiple packages working together:
  *
  *   1. Covenant -> Enforcement -> Reputation -> Breach pipeline
  *   2. Identity evolution + covenant binding
- *   3. SDK KovaClient full workflow
+ *   3. SDK GrithClient full workflow
  *   4. Store + Verifier batch operations
  *   5. Attestation + Reputation cross-validation
  *
@@ -20,8 +20,8 @@ import {
   sha256Object,
   toHex,
   timestamp,
-} from '@usekova/crypto';
-import type { KeyPair, HashHex } from '@usekova/crypto';
+} from '@grith/crypto';
+import type { KeyPair, HashHex } from '@grith/crypto';
 
 import {
   buildCovenant,
@@ -34,17 +34,17 @@ import {
   serializeCovenant,
   deserializeCovenant,
   CovenantBuildError,
-} from '@usekova/core';
-import type { CovenantDocument } from '@usekova/core';
+} from '@grith/core';
+import type { CovenantDocument } from '@grith/core';
 
-import { parse, evaluate, merge, serialize, validateNarrowing } from '@usekova/ccl';
+import { parse, evaluate, merge, serialize, validateNarrowing } from '@grith/ccl';
 
-import { MemoryStore } from '@usekova/store';
-import type { StoreEvent } from '@usekova/store';
+import { MemoryStore } from '@grith/store';
+import type { StoreEvent } from '@grith/store';
 
-import { Verifier, verifyBatch } from '@usekova/verifier';
+import { Verifier, verifyBatch } from '@grith/verifier';
 
-import { KovaClient, QuickCovenant } from '@usekova/sdk';
+import { GrithClient, QuickCovenant } from '@grith/sdk';
 import type {
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
@@ -54,7 +54,7 @@ import type {
   ChainResolvedEvent,
   ChainValidatedEvent,
   EvaluationCompletedEvent,
-} from '@usekova/sdk';
+} from '@grith/sdk';
 
 import {
   createIdentity,
@@ -63,14 +63,14 @@ import {
   serializeIdentity,
   deserializeIdentity,
   computeIdentityHash,
-} from '@usekova/identity';
-import type { AgentIdentity } from '@usekova/identity';
+} from '@grith/identity';
+import type { AgentIdentity } from '@grith/identity';
 
 import {
   Monitor,
   MonitorDeniedError,
   verifyMerkleProof,
-} from '@usekova/enforcement';
+} from '@grith/enforcement';
 
 import {
   createReceipt,
@@ -82,15 +82,15 @@ import {
   createEndorsement,
   verifyEndorsement,
   verifyReceiptChain,
-} from '@usekova/reputation';
-import type { ExecutionReceipt, Endorsement } from '@usekova/reputation';
+} from '@grith/reputation';
+import type { ExecutionReceipt, Endorsement } from '@grith/reputation';
 
 import {
   createBreachAttestation,
   verifyBreachAttestation,
   TrustGraph,
-} from '@usekova/breach';
-import type { BreachEvent } from '@usekova/breach';
+} from '@grith/breach';
+import type { BreachEvent } from '@grith/breach';
 
 import {
   createAttestation,
@@ -99,15 +99,15 @@ import {
   reconcile,
   getDiscrepancies,
   computeAttestationCoverage,
-} from '@usekova/attestation';
-import type { ReceiptSummary, AgentAction } from '@usekova/attestation';
+} from '@grith/attestation';
+import type { ReceiptSummary, AgentAction } from '@grith/attestation';
 
 import {
   generateCanary,
   evaluateCanary,
   detectionProbability,
   isExpired,
-} from '@usekova/canary';
+} from '@grith/canary';
 
 
 // ===========================================================================
@@ -615,15 +615,15 @@ describe('Identity evolution + covenant binding', () => {
 
 
 // ===========================================================================
-// 3. SDK KovaClient full workflow
+// 3. SDK GrithClient full workflow
 // ===========================================================================
 
-describe('SDK KovaClient full workflow', () => {
-  let client: KovaClient;
+describe('SDK GrithClient full workflow', () => {
+  let client: GrithClient;
   let auditorKp: KeyPair;
 
   beforeEach(async () => {
-    client = new KovaClient();
+    client = new GrithClient();
     auditorKp = await generateKeyPair();
   });
 
