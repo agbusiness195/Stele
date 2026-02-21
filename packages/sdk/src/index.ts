@@ -1,7 +1,7 @@
 /**
- * @usekova/sdk -- High-level TypeScript SDK that unifies the entire Stele protocol.
+ * @grith/sdk -- High-level TypeScript SDK that unifies the entire Grith protocol.
  *
- * Provides a single entry point (KovaClient) for key management, covenant
+ * Provides a single entry point (GrithClient) for key management, covenant
  * lifecycle, identity management, chain operations, and CCL utilities.
  *
  * @packageDocumentation
@@ -13,8 +13,8 @@ import {
   generateKeyPair as cryptoGenerateKeyPair,
   timestamp,
   KeyManager,
-} from '@usekova/crypto';
-import type { KeyPair, KeyRotationPolicy, ManagedKeyPair } from '@usekova/crypto';
+} from '@grith/crypto';
+import type { KeyPair, KeyRotationPolicy, ManagedKeyPair } from '@grith/crypto';
 
 import {
   buildCovenant,
@@ -35,7 +35,7 @@ import {
   resignCovenant,
   serializeCovenant,
   deserializeCovenant,
-} from '@usekova/core';
+} from '@grith/core';
 import type {
   CovenantDocument,
   VerificationResult,
@@ -43,7 +43,7 @@ import type {
   Issuer,
   Beneficiary,
   PartyRole,
-} from '@usekova/core';
+} from '@grith/core';
 
 import {
   parse as cclParse,
@@ -54,27 +54,27 @@ import {
   serialize as cclSerialize,
   checkRateLimit as cclCheckRateLimit,
   validateNarrowing as cclValidateNarrowing,
-} from '@usekova/ccl';
-import type { CCLDocument, EvaluationContext } from '@usekova/ccl';
+} from '@grith/ccl';
+import type { CCLDocument, EvaluationContext } from '@grith/ccl';
 
 import {
   createIdentity as identityCreate,
   evolveIdentity as identityEvolve,
   verifyIdentity as identityVerify,
-} from '@usekova/identity';
-import type { AgentIdentity } from '@usekova/identity';
+} from '@grith/identity';
+import type { AgentIdentity } from '@grith/identity';
 
 import type {
-  KovaClientOptions,
+  GrithClientOptions,
   CreateCovenantOptions,
   EvaluationResult,
   CreateIdentityOptions,
   EvolveOptions,
   ChainValidationResult,
   NarrowingViolationEntry,
-  SteleEventType,
-  SteleEventMap,
-  SteleEventHandler,
+  GrithEventType,
+  GrithEventMap,
+  GrithEventHandler,
 } from './types.js';
 
 // ─── Re-exports ─────────────────────────────────────────────────────────────
@@ -96,7 +96,7 @@ export type {
 
 // Re-export middleware system
 export { MiddlewarePipeline, loggingMiddleware, validationMiddleware, timingMiddleware, rateLimitMiddleware } from './middleware.js';
-export type { MiddlewareContext, MiddlewareResult, MiddlewareFn, SteleMiddleware } from './middleware.js';
+export type { MiddlewareContext, MiddlewareResult, MiddlewareFn, GrithMiddleware } from './middleware.js';
 
 // Re-export plugins
 export * from './plugins/index.js';
@@ -104,7 +104,7 @@ export * from './plugins/index.js';
 // Re-export telemetry
 export {
   telemetryMiddleware,
-  SteleMetrics,
+  GrithMetrics,
   NoopTracer,
   NoopMeter,
   NoopSpan,
@@ -126,16 +126,16 @@ export type {
 
 // Re-export all SDK types
 export type {
-  KovaClientOptions,
+  GrithClientOptions,
   CreateCovenantOptions,
   EvaluationResult,
   CreateIdentityOptions,
   EvolveOptions,
   ChainValidationResult,
   NarrowingViolationEntry,
-  SteleEventType,
-  SteleEventMap,
-  SteleEventHandler,
+  GrithEventType,
+  GrithEventMap,
+  GrithEventHandler,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   CovenantCountersignedEvent,
@@ -145,7 +145,7 @@ export type {
   ChainValidatedEvent,
   EvaluationCompletedEvent,
   KeyRotatedEvent,
-  SteleEvent,
+  GrithEvent,
 } from './types.js';
 
 // Re-export core types
@@ -170,7 +170,7 @@ export type {
   ProofType,
   RevocationMethod,
   Severity,
-} from '@usekova/core';
+} from '@grith/core';
 
 export {
   PROTOCOL_VERSION,
@@ -191,9 +191,9 @@ export {
   resolveChain as resolveChain_core,
   computeEffectiveConstraints,
   validateChainNarrowing,
-} from '@usekova/core';
+} from '@grith/core';
 
-export type { ChainResolver } from '@usekova/core';
+export type { ChainResolver } from '@grith/core';
 
 // Re-export crypto types and functions
 export type {
@@ -207,7 +207,7 @@ export type {
   Nonce,
   KeyRotationPolicy,
   ManagedKeyPair,
-} from '@usekova/crypto';
+} from '@grith/crypto';
 
 export {
   generateKeyPair,
@@ -229,7 +229,7 @@ export {
   keyPairFromPrivateKey,
   keyPairFromPrivateKeyHex,
   KeyManager,
-} from '@usekova/crypto';
+} from '@grith/crypto';
 
 // Re-export CCL types and functions
 export type {
@@ -243,7 +243,7 @@ export type {
   Condition,
   CompoundCondition,
   NarrowingViolation,
-} from '@usekova/ccl';
+} from '@grith/ccl';
 
 export {
   parse as parseCCL,
@@ -260,7 +260,7 @@ export {
   parseTokens,
   CCLSyntaxError,
   CCLValidationError,
-} from '@usekova/ccl';
+} from '@grith/ccl';
 
 // Re-export identity types and functions
 export type {
@@ -272,7 +272,7 @@ export type {
   CreateIdentityOptions as CoreCreateIdentityOptions,
   EvolveIdentityOptions as CoreEvolveIdentityOptions,
   RuntimeType,
-} from '@usekova/identity';
+} from '@grith/identity';
 
 export {
   createIdentity as createIdentity_core,
@@ -289,20 +289,20 @@ export {
   triggerReverification,
   computeDecayedTrust,
   completeReverification,
-} from '@usekova/identity';
+} from '@grith/identity';
 
-// ─── KovaClient ────────────────────────────────────────────────────────────
+// ─── GrithClient ────────────────────────────────────────────────────────────
 
 /**
- * The main entry point for the Stele SDK.
+ * The main entry point for the Grith SDK.
  *
- * Provides a unified, high-level API for the entire Stele protocol:
+ * Provides a unified, high-level API for the entire Grith protocol:
  * key management, covenant lifecycle, identity management, chain
  * operations, and CCL utilities.
  *
  * @example
  * ```typescript
- * const client = new KovaClient();
+ * const client = new GrithClient();
  * await client.generateKeyPair();
  *
  * const doc = await client.createCovenant({
@@ -315,14 +315,14 @@ export {
  * console.log(result.valid); // true
  * ```
  */
-export class KovaClient {
+export class GrithClient {
   private _keyPair: KeyPair | undefined;
   private readonly _agentId: string | undefined;
   private readonly _strictMode: boolean;
-  private readonly _listeners: Map<SteleEventType, Set<SteleEventHandler<SteleEventType>>>;
+  private readonly _listeners: Map<GrithEventType, Set<GrithEventHandler<GrithEventType>>>;
   private _keyManager: KeyManager | undefined;
 
-  constructor(options: KovaClientOptions = {}) {
+  constructor(options: GrithClientOptions = {}) {
     this._keyPair = options.keyPair;
     this._agentId = options.agentId;
     this._strictMode = options.strictMode ?? false;
@@ -471,17 +471,17 @@ export class KovaClient {
     // ── Input validation (Stripe-quality errors at the public API boundary) ──
     if (!options.issuer || !options.issuer.id) {
       throw new Error(
-        "KovaClient.createCovenant(): issuer.id is required. Provide a non-empty string identifying the issuing party.",
+        "GrithClient.createCovenant(): issuer.id is required. Provide a non-empty string identifying the issuing party.",
       );
     }
     if (!options.beneficiary || !options.beneficiary.id) {
       throw new Error(
-        "KovaClient.createCovenant(): beneficiary.id is required. Provide a non-empty string identifying the beneficiary party.",
+        "GrithClient.createCovenant(): beneficiary.id is required. Provide a non-empty string identifying the beneficiary party.",
       );
     }
     if (!options.constraints || options.constraints.trim().length === 0) {
       throw new Error(
-        "KovaClient.createCovenant(): constraints must be a non-empty CCL string. Example: permit read on '/data/**'",
+        "GrithClient.createCovenant(): constraints must be a non-empty CCL string. Example: permit read on '/data/**'",
       );
     }
 
@@ -497,7 +497,7 @@ export class KovaClient {
     const privateKey = options.privateKey ?? this._keyPair?.privateKey;
     if (!privateKey) {
       throw new Error(
-        "KovaClient.createCovenant(): No private key available. Either call client.generateKeyPair() first, or pass { privateKey } in the options.",
+        "GrithClient.createCovenant(): No private key available. Either call client.generateKeyPair() first, or pass { privateKey } in the options.",
       );
     }
 
@@ -600,7 +600,7 @@ export class KovaClient {
     const kp = signerKeyPair ?? this._keyPair;
     if (!kp) {
       throw new Error(
-        "KovaClient.countersign(): No key pair available. Either call client.generateKeyPair() first, or pass a KeyPair as the third argument.",
+        "GrithClient.countersign(): No key pair available. Either call client.generateKeyPair() first, or pass a KeyPair as the third argument.",
       );
     }
 
@@ -643,12 +643,12 @@ export class KovaClient {
   ): Promise<EvaluationResult> {
     if (!action || action.trim().length === 0) {
       throw new Error(
-        "KovaClient.evaluateAction(): action must be a non-empty string (e.g., 'read', 'write', 'api.call').",
+        "GrithClient.evaluateAction(): action must be a non-empty string (e.g., 'read', 'write', 'api.call').",
       );
     }
     if (!resource || resource.trim().length === 0) {
       throw new Error(
-        "KovaClient.evaluateAction(): resource must be a non-empty string (e.g., '/data/**', '/api/endpoint').",
+        "GrithClient.evaluateAction(): resource must be a non-empty string (e.g., '/data/**', '/api/endpoint').",
       );
     }
 
@@ -699,7 +699,7 @@ export class KovaClient {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
       throw new Error(
-        "KovaClient.createIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
+        "GrithClient.createIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
 
@@ -748,7 +748,7 @@ export class KovaClient {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
       throw new Error(
-        "KovaClient.evolveIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
+        "GrithClient.evolveIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
 
@@ -929,18 +929,18 @@ export class KovaClient {
    * // later: off() to unsubscribe
    * ```
    */
-  on<T extends SteleEventType>(
+  on<T extends GrithEventType>(
     event: T,
-    handler: SteleEventHandler<T>,
+    handler: GrithEventHandler<T>,
   ): () => void {
     if (!this._listeners.has(event)) {
       this._listeners.set(event, new Set());
     }
     const handlers = this._listeners.get(event)!;
-    handlers.add(handler as SteleEventHandler<SteleEventType>);
+    handlers.add(handler as GrithEventHandler<GrithEventType>);
 
     return () => {
-      handlers.delete(handler as SteleEventHandler<SteleEventType>);
+      handlers.delete(handler as GrithEventHandler<GrithEventType>);
     };
   }
 
@@ -950,13 +950,13 @@ export class KovaClient {
    * @param event - The event type.
    * @param handler - The handler function to remove.
    */
-  off<T extends SteleEventType>(
+  off<T extends GrithEventType>(
     event: T,
-    handler: SteleEventHandler<T>,
+    handler: GrithEventHandler<T>,
   ): void {
     const handlers = this._listeners.get(event);
     if (handlers) {
-      handlers.delete(handler as SteleEventHandler<SteleEventType>);
+      handlers.delete(handler as GrithEventHandler<GrithEventType>);
     }
   }
 
@@ -966,7 +966,7 @@ export class KovaClient {
    *
    * @param event - Optional event type. If omitted, removes all handlers.
    */
-  removeAllListeners(event?: SteleEventType): void {
+  removeAllListeners(event?: GrithEventType): void {
     if (event) {
       this._listeners.delete(event);
     } else {
@@ -975,9 +975,9 @@ export class KovaClient {
   }
 
   /** Emit an event to all registered handlers. */
-  private _emit<T extends SteleEventType>(
+  private _emit<T extends GrithEventType>(
     event: T,
-    payload: SteleEventMap[T],
+    payload: GrithEventMap[T],
   ): void {
     const handlers = this._listeners.get(event);
     if (handlers) {
@@ -1099,7 +1099,7 @@ export class QuickCovenant {
 export * from './adapters/index.js';
 
 // ─── Store ────────────────────────────────────────────────────────────────────
-export { MemoryStore, FileStore, SqliteStore, QueryBuilder, createQuery, StoreIndex, IndexedStore, createTransaction } from '@usekova/store';
+export { MemoryStore, FileStore, SqliteStore, QueryBuilder, createQuery, StoreIndex, IndexedStore, createTransaction } from '@grith/store';
 export type {
   CovenantStore,
   StoreFilter,
@@ -1113,7 +1113,7 @@ export type {
   SortOrder,
   IndexField,
   Transaction,
-} from '@usekova/store';
+} from '@grith/store';
 
 // ─── Breach Detection ─────────────────────────────────────────────────────────
 export {
@@ -1129,13 +1129,13 @@ export {
   createIncidentReport,
   escalateIncident,
   resolveIncident,
-} from '@usekova/breach';
+} from '@grith/breach';
 export type {
   BreachAttestation,
   TrustStatus,
   TrustNode,
   BreachEvent,
-} from '@usekova/breach';
+} from '@grith/breach';
 
 // ─── Reputation ───────────────────────────────────────────────────────────────
 export {
@@ -1170,7 +1170,7 @@ export {
   createStakedAgent,
   recordQuery,
   computeGovernanceVote,
-} from '@usekova/reputation';
+} from '@grith/reputation';
 export type {
   ReputationScore,
   ExecutionReceipt,
@@ -1185,7 +1185,7 @@ export type {
   StakeTier,
   StakeTierConfig,
   StakedAgent,
-} from '@usekova/reputation';
+} from '@grith/reputation';
 
 // ─── Proof ────────────────────────────────────────────────────────────────────
 export {
@@ -1197,13 +1197,13 @@ export {
   hashToField,
   fieldToHex,
   FIELD_PRIME,
-} from '@usekova/proof';
+} from '@grith/proof';
 export type {
   ComplianceProof,
   ProofVerificationResult,
   ProofGenerationOptions,
   AuditEntryData,
-} from '@usekova/proof';
+} from '@grith/proof';
 
 // ─── Attestation ──────────────────────────────────────────────────────────────
 export {
@@ -1219,7 +1219,7 @@ export {
   buildEntanglementNetwork,
   verifyEntangled,
   assessConditionalRisk,
-} from '@usekova/attestation';
+} from '@grith/attestation';
 export type {
   ExternalAttestation,
   AttestationReconciliation,
@@ -1229,10 +1229,10 @@ export type {
   ChainVerificationResult,
   AgentAction,
   AttestationCoverageResult,
-} from '@usekova/attestation';
+} from '@grith/attestation';
 
 // ─── Verifier ─────────────────────────────────────────────────────────────────
-export { Verifier, verifyBatch } from '@usekova/verifier';
+export { Verifier, verifyBatch } from '@grith/verifier';
 export type {
   VerifierOptions,
   VerificationReport,
@@ -1245,7 +1245,7 @@ export type {
   BatchSummary,
   VerificationRecord,
   VerificationKind,
-} from '@usekova/verifier';
+} from '@grith/verifier';
 
 // ─── Discovery ─────────────────────────────────────────────────────────────────
 export {
@@ -1257,7 +1257,7 @@ export {
   buildKeySet,
   WELL_KNOWN_PATH,
   CONFIGURATION_PATH,
-  STELE_MEDIA_TYPE,
+  GRITH_MEDIA_TYPE,
   MAX_DOCUMENT_AGE_MS,
   createFederationConfig,
   addResolver,
@@ -1270,7 +1270,7 @@ export {
   createTransaction as createMarketplaceTransaction,
   completeTransaction,
   disputeTransaction,
-} from '@usekova/discovery';
+} from '@grith/discovery';
 export type {
   DiscoveryDocument,
   AgentKeyEntry,
@@ -1294,7 +1294,7 @@ export type {
   MarketplaceConfig,
   MarketplaceQuery,
   MarketplaceTransaction,
-} from '@usekova/discovery';
+} from '@grith/discovery';
 
 // ─── Schema ────────────────────────────────────────────────────────────────────
 export {
@@ -1306,11 +1306,11 @@ export {
   validateDiscoverySchema,
   validateAgentKeySchema,
   getAllSchemas,
-} from '@usekova/schema';
+} from '@grith/schema';
 export type {
   SchemaValidationError,
   SchemaValidationResult,
-} from '@usekova/schema';
+} from '@grith/schema';
 
 // ─── Temporal ─────────────────────────────────────────────────────────────────
 export {
@@ -1330,7 +1330,7 @@ export {
   evaluatePhaseTransition,
   transitionPhase,
   computeVotingPower,
-} from '@usekova/temporal';
+} from '@grith/temporal';
 export type {
   TriggerType,
   TriggerAction,
@@ -1355,7 +1355,7 @@ export type {
   GovernancePhase,
   GovernanceState,
   GovernanceBootstrapConfig,
-} from '@usekova/temporal';
+} from '@grith/temporal';
 
 // ─── Trust Gate ───────────────────────────────────────────────────────────────
 export { createTrustGate, evaluateAccess, calculateRevenueLift } from './trust-gate.js';
@@ -1454,7 +1454,7 @@ export {
   isExpired as isCanaryExpired,
   canarySchedule,
   canaryCorrelation,
-} from '@usekova/canary';
+} from '@grith/canary';
 export type {
   ChallengePayload,
   Canary,
@@ -1462,7 +1462,7 @@ export type {
   CanaryScheduleEntry,
   CanaryScheduleResult,
   CanaryCorrelationResult,
-} from '@usekova/canary';
+} from '@grith/canary';
 
 // ─── Game Theory ──────────────────────────────────────────────────────────────
 export {
@@ -1480,7 +1480,7 @@ export {
   defineConjecture,
   getStandardConjectures,
   analyzeImpossibilityBounds,
-} from '@usekova/gametheory';
+} from '@grith/gametheory';
 export type {
   HonestyParameters,
   HonestyProof,
@@ -1497,7 +1497,7 @@ export type {
   ConjectureStatus,
   Conjecture,
   ImpossibilityBound,
-} from '@usekova/gametheory';
+} from '@grith/gametheory';
 
 // ─── Composition ──────────────────────────────────────────────────────────────
 export {
@@ -1520,7 +1520,7 @@ export {
   proposeImprovement,
   applyImprovement,
   verifyEnvelopeIntegrity,
-} from '@usekova/composition';
+} from '@grith/composition';
 export type {
   CompositionProof,
   ComposedConstraint,
@@ -1533,7 +1533,7 @@ export type {
   SafetyEnvelope,
   ImprovementProposal,
   ImprovementResult,
-} from '@usekova/composition';
+} from '@grith/composition';
 
 // ─── Antifragile ──────────────────────────────────────────────────────────────
 export {
@@ -1551,7 +1551,7 @@ export {
   PhaseTransitionDetector,
   FitnessEvolution,
   calibratedAntifragilityIndex,
-} from '@usekova/antifragile';
+} from '@grith/antifragile';
 export type {
   BreachAntibody,
   NetworkHealth,
@@ -1565,7 +1565,7 @@ export type {
   ScoredAntibody,
   FitnessEvolutionConfig,
   CalibratedAntifragilityResult,
-} from '@usekova/antifragile';
+} from '@grith/antifragile';
 
 // ─── Consensus ────────────────────────────────────────────────────────────────
 export {
@@ -1584,7 +1584,7 @@ export {
   DynamicQuorum,
   PipelineSimulator,
   QuorumIntersectionVerifier,
-} from '@usekova/consensus';
+} from '@grith/consensus';
 export type {
   AccountabilityTier,
   AccountabilityScore,
@@ -1607,7 +1607,7 @@ export type {
   NetworkCondition,
   PipelineSimulationResult,
   QuorumIntersectionResult,
-} from '@usekova/consensus';
+} from '@grith/consensus';
 
 // ─── Robustness ───────────────────────────────────────────────────────────────
 export {
@@ -1617,7 +1617,7 @@ export {
   generateAdversarialInputs,
   formalVerification,
   robustnessScore,
-} from '@usekova/robustness';
+} from '@grith/robustness';
 export type {
   RobustnessProof,
   InputBound,
@@ -1630,7 +1630,7 @@ export type {
   Contradiction,
   RobustnessScoreResult,
   RobustnessFactor,
-} from '@usekova/robustness';
+} from '@grith/robustness';
 
 // ─── Recursive ────────────────────────────────────────────────────────────────
 export {
@@ -1641,7 +1641,7 @@ export {
   addLayer,
   computeTrustTransitivity,
   findMinimalVerificationSet,
-} from '@usekova/recursive';
+} from '@grith/recursive';
 export type {
   MetaTargetType,
   MetaCovenant,
@@ -1653,7 +1653,7 @@ export type {
   TransitiveTrustResult,
   VerifierNode,
   MinimalVerificationSetResult,
-} from '@usekova/recursive';
+} from '@grith/recursive';
 
 // ─── Alignment ────────────────────────────────────────────────────────────────
 export {
@@ -1668,7 +1668,7 @@ export {
   DriftForecaster,
   AlignmentSurface,
   AlignmentFeedbackLoop,
-} from '@usekova/alignment';
+} from '@grith/alignment';
 export type {
   AlignmentProperty,
   AlignmentCovenant,
@@ -1687,7 +1687,7 @@ export type {
   FeedbackLoopConfig,
   AlignmentOutcome,
   FeedbackLoopState,
-} from '@usekova/alignment';
+} from '@grith/alignment';
 
 // ─── Norms ────────────────────────────────────────────────────────────────────
 export {
@@ -1697,7 +1697,7 @@ export {
   generateTemplate,
   normConflictDetection,
   normPrecedence,
-} from '@usekova/norms';
+} from '@grith/norms';
 export type {
   DiscoveredNorm,
   NormAnalysis,
@@ -1708,7 +1708,7 @@ export type {
   NormDefinition,
   NormConflict,
   NormPrecedenceResult,
-} from '@usekova/norms';
+} from '@grith/norms';
 
 // ─── Substrate ────────────────────────────────────────────────────────────────
 export {
@@ -1721,7 +1721,7 @@ export {
   substrateCompatibility,
   constraintTranslation,
   substrateCapabilityMatrix,
-} from '@usekova/substrate';
+} from '@grith/substrate';
 export type {
   SubstrateType,
   SubstrateAdapter,
@@ -1736,7 +1736,7 @@ export type {
   CapabilityEntry,
   CapabilityMatrixRow,
   CapabilityMatrix,
-} from '@usekova/substrate';
+} from '@grith/substrate';
 
 // ─── Derivatives ──────────────────────────────────────────────────────────────
 export {
@@ -1749,7 +1749,7 @@ export {
   blackScholesPrice,
   valueAtRisk,
   hedgeRatio,
-} from '@usekova/derivatives';
+} from '@grith/derivatives';
 export type {
   TrustFuture,
   AgentInsurancePolicy,
@@ -1764,7 +1764,7 @@ export type {
   VaRResult,
   HedgeRatioParams,
   HedgeRatioResult,
-} from '@usekova/derivatives';
+} from '@grith/derivatives';
 
 // ─── Legal ────────────────────────────────────────────────────────────────────
 export {
@@ -1786,7 +1786,7 @@ export {
   takeSnapshot,
   analyzeTrajectory,
   generateRegulatoryReport,
-} from '@usekova/legal';
+} from '@grith/legal';
 export type {
   LegalIdentityPackage,
   ComplianceRecord,
@@ -1824,7 +1824,7 @@ export type {
   ComplianceSnapshot,
   ComplianceAlert,
   ComplianceAutopilotTrajectory,
-} from '@usekova/legal';
+} from '@grith/legal';
 
 // ─── Enforcement ──────────────────────────────────────────────────────────────
 export {
@@ -1842,7 +1842,7 @@ export {
   addDefenseLayer,
   disableLayer,
   AuditChain,
-} from '@usekova/enforcement';
+} from '@grith/enforcement';
 export type {
   ExecutionOutcome,
   AuditEntry,
@@ -1859,7 +1859,7 @@ export type {
   DefenseInDepthConfig,
   DefenseAnalysis,
   ChainedAuditEntry,
-} from '@usekova/enforcement';
+} from '@grith/enforcement';
 
 // ─── Negotiation ──────────────────────────────────────────────────────────────
 export {
@@ -1878,7 +1878,7 @@ export {
   IncrementalParetoFrontier,
   zeuthenStrategy,
   runZeuthenNegotiation,
-} from '@usekova/negotiation';
+} from '@grith/negotiation';
 export type {
   NegotiationSession,
   Proposal,
@@ -1893,5 +1893,5 @@ export type {
   ConcessionEvent,
   ConcessionConfig,
   ZeuthenResult,
-} from '@usekova/negotiation';
+} from '@grith/negotiation';
 export { protect, listPresets, getPreset } from './easy';

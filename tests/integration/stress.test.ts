@@ -1,17 +1,17 @@
 /**
- * Stress tests for the Stele SDK.
+ * Stress tests for the Grith SDK.
  *
  * Exercises high-volume, concurrent, and boundary-condition scenarios
  * across crypto, core, CCL, store, and verifier packages.
  */
 
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, toHex } from '@usekova/crypto';
-import { buildCovenant, verifyCovenant } from '@usekova/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
-import { parse, evaluate, merge, serialize } from '@usekova/ccl';
-import { MemoryStore } from '@usekova/store';
-import { Verifier, verifyBatch } from '@usekova/verifier';
+import { generateKeyPair, toHex } from '@grith/crypto';
+import { buildCovenant, verifyCovenant } from '@grith/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
+import { parse, evaluate, merge, serialize } from '@grith/ccl';
+import { MemoryStore } from '@grith/store';
+import { Verifier, verifyBatch } from '@grith/verifier';
 
 // ---------------------------------------------------------------------------
 // Helpers

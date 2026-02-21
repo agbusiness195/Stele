@@ -1,11 +1,11 @@
-# @usekova/robustness
+# @grith/robustness
 
-Robustness analysis for Stele covenants: fuzz testing, formal verification, adversarial input generation, and composite scoring.
+Robustness analysis for Grith covenants: fuzz testing, formal verification, adversarial input generation, and composite scoring.
 
 ## Installation
 
 ```bash
-npm install @usekova/robustness
+npm install @grith/robustness
 ```
 
 ## Key APIs
@@ -20,7 +20,7 @@ npm install @usekova/robustness
 ## Usage
 
 ```typescript
-import { fuzz, formalVerification, robustnessScore } from '@usekova/robustness';
+import { fuzz, formalVerification, robustnessScore } from '@grith/robustness';
 
 const covenant = {
   id: 'cov-1',
@@ -56,4 +56,4 @@ console.log(result.recommendations);
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

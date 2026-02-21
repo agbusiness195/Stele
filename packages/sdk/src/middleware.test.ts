@@ -1,9 +1,9 @@
 /**
- * Tests for the Stele SDK middleware system.
+ * Tests for the Grith SDK middleware system.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Logger, LogLevel } from '@usekova/types';
+import { Logger, LogLevel } from '@grith/types';
 
 import {
   MiddlewarePipeline,
@@ -15,7 +15,7 @@ import {
 import type {
   MiddlewareContext,
   MiddlewareResult,
-  SteleMiddleware,
+  GrithMiddleware,
 } from './middleware.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -33,12 +33,12 @@ function failingOp(message: string): () => Promise<never> {
 }
 
 /** Create a simple pass-through middleware for testing. */
-function passthroughMiddleware(name: string): SteleMiddleware {
+function passthroughMiddleware(name: string): GrithMiddleware {
   return { name };
 }
 
 /** Create a middleware that records calls for order verification. */
-function orderTrackingMiddleware(name: string, calls: string[]): SteleMiddleware {
+function orderTrackingMiddleware(name: string, calls: string[]): GrithMiddleware {
   return {
     name,
     async before(ctx) {
@@ -86,8 +86,8 @@ describe('MiddlewarePipeline — use / remove / list / clear', () => {
   });
 
   it('replaces middleware with the same name', () => {
-    const first: SteleMiddleware = { name: 'dup', async before() { return { proceed: true, metadata: { v: 1 } }; } };
-    const second: SteleMiddleware = { name: 'dup', async before() { return { proceed: true, metadata: { v: 2 } }; } };
+    const first: GrithMiddleware = { name: 'dup', async before() { return { proceed: true, metadata: { v: 1 } }; } };
+    const second: GrithMiddleware = { name: 'dup', async before() { return { proceed: true, metadata: { v: 2 } }; } };
     pipeline.use(first);
     pipeline.use(second);
     expect(pipeline.list()).toEqual(['dup']);

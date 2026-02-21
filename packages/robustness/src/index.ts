@@ -1,11 +1,11 @@
-import { parse, evaluate, matchAction, matchResource } from '@usekova/ccl';
+import { parse, evaluate, matchAction, matchResource } from '@grith/ccl';
 import type {
   CCLDocument,
   Condition,
   CompoundCondition,
   PermitDenyStatement,
   EvaluationContext,
-} from '@usekova/ccl';
+} from '@grith/ccl';
 
 export type {
   RobustnessProof,

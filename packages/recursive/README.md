@@ -1,11 +1,11 @@
-# @usekova/recursive
+# @grith/recursive
 
 Recursive covenant structures with self-referential constraints, DAG-based termination proofs, and transitive trust computation.
 
 ## Installation
 
 ```bash
-npm install @usekova/recursive
+npm install @grith/recursive
 ```
 
 ## Key APIs
@@ -26,7 +26,7 @@ import {
   addLayer,
   proveTermination,
   computeTrustTransitivity,
-} from '@usekova/recursive';
+} from '@grith/recursive';
 
 // Build a recursive covenant chain
 const base = createMetaCovenant('covenant', ['no-exfiltration']);
@@ -59,4 +59,4 @@ console.log(trust.path);          // ['alice', 'bob', 'carol']
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

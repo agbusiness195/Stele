@@ -1,5 +1,5 @@
 /**
- * Basic i18n (internationalization) foundation for the Kova protocol.
+ * Basic i18n (internationalization) foundation for the Grith protocol.
  *
  * Provides translated protocol messages in five languages:
  * English, German, French, Spanish, and Japanese.

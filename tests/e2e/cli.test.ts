@@ -1,7 +1,7 @@
 /**
- * Comprehensive E2E tests for the Stele CLI.
+ * Comprehensive E2E tests for the Grith CLI.
  *
- * Tests the CLI programmatically via the `run()` function from `@usekova/cli`,
+ * Tests the CLI programmatically via the `run()` function from `@grith/cli`,
  * covering all available commands: init, create, verify, evaluate, inspect,
  * parse, completions, doctor, diff, version, and help.
  *
@@ -9,9 +9,9 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { run } from '@usekova/cli';
-import { buildCovenant, serializeCovenant } from '@usekova/core';
-import { generateKeyPair } from '@usekova/crypto';
+import { run } from '@grith/cli';
+import { buildCovenant, serializeCovenant } from '@grith/core';
+import { generateKeyPair } from '@grith/crypto';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -22,7 +22,7 @@ import * as path from 'path';
 
 /** Create and return a fresh temporary directory for test isolation. */
 function makeTmpDir(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'stele-cli-test-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'grith-cli-test-'));
 }
 
 /** Remove a temporary directory and all its contents. */
@@ -76,7 +76,7 @@ describe('CLI help and version', () => {
     expect(r.exitCode).toBe(0);
     expect(r.stderr).toBe('');
     const plain = stripAnsi(r.stdout);
-    expect(plain).toContain('Stele CLI');
+    expect(plain).toContain('Grith CLI');
     expect(plain).toContain('Commands');
     expect(plain).toContain('init');
     expect(plain).toContain('create');
@@ -103,7 +103,7 @@ describe('CLI help and version', () => {
     expect(r.exitCode).toBe(0);
     expect(r.stderr).toBe('');
     const plain = stripAnsi(r.stdout);
-    expect(plain).toContain('Stele CLI');
+    expect(plain).toContain('Grith CLI');
     expect(plain).toContain('Commands');
   });
 
@@ -111,7 +111,7 @@ describe('CLI help and version', () => {
     const r = await run(['create', '--help']);
     expect(r.exitCode).toBe(0);
     expect(r.stderr).toBe('');
-    expect(r.stdout).toContain('stele create');
+    expect(r.stdout).toContain('grith create');
     expect(r.stdout).toContain('--issuer');
     expect(r.stdout).toContain('--beneficiary');
     expect(r.stdout).toContain('--constraints');
@@ -144,7 +144,7 @@ describe('CLI init', () => {
     const r = await run(['init'], tmpDir);
     expect(r.exitCode).toBe(0);
     expect(r.stderr).toBe('');
-    const configPath = path.join(tmpDir, 'stele.config.json');
+    const configPath = path.join(tmpDir, 'grith.config.json');
     expect(fs.existsSync(configPath)).toBe(true);
     const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
     expect(config.defaultIssuer).toBeDefined();
@@ -156,13 +156,13 @@ describe('CLI init', () => {
     const r1 = await run(['init'], tmpDir);
     expect(r1.exitCode).toBe(0);
     const config1 = JSON.parse(
-      fs.readFileSync(path.join(tmpDir, 'stele.config.json'), 'utf-8'),
+      fs.readFileSync(path.join(tmpDir, 'grith.config.json'), 'utf-8'),
     );
 
     const r2 = await run(['init'], tmpDir);
     expect(r2.exitCode).toBe(0);
     const config2 = JSON.parse(
-      fs.readFileSync(path.join(tmpDir, 'stele.config.json'), 'utf-8'),
+      fs.readFileSync(path.join(tmpDir, 'grith.config.json'), 'utf-8'),
     );
 
     // The second init generates a new key pair, so public keys differ
@@ -173,7 +173,7 @@ describe('CLI init', () => {
 
   it('the generated config file contains a valid public key hex string', async () => {
     await run(['init'], tmpDir);
-    const configPath = path.join(tmpDir, 'stele.config.json');
+    const configPath = path.join(tmpDir, 'grith.config.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
     // 64 hex chars = 32 bytes = Ed25519 public key
     expect(config.defaultIssuer.publicKey).toMatch(/^[0-9a-f]{64}$/);
@@ -192,7 +192,7 @@ describe('CLI init', () => {
   it('init --help shows usage information', async () => {
     const r = await run(['init', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('stele init');
+    expect(r.stdout).toContain('grith init');
     expect(r.stdout).toContain('Generate');
   });
 });
@@ -496,7 +496,7 @@ describe('CLI doctor', () => {
     const r = await run(['doctor']);
     expect(r.exitCode).toBe(0);
     const plain = stripAnsi(r.stdout);
-    expect(plain).toContain('Stele Doctor');
+    expect(plain).toContain('Grith Doctor');
     expect(plain).toContain('Summary');
     expect(plain).toContain('passed');
   });
@@ -529,7 +529,7 @@ describe('CLI error handling', () => {
     const r = await run([]);
     expect(r.exitCode).toBe(0);
     const plain = stripAnsi(r.stdout);
-    expect(plain).toContain('Stele CLI');
+    expect(plain).toContain('Grith CLI');
     expect(plain).toContain('Commands');
   });
 
@@ -627,7 +627,7 @@ describe('CLI completions', () => {
   it('generates bash completions', async () => {
     const r = await run(['completions', 'bash']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('_stele_completions');
+    expect(r.stdout).toContain('_grith_completions');
     expect(r.stdout).toContain('init');
     expect(r.stdout).toContain('create');
   });

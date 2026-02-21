@@ -1,4 +1,4 @@
-import type { HashHex } from '@usekova/crypto';
+import type { HashHex } from '@grith/crypto';
 
 export interface ExecutionReceipt {
   id: HashHex;
@@ -6,7 +6,7 @@ export interface ExecutionReceipt {
   agentIdentityHash: HashHex;
   principalPublicKey: string;
   outcome: 'fulfilled' | 'partial' | 'failed' | 'breached';
-  breachSeverity?: import('@usekova/ccl').Severity;
+  breachSeverity?: import('@grith/ccl').Severity;
   proofHash: HashHex;
   durationMs: number;
   completedAt: string;
@@ -72,7 +72,7 @@ export interface Endorsement {
 export interface ScoringConfig {
   recencyDecay: number;
   recencyPeriod: number;
-  breachPenalty: Record<import('@usekova/ccl').Severity, number>;
+  breachPenalty: Record<import('@grith/ccl').Severity, number>;
   minimumExecutions: number;
   endorsementWeight: number;
 }

@@ -12,15 +12,15 @@
  */
 
 import {
-  KovaClient,
+  GrithClient,
   generateKeyPair,
   countersignCovenant,
   type Issuer,
   type Beneficiary,
   type CovenantDocument,
-} from '@usekova/sdk';
+} from '@grith/sdk';
 
-import { Verifier } from '@usekova/verifier';
+import { Verifier } from '@grith/verifier';
 
 async function main() {
   console.log('========================================');
@@ -60,7 +60,7 @@ async function main() {
     name: 'Trading Bot v2',
   };
 
-  const client = new KovaClient({ keyPair: issuerKeys });
+  const client = new GrithClient({ keyPair: issuerKeys });
 
   const covenant = await client.createCovenant({
     issuer,

@@ -1,7 +1,7 @@
 /**
- * Trust-gated access control for the Stele protocol.
+ * Trust-gated access control for the Grith protocol.
  *
- * Agents without Kova covenant compliance get no access to premium APIs.
+ * Agents without Grith covenant compliance get no access to premium APIs.
  * Trust scores determine the access tier: denied, basic, standard, or premium.
  * Supports grace periods for new agents and bypass tokens for testing.
  *
@@ -172,50 +172,50 @@ export function evaluateAccess(
 // ─── Revenue Analysis ────────────────────────────────────────────────────────
 
 /**
- * Calculate the revenue lift from Kova adoption.
+ * Calculate the revenue lift from Grith adoption.
  *
- * Non-Kova agents pay basic pricing (1x). Kova agents at standard tier
- * also pay 1x, while Kova agents at premium tier pay the premium price
- * multiplier. The lift percentage measures how much more revenue Kova
+ * Non-Grith agents pay basic pricing (1x). Grith agents at standard tier
+ * also pay 1x, while Grith agents at premium tier pay the premium price
+ * multiplier. The lift percentage measures how much more revenue Grith
  * adoption generates compared to a baseline of all agents at 1x.
  *
  * @param params - Revenue calculation parameters.
- * @returns Total revenue, Kova-attributable revenue, and lift percentage.
+ * @returns Total revenue, Grith-attributable revenue, and lift percentage.
  */
 export function calculateRevenueLift(params: {
   totalAgents: number;
-  kovaAdoptionRate: number;
+  grithAdoptionRate: number;
   premiumRate: number;
   premiumPriceMultiplier: number;
-}): { totalRevenue: number; kovaRevenue: number; liftPercentage: number } {
-  const { totalAgents, kovaAdoptionRate, premiumRate, premiumPriceMultiplier } = params;
+}): { totalRevenue: number; grithRevenue: number; liftPercentage: number } {
+  const { totalAgents, grithAdoptionRate, premiumRate, premiumPriceMultiplier } = params;
 
-  const kovaAgents = totalAgents * kovaAdoptionRate;
-  const nonKovaAgents = totalAgents - kovaAgents;
-  const premiumAgents = kovaAgents * premiumRate;
-  const standardKovaAgents = kovaAgents - premiumAgents;
+  const grithAgents = totalAgents * grithAdoptionRate;
+  const nonGrithAgents = totalAgents - grithAgents;
+  const premiumAgents = grithAgents * premiumRate;
+  const standardGrithAgents = grithAgents - premiumAgents;
 
-  // Non-Kova agents: basic pricing (1x each)
-  const nonKovaRevenue = nonKovaAgents * 1;
+  // Non-Grith agents: basic pricing (1x each)
+  const nonGrithRevenue = nonGrithAgents * 1;
 
-  // Kova standard agents: 1x each
-  const standardRevenue = standardKovaAgents * 1;
+  // Grith standard agents: 1x each
+  const standardRevenue = standardGrithAgents * 1;
 
-  // Kova premium agents: premiumPriceMultiplier each
+  // Grith premium agents: premiumPriceMultiplier each
   const premiumRevenue = premiumAgents * premiumPriceMultiplier;
 
-  const kovaRevenue = standardRevenue + premiumRevenue;
-  const totalRevenue = nonKovaRevenue + kovaRevenue;
+  const grithRevenue = standardRevenue + premiumRevenue;
+  const totalRevenue = nonGrithRevenue + grithRevenue;
 
   // Baseline: all agents at 1x
   const baseRevenue = totalAgents * 1;
 
   const liftPercentage =
-    baseRevenue === 0 ? 0 : ((kovaRevenue - baseRevenue) / baseRevenue) * 100;
+    baseRevenue === 0 ? 0 : ((grithRevenue - baseRevenue) / baseRevenue) * 100;
 
   return {
     totalRevenue,
-    kovaRevenue,
+    grithRevenue,
     liftPercentage,
   };
 }

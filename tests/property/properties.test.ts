@@ -1,11 +1,11 @@
 /**
- * Property-based and fuzz-style tests for the Stele SDK.
+ * Property-based and fuzz-style tests for the Grith SDK.
  *
  * Since fast-check is unavailable, we use manual random generators with
  * crypto.getRandomValues for true randomness, running 20 iterations per
  * property to cover a broad range of inputs.
  *
- * Covers: @usekova/crypto, @usekova/ccl, @usekova/core, @usekova/identity
+ * Covers: @grith/crypto, @grith/ccl, @grith/core, @grith/identity
  */
 
 import { describe, it, expect } from 'vitest';
@@ -26,8 +26,8 @@ import {
   generateNonce,
   generateId,
   constantTimeEqual,
-} from '@usekova/crypto';
-import type { KeyPair } from '@usekova/crypto';
+} from '@grith/crypto';
+import type { KeyPair } from '@grith/crypto';
 
 import {
   parse,
@@ -39,8 +39,8 @@ import {
   matchAction,
   matchResource,
   evaluateCondition,
-} from '@usekova/ccl';
-import type { CCLDocument, EvaluationContext } from '@usekova/ccl';
+} from '@grith/ccl';
+import type { CCLDocument, EvaluationContext } from '@grith/ccl';
 
 import {
   buildCovenant,
@@ -52,8 +52,8 @@ import {
   serializeCovenant,
   deserializeCovenant,
   MAX_CHAIN_DEPTH,
-} from '@usekova/core';
-import type { CovenantDocument, CovenantBuilderOptions } from '@usekova/core';
+} from '@grith/core';
+import type { CovenantDocument, CovenantBuilderOptions } from '@grith/core';
 
 import {
   createIdentity,
@@ -61,8 +61,8 @@ import {
   verifyIdentity,
   computeIdentityHash,
   computeCapabilityManifestHash,
-} from '@usekova/identity';
-import type { AgentIdentity, CreateIdentityOptions } from '@usekova/identity';
+} from '@grith/identity';
+import type { AgentIdentity, CreateIdentityOptions } from '@grith/identity';
 
 // ---------------------------------------------------------------------------
 // Random generators

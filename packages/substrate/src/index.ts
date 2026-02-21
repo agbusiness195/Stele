@@ -1,4 +1,4 @@
-import { sha256Object, generateId } from '@usekova/crypto';
+import { sha256Object, generateId } from '@grith/crypto';
 
 export type {
   SubstrateType,

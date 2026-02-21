@@ -1,7 +1,7 @@
 {
-  "name": "@usekova/ccl",
+  "name": "@grith/ccl",
   "version": "2.0.0",
-  "description": "Covenant Constraint Language parser and evaluator for Stele",
+  "description": "Covenant Constraint Language parser and evaluator for Grith",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,16 +27,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/Stele.git",
+    "url": "https://github.com/agbusiness195/Grith.git",
     "directory": "packages/ccl"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/stele/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Grith Labs, Inc.",
   "keywords": [
-    "stele",
+    "grith",
     "covenant",
     "ai-accountability",
     "ccl",
@@ -53,6 +53,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@usekova/crypto": "2.0.0"
+    "@grith/crypto": "2.0.0"
   }
 }

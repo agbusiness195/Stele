@@ -1,5 +1,5 @@
 /**
- * @usekova/types — Shared TypeScript type definitions and protocol schemas.
+ * @grith/types — Shared TypeScript type definitions and protocol schemas.
  *
  * Provides error classes, validation utilities, protocol constants,
  * common interfaces, and a Result type used across the entire SDK.
@@ -9,8 +9,8 @@
 
 // ─── Error codes ────────────────────────────────────────────────────────────────
 
-/** Enumeration of all error codes used across the Stele SDK. */
-export enum KovaErrorCode {
+/** Enumeration of all error codes used across the Grith SDK. */
+export enum GrithErrorCode {
   /** A required input was empty, missing, or otherwise invalid. */
   INVALID_INPUT = 'INVALID_INPUT',
   /** A cryptographic operation (sign, verify, hash) failed. */
@@ -36,25 +36,25 @@ export enum KovaErrorCode {
   /** A chain narrowing validation detected a broadening violation. */
   NARROWING_VIOLATION = 'NARROWING_VIOLATION',
   /** A protocol-layer function received invalid input. */
-  PROTOCOL_INVALID_INPUT = 'STELE_E940',
+  PROTOCOL_INVALID_INPUT = 'GRITH_E940',
   /** A protocol-layer computation failed (numerical, algorithmic, or convergence). */
-  PROTOCOL_COMPUTATION_FAILED = 'STELE_E941',
+  PROTOCOL_COMPUTATION_FAILED = 'GRITH_E941',
 }
 
 // ─── Error classes ──────────────────────────────────────────────────────────────
 
 /**
- * Base error class for the Stele SDK.
+ * Base error class for the Grith SDK.
  *
- * Every Stele error carries a {@link KovaErrorCode} so callers can
+ * Every Grith error carries a {@link GrithErrorCode} so callers can
  * programmatically distinguish error categories without parsing messages.
  */
-export class KovaError extends Error {
-  readonly code: KovaErrorCode;
+export class GrithError extends Error {
+  readonly code: GrithErrorCode;
 
-  constructor(message: string, code: KovaErrorCode) {
+  constructor(message: string, code: GrithErrorCode) {
     super(message);
-    this.name = 'KovaError';
+    this.name = 'GrithError';
     this.code = code;
   }
 }
@@ -62,11 +62,11 @@ export class KovaError extends Error {
 /**
  * Thrown when an input fails validation (empty string, out of range, etc.).
  */
-export class ValidationError extends KovaError {
+export class ValidationError extends GrithError {
   /** The name of the field or parameter that failed validation. */
   readonly field: string;
 
-  constructor(message: string, field: string, code: KovaErrorCode = KovaErrorCode.INVALID_INPUT) {
+  constructor(message: string, field: string, code: GrithErrorCode = GrithErrorCode.INVALID_INPUT) {
     super(message, code);
     this.name = 'ValidationError';
     this.field = field;
@@ -76,9 +76,9 @@ export class ValidationError extends KovaError {
 /**
  * Thrown when a cryptographic operation fails.
  */
-export class CryptoError extends KovaError {
+export class CryptoError extends GrithError {
   constructor(message: string) {
-    super(message, KovaErrorCode.CRYPTO_FAILURE);
+    super(message, GrithErrorCode.CRYPTO_FAILURE);
     this.name = 'CryptoError';
   }
 }
@@ -86,9 +86,9 @@ export class CryptoError extends KovaError {
 /**
  * Thrown when CCL constraint parsing or evaluation fails.
  */
-export class CCLError extends KovaError {
+export class CCLError extends GrithError {
   constructor(message: string) {
-    super(message, KovaErrorCode.CCL_PARSE_ERROR);
+    super(message, GrithErrorCode.CCL_PARSE_ERROR);
     this.name = 'CCLError';
   }
 }
@@ -96,8 +96,8 @@ export class CCLError extends KovaError {
 /**
  * Thrown when a chain operation violates protocol rules.
  */
-export class ChainError extends KovaError {
-  constructor(message: string, code: KovaErrorCode = KovaErrorCode.CHAIN_DEPTH_EXCEEDED) {
+export class ChainError extends GrithError {
+  constructor(message: string, code: GrithErrorCode = GrithErrorCode.CHAIN_DEPTH_EXCEEDED) {
     super(message, code);
     this.name = 'ChainError';
   }
@@ -106,8 +106,8 @@ export class ChainError extends KovaError {
 /**
  * Thrown when a storage operation fails.
  */
-export class StorageError extends KovaError {
-  constructor(message: string, code: KovaErrorCode = KovaErrorCode.STORAGE_NOT_FOUND) {
+export class StorageError extends GrithError {
+  constructor(message: string, code: GrithErrorCode = GrithErrorCode.STORAGE_NOT_FOUND) {
     super(message, code);
     this.name = 'StorageError';
   }
@@ -132,7 +132,7 @@ export function validateNonEmpty(value: string, name: string): void {
     throw new ValidationError(
       `${name} must be a non-empty string`,
       name,
-      KovaErrorCode.INVALID_INPUT,
+      GrithErrorCode.INVALID_INPUT,
     );
   }
 }
@@ -156,7 +156,7 @@ export function validateRange(value: number, min: number, max: number, name: str
     throw new ValidationError(
       `${name} must be between ${min} and ${max} (got ${value})`,
       name,
-      KovaErrorCode.OUT_OF_RANGE,
+      GrithErrorCode.OUT_OF_RANGE,
     );
   }
 }
@@ -178,21 +178,21 @@ export function validateHex(value: string, name: string): void {
     throw new ValidationError(
       `${name} must be a non-empty hex string`,
       name,
-      KovaErrorCode.INVALID_HEX,
+      GrithErrorCode.INVALID_HEX,
     );
   }
   if (value.length % 2 !== 0) {
     throw new ValidationError(
       `${name} must have even length (got ${value.length})`,
       name,
-      KovaErrorCode.INVALID_HEX,
+      GrithErrorCode.INVALID_HEX,
     );
   }
   if (!/^[0-9a-fA-F]+$/.test(value)) {
     throw new ValidationError(
       `${name} contains invalid hex characters`,
       name,
-      KovaErrorCode.INVALID_HEX,
+      GrithErrorCode.INVALID_HEX,
     );
   }
 }
@@ -214,25 +214,25 @@ export function validateProbability(value: number, name: string): void {
     throw new ValidationError(
       `${name} must be a probability between 0 and 1 (got ${value})`,
       name,
-      KovaErrorCode.INVALID_PROBABILITY,
+      GrithErrorCode.INVALID_PROBABILITY,
     );
   }
 }
 
 // ─── Protocol constants ─────────────────────────────────────────────────────────
 
-/** Current Stele SDK version string. */
-export const STELE_VERSION = '0.1.0';
+/** Current Grith SDK version string. */
+export const GRITH_VERSION = '0.1.0';
 
 /** Default severity level for CCL statements. */
 export const DEFAULT_SEVERITY = 'must';
 
-/** Hash algorithms supported by the Stele protocol. */
+/** Hash algorithms supported by the Grith protocol. */
 export const SUPPORTED_HASH_ALGORITHMS: readonly string[] = [
   'sha256',
 ] as const;
 
-/** Signature schemes supported by the Stele protocol. */
+/** Signature schemes supported by the Grith protocol. */
 export const SUPPORTED_SIGNATURE_SCHEMES: readonly string[] = [
   'ed25519',
 ] as const;
@@ -364,16 +364,16 @@ export type { HistogramSnapshot, MetricsSnapshot } from './metrics';
 // ─── Documented error codes ─────────────────────────────────────────────────────
 //
 // The comprehensive error code system in ./errors provides unique, documentable
-// error codes (STELE_Exxx). The legacy KovaErrorCode/KovaError above are
+// error codes (GRITH_Exxx). The legacy GrithErrorCode/GrithError above are
 // retained for backward compatibility. Import directly from './errors' for the
 // full documented error code system.
 export {
-  KovaErrorCode as DocumentedErrorCode,
-  KovaError as DocumentedKovaError,
+  GrithErrorCode as DocumentedErrorCode,
+  GrithError as DocumentedGrithError,
   errorDocsUrl,
   formatError,
 } from './errors';
-export type { KovaErrorOptions } from './errors';
+export type { GrithErrorOptions } from './errors';
 
 // ─── Debug logging ──────────────────────────────────────────────────────────────
 export { isDebugEnabled, createDebugLogger, debug } from './debug';

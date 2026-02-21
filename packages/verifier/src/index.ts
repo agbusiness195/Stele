@@ -1,5 +1,5 @@
 /**
- * @usekova/verifier — Standalone verification engine for third-party auditors.
+ * @grith/verifier — Standalone verification engine for third-party auditors.
  *
  * Provides a stateful {@link Verifier} class that wraps the core
  * `verifyCovenant` function with history tracking, batch processing,
@@ -14,12 +14,12 @@ import {
   canonicalForm,
   validateChainNarrowing,
   MAX_CHAIN_DEPTH,
-} from '@usekova/core';
+} from '@grith/core';
 
 import type {
   CovenantDocument,
   VerificationResult,
-} from '@usekova/core';
+} from '@grith/core';
 
 import {
   parse,
@@ -27,12 +27,12 @@ import {
   matchAction,
   matchResource,
   validateNarrowing,
-} from '@usekova/ccl';
+} from '@grith/ccl';
 
-import type { EvaluationContext } from '@usekova/ccl';
+import type { EvaluationContext } from '@grith/ccl';
 
-import { generateId } from '@usekova/crypto';
-import { DocumentedKovaError as KovaError, DocumentedErrorCode as KovaErrorCode } from '@usekova/types';
+import { generateId } from '@grith/crypto';
+import { DocumentedGrithError as GrithError, DocumentedErrorCode as GrithErrorCode } from '@grith/types';
 
 import type {
   VerifierOptions,
@@ -220,15 +220,15 @@ export class Verifier {
    */
   async verify(doc: CovenantDocument): Promise<VerificationReport> {
     if (!doc || typeof doc !== 'object') {
-      throw new KovaError(
-        KovaErrorCode.SIGNATURE_INVALID,
+      throw new GrithError(
+        GrithErrorCode.SIGNATURE_INVALID,
         'verify() requires a valid CovenantDocument object',
-        { hint: 'Pass a CovenantDocument produced by buildCovenant() from @usekova/core.' }
+        { hint: 'Pass a CovenantDocument produced by buildCovenant() from @grith/core.' }
       );
     }
     if (!doc.id || typeof doc.id !== 'string') {
-      throw new KovaError(
-        KovaErrorCode.SIGNATURE_INVALID,
+      throw new GrithError(
+        GrithErrorCode.SIGNATURE_INVALID,
         'verify() requires a document with a valid id field',
         { hint: 'Ensure the document has a non-empty id field. Use buildCovenant() to generate properly identified documents.' }
       );
@@ -447,22 +447,22 @@ export class Verifier {
     context?: EvaluationContext,
   ): Promise<ActionVerificationReport> {
     if (!doc || typeof doc !== 'object') {
-      throw new KovaError(
-        KovaErrorCode.SIGNATURE_INVALID,
+      throw new GrithError(
+        GrithErrorCode.SIGNATURE_INVALID,
         'verifyAction() requires a valid CovenantDocument object',
-        { hint: 'Pass a CovenantDocument produced by buildCovenant() from @usekova/core.' }
+        { hint: 'Pass a CovenantDocument produced by buildCovenant() from @grith/core.' }
       );
     }
     if (!action || typeof action !== 'string' || action.trim().length === 0) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'verifyAction() requires a non-empty action string',
         { hint: 'Pass an action name like "read", "write", or "file.read".' }
       );
     }
     if (typeof resource !== 'string') {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'verifyAction() requires a resource string',
         { hint: 'Pass a resource path like "/data/users" or "**".' }
       );
@@ -546,8 +546,8 @@ export async function verifyBatch(
   options?: VerifierOptions,
 ): Promise<BatchVerificationReport> {
   if (!Array.isArray(docs)) {
-    throw new KovaError(
-      KovaErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new GrithError(
+      GrithErrorCode.PROTOCOL_INVALID_INPUT,
       'verifyBatch() requires an array of CovenantDocument objects',
       { hint: 'Pass an array of documents to verify in batch.' }
     );

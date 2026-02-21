@@ -1,11 +1,11 @@
-# @usekova/verifier
+# @grith/verifier
 
 Independent verification engine for third-party auditors. Wraps core verification with history tracking, batch processing, chain integrity validation, and action-level evaluation.
 
 ## Installation
 
 ```bash
-npm install @usekova/verifier
+npm install @grith/verifier
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @usekova/verifier
 ### Single Document Verification
 
 ```typescript
-import { Verifier } from '@usekova/verifier';
+import { Verifier } from '@grith/verifier';
 
 const verifier = new Verifier({ strictMode: true });
 
@@ -50,7 +50,7 @@ console.log(report.reason);         // human-readable explanation
 ### Batch Verification
 
 ```typescript
-import { verifyBatch } from '@usekova/verifier';
+import { verifyBatch } from '@grith/verifier';
 
 const report = await verifyBatch([doc1, doc2, doc3]);
 console.log(`${report.summary.passed}/${report.summary.total} passed`);
@@ -77,4 +77,4 @@ verifier.clearHistory();
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Grith SDK root documentation](../../README.md) for the full API reference and architecture guide.

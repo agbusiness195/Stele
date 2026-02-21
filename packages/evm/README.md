@@ -1,11 +1,11 @@
-# @usekova/evm
+# @grith/evm
 
 EVM anchoring utilities for on-chain covenant verification with ABI encoding and Keccak-256 hashing.
 
 ## Installation
 
 ```bash
-npm install @usekova/evm
+npm install @grith/evm
 ```
 
 ## Key APIs
@@ -22,12 +22,12 @@ npm install @usekova/evm
 - **checksumAddress()**: EIP-55 mixed-case checksum encoding.
 - **isValidAddress()**: Validate EVM addresses.
 - **keccak256()**: Keccak-256 hashing for EVM-compatible use cases.
-- **STELE_REGISTRY_ABI**: JSON ABI for the on-chain Stele registry contract.
+- **GRITH_REGISTRY_ABI**: JSON ABI for the on-chain Grith registry contract.
 
 ## Usage
 
 ```typescript
-import { EVMClient, buildAnchorCalldata, computeAnchorHash } from '@usekova/evm';
+import { EVMClient, buildAnchorCalldata, computeAnchorHash } from '@grith/evm';
 
 // Plug in any JSON-RPC provider (ethers, viem, raw fetch, etc.)
 const client = new EVMClient(myProvider, '0xRegistryAddress');
@@ -48,4 +48,4 @@ const isAnchored = await client.verifyCovenant(anchor.covenantId);
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

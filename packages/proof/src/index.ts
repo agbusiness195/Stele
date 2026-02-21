@@ -1,6 +1,6 @@
-import { sha256String, timestamp } from '@usekova/crypto';
-import type { HashHex } from '@usekova/crypto';
-import { DocumentedKovaError as KovaError, DocumentedErrorCode as KovaErrorCode } from '@usekova/types';
+import { sha256String, timestamp } from '@grith/crypto';
+import type { HashHex } from '@grith/crypto';
+import { DocumentedGrithError as GrithError, DocumentedErrorCode as GrithErrorCode } from '@grith/types';
 import { poseidonHash, hashToField, fieldToHex, FIELD_PRIME } from './poseidon';
 
 import type {
@@ -91,15 +91,15 @@ export function computeConstraintCommitment(constraints: string): HashHex {
  */
 const GROTH16_DOMAIN = {
   /** Domain separator for the alpha*beta pairing term */
-  ALPHA_BETA: poseidonHash([BigInt('0x' + sha256String('stele:groth16:alpha_beta').slice(0, 60)) % FIELD_PRIME]),
+  ALPHA_BETA: poseidonHash([BigInt('0x' + sha256String('grith:groth16:alpha_beta').slice(0, 60)) % FIELD_PRIME]),
   /** Domain separator for the gamma term (public input accumulation) */
-  GAMMA: poseidonHash([BigInt('0x' + sha256String('stele:groth16:gamma').slice(0, 60)) % FIELD_PRIME]),
+  GAMMA: poseidonHash([BigInt('0x' + sha256String('grith:groth16:gamma').slice(0, 60)) % FIELD_PRIME]),
   /** Domain separator for the delta term (proof element C) */
-  DELTA: poseidonHash([BigInt('0x' + sha256String('stele:groth16:delta').slice(0, 60)) % FIELD_PRIME]),
+  DELTA: poseidonHash([BigInt('0x' + sha256String('grith:groth16:delta').slice(0, 60)) % FIELD_PRIME]),
   /** Domain separator for blinding factor generation */
-  BLINDING: poseidonHash([BigInt('0x' + sha256String('stele:groth16:blinding').slice(0, 60)) % FIELD_PRIME]),
+  BLINDING: poseidonHash([BigInt('0x' + sha256String('grith:groth16:blinding').slice(0, 60)) % FIELD_PRIME]),
   /** Domain separator for verification key derivation */
-  VK: poseidonHash([BigInt('0x' + sha256String('stele:groth16:vk').slice(0, 60)) % FIELD_PRIME]),
+  VK: poseidonHash([BigInt('0x' + sha256String('grith:groth16:vk').slice(0, 60)) % FIELD_PRIME]),
 } as const;
 
 /**
@@ -149,22 +149,22 @@ export class ZKCircuit {
    */
   addConstraint(commitment: bigint, auditValue: bigint): void {
     if (this._isFinalized) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'Cannot add constraints to a finalized circuit',
         { hint: 'Create a new ZKCircuit instance if you need to add more constraints.' }
       );
     }
     if (commitment < 0n || commitment >= FIELD_PRIME) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'Commitment value is out of field range',
         { hint: 'Commitment must be a non-negative integer less than FIELD_PRIME.' }
       );
     }
     if (auditValue < 0n || auditValue >= FIELD_PRIME) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'Audit value is out of field range',
         { hint: 'Audit value must be a non-negative integer less than FIELD_PRIME.' }
       );
@@ -245,8 +245,8 @@ export class ZKCircuit {
    */
   prove(witness: ZKWitness, publicInputs: bigint[]): Groth16Proof {
     if (!this._isFinalized) {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         'Circuit must be finalized (witness generated) before proving',
         { hint: 'Call generateWitness() before prove().' }
       );
@@ -618,29 +618,29 @@ export async function generateComplianceProof(
 
   // Validate inputs (shared across all proof systems)
   if (!covenantId || typeof covenantId !== 'string' || covenantId.trim().length === 0) {
-    throw new KovaError(
-      KovaErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new GrithError(
+      GrithErrorCode.PROTOCOL_INVALID_INPUT,
       'covenantId is required',
       { hint: 'Pass the covenant document ID (a hex-encoded hash string).' }
     );
   }
   if (covenantId.length > 0 && !/^[0-9a-fA-F]+$/.test(covenantId)) {
-    throw new KovaError(
-      KovaErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new GrithError(
+      GrithErrorCode.PROTOCOL_INVALID_INPUT,
       'generateComplianceProof() requires a valid hex-encoded covenantId',
       { hint: 'The covenantId must be a hex string. Use the id field from a CovenantDocument.' }
     );
   }
   if (!constraints || typeof constraints !== 'string' || constraints.trim().length === 0) {
-    throw new KovaError(
-      KovaErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new GrithError(
+      GrithErrorCode.PROTOCOL_INVALID_INPUT,
       'constraints string is required',
       { hint: 'Pass the CCL constraint text from the covenant document.' }
     );
   }
   if (!Array.isArray(auditEntries)) {
-    throw new KovaError(
-      KovaErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new GrithError(
+      GrithErrorCode.PROTOCOL_INVALID_INPUT,
       'generateComplianceProof() requires auditEntries to be an array',
       { hint: 'Pass an array of AuditEntryData objects. An empty array is allowed.' }
     );
@@ -648,8 +648,8 @@ export async function generateComplianceProof(
   for (let i = 0; i < auditEntries.length; i++) {
     const entry = auditEntries[i];
     if (!entry || typeof entry !== 'object' || !entry.hash || typeof entry.hash !== 'string') {
-      throw new KovaError(
-        KovaErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new GrithError(
+        GrithErrorCode.PROTOCOL_INVALID_INPUT,
         `generateComplianceProof() audit entry at index ${i} is missing a valid hash field`,
         { hint: 'Each audit entry must have a hash field containing a hex-encoded hash string.' }
       );
@@ -720,8 +720,8 @@ export async function verifyComplianceProof(
   proof: ComplianceProof
 ): Promise<ProofVerificationResult> {
   if (!proof || typeof proof !== 'object') {
-    throw new KovaError(
-      KovaErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new GrithError(
+      GrithErrorCode.PROTOCOL_INVALID_INPUT,
       'verifyComplianceProof() requires a valid proof object',
       { hint: 'Pass a ComplianceProof object produced by generateComplianceProof().' }
     );

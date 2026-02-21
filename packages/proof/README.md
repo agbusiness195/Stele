@@ -1,11 +1,11 @@
-# @usekova/proof
+# @grith/proof
 
 Compliance proof generation and verification using Poseidon hash commitments over audit logs and covenant constraints.
 
 ## Installation
 
 ```bash
-npm install @usekova/proof
+npm install @grith/proof
 ```
 
 ## Key APIs
@@ -25,7 +25,7 @@ npm install @usekova/proof
 import {
   generateComplianceProof,
   verifyComplianceProof,
-} from '@usekova/proof';
+} from '@grith/proof';
 
 // Generate a proof that audit entries comply with constraints
 const proof = await generateComplianceProof({
@@ -50,4 +50,4 @@ console.log(result.errors);  // []
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

@@ -1,5 +1,5 @@
 /**
- * @usekova/react -- Reactive primitives for building Stele-powered UIs.
+ * @grith/react -- Reactive primitives for building Grith-powered UIs.
  *
  * Provides framework-agnostic reactive state management that can be
  * adapted to React, Vue, Svelte, or vanilla JS. No external dependencies.
@@ -7,17 +7,17 @@
  * @packageDocumentation
  */
 
-import type { CovenantDocument, VerificationResult } from '@usekova/core';
-import type { AgentIdentity } from '@usekova/identity';
-import type { CovenantStore, StoreFilter, StoreEvent } from '@usekova/store';
+import type { CovenantDocument, VerificationResult } from '@grith/core';
+import type { AgentIdentity } from '@grith/identity';
+import type { CovenantStore, StoreFilter, StoreEvent } from '@grith/store';
 import type {
   CreateCovenantOptions,
   EvaluationResult,
   CreateIdentityOptions,
   EvolveOptions,
-} from '@usekova/sdk';
-import { KovaClient } from '@usekova/sdk';
-import type { EvaluationContext } from '@usekova/ccl';
+} from '@grith/sdk';
+import { GrithClient } from '@grith/sdk';
+import type { EvaluationContext } from '@grith/ccl';
 
 // ---------------------------------------------------------------------------
 // Observable<T>
@@ -120,7 +120,7 @@ export type CovenantStatus =
  * Observable state container for the full covenant lifecycle:
  * creation, verification, and action evaluation.
  *
- * Internally delegates to a {@link KovaClient} for all operations.
+ * Internally delegates to a {@link GrithClient} for all operations.
  */
 export class CovenantState {
   readonly status: Observable<CovenantStatus>;
@@ -128,9 +128,9 @@ export class CovenantState {
   readonly error: Observable<Error | null>;
   readonly verificationResult: Observable<VerificationResult | null>;
 
-  private readonly _client: KovaClient;
+  private readonly _client: GrithClient;
 
-  constructor(client: KovaClient) {
+  constructor(client: GrithClient) {
     this._client = client;
     this.status = new Observable<CovenantStatus>('idle');
     this.document = new Observable<CovenantDocument | null>(null);
@@ -230,16 +230,16 @@ export type IdentityStatus =
  * Observable state container for the agent identity lifecycle:
  * creation and evolution.
  *
- * Internally delegates to a {@link KovaClient} for all operations.
+ * Internally delegates to a {@link GrithClient} for all operations.
  */
 export class IdentityState {
   readonly identity: Observable<AgentIdentity | null>;
   readonly status: Observable<IdentityStatus>;
   readonly error: Observable<Error | null>;
 
-  private readonly _client: KovaClient;
+  private readonly _client: GrithClient;
 
-  constructor(client: KovaClient) {
+  constructor(client: GrithClient) {
     this._client = client;
     this.identity = new Observable<AgentIdentity | null>(null);
     this.status = new Observable<IdentityStatus>('idle');
@@ -376,14 +376,14 @@ export class StoreState {
 /**
  * Create a new {@link CovenantState} bound to the given client.
  */
-export function createCovenantState(client: KovaClient): CovenantState {
+export function createCovenantState(client: GrithClient): CovenantState {
   return new CovenantState(client);
 }
 
 /**
  * Create a new {@link IdentityState} bound to the given client.
  */
-export function createIdentityState(client: KovaClient): IdentityState {
+export function createIdentityState(client: GrithClient): IdentityState {
   return new IdentityState(client);
 }
 

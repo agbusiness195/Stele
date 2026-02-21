@@ -1,5 +1,5 @@
 {
-  "name": "@usekova/consensus",
+  "name": "@grith/consensus",
   "version": "2.0.0",
   "description": "Byzantine fault-tolerant consensus protocols for covenant agreement",
   "sideEffects": false,
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@usekova/crypto": "2.0.0",
-    "@usekova/types": "2.0.0"
+    "@grith/crypto": "2.0.0",
+    "@grith/types": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -39,16 +39,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/Stele.git",
+    "url": "https://github.com/agbusiness195/Grith.git",
     "directory": "packages/consensus"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/stele/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Grith Labs, Inc.",
   "keywords": [
-    "stele",
+    "grith",
     "covenant",
     "ai-accountability",
     "consensus",

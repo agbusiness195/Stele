@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { sha256String } from '@usekova/crypto';
-import type { HashHex } from '@usekova/crypto';
+import { sha256String } from '@grith/crypto';
+import type { HashHex } from '@grith/crypto';
 import {
   poseidonHash,
   hashToField,

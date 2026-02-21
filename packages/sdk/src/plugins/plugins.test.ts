@@ -1,15 +1,15 @@
 /**
- * Comprehensive tests for all Stele SDK plugins.
+ * Comprehensive tests for all Grith SDK plugins.
  *
  * Tests the caching, authentication, metrics, and retry middleware plugins
  * using the MiddlewarePipeline from middleware.ts.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { MetricsRegistry, createMetricsRegistry } from '@usekova/types';
+import { MetricsRegistry, createMetricsRegistry } from '@grith/types';
 
 import { MiddlewarePipeline } from '../middleware.js';
-import type { SteleMiddleware, MiddlewareContext } from '../middleware.js';
+import type { GrithMiddleware, MiddlewareContext } from '../middleware.js';
 
 import { cachingMiddleware } from './cache.js';
 import type { CacheStats } from './cache.js';
@@ -454,7 +454,7 @@ describe('metricsMiddleware', () => {
     expect(mw.registry).toBeInstanceOf(MetricsRegistry);
   });
 
-  it('uses default prefix "stele" when none provided', () => {
+  it('uses default prefix "grith" when none provided', () => {
     const mw = metricsMiddleware();
     const pipeline2 = new MiddlewarePipeline();
     pipeline2.use(mw);
@@ -463,7 +463,7 @@ describe('metricsMiddleware', () => {
     pipeline2.execute('op', {}, echoOp('ok'));
 
     const snapshot = mw.registry.getAll();
-    expect(snapshot.counters).toHaveProperty('stele.operations.total');
+    expect(snapshot.counters).toHaveProperty('grith.operations.total');
   });
 
   // ── Counters ─────────────────────────────────────────────────────────

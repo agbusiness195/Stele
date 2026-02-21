@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SqliteStore } from './sqlite-store';
 import type { SQLiteDriver } from './sqlite-store';
 import type { CovenantStore, StoreEvent, StoreEventCallback } from './types';
-import type { CovenantDocument } from '@usekova/core';
+import type { CovenantDocument } from '@grith/core';
 
 // ---------------------------------------------------------------------------
 // Test helpers

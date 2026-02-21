@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { StoreIndex } from './indexing';
 import type { IndexField } from './indexing';
-import type { CovenantDocument } from '@usekova/core';
+import type { CovenantDocument } from '@grith/core';
 
 // ---------------------------------------------------------------------------
 // Test helpers

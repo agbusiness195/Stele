@@ -1,7 +1,7 @@
 /**
- * Stele adapter for LangChain.
+ * Grith adapter for LangChain.
  *
- * Provides a callback handler that logs agent actions to the Stele
+ * Provides a callback handler that logs agent actions to the Grith
  * audit trail, and tool/chain wrappers that enforce covenant constraints
  * before execution.
  *
@@ -11,20 +11,20 @@
  *
  * @example
  * ```typescript
- * import { KovaClient, SteleCallbackHandler, withSteleTool } from '@usekova/sdk';
+ * import { GrithClient, GrithCallbackHandler, withGrithTool } from '@grith/sdk';
  *
- * const handler = new SteleCallbackHandler({ client, covenant });
- * const protectedTool = withSteleTool(myTool, { client, covenant });
+ * const handler = new GrithCallbackHandler({ client, covenant });
+ * const protectedTool = withGrithTool(myTool, { client, covenant });
  * ```
  */
 
-import type { KovaClient } from '../index.js';
-import type { CovenantDocument } from '@usekova/core';
+import type { GrithClient } from '../index.js';
+import type { CovenantDocument } from '@grith/core';
 import type { EvaluationResult } from '../types.js';
-import { SteleAccessDeniedError } from './vercel-ai.js';
+import { GrithAccessDeniedError } from './vercel-ai.js';
 
 // Re-export the shared error so consumers can import from either adapter
-export { SteleAccessDeniedError } from './vercel-ai.js';
+export { GrithAccessDeniedError } from './vercel-ai.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -52,11 +52,11 @@ export interface LangChainToolLike {
 }
 
 /**
- * Options for wrapping LangChain tools with Stele enforcement.
+ * Options for wrapping LangChain tools with Grith enforcement.
  */
-export interface SteleLangChainOptions {
-  /** The KovaClient instance for covenant evaluation. */
-  client: KovaClient;
+export interface GrithLangChainOptions {
+  /** The GrithClient instance for covenant evaluation. */
+  client: GrithClient;
   /** The covenant document whose constraints are enforced. */
   covenant: CovenantDocument;
   /**
@@ -72,14 +72,14 @@ export interface SteleLangChainOptions {
   /**
    * Custom handler invoked when a tool call is denied. If provided,
    * its return value is returned instead of throwing. If not provided,
-   * a `SteleAccessDeniedError` is thrown.
+   * a `GrithAccessDeniedError` is thrown.
    */
   onDenied?: (tool: LangChainToolLike, result: EvaluationResult) => unknown;
 }
 
 // ─── Callback handler event ──────────────────────────────────────────────────
 
-/** A recorded event from the SteleCallbackHandler audit trail. */
+/** A recorded event from the GrithCallbackHandler audit trail. */
 export interface CallbackEvent {
   /** The event type (e.g. 'tool:start', 'chain:end', 'tool:error'). */
   type: string;
@@ -89,31 +89,31 @@ export interface CallbackEvent {
   timestamp: string;
 }
 
-// ─── SteleCallbackHandler ────────────────────────────────────────────────────
+// ─── GrithCallbackHandler ────────────────────────────────────────────────────
 
 /**
  * A LangChain-compatible callback handler that records agent actions
- * to a Stele audit trail.
+ * to a Grith audit trail.
  *
  * This handler does not enforce constraints; it only observes and
- * logs. Use it alongside `withSteleTool` for enforcement + auditing.
+ * logs. Use it alongside `withGrithTool` for enforcement + auditing.
  *
  * @example
  * ```typescript
- * const handler = new SteleCallbackHandler({ client, covenant });
+ * const handler = new GrithCallbackHandler({ client, covenant });
  * await handler.handleToolStart({ name: 'search' }, 'query');
  * console.log(handler.events); // [{ type: 'tool:start', ... }]
  * ```
  */
-export class SteleCallbackHandler {
-  /** The KovaClient used for event emission. */
-  readonly client: KovaClient;
+export class GrithCallbackHandler {
+  /** The GrithClient used for event emission. */
+  readonly client: GrithClient;
   /** The covenant document being audited. */
   readonly covenant: CovenantDocument;
   /** Ordered list of recorded events. */
   readonly events: CallbackEvent[] = [];
 
-  constructor(options: { client: KovaClient; covenant: CovenantDocument }) {
+  constructor(options: { client: GrithClient; covenant: CovenantDocument }) {
     this.client = options.client;
     this.covenant = options.covenant;
   }
@@ -199,14 +199,14 @@ export class SteleCallbackHandler {
   }
 }
 
-// ─── withSteleTool ───────────────────────────────────────────────────────────
+// ─── withGrithTool ───────────────────────────────────────────────────────────
 
 /**
- * Wrap a LangChain-style tool with Stele covenant enforcement.
+ * Wrap a LangChain-style tool with Grith covenant enforcement.
  *
  * Wraps all three call patterns (`call`, `invoke`, `_call`) when present.
  * Before delegation, evaluates the action/resource against the covenant.
- * If denied, throws a `SteleAccessDeniedError` (or invokes `onDenied`).
+ * If denied, throws a `GrithAccessDeniedError` (or invokes `onDenied`).
  *
  * @param tool    - The LangChain tool to wrap.
  * @param options - Enforcement options including client and covenant.
@@ -214,13 +214,13 @@ export class SteleCallbackHandler {
  *
  * @example
  * ```typescript
- * const protectedTool = withSteleTool(searchTool, { client, covenant });
+ * const protectedTool = withGrithTool(searchTool, { client, covenant });
  * await protectedTool.invoke('my query'); // throws if denied
  * ```
  */
-export function withSteleTool<T extends LangChainToolLike>(
+export function withGrithTool<T extends LangChainToolLike>(
   tool: T,
-  options: SteleLangChainOptions,
+  options: GrithLangChainOptions,
 ): T {
   const { client, covenant, actionFromTool, resourceFromTool, onDenied } = options;
   const wrapped = { ...tool } as T;
@@ -238,7 +238,7 @@ export function withSteleTool<T extends LangChainToolLike>(
       if (onDenied) {
         return onDenied(tool, result);
       }
-      throw new SteleAccessDeniedError(
+      throw new GrithAccessDeniedError(
         `Action '${action}' on resource '${resource}' denied by covenant`,
         result,
       );
@@ -289,7 +289,7 @@ export function withSteleTool<T extends LangChainToolLike>(
  * ```
  */
 export function createChainGuard(
-  options: SteleLangChainOptions,
+  options: GrithLangChainOptions,
 ): (chainName: string, input: unknown, fn: () => Promise<unknown>) => Promise<unknown> {
   const { client, covenant, onDenied } = options;
 
@@ -307,7 +307,7 @@ export function createChainGuard(
       if (onDenied) {
         return onDenied({ name: chainName } as LangChainToolLike, result);
       }
-      throw new SteleAccessDeniedError(
+      throw new GrithAccessDeniedError(
         `Chain '${chainName}' on resource '${resource}' denied by covenant`,
         result,
       );

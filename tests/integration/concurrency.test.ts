@@ -1,5 +1,5 @@
 /**
- * Concurrency and stress tests for the Stele SDK.
+ * Concurrency and stress tests for the Grith SDK.
  *
  * Exercises parallel operations, race conditions, and high-volume
  * scenarios across crypto, core, store, verifier, identity,
@@ -15,8 +15,8 @@ import {
   sha256,
   toHex,
   generateNonce,
-} from '@usekova/crypto';
-import type { KeyPair, HashHex } from '@usekova/crypto';
+} from '@grith/crypto';
+import type { KeyPair, HashHex } from '@grith/crypto';
 
 import {
   buildCovenant,
@@ -25,14 +25,14 @@ import {
   computeId,
   serializeCovenant,
   deserializeCovenant,
-} from '@usekova/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
+} from '@grith/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
 
-import { parse, evaluate } from '@usekova/ccl';
+import { parse, evaluate } from '@grith/ccl';
 
-import { MemoryStore } from '@usekova/store';
+import { MemoryStore } from '@grith/store';
 
-import { Verifier, verifyBatch } from '@usekova/verifier';
+import { Verifier, verifyBatch } from '@grith/verifier';
 
 import {
   createIdentity,
@@ -40,19 +40,19 @@ import {
   verifyIdentity,
   serializeIdentity,
   deserializeIdentity,
-} from '@usekova/identity';
+} from '@grith/identity';
 
 import {
   Monitor,
   MonitorDeniedError,
   CapabilityGate,
-} from '@usekova/enforcement';
+} from '@grith/enforcement';
 
 import {
   createReceipt,
   verifyReceipt,
   computeReputationScore,
-} from '@usekova/reputation';
+} from '@grith/reputation';
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -1,5 +1,5 @@
 /**
- * Generate API documentation from TSDoc comments across all @usekova/* packages.
+ * Generate API documentation from TSDoc comments across all @grith/* packages.
  *
  * Usage:
  *   npx tsx scripts/generate-docs.ts

@@ -1,17 +1,17 @@
 /**
- * @usekova/mcp-server -- Model Context Protocol server that exposes
- * Stele tools to any AI agent.
+ * @grith/mcp-server -- Model Context Protocol server that exposes
+ * Grith tools to any AI agent.
  *
  * Implements JSON-RPC 2.0 over stdio, with tool definitions that map
- * to @usekova/sdk, @usekova/store, and @usekova/crypto operations.
+ * to @grith/sdk, @grith/store, and @grith/crypto operations.
  *
  * @packageDocumentation
  */
 
-import { KovaClient } from '@usekova/sdk';
-import { MemoryStore } from '@usekova/store';
-import { generateKeyPair, toHex } from '@usekova/crypto';
-import type { KeyPair } from '@usekova/crypto';
+import { GrithClient } from '@grith/sdk';
+import { MemoryStore } from '@grith/store';
+import { generateKeyPair, toHex } from '@grith/crypto';
+import type { KeyPair } from '@grith/crypto';
 
 import type {
   JsonRpcRequest,
@@ -208,20 +208,20 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
   },
 ];
 
-// ─── SteleServer ────────────────────────────────────────────────────────────────
+// ─── GrithServer ────────────────────────────────────────────────────────────────
 
 /**
- * MCP server that exposes Stele protocol operations as tools via JSON-RPC 2.0.
+ * MCP server that exposes Grith protocol operations as tools via JSON-RPC 2.0.
  *
  * Accepts a {@link MemoryStore} for persisting covenant documents and provides
  * methods for handling MCP protocol messages, listing tools, and calling tools.
  */
-export class SteleServer {
+export class GrithServer {
   /** The backing store for covenant documents. */
   readonly store: MemoryStore;
 
   /** The SDK client used for operations. */
-  private readonly client: KovaClient;
+  private readonly client: GrithClient;
 
   /** Server name. */
   readonly name: string;
@@ -231,8 +231,8 @@ export class SteleServer {
 
   constructor(store: MemoryStore, options?: MCPServerOptions) {
     this.store = store;
-    this.client = new KovaClient();
-    this.name = options?.name ?? 'stele-mcp-server';
+    this.client = new GrithClient();
+    this.name = options?.name ?? 'grith-mcp-server';
     this.version = options?.version ?? '0.1.0';
   }
 
@@ -397,7 +397,7 @@ export class SteleServer {
         return this._toolError('Missing required field: privateKeyHex');
       }
 
-      const { fromHex } = await import('@usekova/crypto');
+      const { fromHex } = await import('@grith/crypto');
       const privateKey = fromHex(privateKeyHex);
 
       const doc = await this.client.createCovenant({
@@ -511,7 +511,7 @@ export class SteleServer {
 
       let keyPair: KeyPair;
       if (privateKeyHex) {
-        const { keyPairFromPrivateKeyHex } = await import('@usekova/crypto');
+        const { keyPairFromPrivateKeyHex } = await import('@grith/crypto');
         keyPair = await keyPairFromPrivateKeyHex(privateKeyHex);
       } else {
         keyPair = await generateKeyPair();

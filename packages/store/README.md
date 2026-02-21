@@ -1,11 +1,11 @@
-# @usekova/store
+# @grith/store
 
 Pluggable storage backends for covenant documents. Ships with `MemoryStore`, `FileStore`, and `SqliteStore`.
 
 ## Installation
 
 ```bash
-npm install @usekova/store
+npm install @grith/store
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @usekova/store
 ### MemoryStore
 
 ```typescript
-import { MemoryStore } from '@usekova/store';
+import { MemoryStore } from '@grith/store';
 
 const store = new MemoryStore();
 
@@ -38,7 +38,7 @@ const docs = await store.getBatch([id1, id2]);
 ### FileStore
 
 ```typescript
-import { FileStore } from '@usekova/store';
+import { FileStore } from '@grith/store';
 
 const store = new FileStore('/path/to/covenants');
 await store.put(doc);
@@ -48,8 +48,8 @@ const retrieved = await store.get(doc.id);
 ### SqliteStore (bring-your-own-driver)
 
 ```typescript
-import { SqliteStore } from '@usekova/store';
-import type { SQLiteDriver } from '@usekova/store';
+import { SqliteStore } from '@grith/store';
+import type { SQLiteDriver } from '@grith/store';
 
 const driver: SQLiteDriver = { /* your sqlite driver implementation */ };
 const store = new SqliteStore(driver);
@@ -61,7 +61,7 @@ await store.put(doc);
 ```typescript
 store.onEvent((event) => console.log(`${event.type}: ${event.documentId}`));
 
-import { createQuery } from '@usekova/store';
+import { createQuery } from '@grith/store';
 const query = createQuery().where({ issuerId: 'alice' }).sortBy('createdAt', 'desc');
 ```
 
@@ -76,4 +76,4 @@ const query = createQuery().where({ issuerId: 'alice' }).sortBy('createdAt', 'de
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Grith SDK root documentation](../../README.md) for the full API reference and architecture guide.

@@ -1,5 +1,5 @@
 /**
- * Two-sided payment system for the Stele protocol.
+ * Two-sided payment system for the Grith protocol.
  *
  * Manages agent accounts, tracks query income, processes payments between
  * agents, and maintains an immutable transaction ledger. Agents earn from

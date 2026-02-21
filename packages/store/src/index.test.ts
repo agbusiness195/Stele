@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { MemoryStore } from './index';
 import type { CovenantStore, StoreEvent, StoreEventCallback } from './index';
-import type { CovenantDocument } from '@usekova/core';
+import type { CovenantDocument } from '@grith/core';
 
 // ---------------------------------------------------------------------------
 // Test helpers

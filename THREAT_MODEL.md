@@ -1,10 +1,10 @@
-# Stele Threat Model
+# Grith Threat Model
 
 Version: 1.0 | Last updated: 2026-02-11
 
 ## 1. System Overview
 
-Stele is a cryptographic covenant protocol for governing AI agent behavior. It enables an **issuer** to make binding, verifiable commitments about what an AI agent (the **beneficiary**) is permitted to do. The protocol produces signed, content-addressed documents that can be independently verified by any party without trusting the issuer's infrastructure.
+Grith is a cryptographic covenant protocol for governing AI agent behavior. It enables an **issuer** to make binding, verifiable commitments about what an AI agent (the **beneficiary**) is permitted to do. The protocol produces signed, content-addressed documents that can be independently verified by any party without trusting the issuer's infrastructure.
 
 The security goal is **pre-operative commitment**: the issuer cannot silently modify constraints after signing, and the beneficiary can prove exactly what was agreed upon. This differs from post-hoc policy enforcement (ACLs, RBAC) where the authority can change rules without the subject's knowledge.
 
@@ -106,14 +106,14 @@ The security goal is **pre-operative commitment**: the issuer cannot silently mo
 
 **Mitigations**:
 - E1: `validateChainNarrowing()` verifies that a child covenant only restricts (never broadens) the parent's CCL constraints. `validateChain()` runs this check on every parent-child pair. The CCL `validateNarrowing()` function performs semantic comparison of permit, deny, and limit statements.
-- E2: This is an application-level concern. Stele provides `Monitor` (enforce mode throws `MonitorDeniedError` on violations) and `CapabilityGate` (pre-computes permitted actions and refuses to register handlers for non-permitted actions). However, the application must actually use these enforcement mechanisms.
+- E2: This is an application-level concern. Grith provides `Monitor` (enforce mode throws `MonitorDeniedError` on violations) and `CapabilityGate` (pre-computes permitted actions and refuses to register handlers for non-permitted actions). However, the application must actually use these enforcement mechanisms.
 - E3: The `buildCovenant()` function validates that `issuer.role === 'issuer'` and `beneficiary.role === 'beneficiary'`. Verification checks party roles. However, a forged document with correct roles but wrong keys will fail signature verification.
 
 ## 4. Residual Risks
 
 The following threats are acknowledged but NOT mitigated by the protocol:
 
-1. **Key management at rest**: Stele does not prescribe how private keys are stored. If keys are stored in plaintext on disk, in environment variables, or in version control, they can be compromised. Operators must use HSMs, secure enclaves, or encrypted key stores.
+1. **Key management at rest**: Grith does not prescribe how private keys are stored. If keys are stored in plaintext on disk, in environment variables, or in version control, they can be compromised. Operators must use HSMs, secure enclaves, or encrypted key stores.
 
 2. **Side-channel attacks on the runtime**: Timing attacks against the Ed25519 implementation are mitigated by `@noble/ed25519` (which uses constant-time operations), but other side channels (power analysis, cache timing, speculative execution) are outside scope.
 

@@ -1,16 +1,16 @@
-# @usekova/mcp-server
+# @grith/mcp-server
 
-Model Context Protocol (MCP) server that exposes Stele covenant operations as tools to any AI agent via JSON-RPC 2.0.
+Model Context Protocol (MCP) server that exposes Grith covenant operations as tools to any AI agent via JSON-RPC 2.0.
 
 ## Installation
 
 ```bash
-npm install @usekova/mcp-server
+npm install @grith/mcp-server
 ```
 
 ## Key APIs
 
-- **SteleServer**: MCP server class that handles JSON-RPC 2.0 messages and exposes Stele tools. Supports `initialize`, `tools/list`, `tools/call`, and `ping` methods.
+- **GrithServer**: MCP server class that handles JSON-RPC 2.0 messages and exposes Grith tools. Supports `initialize`, `tools/list`, `tools/call`, and `ping` methods.
 - **createAuthMiddleware()**: Authentication middleware for securing MCP endpoints.
 - **JSON_RPC_ERRORS**: Standard JSON-RPC 2.0 error code constants.
 
@@ -28,11 +28,11 @@ npm install @usekova/mcp-server
 ## Usage
 
 ```typescript
-import { SteleServer } from '@usekova/mcp-server';
-import { MemoryStore } from '@usekova/store';
+import { GrithServer } from '@grith/mcp-server';
+import { MemoryStore } from '@grith/store';
 
-const server = new SteleServer(new MemoryStore(), {
-  name: 'my-stele-server',
+const server = new GrithServer(new MemoryStore(), {
+  name: 'my-grith-server',
   version: '1.0.0',
 });
 
@@ -54,4 +54,4 @@ const result = await server.callTool('evaluate_action', {
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

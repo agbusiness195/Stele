@@ -1,5 +1,5 @@
 {
-  "name": "@usekova/recursive",
+  "name": "@grith/recursive",
   "version": "2.0.0",
   "description": "Recursive covenant structures with self-referential constraints",
   "sideEffects": false,
@@ -27,13 +27,13 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@usekova/crypto": "2.0.0"
+    "@grith/crypto": "2.0.0"
   },
   "license": "MIT",
-  "author": "Stele Labs, Inc.",
-  "homepage": "https://stele.dev",
+  "author": "Grith Labs, Inc.",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/stele/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
   "engines": {
     "node": ">=18"
@@ -43,11 +43,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/Stele.git",
+    "url": "https://github.com/agbusiness195/Grith.git",
     "directory": "packages/recursive"
   },
   "keywords": [
-    "stele",
+    "grith",
     "covenant",
     "ai-accountability",
     "recursive",

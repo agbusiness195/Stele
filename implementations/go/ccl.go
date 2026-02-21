@@ -1,4 +1,4 @@
-package stele
+package grith
 
 import (
 	"encoding/json"

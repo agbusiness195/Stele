@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair } from '@usekova/crypto';
+import { generateKeyPair } from '@grith/crypto';
 
 import {
   validateDocumentSchema,

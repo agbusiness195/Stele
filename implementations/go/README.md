@@ -1,10 +1,10 @@
-# Stele Go Implementation
+# Grith Go Implementation
 
-A complete Go implementation of the Stele protocol for cryptographic accountability of AI agents.
+A complete Go implementation of the Grith protocol for cryptographic accountability of AI agents.
 
 ## Overview
 
-This package implements the core Stele protocol primitives:
+This package implements the core Grith protocol primitives:
 
 - **Crypto** (`crypto.go`) -- Ed25519 signing/verification, SHA-256 hashing, JCS (RFC 8785) JSON canonicalization
 - **CCL** (`ccl.go`) -- Covenant Constraint Language parser and evaluator with wildcard matching, rate limits, and narrowing validation
@@ -20,7 +20,7 @@ This package implements the core Stele protocol primitives:
 ## Installation
 
 ```bash
-go get github.com/agbusiness195/stele/implementations/go
+go get github.com/agbusiness195/grith/implementations/go
 ```
 
 ## Quick Start
@@ -30,22 +30,22 @@ package main
 
 import (
     "fmt"
-    stele "github.com/agbusiness195/stele/implementations/go"
+    grith "github.com/agbusiness195/grith/implementations/go"
 )
 
 func main() {
     // Generate key pairs
-    issuerKP, _ := stele.GenerateKeyPair()
-    beneficiaryKP, _ := stele.GenerateKeyPair()
+    issuerKP, _ := grith.GenerateKeyPair()
+    beneficiaryKP, _ := grith.GenerateKeyPair()
 
     // Build a covenant
-    doc, _ := stele.BuildCovenant(&stele.CovenantBuilderOptions{
-        Issuer: stele.Party{
+    doc, _ := grith.BuildCovenant(&grith.CovenantBuilderOptions{
+        Issuer: grith.Party{
             ID:        "alice",
             PublicKey: issuerKP.PublicKeyHex,
             Role:      "issuer",
         },
-        Beneficiary: stele.Party{
+        Beneficiary: grith.Party{
             ID:        "bob",
             PublicKey: beneficiaryKP.PublicKeyHex,
             Role:      "beneficiary",
@@ -55,12 +55,12 @@ func main() {
     })
 
     // Verify the covenant
-    result, _ := stele.VerifyCovenant(doc)
+    result, _ := grith.VerifyCovenant(doc)
     fmt.Println("Valid:", result.Valid)
 
     // Evaluate CCL constraints
-    ccl, _ := stele.Parse(doc.Constraints)
-    eval := stele.Evaluate(ccl, "read", "/data/users", nil)
+    ccl, _ := grith.Parse(doc.Constraints)
+    eval := grith.Evaluate(ccl, "read", "/data/users", nil)
     fmt.Println("Permitted:", eval.Permitted)
 }
 ```
@@ -73,7 +73,7 @@ go test -v ./...
 
 ## Protocol Version
 
-This implementation targets Stele protocol version 1.0.
+This implementation targets Grith protocol version 1.0.
 
 ## Architecture
 

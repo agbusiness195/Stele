@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { MemoryStore } from './index';
 import { QueryBuilder, createQuery } from './query';
 import type { PaginationOptions, PaginatedResult, SortField, SortOrder } from './query';
-import type { CovenantDocument } from '@usekova/core';
+import type { CovenantDocument } from '@grith/core';
 
 // ---------------------------------------------------------------------------
 // Test helpers

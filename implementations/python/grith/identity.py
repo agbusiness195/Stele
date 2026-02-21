@@ -1,5 +1,5 @@
 """
-Stele Agent Identity creation, evolution, and verification.
+Grith Agent Identity creation, evolution, and verification.
 
 Implements the full agent identity lifecycle: creation, evolution with lineage
 tracking, cryptographic verification, and serialization.

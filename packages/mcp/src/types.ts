@@ -1,4 +1,4 @@
-import type { Severity } from '@usekova/ccl';
+import type { Severity } from '@grith/ccl';
 
 export interface MCPServer {
   tools?: MCPTool[];
@@ -12,24 +12,24 @@ export interface MCPTool {
   inputSchema?: Record<string, unknown>;
 }
 
-export interface SteleGuardOptions {
+export interface GrithGuardOptions {
   constraints: string;
   mode?: 'enforce' | 'log_only';
   proofType?: 'audit_log' | 'capability_manifest';
-  operatorKeyPair?: import('@usekova/crypto').KeyPair;
+  operatorKeyPair?: import('@grith/crypto').KeyPair;
   agentIdentifier?: string;
-  model?: import('@usekova/identity').ModelAttestation;
+  model?: import('@grith/identity').ModelAttestation;
   onViolation?: (details: ViolationDetails) => void;
   onToolCall?: (details: ToolCallDetails) => void;
 }
 
 export interface WrappedMCPServer extends MCPServer {
-  getMonitor(): import('@usekova/enforcement').Monitor;
-  getIdentity(): import('@usekova/identity').AgentIdentity;
-  getAuditLog(): import('@usekova/enforcement').AuditLog;
-  generateProof(): Promise<import('@usekova/proof').ComplianceProof>;
-  getReceipt(): import('@usekova/reputation').ExecutionReceipt | null;
-  getCovenant(): import('@usekova/core').CovenantDocument;
+  getMonitor(): import('@grith/enforcement').Monitor;
+  getIdentity(): import('@grith/identity').AgentIdentity;
+  getAuditLog(): import('@grith/enforcement').AuditLog;
+  generateProof(): Promise<import('@grith/proof').ComplianceProof>;
+  getReceipt(): import('@grith/reputation').ExecutionReceipt | null;
+  getCovenant(): import('@grith/core').CovenantDocument;
 }
 
 export interface ViolationDetails {

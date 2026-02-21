@@ -1,6 +1,6 @@
-# Stele SDK Examples
+# Grith SDK Examples
 
-Runnable TypeScript examples demonstrating the Stele protocol SDK.
+Runnable TypeScript examples demonstrating the Grith protocol SDK.
 
 ## Running
 

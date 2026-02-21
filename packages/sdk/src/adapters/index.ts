@@ -1,5 +1,5 @@
 /**
- * Framework adapters for the Stele SDK.
+ * Framework adapters for the Grith SDK.
  *
  * Re-exports all adapter factories and their associated types for
  * Express/HTTP, Vercel AI SDK, and LangChain integrations.
@@ -12,8 +12,8 @@
 // ─── Express / HTTP adapter (stable) ─────────────────────────────────────────
 
 export {
-  steleMiddleware,
-  steleGuardHandler,
+  grithMiddleware,
+  grithGuardHandler,
   createCovenantRouter,
 } from './express.js';
 
@@ -21,8 +21,8 @@ export type {
   IncomingRequest,
   OutgoingResponse,
   NextFunction,
-  SteleMiddlewareOptions,
-  SteleGuardHandlerOptions,
+  GrithMiddlewareOptions,
+  GrithGuardHandlerOptions,
   CovenantRouterOptions,
   CovenantRouter,
   AsyncHandler,
@@ -31,27 +31,27 @@ export type {
 // ─── Vercel AI SDK adapter (stable) ──────────────────────────────────────────
 
 export {
-  SteleAccessDeniedError,
-  withStele,
-  withSteleTools,
+  GrithAccessDeniedError,
+  withGrith,
+  withGrithTools,
   createToolGuard,
 } from './vercel-ai.js';
 
 export type {
   ToolLike,
-  SteleToolOptions,
+  GrithToolOptions,
 } from './vercel-ai.js';
 
 // ─── LangChain adapter (stable) ──────────────────────────────────────────────
 
 export {
-  SteleCallbackHandler,
-  withSteleTool,
+  GrithCallbackHandler,
+  withGrithTool,
   createChainGuard,
 } from './langchain.js';
 
 export type {
   LangChainToolLike,
-  SteleLangChainOptions,
+  GrithLangChainOptions,
   CallbackEvent,
 } from './langchain.js';

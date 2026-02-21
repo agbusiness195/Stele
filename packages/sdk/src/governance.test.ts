@@ -1,5 +1,5 @@
 /**
- * Edge-case tests for the Stele SDK governance module.
+ * Edge-case tests for the Grith SDK governance module.
  */
 
 import { describe, it, expect } from 'vitest';

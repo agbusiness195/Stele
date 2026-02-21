@@ -1,9 +1,9 @@
-import type { HashHex } from '@usekova/crypto';
-import type { Severity } from '@usekova/ccl';
+import type { HashHex } from '@grith/crypto';
+import type { Severity } from '@grith/ccl';
 
 // ─── Protocol constants ────────────────────────────────────────────────────────
 
-/** Current Stele Covenant protocol version. */
+/** Current Grith Covenant protocol version. */
 export const PROTOCOL_VERSION = '1.0';
 
 /** Maximum number of CCL constraint statements in a single covenant. */

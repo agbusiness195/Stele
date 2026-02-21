@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { CovenantDocument } from '@usekova/core';
+import type { CovenantDocument } from '@grith/core';
 
 import type { CovenantStore } from './types.js';
 

@@ -1,12 +1,12 @@
 {
-  "name": "@usekova/reputation",
+  "name": "@grith/reputation",
   "version": "2.0.0",
-  "description": "Reputation scoring and trust management for the Stele covenant framework",
+  "description": "Reputation scoring and trust management for the Grith covenant framework",
   "license": "MIT",
-  "author": "Stele Labs, Inc.",
-  "homepage": "https://stele.dev",
+  "author": "Grith Labs, Inc.",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/stele/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,11 +32,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/Stele.git",
+    "url": "https://github.com/agbusiness195/Grith.git",
     "directory": "packages/reputation"
   },
   "keywords": [
-    "stele",
+    "grith",
     "covenant",
     "ai-accountability",
     "reputation",
@@ -52,10 +52,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@usekova/ccl": "2.0.0",
-    "@usekova/core": "2.0.0",
-    "@usekova/crypto": "2.0.0",
-    "@usekova/identity": "2.0.0",
-    "@usekova/types": "2.0.0"
+    "@grith/ccl": "2.0.0",
+    "@grith/core": "2.0.0",
+    "@grith/crypto": "2.0.0",
+    "@grith/identity": "2.0.0",
+    "@grith/types": "2.0.0"
   }
 }

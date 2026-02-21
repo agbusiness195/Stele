@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createAuthMiddleware } from './auth';
 import type { MCPAuthOptions, AuthenticatedRequest } from './auth';
-import { generateKeyPair, sign, toHex, sha256String } from '@usekova/crypto';
+import { generateKeyPair, sign, toHex, sha256String } from '@grith/crypto';
 
 // ─── API Key Authentication ─────────────────────────────────────────────────────
 

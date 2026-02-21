@@ -1,5 +1,5 @@
 """
-Stele Constraint Commitment Language (CCL) parser and evaluator.
+Grith Constraint Commitment Language (CCL) parser and evaluator.
 
 Provides a complete pipeline for working with CCL: lexing, parsing,
 evaluation, merging, narrowing validation, rate-limit checking, and

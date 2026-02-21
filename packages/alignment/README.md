@@ -1,11 +1,11 @@
-# @usekova/alignment
+# @grith/alignment
 
 Value alignment verification and normative constraint enforcement for AI agents.
 
 ## Installation
 
 ```bash
-npm install @usekova/alignment
+npm install @grith/alignment
 ```
 
 ## Key APIs
@@ -31,7 +31,7 @@ import {
   alignmentDrift,
   STANDARD_ALIGNMENT_PROPERTIES,
   AdaptiveAlignmentTracker,
-} from '@usekova/alignment';
+} from '@grith/alignment';
 
 // Define alignment for an agent using standard HHH properties
 const covenant = defineAlignment('agent-1', STANDARD_ALIGNMENT_PROPERTIES, 'behavioral');
@@ -58,4 +58,4 @@ console.log(tracker.getWeights()); // weights shifted toward harmlessness
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

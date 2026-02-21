@@ -1,6 +1,6 @@
-# Stele API Reference
+# Grith API Reference
 
-Complete API reference for all packages in the Stele monorepo. Packages are grouped
+Complete API reference for all packages in the Grith monorepo. Packages are grouped
 by layer: **Foundation**, **Enforcement**, **Protocol**, and **Platform**.
 
 ---
@@ -8,47 +8,47 @@ by layer: **Foundation**, **Enforcement**, **Protocol**, and **Platform**.
 ## Table of Contents
 
 - [Foundation](#foundation)
-  - [@usekova/types](#steletypes)
-  - [@usekova/crypto](#stelecrypto)
-  - [@usekova/ccl](#steleccl)
-  - [@usekova/core](#stelecore)
-  - [@usekova/store](#stelestore)
-  - [@usekova/verifier](#steleverifier)
-  - [@usekova/sdk](#stelesdk)
-  - [@usekova/identity](#steleidentity)
+  - [@grith/types](#grithtypes)
+  - [@grith/crypto](#grithcrypto)
+  - [@grith/ccl](#grithccl)
+  - [@grith/core](#grithcore)
+  - [@grith/store](#grithstore)
+  - [@grith/verifier](#grithverifier)
+  - [@grith/sdk](#grithsdk)
+  - [@grith/identity](#grithidentity)
 - [Enforcement](#enforcement)
-  - [@usekova/enforcement](#steleenforcement)
-  - [@usekova/proof](#steleproof)
-  - [@usekova/breach](#stelebreach)
-  - [@usekova/reputation](#stelereputation)
-  - [@usekova/mcp](#stelemcp)
+  - [@grith/enforcement](#grithenforcement)
+  - [@grith/proof](#grithproof)
+  - [@grith/breach](#grithbreach)
+  - [@grith/reputation](#grithreputation)
+  - [@grith/mcp](#grithmcp)
 - [Protocol](#protocol)
-  - [@usekova/attestation](#steleattestation)
-  - [@usekova/canary](#stelecanary)
-  - [@usekova/gametheory](#stelegametheory)
-  - [@usekova/composition](#stelecomposition)
-  - [@usekova/antifragile](#steleantifragile)
-  - [@usekova/negotiation](#stelenegotiation)
-  - [@usekova/consensus](#steleconsensus)
-  - [@usekova/robustness](#stelerobustness)
-  - [@usekova/temporal](#steletemporal)
-  - [@usekova/recursive](#stelerecursive)
-  - [@usekova/alignment](#stelealignment)
-  - [@usekova/norms](#stelenorms)
-  - [@usekova/substrate](#stelesubstrate)
-  - [@usekova/derivatives](#stelederivatives)
-  - [@usekova/legal](#stelelegal)
+  - [@grith/attestation](#grithattestation)
+  - [@grith/canary](#grithcanary)
+  - [@grith/gametheory](#grithgametheory)
+  - [@grith/composition](#grithcomposition)
+  - [@grith/antifragile](#grithantifragile)
+  - [@grith/negotiation](#grithnegotiation)
+  - [@grith/consensus](#grithconsensus)
+  - [@grith/robustness](#grithrobustness)
+  - [@grith/temporal](#grithtemporal)
+  - [@grith/recursive](#grithrecursive)
+  - [@grith/alignment](#grithalignment)
+  - [@grith/norms](#grithnorms)
+  - [@grith/substrate](#grithsubstrate)
+  - [@grith/derivatives](#grithderivatives)
+  - [@grith/legal](#grithlegal)
 - [Platform](#platform)
-  - [@usekova/react](#stelereact)
-  - [@usekova/evm](#steleevm)
-  - [@usekova/mcp-server](#stelemcp-server)
-  - [@usekova/cli](#stelecli)
+  - [@grith/react](#grithreact)
+  - [@grith/evm](#grithevm)
+  - [@grith/mcp-server](#grithmcp-server)
+  - [@grith/cli](#grithcli)
 
 ---
 
 ## Foundation
 
-### @usekova/types
+### @grith/types
 
 Shared TypeScript type definitions, error classes, validation utilities, and protocol constants used across the entire SDK.
 
@@ -56,13 +56,13 @@ Shared TypeScript type definitions, error classes, validation utilities, and pro
 
 | Export | Kind | Description |
 |--------|------|-------------|
-| `SteleError` | class | Base error class carrying a `SteleErrorCode` for programmatic error handling. |
+| `GrithError` | class | Base error class carrying a `GrithErrorCode` for programmatic error handling. |
 | `ValidationError` | class | Thrown when an input fails validation; includes a `field` property. |
 | `CryptoError` | class | Thrown when a cryptographic operation fails. |
 | `CCLError` | class | Thrown when CCL parsing or evaluation fails. |
 | `ChainError` | class | Thrown when a chain operation violates protocol rules. |
 | `StorageError` | class | Thrown when a storage operation fails. |
-| `SteleErrorCode` | enum | Enumeration of all error codes (`INVALID_INPUT`, `CRYPTO_FAILURE`, `CCL_PARSE_ERROR`, etc.). |
+| `GrithErrorCode` | enum | Enumeration of all error codes (`INVALID_INPUT`, `CRYPTO_FAILURE`, `CCL_PARSE_ERROR`, etc.). |
 | `validateNonEmpty(value, name)` | function | Assert a string is non-empty; throws `ValidationError`. |
 | `validateRange(value, min, max, name)` | function | Assert a number is within `[min, max]`. |
 | `validateHex(value, name)` | function | Assert a string is valid hex (even length, `[0-9a-fA-F]`). |
@@ -75,14 +75,14 @@ Shared TypeScript type definitions, error classes, validation utilities, and pro
 | `sanitizeJsonInput(input)` | function | Sanitize raw JSON input. |
 | `freezeDeep(obj)` | function | Recursively freeze an object. |
 | `Logger`, `createLogger`, `defaultLogger` | class/function | Structured logging with levels and child loggers. |
-| `STELE_VERSION` | const | Current SDK version string (`"0.1.0"`). |
+| `GRITH_VERSION` | const | Current SDK version string (`"0.1.0"`). |
 | `DEFAULT_SEVERITY` | const | Default CCL severity level (`"must"`). |
 | `Identifiable`, `Timestamped`, `Hashable`, `Serializable<T>` | interface | Common structural interfaces. |
 
 #### Usage
 
 ```typescript
-import { ValidationError, validateNonEmpty, ok, err, Result } from '@usekova/types';
+import { ValidationError, validateNonEmpty, ok, err, Result } from '@grith/types';
 
 validateNonEmpty(input, 'agentId'); // throws if empty
 const result: Result<number> = ok(42);
@@ -91,7 +91,7 @@ if (result.ok) console.log(result.value);
 
 ---
 
-### @usekova/crypto
+### @grith/crypto
 
 Ed25519 key management, signing, verification, SHA-256 hashing, and encoding utilities built on `@noble/ed25519` and `@noble/hashes`.
 
@@ -121,7 +121,7 @@ Ed25519 key management, signing, verification, SHA-256 hashing, and encoding uti
 #### Usage
 
 ```typescript
-import { generateKeyPair, signString, verify, sha256String, toHex } from '@usekova/crypto';
+import { generateKeyPair, signString, verify, sha256String, toHex } from '@grith/crypto';
 
 const kp = await generateKeyPair();
 const sig = await signString('hello', kp.privateKey);
@@ -130,7 +130,7 @@ const valid = await verify(new TextEncoder().encode('hello'), sig, kp.publicKey)
 
 ---
 
-### @usekova/ccl
+### @grith/ccl
 
 Parser, evaluator, merger, and serializer for the Covenant Constraint Language (CCL) -- the rule language that governs what actions agents may perform.
 
@@ -160,7 +160,7 @@ Parser, evaluator, merger, and serializer for the Covenant Constraint Language (
 #### Usage
 
 ```typescript
-import { parse, evaluate } from '@usekova/ccl';
+import { parse, evaluate } from '@grith/ccl';
 
 const doc = parse("permit read on '**'\ndeny write on '/system/**'");
 const result = evaluate(doc, 'write', '/system/config');
@@ -169,7 +169,7 @@ console.log(result.permitted); // false
 
 ---
 
-### @usekova/core
+### @grith/core
 
 Covenant document lifecycle: building, signing, verifying, countersigning, chain resolution, and serialization.
 
@@ -201,7 +201,7 @@ Covenant document lifecycle: building, signing, verifying, countersigning, chain
 #### Usage
 
 ```typescript
-import { buildCovenant, verifyCovenant } from '@usekova/core';
+import { buildCovenant, verifyCovenant } from '@grith/core';
 
 const doc = await buildCovenant({
   issuer, beneficiary,
@@ -214,7 +214,7 @@ console.log(result.valid); // true
 
 ---
 
-### @usekova/store
+### @grith/store
 
 Pluggable storage backends for covenant documents with event-driven notifications.
 
@@ -233,7 +233,7 @@ Pluggable storage backends for covenant documents with event-driven notification
 #### Usage
 
 ```typescript
-import { MemoryStore } from '@usekova/store';
+import { MemoryStore } from '@grith/store';
 
 const store = new MemoryStore();
 await store.put(covenantDoc);
@@ -243,7 +243,7 @@ const all = await store.list({ issuerId: 'operator-1' });
 
 ---
 
-### @usekova/verifier
+### @grith/verifier
 
 Standalone verification engine for third-party auditors with history tracking, batch processing, chain integrity validation, and action-level evaluation.
 
@@ -263,7 +263,7 @@ Standalone verification engine for third-party auditors with history tracking, b
 #### Usage
 
 ```typescript
-import { Verifier, verifyBatch } from '@usekova/verifier';
+import { Verifier, verifyBatch } from '@grith/verifier';
 
 const v = new Verifier({ strictMode: true });
 const report = await v.verify(doc);
@@ -273,28 +273,28 @@ const batchReport = await verifyBatch(docs);
 
 ---
 
-### @usekova/sdk
+### @grith/sdk
 
-High-level unified SDK that ties together all foundation packages into a single `SteleClient` entry point with an event system.
+High-level unified SDK that ties together all foundation packages into a single `GrithClient` entry point with an event system.
 
 #### Key Exports
 
 | Export | Kind | Description |
 |--------|------|-------------|
-| `SteleClient` | class | Main entry point. Provides `generateKeyPair()`, `createCovenant(options)`, `verifyCovenant(doc)`, `countersign(doc, role?, keyPair?)`, `evaluateAction(doc, action, resource, context?)`, `createIdentity(options)`, `evolveIdentity(identity, options)`, `resolveChain(doc, knownDocs?)`, `validateChain(docs)`, `parseCCL(source)`, `mergeCCL(a, b)`, `serializeCCL(doc)`, `on(event, handler)`, `off(event, handler)`, `removeAllListeners(event?)`. |
+| `GrithClient` | class | Main entry point. Provides `generateKeyPair()`, `createCovenant(options)`, `verifyCovenant(doc)`, `countersign(doc, role?, keyPair?)`, `evaluateAction(doc, action, resource, context?)`, `createIdentity(options)`, `evolveIdentity(identity, options)`, `resolveChain(doc, knownDocs?)`, `validateChain(docs)`, `parseCCL(source)`, `mergeCCL(a, b)`, `serializeCCL(doc)`, `on(event, handler)`, `off(event, handler)`, `removeAllListeners(event?)`. |
 | `QuickCovenant` | class | Convenience builders: `permit(action, resource, issuer, beneficiary, privateKey)`, `deny(...)`, `standard(issuer, beneficiary, privateKey)`. |
-| `SteleClientOptions` | type | `{ keyPair?, agentId?, strictMode? }` |
+| `GrithClientOptions` | type | `{ keyPair?, agentId?, strictMode? }` |
 | `CreateCovenantOptions` | type | Options for `createCovenant`: issuer, beneficiary, constraints, privateKey, obligations, chain, enforcement, proof, revocation, metadata, expiresAt, activatesAt. |
-| `SteleEventType` | type | `'covenant:created' | 'covenant:verified' | 'covenant:countersigned' | 'identity:created' | 'identity:evolved' | 'chain:resolved' | 'chain:validated' | 'evaluation:completed'` |
+| `GrithEventType` | type | `'covenant:created' | 'covenant:verified' | 'covenant:countersigned' | 'identity:created' | 'identity:evolved' | 'chain:resolved' | 'chain:validated' | 'evaluation:completed'` |
 
-Also re-exports all types and functions from `@usekova/core`, `@usekova/crypto`, `@usekova/ccl`, and `@usekova/identity`.
+Also re-exports all types and functions from `@grith/core`, `@grith/crypto`, `@grith/ccl`, and `@grith/identity`.
 
 #### Usage
 
 ```typescript
-import { SteleClient, QuickCovenant } from '@usekova/sdk';
+import { GrithClient, QuickCovenant } from '@grith/sdk';
 
-const client = new SteleClient();
+const client = new GrithClient();
 const kp = await client.generateKeyPair();
 const doc = await client.createCovenant({
   issuer, beneficiary, constraints,
@@ -305,7 +305,7 @@ const result = await client.evaluateAction(doc, 'read', '/data');
 
 ---
 
-### @usekova/identity
+### @grith/identity
 
 Agent identity management with lineage tracking, evolution policies, and reputation carry-forward.
 
@@ -330,7 +330,7 @@ Agent identity management with lineage tracking, evolution policies, and reputat
 #### Usage
 
 ```typescript
-import { createIdentity, evolveIdentity } from '@usekova/identity';
+import { createIdentity, evolveIdentity } from '@grith/identity';
 
 const identity = await createIdentity({
   operatorKeyPair: kp,
@@ -350,7 +350,7 @@ const evolved = await evolveIdentity(identity, {
 
 ## Enforcement
 
-### @usekova/enforcement
+### @grith/enforcement
 
 Runtime constraint enforcement engine with capability-based access control, monitoring, audit logging, and rate limiting.
 
@@ -369,7 +369,7 @@ Runtime constraint enforcement engine with capability-based access control, moni
 #### Usage
 
 ```typescript
-import { Monitor } from '@usekova/enforcement';
+import { Monitor } from '@grith/enforcement';
 
 const monitor = new Monitor(covenantDoc, keyPair);
 const outcome = await monitor.execute('read', '/data', handler);
@@ -378,7 +378,7 @@ console.log(outcome.permitted, outcome.auditEntry);
 
 ---
 
-### @usekova/proof
+### @grith/proof
 
 Zero-knowledge-style compliance proofs using Poseidon hashing for efficient audit log commitment and verification.
 
@@ -399,7 +399,7 @@ Zero-knowledge-style compliance proofs using Poseidon hashing for efficient audi
 #### Usage
 
 ```typescript
-import { generateComplianceProof, verifyComplianceProof } from '@usekova/proof';
+import { generateComplianceProof, verifyComplianceProof } from '@grith/proof';
 
 const proof = await generateComplianceProof({
   entries: auditEntries,
@@ -411,7 +411,7 @@ console.log(result.valid);
 
 ---
 
-### @usekova/breach
+### @grith/breach
 
 Breach detection, attestation, and trust graph management for tracking covenant violations and their impact on agent trust.
 
@@ -429,7 +429,7 @@ Breach detection, attestation, and trust graph management for tracking covenant 
 #### Usage
 
 ```typescript
-import { createBreachAttestation, verifyBreachAttestation } from '@usekova/breach';
+import { createBreachAttestation, verifyBreachAttestation } from '@grith/breach';
 
 const attestation = await createBreachAttestation({
   covenantId: doc.id,
@@ -443,7 +443,7 @@ const valid = await verifyBreachAttestation(attestation);
 
 ---
 
-### @usekova/reputation
+### @grith/reputation
 
 Reputation scoring, staking, delegation, and endorsement system for agents based on execution history and breach records.
 
@@ -462,7 +462,7 @@ Reputation scoring, staking, delegation, and endorsement system for agents based
 #### Usage
 
 ```typescript
-import { createReceipt, computeScore } from '@usekova/reputation';
+import { createReceipt, computeScore } from '@grith/reputation';
 
 const receipt = createReceipt({
   agentId: 'agent-1', action: 'read',
@@ -474,26 +474,26 @@ console.log(score.overall); // 0.0 - 1.0
 
 ---
 
-### @usekova/mcp
+### @grith/mcp
 
-MCP (Model Context Protocol) guard that wraps an MCP server with Stele covenant enforcement, audit logging, identity creation, and compliance proof generation.
+MCP (Model Context Protocol) guard that wraps an MCP server with Grith covenant enforcement, audit logging, identity creation, and compliance proof generation.
 
 #### Key Exports
 
 | Export | Kind | Description |
 |--------|------|-------------|
-| `steleGuard(server, options)` | function | Wrap an MCP server with Stele enforcement. Returns `WrappedMCPServer` with audit log, identity, and compliance proof. |
+| `grithGuard(server, options)` | function | Wrap an MCP server with Grith enforcement. Returns `WrappedMCPServer` with audit log, identity, and compliance proof. |
 | `PRESETS` | const | Named constraint presets (e.g., `"standard:data-isolation"`, `"standard:read-only"`). |
 | `MCPServer`, `WrappedMCPServer` | type | MCP server interfaces. |
-| `SteleGuardOptions` | type | Guard configuration: constraints, key pair, operator identifier, model, capabilities, deployment. |
+| `GrithGuardOptions` | type | Guard configuration: constraints, key pair, operator identifier, model, capabilities, deployment. |
 | `ViolationDetails`, `ToolCallDetails` | type | Event detail types for monitoring. |
 
 #### Usage
 
 ```typescript
-import { steleGuard, PRESETS } from '@usekova/mcp';
+import { grithGuard, PRESETS } from '@grith/mcp';
 
-const wrapped = await steleGuard(mcpServer, {
+const wrapped = await grithGuard(mcpServer, {
   constraints: 'standard:data-isolation',
   keyPair,
   model: { provider: 'anthropic', modelId: 'claude-3' },
@@ -507,7 +507,7 @@ const wrapped = await steleGuard(mcpServer, {
 
 ## Protocol
 
-### @usekova/attestation
+### @grith/attestation
 
 External attestation creation, reconciliation, chain linking, and coverage analysis for verifying agent interactions with external counterparties.
 
@@ -525,7 +525,7 @@ External attestation creation, reconciliation, chain linking, and coverage analy
 #### Usage
 
 ```typescript
-import { createAttestation, reconcileAttestations } from '@usekova/attestation';
+import { createAttestation, reconcileAttestations } from '@grith/attestation';
 
 const agentAtt = createAttestation(
   'agent-1', 'service-a', '/api/data',
@@ -540,7 +540,7 @@ const reconciliation = reconcileAttestations(agentAtt, serviceAtt);
 
 ---
 
-### @usekova/canary
+### @grith/canary
 
 Canary testing framework that generates challenge payloads from CCL constraints and verifies agent compliance by probing boundary conditions.
 
@@ -558,7 +558,7 @@ Canary testing framework that generates challenge payloads from CCL constraints 
 #### Usage
 
 ```typescript
-import { createCanary, runCanary } from '@usekova/canary';
+import { createCanary, runCanary } from '@grith/canary';
 
 const canary = createCanary("deny write on '/secrets/**'", 'agent-1');
 const result = await runCanary(canary, async (challenge) => {
@@ -569,9 +569,9 @@ console.log(result.passed);
 
 ---
 
-### @usekova/gametheory
+### @grith/gametheory
 
-Game-theoretic analysis proving that honest behavior is the dominant strategy under Stele's incentive structure.
+Game-theoretic analysis proving that honest behavior is the dominant strategy under Grith's incentive structure.
 
 #### Key Exports
 
@@ -586,7 +586,7 @@ Game-theoretic analysis proving that honest behavior is the dominant strategy un
 #### Usage
 
 ```typescript
-import { proveHonesty } from '@usekova/gametheory';
+import { proveHonesty } from '@grith/gametheory';
 
 const proof = proveHonesty({
   stakeAmount: 1000,
@@ -600,7 +600,7 @@ console.log(proof.isDominantStrategy); // true
 
 ---
 
-### @usekova/composition
+### @grith/composition
 
 Formal composition of multiple covenant constraints with proof of system-property preservation and complexity analysis.
 
@@ -618,7 +618,7 @@ Formal composition of multiple covenant constraints with proof of system-propert
 #### Usage
 
 ```typescript
-import { composeConstraints, checkSystemProperty } from '@usekova/composition';
+import { composeConstraints, checkSystemProperty } from '@grith/composition';
 
 const result = composeConstraints([
   "permit read on '**'",
@@ -632,7 +632,7 @@ const ok = checkSystemProperty(result.document, {
 
 ---
 
-### @usekova/antifragile
+### @grith/antifragile
 
 Antifragility analysis that turns breach events into system improvements through antibody generation, stress testing, and governance proposals.
 
@@ -650,7 +650,7 @@ Antifragility analysis that turns breach events into system improvements through
 #### Usage
 
 ```typescript
-import { generateAntibody, assessNetworkHealth } from '@usekova/antifragile';
+import { generateAntibody, assessNetworkHealth } from '@grith/antifragile';
 
 const antibody = generateAntibody({
   violatedConstraint: "deny write on '/secrets/**'",
@@ -662,7 +662,7 @@ const health = assessNetworkHealth(breaches, [antibody]);
 
 ---
 
-### @usekova/negotiation
+### @grith/negotiation
 
 Multi-party covenant negotiation with proposal/counter-proposal workflows, Nash bargaining solutions, and Pareto optimality analysis.
 
@@ -680,7 +680,7 @@ Multi-party covenant negotiation with proposal/counter-proposal workflows, Nash 
 #### Usage
 
 ```typescript
-import { createSession, submitProposal } from '@usekova/negotiation';
+import { createSession, submitProposal } from '@grith/negotiation';
 
 const session = createSession(['operator', 'agent']);
 submitProposal(session, {
@@ -693,7 +693,7 @@ submitProposal(session, {
 
 ---
 
-### @usekova/consensus
+### @grith/consensus
 
 Accountability-score-based consensus protocol for multi-agent governance decisions and access control.
 
@@ -711,7 +711,7 @@ Accountability-score-based consensus protocol for multi-agent governance decisio
 #### Usage
 
 ```typescript
-import { computeAccountabilityScore, classifyTier } from '@usekova/consensus';
+import { computeAccountabilityScore, classifyTier } from '@grith/consensus';
 
 const score = computeAccountabilityScore({
   covenantCompleteness: 0.9,
@@ -725,7 +725,7 @@ const tier = classifyTier(score); // 'trusted'
 
 ---
 
-### @usekova/robustness
+### @grith/robustness
 
 Formal robustness analysis for covenant constraints: input bound verification, vulnerability scanning, contradiction detection, and robustness scoring.
 
@@ -742,7 +742,7 @@ Formal robustness analysis for covenant constraints: input bound verification, v
 #### Usage
 
 ```typescript
-import { scanVulnerabilities, computeRobustnessScore } from '@usekova/robustness';
+import { scanVulnerabilities, computeRobustnessScore } from '@grith/robustness';
 
 const vulns = scanVulnerabilities([
   "permit read on '**'",
@@ -757,7 +757,7 @@ console.log(score.overall, score.factors);
 
 ---
 
-### @usekova/temporal
+### @grith/temporal
 
 Temporal evolution of covenants: trigger-based constraint evolution, trust decay modeling, violation tracking, and expiration forecasting.
 
@@ -776,7 +776,7 @@ Temporal evolution of covenants: trigger-based constraint evolution, trust decay
 #### Usage
 
 ```typescript
-import { createEvolutionPolicy, modelTrustDecay } from '@usekova/temporal';
+import { createEvolutionPolicy, modelTrustDecay } from '@grith/temporal';
 
 const policy = createEvolutionPolicy([{
   type: 'reputation_threshold',
@@ -789,7 +789,7 @@ const decay = modelTrustDecay(1.0, 0.95, [0, 30, 60, 90]);
 
 ---
 
-### @usekova/recursive
+### @grith/recursive
 
 Meta-covenants and recursive verification: covenants that govern other covenants, termination proofs, and transitive trust analysis.
 
@@ -807,7 +807,7 @@ Meta-covenants and recursive verification: covenants that govern other covenants
 #### Usage
 
 ```typescript
-import { createMetaCovenant, proveTermination } from '@usekova/recursive';
+import { createMetaCovenant, proveTermination } from '@grith/recursive';
 
 const meta = createMetaCovenant('ai-agent', ["deny * on '/system/**'"]);
 const proof = proveTermination([meta]);
@@ -816,7 +816,7 @@ console.log(proof.terminates); // true
 
 ---
 
-### @usekova/alignment
+### @grith/alignment
 
 AI alignment verification: HHH (Helpful, Honest, Harmless) property checking, alignment drift detection, and decomposition analysis.
 
@@ -834,7 +834,7 @@ AI alignment verification: HHH (Helpful, Honest, Harmless) property checking, al
 #### Usage
 
 ```typescript
-import { createAlignmentCovenant, verifyAlignment, STANDARD_ALIGNMENT_PROPERTIES } from '@usekova/alignment';
+import { createAlignmentCovenant, verifyAlignment, STANDARD_ALIGNMENT_PROPERTIES } from '@grith/alignment';
 
 const covenant = createAlignmentCovenant(STANDARD_ALIGNMENT_PROPERTIES);
 const report = verifyAlignment(covenant, executionRecords);
@@ -843,7 +843,7 @@ console.log(report.overallScore, report.propertyScores);
 
 ---
 
-### @usekova/norms
+### @grith/norms
 
 Emergent norm discovery, clustering, governance proposal generation, and template management from observed covenant patterns.
 
@@ -862,7 +862,7 @@ Emergent norm discovery, clustering, governance proposal generation, and templat
 #### Usage
 
 ```typescript
-import { discoverNorms, clusterNorms, proposeGovernance } from '@usekova/norms';
+import { discoverNorms, clusterNorms, proposeGovernance } from '@grith/norms';
 
 const norms = discoverNorms(covenantDataset);
 const clusters = clusterNorms(norms);
@@ -871,7 +871,7 @@ const proposals = proposeGovernance(clusters);
 
 ---
 
-### @usekova/substrate
+### @grith/substrate
 
 Cross-substrate constraint translation for AI agents, robots, IoT devices, autonomous vehicles, smart contracts, and drones.
 
@@ -890,7 +890,7 @@ Cross-substrate constraint translation for AI agents, robots, IoT devices, auton
 #### Usage
 
 ```typescript
-import { createAdapter, translateConstraints } from '@usekova/substrate';
+import { createAdapter, translateConstraints } from '@grith/substrate';
 
 const adapter = createAdapter('robot', { maxVelocity: 1.5, maxForce: 100 });
 const rules = translateConstraints(adapter, [
@@ -900,7 +900,7 @@ const rules = translateConstraints(adapter, [
 
 ---
 
-### @usekova/derivatives
+### @grith/derivatives
 
 Trust derivatives: trust futures, agent insurance policies, risk assessment, and settlement for accountability-based financial instruments.
 
@@ -918,7 +918,7 @@ Trust derivatives: trust futures, agent insurance policies, risk assessment, and
 #### Usage
 
 ```typescript
-import { createInsurancePolicy, assessRisk } from '@usekova/derivatives';
+import { createInsurancePolicy, assessRisk } from '@grith/derivatives';
 
 const risk = assessRisk({
   breachCount: 0, trustScore: 0.85,
@@ -931,7 +931,7 @@ console.log(policy.premiumRate, risk.overallRisk);
 
 ---
 
-### @usekova/legal
+### @grith/legal
 
 Legal compliance: identity packages, jurisdictional mappings, cross-jurisdiction compliance checking, audit trail export, and regulatory gap analysis.
 
@@ -950,7 +950,7 @@ Legal compliance: identity packages, jurisdictional mappings, cross-jurisdiction
 #### Usage
 
 ```typescript
-import { createLegalIdentityPackage, checkCompliance } from '@usekova/legal';
+import { createLegalIdentityPackage, checkCompliance } from '@grith/legal';
 
 const pkg = createLegalIdentityPackage(
   identity, covenants, reputation, attestations,
@@ -963,9 +963,9 @@ console.log(compliance.compliant, compliance.gaps);
 
 ## Platform
 
-### @usekova/react
+### @grith/react
 
-Framework-agnostic reactive primitives (Observable, CovenantState, IdentityState) for building Stele-powered UIs.
+Framework-agnostic reactive primitives (Observable, CovenantState, IdentityState) for building Grith-powered UIs.
 
 #### Key Exports
 
@@ -980,7 +980,7 @@ Framework-agnostic reactive primitives (Observable, CovenantState, IdentityState
 #### Usage
 
 ```typescript
-import { Observable, CovenantState } from '@usekova/react';
+import { Observable, CovenantState } from '@grith/react';
 
 const counter = new Observable(0);
 counter.subscribe((value) => console.log('Count:', value));
@@ -992,7 +992,7 @@ await state.create(options);
 
 ---
 
-### @usekova/evm
+### @grith/evm
 
 EVM anchoring utilities for on-chain covenant verification: ABI encoding/decoding, contract interface generation, and anchor/verify helpers for Ethereum-compatible blockchains.
 
@@ -1009,12 +1009,12 @@ EVM anchoring utilities for on-chain covenant verification: ABI encoding/decodin
 | `computeFunctionSelector(signature)` | function | Compute the 4-byte function selector from a signature string. |
 | `anchorCovenant(doc)` | function | Prepare a covenant for on-chain anchoring (returns encoded calldata). |
 | `verifyAnchor(anchorData, doc)` | function | Verify that anchor data matches a covenant document. |
-| `STELE_CONTRACT_ABI` | const | ABI definition for the Stele covenant anchor contract. |
+| `GRITH_CONTRACT_ABI` | const | ABI definition for the Grith covenant anchor contract. |
 
 #### Usage
 
 ```typescript
-import { anchorCovenant, encodeUint256, computeFunctionSelector } from '@usekova/evm';
+import { anchorCovenant, encodeUint256, computeFunctionSelector } from '@grith/evm';
 
 const calldata = anchorCovenant(covenantDoc);
 const selector = computeFunctionSelector('anchor(bytes32,bytes32,uint256)');
@@ -1023,24 +1023,24 @@ const encoded = encodeUint256(42n);
 
 ---
 
-### @usekova/mcp-server
+### @grith/mcp-server
 
-Model Context Protocol server exposing Stele tools to AI agents via JSON-RPC 2.0 over stdio.
+Model Context Protocol server exposing Grith tools to AI agents via JSON-RPC 2.0 over stdio.
 
 #### Key Exports
 
 | Export | Kind | Description |
 |--------|------|-------------|
-| `MCPSteleServer` | class | JSON-RPC 2.0 server with 6 built-in tools: `create_covenant`, `verify_covenant`, `evaluate_action`, `create_identity`, `parse_ccl`, `list_covenants`. Methods: `handleRequest(json)`, `getToolDefinitions()`, `start()`. |
+| `MCPGrithServer` | class | JSON-RPC 2.0 server with 6 built-in tools: `create_covenant`, `verify_covenant`, `evaluate_action`, `create_identity`, `parse_ccl`, `list_covenants`. Methods: `handleRequest(json)`, `getToolDefinitions()`, `start()`. |
 | `JSON_RPC_ERRORS` | const | Standard JSON-RPC 2.0 error codes. |
 | `JsonRpcRequest`, `JsonRpcResponse`, `ToolDefinition`, `ToolResult`, `MCPServerOptions` | type | JSON-RPC and MCP types. |
 
 #### Usage
 
 ```typescript
-import { MCPSteleServer } from '@usekova/mcp-server';
+import { MCPGrithServer } from '@grith/mcp-server';
 
-const server = new MCPSteleServer({ storePath: './covenants' });
+const server = new MCPGrithServer({ storePath: './covenants' });
 const response = await server.handleRequest({
   jsonrpc: '2.0', id: 1,
   method: 'tools/call',
@@ -1050,38 +1050,38 @@ const response = await server.handleRequest({
 
 ---
 
-### @usekova/cli
+### @grith/cli
 
-Command-line interface for Stele operations: key generation, covenant management, identity management, CCL parsing, and verification.
+Command-line interface for Grith operations: key generation, covenant management, identity management, CCL parsing, and verification.
 
 #### Commands
 
 | Command | Description |
 |---------|-------------|
-| `stele keygen` | Generate a new Ed25519 key pair and write to files. |
-| `stele build --issuer <file> --beneficiary <file> --constraints <ccl> --key <file>` | Build and sign a new covenant document. |
-| `stele verify <file>` | Verify a covenant document from a JSON file. |
-| `stele inspect <file>` | Display details of a covenant document. |
-| `stele resign <file> --key <file>` | Re-sign a covenant with a new nonce. |
-| `stele parse <ccl>` | Parse CCL source text and display the AST. |
-| `stele identity create --key <file> --model <json> --capabilities <list> --deployment <json>` | Create a new agent identity. |
-| `stele identity evolve <file> --key <file> --change-type <type> --description <text>` | Evolve an existing agent identity. |
+| `grith keygen` | Generate a new Ed25519 key pair and write to files. |
+| `grith build --issuer <file> --beneficiary <file> --constraints <ccl> --key <file>` | Build and sign a new covenant document. |
+| `grith verify <file>` | Verify a covenant document from a JSON file. |
+| `grith inspect <file>` | Display details of a covenant document. |
+| `grith resign <file> --key <file>` | Re-sign a covenant with a new nonce. |
+| `grith parse <ccl>` | Parse CCL source text and display the AST. |
+| `grith identity create --key <file> --model <json> --capabilities <list> --deployment <json>` | Create a new agent identity. |
+| `grith identity evolve <file> --key <file> --change-type <type> --description <text>` | Evolve an existing agent identity. |
 
 #### Usage
 
 ```bash
 # Generate a key pair
-stele keygen --output ./keys
+grith keygen --output ./keys
 
 # Build a covenant
-stele build --issuer issuer.json --beneficiary beneficiary.json \
+grith build --issuer issuer.json --beneficiary beneficiary.json \
   --constraints "permit read on '**'" --key ./keys/private.hex
 
 # Verify a covenant
-stele verify covenant.json
+grith verify covenant.json
 
 # Parse CCL
-stele parse "deny write on '/system/**'"
+grith parse "deny write on '/system/**'"
 ```
 
 ---
@@ -1096,7 +1096,7 @@ stele parse "deny write on '/system/**'"
 | `AgentIdentity` | identity | Agent identity with model attestation, capabilities, lineage. |
 | `VerificationResult` | core | `{ valid: boolean, checks: VerificationCheck[], document }`. |
 | `EvaluationResult` | ccl | `{ permitted: boolean, matchedRule?, allMatches[], reason?, severity? }`. |
-| `SteleError` | types | Base error with `code: SteleErrorCode`. |
+| `GrithError` | types | Base error with `code: GrithErrorCode`. |
 | `Result<T, E>` | types | Discriminated union for fallible operations. |
 
 ---
@@ -1109,5 +1109,5 @@ stele parse "deny write on '/system/**'"
 | `MAX_CONSTRAINTS` | core | `100` | Maximum CCL statements per document. |
 | `MAX_CHAIN_DEPTH` | core | `16` | Maximum delegation chain depth. |
 | `MAX_DOCUMENT_SIZE` | core | `1048576` | Maximum serialized document size (1 MB). |
-| `STELE_VERSION` | types | `"0.1.0"` | SDK version string. |
+| `GRITH_VERSION` | types | `"0.1.0"` | SDK version string. |
 | `DEFAULT_SEVERITY` | types | `"must"` | Default CCL severity level. |

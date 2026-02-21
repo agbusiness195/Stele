@@ -1,12 +1,12 @@
 {
-  "name": "@usekova/proof",
+  "name": "@grith/proof",
   "version": "2.0.0",
-  "description": "Proof generation and verification for the Stele covenant framework",
+  "description": "Proof generation and verification for the Grith covenant framework",
   "license": "MIT",
-  "author": "Stele Labs, Inc.",
-  "homepage": "https://stele.dev",
+  "author": "Grith Labs, Inc.",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/stele/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,11 +32,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/Stele.git",
+    "url": "https://github.com/agbusiness195/Grith.git",
     "directory": "packages/proof"
   },
   "keywords": [
-    "stele",
+    "grith",
     "covenant",
     "ai-accountability",
     "proof",
@@ -52,8 +52,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@usekova/ccl": "2.0.0",
-    "@usekova/crypto": "2.0.0",
-    "@usekova/types": "2.0.0"
+    "@grith/ccl": "2.0.0",
+    "@grith/crypto": "2.0.0",
+    "@grith/types": "2.0.0"
   }
 }

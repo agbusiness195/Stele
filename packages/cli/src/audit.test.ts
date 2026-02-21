@@ -403,11 +403,11 @@ afterEach(() => {
   setColorsEnabled(true);
 });
 
-describe('stele audit command', () => {
+describe('grith audit command', () => {
   it('shows help with --help', async () => {
     const r = await run(['audit', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('stele audit');
+    expect(r.stdout).toContain('grith audit');
     expect(r.stdout).toContain('compliance audit');
   });
 

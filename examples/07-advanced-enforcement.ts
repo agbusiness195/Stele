@@ -15,27 +15,27 @@
 import {
   Monitor,
   type AuditEntry,
-} from '@usekova/enforcement';
+} from '@grith/enforcement';
 
 import {
   createReceipt,
   computeReputationScore,
   createEndorsement,
   type ExecutionReceipt,
-} from '@usekova/reputation';
+} from '@grith/reputation';
 
 import {
   createBreachAttestation,
   TrustGraph,
-} from '@usekova/breach';
+} from '@grith/breach';
 
 import {
   buildCovenant,
   type Issuer,
   type Beneficiary,
-} from '@usekova/core';
+} from '@grith/core';
 
-import { generateKeyPair, sha256String, toHex, type HashHex } from '@usekova/crypto';
+import { generateKeyPair, sha256String, toHex, type HashHex } from '@grith/crypto';
 
 async function main() {
   console.log('========================================');

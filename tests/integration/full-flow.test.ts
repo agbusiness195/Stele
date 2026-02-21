@@ -1,16 +1,16 @@
 /**
- * Cross-package integration tests for the Stele SDK.
+ * Cross-package integration tests for the Grith SDK.
  *
- * This test exercises the full lifecycle of the Stele protocol across
+ * This test exercises the full lifecycle of the Grith protocol across
  * all core packages:
  *
- *   @usekova/crypto     - Key generation and hashing primitives
- *   @usekova/identity   - Agent identity creation and verification
- *   @usekova/core       - Covenant document building and verification
- *   @usekova/enforcement - Runtime constraint monitoring with audit logging
- *   @usekova/breach     - Breach attestation creation and trust graph propagation
- *   @usekova/proof      - Zero-knowledge compliance proof generation and verification
- *   @usekova/reputation - Execution receipts, receipt chains, and reputation scoring
+ *   @grith/crypto     - Key generation and hashing primitives
+ *   @grith/identity   - Agent identity creation and verification
+ *   @grith/core       - Covenant document building and verification
+ *   @grith/enforcement - Runtime constraint monitoring with audit logging
+ *   @grith/breach     - Breach attestation creation and trust graph propagation
+ *   @grith/proof      - Zero-knowledge compliance proof generation and verification
+ *   @grith/reputation - Execution receipts, receipt chains, and reputation scoring
  *
  * Scenario: An AI code-review agent operates under a covenant that permits
  * reading source files and generating reviews, but denies writing to
@@ -27,15 +27,15 @@ import {
   sha256Object,
   toHex,
   timestamp,
-} from '@usekova/crypto';
-import type { KeyPair, HashHex } from '@usekova/crypto';
+} from '@grith/crypto';
+import type { KeyPair, HashHex } from '@grith/crypto';
 
 import {
   createIdentity,
   evolveIdentity,
   verifyIdentity,
-} from '@usekova/identity';
-import type { AgentIdentity } from '@usekova/identity';
+} from '@grith/identity';
+import type { AgentIdentity } from '@grith/identity';
 
 import {
   buildCovenant,
@@ -44,28 +44,28 @@ import {
   resolveChain,
   computeEffectiveConstraints,
   validateChainNarrowing,
-} from '@usekova/core';
-import type { CovenantDocument } from '@usekova/core';
+} from '@grith/core';
+import type { CovenantDocument } from '@grith/core';
 
 import {
   Monitor,
   MonitorDeniedError,
   verifyMerkleProof,
-} from '@usekova/enforcement';
-import type { AuditEntry } from '@usekova/enforcement';
+} from '@grith/enforcement';
+import type { AuditEntry } from '@grith/enforcement';
 
 import {
   createBreachAttestation,
   verifyBreachAttestation,
   TrustGraph,
-} from '@usekova/breach';
-import type { BreachAttestation, BreachEvent } from '@usekova/breach';
+} from '@grith/breach';
+import type { BreachAttestation, BreachEvent } from '@grith/breach';
 
 import {
   generateComplianceProof,
   verifyComplianceProof,
-} from '@usekova/proof';
-import type { AuditEntryData } from '@usekova/proof';
+} from '@grith/proof';
+import type { AuditEntryData } from '@grith/proof';
 
 import {
   createReceipt,
@@ -77,8 +77,8 @@ import {
   burnStake,
   createDelegation,
   coBurnDelegation,
-} from '@usekova/reputation';
-import type { ExecutionReceipt } from '@usekova/reputation';
+} from '@grith/reputation';
+import type { ExecutionReceipt } from '@grith/reputation';
 
 // ---------------------------------------------------------------------------
 // Shared CCL constraint definitions used across all tests.
@@ -102,7 +102,7 @@ const CONSTRAINTS = [
 // Top-level describe
 // ---------------------------------------------------------------------------
 
-describe('Stele SDK: Full cross-package integration flow', () => {
+describe('Grith SDK: Full cross-package integration flow', () => {
   // Shared state across sequential test blocks. Each describe block
   // produces artifacts consumed by the next one, mirroring a real
   // deployment lifecycle.
@@ -122,7 +122,7 @@ describe('Stele SDK: Full cross-package integration flow', () => {
   // Step 0: Key generation
   // =========================================================================
 
-  describe('Step 0 - Cryptographic key generation (@usekova/crypto)', () => {
+  describe('Step 0 - Cryptographic key generation (@grith/crypto)', () => {
     it('should generate distinct key pairs for operator, beneficiary, agent, and reporter', async () => {
       [operatorKeyPair, beneficiaryKeyPair, agentKeyPair, reporterKeyPair] =
         await Promise.all([
@@ -151,10 +151,10 @@ describe('Stele SDK: Full cross-package integration flow', () => {
   });
 
   // =========================================================================
-  // Step 1: Agent identity creation and verification (@usekova/identity)
+  // Step 1: Agent identity creation and verification (@grith/identity)
   // =========================================================================
 
-  describe('Step 1 - Agent identity creation (@usekova/identity)', () => {
+  describe('Step 1 - Agent identity creation (@grith/identity)', () => {
     it('should create a valid agent identity with model attestation and capabilities', async () => {
       agentIdentity = await createIdentity({
         operatorKeyPair,
@@ -208,10 +208,10 @@ describe('Stele SDK: Full cross-package integration flow', () => {
   });
 
   // =========================================================================
-  // Step 2: Covenant creation and verification (@usekova/core)
+  // Step 2: Covenant creation and verification (@grith/core)
   // =========================================================================
 
-  describe('Step 2 - Covenant building (@usekova/core)', () => {
+  describe('Step 2 - Covenant building (@grith/core)', () => {
     it('should build a signed covenant document with CCL constraints', async () => {
       covenant = await buildCovenant({
         issuer: {
@@ -273,10 +273,10 @@ describe('Stele SDK: Full cross-package integration flow', () => {
   });
 
   // =========================================================================
-  // Step 3: Runtime enforcement monitoring (@usekova/enforcement)
+  // Step 3: Runtime enforcement monitoring (@grith/enforcement)
   // =========================================================================
 
-  describe('Step 3 - Constraint enforcement and audit logging (@usekova/enforcement)', () => {
+  describe('Step 3 - Constraint enforcement and audit logging (@grith/enforcement)', () => {
     it('should create a monitor from the covenant constraints in enforce mode', () => {
       monitor = new Monitor(covenant.id, CONSTRAINTS, {
         mode: 'enforce',
@@ -397,10 +397,10 @@ describe('Stele SDK: Full cross-package integration flow', () => {
   });
 
   // =========================================================================
-  // Step 4: Breach detection, attestation, and trust graph (@usekova/breach)
+  // Step 4: Breach detection, attestation, and trust graph (@grith/breach)
   // =========================================================================
 
-  describe('Step 4 - Breach attestation and trust graph propagation (@usekova/breach)', () => {
+  describe('Step 4 - Breach attestation and trust graph propagation (@grith/breach)', () => {
     it('should create a signed breach attestation for the denied db.write action', async () => {
       const auditLog = monitor.getAuditLog();
       const deniedEntry = auditLog.entries.find(
@@ -518,10 +518,10 @@ describe('Stele SDK: Full cross-package integration flow', () => {
   });
 
   // =========================================================================
-  // Step 5: Compliance proof generation and verification (@usekova/proof)
+  // Step 5: Compliance proof generation and verification (@grith/proof)
   // =========================================================================
 
-  describe('Step 5 - Compliance proof generation and verification (@usekova/proof)', () => {
+  describe('Step 5 - Compliance proof generation and verification (@grith/proof)', () => {
     let auditEntryData: AuditEntryData[];
 
     it('should convert audit log entries into proof-compatible format', () => {
@@ -634,10 +634,10 @@ describe('Stele SDK: Full cross-package integration flow', () => {
 
   // =========================================================================
   // Step 6: Execution receipts, chain verification, and reputation scoring
-  //         (@usekova/reputation)
+  //         (@grith/reputation)
   // =========================================================================
 
-  describe('Step 6 - Execution receipts and reputation scoring (@usekova/reputation)', () => {
+  describe('Step 6 - Execution receipts and reputation scoring (@grith/reputation)', () => {
     const receipts: ExecutionReceipt[] = [];
 
     it('should create a fulfilled execution receipt for the compliant execution', async () => {
@@ -881,7 +881,7 @@ describe('Stele SDK: Full cross-package integration flow', () => {
   // Step 8: Log-only mode (non-throwing) enforcement
   // =========================================================================
 
-  describe('Step 8 - Log-only mode enforcement (@usekova/enforcement)', () => {
+  describe('Step 8 - Log-only mode enforcement (@grith/enforcement)', () => {
     it('should not throw on denied actions in log_only mode', async () => {
       const logOnlyMonitor = new Monitor(covenant.id, CONSTRAINTS, {
         mode: 'log_only',

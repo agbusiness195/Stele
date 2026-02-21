@@ -1,11 +1,11 @@
-# @usekova/composition
+# @grith/composition
 
 Covenant composition with merge, intersect, conflict detection, and complexity analysis. Composes multiple covenants into a single proof with deny-wins semantics.
 
 ## Installation
 
 ```bash
-npm install @usekova/composition
+npm install @grith/composition
 ```
 
 ## Key APIs
@@ -26,7 +26,7 @@ import {
   validateComposition,
   findConflicts,
   compositionComplexity,
-} from '@usekova/composition';
+} from '@grith/composition';
 
 const covenants = [
   { id: 'c1', agentId: 'agent-a', constraints: ['permit read /data/**'] },
@@ -59,4 +59,4 @@ console.log(`Score: ${complexity.score}`);
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

@@ -1,5 +1,5 @@
-import type { HashHex } from '@usekova/crypto';
-import type { Severity } from '@usekova/ccl';
+import type { HashHex } from '@grith/crypto';
+import type { Severity } from '@grith/ccl';
 
 export type TrustStatus = 'trusted' | 'degraded' | 'restricted' | 'revoked' | 'unknown';
 

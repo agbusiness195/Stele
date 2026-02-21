@@ -12,7 +12,7 @@
  */
 
 import {
-  KovaClient,
+  GrithClient,
   generateKeyPair,
   verifyIdentity,
   getLineage,
@@ -21,7 +21,7 @@ import {
   computeCapabilityManifestHash,
   type ModelAttestation,
   type DeploymentContext,
-} from '@usekova/sdk';
+} from '@grith/sdk';
 
 async function main() {
   console.log('========================================');
@@ -63,7 +63,7 @@ async function main() {
 
   console.log('\n--- Step 3: Create Agent Identity ---\n');
 
-  const client = new KovaClient({ keyPair: operatorKeys });
+  const client = new GrithClient({ keyPair: operatorKeys });
 
   const identity = await client.createIdentity({
     operatorIdentifier: 'operator:acme-research-lab',
@@ -174,7 +174,7 @@ async function main() {
 
   // Create an unrelated identity for comparison
   const otherKeys = await generateKeyPair();
-  const otherClient = new KovaClient({ keyPair: otherKeys });
+  const otherClient = new GrithClient({ keyPair: otherKeys });
   const otherIdentity = await otherClient.createIdentity({
     operatorIdentifier: 'operator:other-org',
     model: { provider: 'openai', modelId: 'gpt-4', modelVersion: '1.0' },

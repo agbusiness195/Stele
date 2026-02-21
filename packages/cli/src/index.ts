@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * @usekova/cli -- Command-line interface for the Stele covenant protocol.
+ * @grith/cli -- Command-line interface for the Grith covenant protocol.
  *
  * Provides commands for key generation, covenant creation, verification,
  * evaluation, inspection, CCL parsing, shell completions, diagnostics, and diff.
@@ -9,17 +9,17 @@
  * @packageDocumentation
  */
 
-import { generateKeyPair, toHex } from '@usekova/crypto';
-import type { KeyPair } from '@usekova/crypto';
+import { generateKeyPair, toHex } from '@grith/crypto';
+import type { KeyPair } from '@grith/crypto';
 import {
   buildCovenant,
   verifyCovenant,
   deserializeCovenant,
   serializeCovenant,
   PROTOCOL_VERSION,
-} from '@usekova/core';
-import type { CovenantDocument } from '@usekova/core';
-import { parse, evaluate, serialize as serializeCCL } from '@usekova/ccl';
+} from '@grith/core';
+import type { CovenantDocument } from '@grith/core';
+import { parse, evaluate, serialize as serializeCCL } from '@grith/ccl';
 
 import {
   setColorsEnabled,
@@ -38,7 +38,7 @@ import {
   box,
 } from './format';
 import { loadConfig, saveConfig } from './config';
-import type { SteleConfig } from './config';
+import type { GrithConfig } from './config';
 import {
   bashCompletions,
   zshCompletions,
@@ -112,9 +112,9 @@ function hasFlag(flags: Record<string, string | boolean>, key: string): boolean 
 function buildMainHelp(): string {
   const lines: string[] = [];
   lines.push('');
-  lines.push(header('Stele CLI') + dim(' - Covenant Protocol Tool'));
+  lines.push(header('Grith CLI') + dim(' - Covenant Protocol Tool'));
   lines.push('');
-  lines.push(`${bold('Usage:')} stele <command> [options]`);
+  lines.push(`${bold('Usage:')} grith <command> [options]`);
   lines.push('');
   lines.push(bold('Commands:'));
   lines.push('');
@@ -129,7 +129,7 @@ function buildMainHelp(): string {
         ['inspect <json>', 'Pretty-print covenant details'],
         ['parse <ccl>', 'Parse CCL and output AST as JSON'],
         ['completions <shell>', 'Generate shell completion script (bash|zsh|fish)'],
-        ['doctor', 'Check Stele installation health'],
+        ['doctor', 'Check Grith installation health'],
         ['audit', 'Run compliance audit and generate report'],
         ['diff <doc1> <doc2>', 'Show differences between two covenant documents'],
         ['version', 'Print version information'],
@@ -154,17 +154,17 @@ function buildMainHelp(): string {
   return lines.join('\n');
 }
 
-const INIT_HELP = `stele init - Generate an Ed25519 key pair and write stele.config.json.
+const INIT_HELP = `grith init - Generate an Ed25519 key pair and write grith.config.json.
 
-Usage: stele init [--json]
+Usage: grith init [--json]
 
 Generates a new key pair, outputs the public key, and writes a
-stele.config.json configuration file in the current directory.
+grith.config.json configuration file in the current directory.
 With --json, outputs { publicKey, privateKey } as JSON.`;
 
-const CREATE_HELP = `stele create - Create and sign a covenant document.
+const CREATE_HELP = `grith create - Create and sign a covenant document.
 
-Usage: stele create --issuer <id> --beneficiary <id> --constraints <ccl> [--json]
+Usage: grith create --issuer <id> --beneficiary <id> --constraints <ccl> [--json]
 
 Options:
   --issuer <id>          Issuer identifier (required)
@@ -172,35 +172,35 @@ Options:
   --constraints <ccl>    CCL constraint string (required)
   --json                 Output raw JSON`;
 
-const VERIFY_HELP = `stele verify - Verify a covenant document.
+const VERIFY_HELP = `grith verify - Verify a covenant document.
 
-Usage: stele verify <json-string> [--json]
+Usage: grith verify <json-string> [--json]
 
 Runs all verification checks on the covenant and reports results.`;
 
-const EVALUATE_HELP = `stele evaluate - Evaluate an action against a covenant.
+const EVALUATE_HELP = `grith evaluate - Evaluate an action against a covenant.
 
-Usage: stele evaluate <json-string> <action> <resource> [--json]
+Usage: grith evaluate <json-string> <action> <resource> [--json]
 
 Parses the covenant's CCL constraints and evaluates the given action
 and resource against them.`;
 
-const INSPECT_HELP = `stele inspect - Pretty-print covenant details.
+const INSPECT_HELP = `grith inspect - Pretty-print covenant details.
 
-Usage: stele inspect <json-string> [--json]
+Usage: grith inspect <json-string> [--json]
 
 Displays covenant fields including parties, constraints, and metadata.`;
 
-const PARSE_HELP = `stele parse - Parse CCL source text and output AST.
+const PARSE_HELP = `grith parse - Parse CCL source text and output AST.
 
-Usage: stele parse <ccl-string> [--json]
+Usage: grith parse <ccl-string> [--json]
 
 Parses CCL and outputs the AST. With --json, outputs the full
 CCLDocument as JSON. Without --json, outputs a human-readable summary.`;
 
-const COMPLETIONS_HELP = `stele completions - Generate shell completion script.
+const COMPLETIONS_HELP = `grith completions - Generate shell completion script.
 
-Usage: stele completions <shell>
+Usage: grith completions <shell>
 
 Supported shells:
   bash    Generate Bash completion script
@@ -208,26 +208,26 @@ Supported shells:
   fish    Generate Fish completion script
 
 Pipe the output to the appropriate file:
-  stele completions bash > /etc/bash_completion.d/stele
-  stele completions zsh > ~/.zsh/completions/_stele
-  stele completions fish > ~/.config/fish/completions/stele.fish`;
+  grith completions bash > /etc/bash_completion.d/grith
+  grith completions zsh > ~/.zsh/completions/_grith
+  grith completions fish > ~/.config/fish/completions/grith.fish`;
 
-const DOCTOR_HELP = `stele doctor - Check Stele installation health.
+const DOCTOR_HELP = `grith doctor - Check Grith installation health.
 
-Usage: stele doctor [--json]
+Usage: grith doctor [--json]
 
-Runs diagnostic checks on the Stele installation:
+Runs diagnostic checks on the Grith installation:
   - Node.js version >= 18
-  - All @usekova/* packages importable
+  - All @grith/* packages importable
   - Crypto key pair generation works
   - Covenant build and verify round-trip
   - CCL parsing works
   - Config file readable (if exists)
   - No stale dist files detected`;
 
-const AUDIT_HELP = `stele audit - Run compliance audit and generate report.
+const AUDIT_HELP = `grith audit - Run compliance audit and generate report.
 
-Usage: stele audit [options] [--json]
+Usage: grith audit [options] [--json]
 
 Options:
   --covenants <n>          Number of configured covenants (default: 0)
@@ -246,9 +246,9 @@ Runs a compliance audit that checks:
 
 Reports findings with severity levels, a 0-100 score, and a letter grade.`;
 
-const DIFF_HELP = `stele diff - Show differences between two covenant documents.
+const DIFF_HELP = `grith diff - Show differences between two covenant documents.
 
-Usage: stele diff <doc1-json> <doc2-json> [--json]
+Usage: grith diff <doc1-json> <doc2-json> [--json]
 
 Compares two covenant documents and highlights:
   - Changed fields (version, constraints, timestamps, etc.)
@@ -273,7 +273,7 @@ async function cmdInit(flags: Record<string, string | boolean>, configDir?: stri
   }
 
   // Write config file
-  const config: SteleConfig = {
+  const config: GrithConfig = {
     defaultIssuer: { id: 'default', publicKey: publicKeyHex },
     outputFormat: 'text',
   };
@@ -292,9 +292,9 @@ async function cmdInit(flags: Record<string, string | boolean>, configDir?: stri
       ['Public key', publicKeyHex],
     ]),
     '',
-    success('Wrote stele.config.json'),
+    success('Wrote grith.config.json'),
     '',
-    dim('Run "stele create" to build your first covenant.'),
+    dim('Run "grith create" to build your first covenant.'),
     '',
   ];
   return { stdout: lines.join('\n'), stderr: '', exitCode: 0 };
@@ -302,7 +302,7 @@ async function cmdInit(flags: Record<string, string | boolean>, configDir?: stri
 
 // ─── Command: create ──────────────────────────────────────────────────────────
 
-async function cmdCreate(flags: Record<string, string | boolean>, config?: SteleConfig): Promise<RunResult> {
+async function cmdCreate(flags: Record<string, string | boolean>, config?: GrithConfig): Promise<RunResult> {
   if (hasFlag(flags, 'help')) {
     return { stdout: CREATE_HELP, stderr: '', exitCode: 0 };
   }
@@ -723,7 +723,7 @@ async function cmdDoctor(
   }
 
   const lines: string[] = [''];
-  lines.push(header('Stele Doctor'));
+  lines.push(header('Grith Doctor'));
   lines.push('');
 
   for (const check of checks) {
@@ -1033,10 +1033,10 @@ function cmdHelp(): RunResult {
 // ─── Main run function ────────────────────────────────────────────────────────
 
 /**
- * Run the Stele CLI with the given argument list.
+ * Run the Grith CLI with the given argument list.
  *
  * @param args - The command-line arguments (without node/script prefix).
- * @param configDir - Optional directory to search for stele.config.json (defaults to cwd).
+ * @param configDir - Optional directory to search for grith.config.json (defaults to cwd).
  * @returns An object with stdout, stderr, and exitCode.
  */
 export async function run(args: string[], configDir?: string): Promise<RunResult> {
@@ -1048,7 +1048,7 @@ export async function run(args: string[], configDir?: string): Promise<RunResult
   setColorsEnabled(!noColor && !jsonMode);
 
   // Load config file (non-fatal if missing)
-  let config: SteleConfig | undefined;
+  let config: GrithConfig | undefined;
   try {
     config = loadConfig(configDir);
   } catch {
@@ -1095,7 +1095,7 @@ export async function run(args: string[], configDir?: string): Promise<RunResult
       default:
         return {
           stdout: '',
-          stderr: `Error: Unknown command '${parsed.command}'. Run 'stele help' for usage.`,
+          stderr: `Error: Unknown command '${parsed.command}'. Run 'grith help' for usage.`,
           exitCode: 1,
         };
     }

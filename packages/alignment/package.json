@@ -1,5 +1,5 @@
 {
-  "name": "@usekova/alignment",
+  "name": "@grith/alignment",
   "version": "2.0.0",
   "description": "Value alignment verification and normative constraint enforcement",
   "sideEffects": false,
@@ -27,9 +27,9 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@usekova/ccl": "2.0.0",
-    "@usekova/crypto": "2.0.0",
-    "@usekova/types": "2.0.0"
+    "@grith/ccl": "2.0.0",
+    "@grith/crypto": "2.0.0",
+    "@grith/types": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -40,16 +40,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/Stele.git",
+    "url": "https://github.com/agbusiness195/Grith.git",
     "directory": "packages/alignment"
   },
-  "homepage": "https://stele.dev",
+  "homepage": "https://grith.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/stele/issues"
+    "url": "https://github.com/agbusiness195/grith/issues"
   },
-  "author": "Stele Labs, Inc.",
+  "author": "Grith Labs, Inc.",
   "keywords": [
-    "stele",
+    "grith",
     "covenant",
     "ai-accountability",
     "alignment",

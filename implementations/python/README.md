@@ -1,16 +1,16 @@
-# Stele Protocol - Python Implementation
+# Grith Protocol - Python Implementation
 
-A complete Python implementation of the Stele protocol core primitives for AI covenant management.
+A complete Python implementation of the Grith protocol core primitives for AI covenant management.
 
 ## Overview
 
-This package implements the Stele protocol, providing:
+This package implements the Grith protocol, providing:
 
-- **Crypto** (`stele.crypto`) -- Ed25519 signing/verification, SHA-256 hashing, JCS canonicalization (RFC 8785)
-- **CCL** (`stele.ccl`) -- Constraint Commitment Language parser and evaluator
-- **Covenant** (`stele.covenant`) -- Covenant document build, verify, chain, serialize/deserialize
-- **Identity** (`stele.identity`) -- Agent identity creation, evolution, verification
-- **Store** (`stele.store`) -- In-memory covenant document storage
+- **Crypto** (`grith.crypto`) -- Ed25519 signing/verification, SHA-256 hashing, JCS canonicalization (RFC 8785)
+- **CCL** (`grith.ccl`) -- Constraint Commitment Language parser and evaluator
+- **Covenant** (`grith.covenant`) -- Covenant document build, verify, chain, serialize/deserialize
+- **Identity** (`grith.identity`) -- Agent identity creation, evolution, verification
+- **Store** (`grith.store`) -- In-memory covenant document storage
 
 ## Installation
 
@@ -26,7 +26,7 @@ pip install -e ".[dev]"
 ## Quick Start
 
 ```python
-from stele import crypto, covenant
+from grith import crypto, covenant
 
 # Generate key pairs
 issuer_kp = crypto.generate_key_pair()
@@ -72,4 +72,4 @@ reference implementation. Key interoperability points:
 
 ## Protocol Version
 
-This implementation targets Stele protocol version 1.0.
+This implementation targets Grith protocol version 1.0.

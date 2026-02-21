@@ -1,4 +1,4 @@
-//! Integration tests for the Stele protocol Rust implementation.
+//! Integration tests for the Grith protocol Rust implementation.
 //!
 //! These tests exercise all core operations: key generation, signing,
 //! CCL parsing/evaluation, covenant building/verification/chaining,
@@ -6,16 +6,16 @@
 
 use std::collections::HashMap;
 
-use stele::ccl;
-use stele::covenant::{
+use grith::ccl;
+use grith::covenant::{
     self, ChainReference, CovenantBuilderOptions, CovenantDocument, Party,
     PROTOCOL_VERSION, MAX_CHAIN_DEPTH,
 };
-use stele::crypto;
-use stele::identity::{
+use grith::crypto;
+use grith::identity::{
     self, CreateIdentityOptions, DeploymentInfo, EvolveIdentityOptions, ModelInfo,
 };
-use stele::store::{MemoryStore, Store};
+use grith::store::{MemoryStore, Store};
 
 // ---------------------------------------------------------------------------
 // Helpers

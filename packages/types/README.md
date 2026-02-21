@@ -1,11 +1,11 @@
-# @usekova/types
+# @grith/types
 
-Shared type definitions, error classes, validation utilities, and protocol constants for the Stele SDK.
+Shared type definitions, error classes, validation utilities, and protocol constants for the Grith SDK.
 
 ## Installation
 
 ```bash
-npm install @usekova/types
+npm install @grith/types
 ```
 
 ## Usage
@@ -13,12 +13,12 @@ npm install @usekova/types
 ### Error Classes
 
 ```typescript
-import { SteleError, SteleErrorCode, ValidationError } from '@usekova/types';
+import { GrithError, GrithErrorCode, ValidationError } from '@grith/types';
 
 try {
-  throw new SteleError('Something went wrong', SteleErrorCode.INVALID_INPUT);
+  throw new GrithError('Something went wrong', GrithErrorCode.INVALID_INPUT);
 } catch (err) {
-  if (err instanceof SteleError) {
+  if (err instanceof GrithError) {
     console.log(err.code); // 'INVALID_INPUT'
   }
 }
@@ -27,7 +27,7 @@ try {
 ### Result Type
 
 ```typescript
-import { ok, err, type Result } from '@usekova/types';
+import { ok, err, type Result } from '@grith/types';
 
 function divide(a: number, b: number): Result<number> {
   if (b === 0) return err(new Error('Division by zero'));
@@ -43,7 +43,7 @@ if (result.ok) {
 ### Validation Utilities
 
 ```typescript
-import { validateNonEmpty, validateRange, validateHex, validateProbability } from '@usekova/types';
+import { validateNonEmpty, validateRange, validateHex, validateProbability } from '@grith/types';
 
 validateNonEmpty(name, 'issuer.name');       // throws ValidationError if blank
 validateRange(depth, 1, 16, 'chain.depth');  // throws if outside [1, 16]
@@ -54,7 +54,7 @@ validateProbability(rate, 'carryForward');    // throws if not in [0, 1]
 ### Type Guards
 
 ```typescript
-import { isNonEmptyString, isValidHex, isValidPublicKey, sanitizeString } from '@usekova/types';
+import { isNonEmptyString, isValidHex, isValidPublicKey, sanitizeString } from '@grith/types';
 
 if (isValidPublicKey(input)) {
   // input is narrowed to a valid public key string
@@ -65,15 +65,15 @@ const safe = sanitizeString(userInput, { maxLength: 256 });
 
 ## Key APIs
 
-- **Error classes**: `SteleError`, `ValidationError`, `CryptoError`, `CCLError`, `ChainError`, `StorageError`
+- **Error classes**: `GrithError`, `ValidationError`, `CryptoError`, `CCLError`, `ChainError`, `StorageError`
 - **Result type**: `Result<T, E>`, `ok()`, `err()`
 - **Validation**: `validateNonEmpty()`, `validateRange()`, `validateHex()`, `validateProbability()`
 - **Type guards**: `isNonEmptyString()`, `isValidHex()`, `isValidPublicKey()`, `isPlainObject()`
 - **Sanitization**: `sanitizeString()`, `sanitizeJsonInput()`, `freezeDeep()`
 - **Observability**: `Logger`, `createLogger()`, `Tracer`, `Counter`, `Gauge`, `Histogram`
 - **Resilience**: `withRetry()`, `CircuitBreaker`, `HealthChecker`
-- **Constants**: `STELE_VERSION`, `DEFAULT_SEVERITY`, `SUPPORTED_HASH_ALGORITHMS`
+- **Constants**: `GRITH_VERSION`, `DEFAULT_SEVERITY`, `SUPPORTED_HASH_ALGORITHMS`
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Grith SDK root documentation](../../README.md) for the full API reference and architecture guide.

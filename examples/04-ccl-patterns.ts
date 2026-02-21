@@ -26,7 +26,7 @@ import {
   matchResource,
   type CCLDocument,
   type EvaluationContext,
-} from '@usekova/ccl';
+} from '@grith/ccl';
 
 function main() {
   console.log('========================================');

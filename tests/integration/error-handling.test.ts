@@ -1,12 +1,12 @@
 /**
- * Integration tests for error handling across the Stele SDK.
+ * Integration tests for error handling across the Grith SDK.
  *
  * Exercises error paths in crypto, CCL, core covenant operations,
- * verification, store, deserialization, and KovaClient.
+ * verification, store, deserialization, and GrithClient.
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { generateKeyPair, toHex } from '@usekova/crypto';
+import { generateKeyPair, toHex } from '@grith/crypto';
 import {
   buildCovenant,
   verifyCovenant,
@@ -16,13 +16,13 @@ import {
   CovenantBuildError,
   PROTOCOL_VERSION,
   MAX_CHAIN_DEPTH,
-} from '@usekova/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@usekova/core';
-import { parse, evaluate } from '@usekova/ccl';
-import { Verifier } from '@usekova/verifier';
-import { MemoryStore } from '@usekova/store';
-import { KovaClient } from '@usekova/sdk';
-import { createIdentity } from '@usekova/identity';
+} from '@grith/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
+import { parse, evaluate } from '@grith/ccl';
+import { Verifier } from '@grith/verifier';
+import { MemoryStore } from '@grith/store';
+import { GrithClient } from '@grith/sdk';
+import { createIdentity } from '@grith/identity';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -516,7 +516,7 @@ describe('Chain depth exceeded', () => {
 
 describe('Narrowing violations', () => {
   it('detects child permitting what parent denies', async () => {
-    const client = new KovaClient();
+    const client = new GrithClient();
     const kp = await client.generateKeyPair();
     const beneficiaryKp = await generateKeyPair();
 
@@ -569,7 +569,7 @@ describe('Narrowing violations', () => {
       },
     });
 
-    const client = new KovaClient({ keyPair: kp });
+    const client = new GrithClient({ keyPair: kp });
     const result = await client.validateChain([parentDoc, childDoc]);
     expect(result.narrowingViolations.length).toBe(0);
   });
@@ -801,12 +801,12 @@ describe('Deserialization errors', () => {
 });
 
 // ===========================================================================
-// 10. KovaClient errors
+// 10. GrithClient errors
 // ===========================================================================
 
-describe('KovaClient errors', () => {
+describe('GrithClient errors', () => {
   it('throws when creating covenant without key pair', async () => {
-    const client = new KovaClient();
+    const client = new GrithClient();
     const beneficiaryKp = await generateKeyPair();
 
     await expect(
@@ -819,14 +819,14 @@ describe('KovaClient errors', () => {
   });
 
   it('throws when countersigning without key pair', async () => {
-    const client = new KovaClient();
+    const client = new GrithClient();
     const { doc } = await buildValidCovenant();
 
     await expect(client.countersign(doc)).rejects.toThrow(/No key pair/);
   });
 
   it('throws when creating identity without key pair', async () => {
-    const client = new KovaClient();
+    const client = new GrithClient();
 
     await expect(
       client.createIdentity({
@@ -845,7 +845,7 @@ describe('KovaClient errors', () => {
   });
 
   it('throws when evolving identity without key pair', async () => {
-    const client = new KovaClient();
+    const client = new GrithClient();
     const kp = await generateKeyPair();
 
     const identity = await createIdentity({
@@ -872,7 +872,7 @@ describe('KovaClient errors', () => {
   });
 
   it('strict mode throws on invalid verification', async () => {
-    const client = new KovaClient({ strictMode: true });
+    const client = new GrithClient({ strictMode: true });
     const { doc } = await buildValidCovenant();
 
     // Tamper to make it fail
@@ -882,7 +882,7 @@ describe('KovaClient errors', () => {
   });
 
   it('non-strict mode returns result on invalid verification', async () => {
-    const client = new KovaClient({ strictMode: false });
+    const client = new GrithClient({ strictMode: false });
     const { doc } = await buildValidCovenant();
 
     const tampered = { ...doc, constraints: "deny all on '**'" };
@@ -894,7 +894,7 @@ describe('KovaClient errors', () => {
   it('client with key pair can create covenants', async () => {
     const kp = await generateKeyPair();
     const beneficiaryKp = await generateKeyPair();
-    const client = new KovaClient({ keyPair: kp });
+    const client = new GrithClient({ keyPair: kp });
 
     const doc = await client.createCovenant({
       issuer: makeIssuer(kp.publicKeyHex),
@@ -1181,10 +1181,10 @@ describe('Event system edge cases', () => {
     expect(events.length).toBe(1); // no new events
   });
 
-  it('KovaClient emits covenant:created event', async () => {
+  it('GrithClient emits covenant:created event', async () => {
     const kp = await generateKeyPair();
     const beneficiaryKp = await generateKeyPair();
-    const client = new KovaClient({ keyPair: kp });
+    const client = new GrithClient({ keyPair: kp });
 
     let eventFired = false;
     client.on('covenant:created', () => {
@@ -1200,10 +1200,10 @@ describe('Event system edge cases', () => {
     expect(eventFired).toBe(true);
   });
 
-  it('KovaClient removeAllListeners clears handlers', async () => {
+  it('GrithClient removeAllListeners clears handlers', async () => {
     const kp = await generateKeyPair();
     const beneficiaryKp = await generateKeyPair();
-    const client = new KovaClient({ keyPair: kp });
+    const client = new GrithClient({ keyPair: kp });
 
     let count = 0;
     client.on('covenant:created', () => {

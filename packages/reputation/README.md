@@ -1,11 +1,11 @@
-# @usekova/reputation
+# @grith/reputation
 
-Reputation scoring, stake management, endorsements, and receipt-chain verification for Stele covenant agents.
+Reputation scoring, stake management, endorsements, and receipt-chain verification for Grith covenant agents.
 
 ## Installation
 
 ```bash
-npm install @usekova/reputation
+npm install @grith/reputation
 ```
 
 ## Key APIs
@@ -40,8 +40,8 @@ npm install @usekova/reputation
 ## Usage
 
 ```typescript
-import { createReceipt, computeReputationScore, createStake } from '@usekova/reputation';
-import { generateKeyPair } from '@usekova/crypto';
+import { createReceipt, computeReputationScore, createStake } from '@grith/reputation';
+import { generateKeyPair } from '@grith/crypto';
 
 const keys = await generateKeyPair();
 
@@ -69,4 +69,4 @@ const stake = await createStake(agentIdentityHash, covenantId, 0.5, keys);
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.

@@ -1,5 +1,5 @@
 /**
- * @usekova/core/schema — JSON Schema-like validation for CovenantDocument structures.
+ * @grith/core/schema — JSON Schema-like validation for CovenantDocument structures.
  *
  * Hand-written validator (no external dependencies) that checks structural
  * correctness of a CovenantDocument before any cryptographic verification.

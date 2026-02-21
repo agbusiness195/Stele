@@ -1,7 +1,7 @@
-// Package stele provides a Go implementation of the Stele protocol for
+// Package grith provides a Go implementation of the Grith protocol for
 // cryptographic accountability of AI agents.
 //
-// Stele introduces behavioral commitments as a first-class primitive for
+// Grith introduces behavioral commitments as a first-class primitive for
 // AI agents. Before acting, an agent inscribes a covenant -- a signed,
 // content-addressed document specifying its intended behavior, constraints,
 // and scope. During operation, every action is logged against this covenant
@@ -22,7 +22,7 @@
 //
 // # Protocol Version
 //
-// This implementation targets Stele protocol version 1.0.
+// This implementation targets Grith protocol version 1.0.
 //
 // # CCL Grammar
 //
@@ -48,4 +48,4 @@
 // Covenant verification performs 11 checks: id_match, signature_valid,
 // not_expired, active, ccl_parses, enforcement_valid, proof_valid,
 // chain_depth, document_size, countersignatures, and nonce_present.
-package stele
+package grith

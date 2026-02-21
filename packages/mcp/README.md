@@ -1,24 +1,24 @@
-# @usekova/mcp
+# @grith/mcp
 
-Model Context Protocol (MCP) integration -- wraps any MCP server with Stele covenant enforcement, audit logging, and compliance proofs.
+Model Context Protocol (MCP) integration -- wraps any MCP server with Grith covenant enforcement, audit logging, and compliance proofs.
 
 ## Installation
 
 ```bash
-npm install @usekova/mcp
+npm install @grith/mcp
 ```
 
 ## Key APIs
 
-- **SteleGuard.wrap(server, options)**: Wrap an MCP server with constraint enforcement using CCL text or a preset name. Returns a `WrappedMCPServer`.
-- **SteleGuard.fromCovenant(server, covenant, keyPair)**: Wrap an MCP server using a pre-built `CovenantDocument` (for externally managed covenants).
+- **GrithGuard.wrap(server, options)**: Wrap an MCP server with constraint enforcement using CCL text or a preset name. Returns a `WrappedMCPServer`.
+- **GrithGuard.fromCovenant(server, covenant, keyPair)**: Wrap an MCP server using a pre-built `CovenantDocument` (for externally managed covenants).
 - **PRESETS**: Built-in CCL constraint presets (`standard:data-isolation`, `standard:read-write`, `standard:network`, `standard:minimal`).
 - **WrappedMCPServer**: Extended server with `getMonitor()`, `getAuditLog()`, `generateProof()`, `getReceipt()`, and `getCovenant()` accessors.
 
 ## Usage
 
 ```typescript
-import { SteleGuard } from '@usekova/mcp';
+import { GrithGuard } from '@grith/mcp';
 
 // Your existing MCP server
 const mcpServer = {
@@ -29,7 +29,7 @@ const mcpServer = {
 };
 
 // Wrap with a built-in preset (2 lines)
-const guarded = await SteleGuard.wrap(mcpServer, {
+const guarded = await GrithGuard.wrap(mcpServer, {
   constraints: 'standard:data-isolation',
   mode: 'enforce', // or 'log_only'
   onViolation: (v) => console.warn(`Blocked: ${v.toolName} - ${v.constraint}`),
@@ -47,14 +47,14 @@ const receipt = guarded.getReceipt();
 ### Using a pre-built covenant
 
 ```typescript
-import { SteleGuard } from '@usekova/mcp';
-import { buildCovenant } from '@usekova/core';
-import { generateKeyPair } from '@usekova/crypto';
+import { GrithGuard } from '@grith/mcp';
+import { buildCovenant } from '@grith/core';
+import { generateKeyPair } from '@grith/crypto';
 
 const keyPair = await generateKeyPair();
 const covenant = await buildCovenant({ /* ... */ });
 
-const guarded = await SteleGuard.fromCovenant(mcpServer, covenant, keyPair);
+const guarded = await GrithGuard.fromCovenant(mcpServer, covenant, keyPair);
 ```
 
 ## Presets
@@ -68,4 +68,4 @@ const guarded = await SteleGuard.fromCovenant(mcpServer, covenant, keyPair);
 
 ## Docs
 
-See the [Stele SDK root documentation](../../README.md) for the full API reference.
+See the [Grith SDK root documentation](../../README.md) for the full API reference.
