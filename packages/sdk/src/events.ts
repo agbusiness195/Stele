@@ -105,7 +105,7 @@ export class GrithEventEmitter {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener as any, once: false });
+    entries.push({ fn: listener as Listener<GrithLifecycleEventMap[keyof GrithLifecycleEventMap]>, once: false });
     return this;
   }
 
@@ -173,7 +173,7 @@ export class GrithEventEmitter {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener as any, once: true });
+    entries.push({ fn: listener as Listener<GrithLifecycleEventMap[keyof GrithLifecycleEventMap]>, once: true });
     return this;
   }
 

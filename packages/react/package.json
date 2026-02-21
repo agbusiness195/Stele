@@ -48,7 +48,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/Grith.git",
+    "url": "https://github.com/agbusiness195/grith.git",
     "directory": "packages/react"
   },
   "homepage": "https://grith.dev",

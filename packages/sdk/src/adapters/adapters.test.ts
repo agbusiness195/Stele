@@ -4,7 +4,7 @@ import type { CovenantDocument } from '@grith/core';
 
 import { GrithClient } from '../index.js';
 import { grithMiddleware, grithGuardHandler, createCovenantRouter } from './express.js';
-import type { IncomingRequest, OutgoingResponse, NextFunction } from './express.js';
+import type { GrithEvaluator, IncomingRequest, OutgoingResponse, NextFunction } from './express.js';
 import { withGrith, withGrithTools, createToolGuard, GrithAccessDeniedError } from './vercel-ai.js';
 import type { ToolLike } from './vercel-ai.js';
 import { GrithCallbackHandler, withGrithTool, createChainGuard } from './langchain.js';
@@ -201,7 +201,7 @@ describe('Express middleware adapter', () => {
       // Create a middleware with a broken client to force an error
       const brokenClient = {
         evaluateAction: () => Promise.reject(new Error('boom')),
-      } as unknown as GrithClient;
+      } satisfies GrithEvaluator;
 
       const mw = grithMiddleware({
         client: brokenClient,
@@ -224,7 +224,7 @@ describe('Express middleware adapter', () => {
     it('default onError handler returns 500 JSON', async () => {
       const brokenClient = {
         evaluateAction: () => Promise.reject(new Error('evaluation failed')),
-      } as unknown as GrithClient;
+      } satisfies GrithEvaluator;
 
       const mw = grithMiddleware({ client: brokenClient, covenant });
       const req = createMockRequest();
@@ -318,7 +318,7 @@ describe('Express middleware adapter', () => {
       const handler = vi.fn();
       const brokenClient = {
         evaluateAction: () => Promise.reject(new Error('fail')),
-      } as unknown as GrithClient;
+      } satisfies GrithEvaluator;
 
       const guarded = grithGuardHandler(
         { client: brokenClient, covenant, onError },

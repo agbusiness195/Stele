@@ -5,6 +5,7 @@ import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
 import { MemoryStore } from '@grith/store';
 import { GrithClient } from '@grith/sdk';
 import type { CreateCovenantOptions, CreateIdentityOptions } from '@grith/sdk';
+import type { ReactModule } from './hooks';
 
 import {
   Observable,
@@ -901,7 +902,7 @@ describe('@grith/react', () => {
 
   describe('React hooks', () => {
     // Minimal mock of React hooks for testing without React installed
-    function createMockReact() {
+    function createMockReact(): { mock: ReactModule; runEffects: () => void; cleanup: () => void } {
       const effects: Array<{ effect: () => void | (() => void); deps?: unknown[] }> = [];
       const cleanups: Array<() => void> = [];
 
@@ -953,7 +954,7 @@ describe('@grith/react', () => {
     beforeEach(async () => {
       const { _injectReact } = await import('./hooks');
       mockReactEnv = createMockReact();
-      _injectReact(mockReactEnv.mock as any);
+      _injectReact(mockReactEnv.mock);
     });
 
     afterEach(async () => {
@@ -1068,7 +1069,7 @@ describe('@grith/react', () => {
         const testStore = new MemoryStore();
         mockReactEnv = createMockReact();
         const { _injectReact } = await import('./hooks');
-        _injectReact(mockReactEnv.mock as any);
+        _injectReact(mockReactEnv.mock);
 
         const result = useCovenantStore(testStore);
         expect(result.documents).toEqual([]);
@@ -1108,7 +1109,7 @@ describe('@grith/react', () => {
         _resetReact();
         // After reset, hooks should throw if React is not installed
         // Re-inject for other tests
-        _injectReact(mockReactEnv.mock as any);
+        _injectReact(mockReactEnv.mock);
       });
     });
   });

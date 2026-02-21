@@ -10,9 +10,19 @@
  * @packageDocumentation
  */
 
-import type { GrithClient } from '../index.js';
 import type { CovenantDocument } from '@grith/core';
 import type { EvaluationResult } from '../types.js';
+
+/**
+ * Minimal interface for covenant evaluation. GrithClient satisfies this.
+ */
+export interface GrithEvaluator {
+  evaluateAction(
+    covenant: CovenantDocument,
+    action: string,
+    resource: string,
+  ): Promise<EvaluationResult>;
+}
 
 // ─── Generic HTTP types ──────────────────────────────────────────────────────
 
@@ -57,8 +67,8 @@ export type NextFunction = (err?: unknown) => void;
  * Options for the grithMiddleware factory.
  */
 export interface GrithMiddlewareOptions {
-  /** The GrithClient instance to use for covenant evaluation. */
-  client: GrithClient;
+  /** The GrithClient (or any GrithEvaluator) instance to use for covenant evaluation. */
+  client: GrithEvaluator;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
   /**
@@ -89,8 +99,8 @@ export interface GrithMiddlewareOptions {
  * Options for the grithGuardHandler factory.
  */
 export interface GrithGuardHandlerOptions {
-  /** The GrithClient instance to use for covenant evaluation. */
-  client: GrithClient;
+  /** The GrithClient (or any GrithEvaluator) instance to use for covenant evaluation. */
+  client: GrithEvaluator;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
   /**
@@ -121,8 +131,8 @@ export interface GrithGuardHandlerOptions {
  * Options for the createCovenantRouter factory.
  */
 export interface CovenantRouterOptions {
-  /** The GrithClient instance to use for covenant evaluation. */
-  client: GrithClient;
+  /** The GrithClient (or any GrithEvaluator) instance to use for covenant evaluation. */
+  client: GrithEvaluator;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
 }

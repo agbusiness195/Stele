@@ -110,7 +110,7 @@ export class MiddlewarePipeline {
     operation: string,
     args: Record<string, unknown>,
     fn: () => Promise<T>,
-  ): Promise<T> {
+  ): Promise<T | undefined> {
     const ctx: MiddlewareContext = {
       operation,
       args: { ...args },
@@ -136,7 +136,7 @@ export class MiddlewarePipeline {
 
           // Short-circuit if proceed is false
           if (!result.proceed) {
-            return undefined as unknown as T;
+            return undefined;
           }
         }
       }
