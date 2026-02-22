@@ -1,17 +1,17 @@
 /**
- * @kervyx/mcp-server -- Model Context Protocol server that exposes
- * Kervyx tools to any AI agent.
+ * @nobulex/mcp-server -- Model Context Protocol server that exposes
+ * Nobulex tools to any AI agent.
  *
  * Implements JSON-RPC 2.0 over stdio, with tool definitions that map
- * to @kervyx/sdk, @kervyx/store, and @kervyx/crypto operations.
+ * to @nobulex/sdk, @nobulex/store, and @nobulex/crypto operations.
  *
  * @packageDocumentation
  */
 
-import { KervyxClient } from '@kervyx/sdk';
-import { MemoryStore } from '@kervyx/store';
-import { generateKeyPair, toHex } from '@kervyx/crypto';
-import type { KeyPair } from '@kervyx/crypto';
+import { NobulexClient } from '@nobulex/sdk';
+import { MemoryStore } from '@nobulex/store';
+import { generateKeyPair, toHex } from '@nobulex/crypto';
+import type { KeyPair } from '@nobulex/crypto';
 
 import type {
   JsonRpcRequest,
@@ -208,20 +208,20 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
   },
 ];
 
-// ─── KervyxServer ────────────────────────────────────────────────────────────────
+// ─── NobulexServer ────────────────────────────────────────────────────────────────
 
 /**
- * MCP server that exposes Kervyx protocol operations as tools via JSON-RPC 2.0.
+ * MCP server that exposes Nobulex protocol operations as tools via JSON-RPC 2.0.
  *
  * Accepts a {@link MemoryStore} for persisting covenant documents and provides
  * methods for handling MCP protocol messages, listing tools, and calling tools.
  */
-export class KervyxServer {
+export class NobulexServer {
   /** The backing store for covenant documents. */
   readonly store: MemoryStore;
 
   /** The SDK client used for operations. */
-  private readonly client: KervyxClient;
+  private readonly client: NobulexClient;
 
   /** Server name. */
   readonly name: string;
@@ -231,8 +231,8 @@ export class KervyxServer {
 
   constructor(store: MemoryStore, options?: MCPServerOptions) {
     this.store = store;
-    this.client = new KervyxClient();
-    this.name = options?.name ?? 'kervyx-mcp-server';
+    this.client = new NobulexClient();
+    this.name = options?.name ?? 'nobulex-mcp-server';
     this.version = options?.version ?? '0.1.0';
   }
 
@@ -397,7 +397,7 @@ export class KervyxServer {
         return this._toolError('Missing required field: privateKeyHex');
       }
 
-      const { fromHex } = await import('@kervyx/crypto');
+      const { fromHex } = await import('@nobulex/crypto');
       const privateKey = fromHex(privateKeyHex);
 
       const doc = await this.client.createCovenant({
@@ -511,7 +511,7 @@ export class KervyxServer {
 
       let keyPair: KeyPair;
       if (privateKeyHex) {
-        const { keyPairFromPrivateKeyHex } = await import('@kervyx/crypto');
+        const { keyPairFromPrivateKeyHex } = await import('@nobulex/crypto');
         keyPair = await keyPairFromPrivateKeyHex(privateKeyHex);
       } else {
         keyPair = await generateKeyPair();

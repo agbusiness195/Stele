@@ -1,5 +1,5 @@
 /**
- * Framework adapters for the Kervyx SDK.
+ * Framework adapters for the Nobulex SDK.
  *
  * Re-exports all adapter factories and their associated types for
  * Express/HTTP, Vercel AI SDK, and LangChain integrations.
@@ -12,8 +12,8 @@
 // ─── Express / HTTP adapter (stable) ─────────────────────────────────────────
 
 export {
-  kervyxMiddleware,
-  kervyxGuardHandler,
+  nobulexMiddleware,
+  nobulexGuardHandler,
   createCovenantRouter,
 } from './express.js';
 
@@ -21,8 +21,8 @@ export type {
   IncomingRequest,
   OutgoingResponse,
   NextFunction,
-  KervyxMiddlewareOptions,
-  KervyxGuardHandlerOptions,
+  NobulexMiddlewareOptions,
+  NobulexGuardHandlerOptions,
   CovenantRouterOptions,
   CovenantRouter,
   AsyncHandler,
@@ -31,27 +31,27 @@ export type {
 // ─── Vercel AI SDK adapter (stable) ──────────────────────────────────────────
 
 export {
-  KervyxAccessDeniedError,
-  withKervyx,
-  withKervyxTools,
+  NobulexAccessDeniedError,
+  withNobulex,
+  withNobulexTools,
   createToolGuard,
 } from './vercel-ai.js';
 
 export type {
   ToolLike,
-  KervyxToolOptions,
+  NobulexToolOptions,
 } from './vercel-ai.js';
 
 // ─── LangChain adapter (stable) ──────────────────────────────────────────────
 
 export {
-  KervyxCallbackHandler,
-  withKervyxTool,
+  NobulexCallbackHandler,
+  withNobulexTool,
   createChainGuard,
 } from './langchain.js';
 
 export type {
   LangChainToolLike,
-  KervyxLangChainOptions,
+  NobulexLangChainOptions,
   CallbackEvent,
 } from './langchain.js';

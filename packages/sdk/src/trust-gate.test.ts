@@ -562,39 +562,39 @@ describe('calculateRevenueLift', () => {
   it('returns zero revenue with 0 total agents', () => {
     const result = calculateRevenueLift({
       totalAgents: 0,
-      kervyxAdoptionRate: 0.5,
+      nobulexAdoptionRate: 0.5,
       premiumRate: 0.5,
       premiumPriceMultiplier: 3,
     });
     expect(result.totalRevenue).toBe(0);
-    expect(result.kervyxRevenue).toBe(0);
+    expect(result.nobulexRevenue).toBe(0);
     expect(result.liftPercentage).toBe(0);
   });
 
-  it('returns baseline revenue with 0% Kervyx adoption', () => {
+  it('returns baseline revenue with 0% Nobulex adoption', () => {
     const result = calculateRevenueLift({
       totalAgents: 100,
-      kervyxAdoptionRate: 0,
+      nobulexAdoptionRate: 0,
       premiumRate: 0.5,
       premiumPriceMultiplier: 3,
     });
-    // All agents are non-Kervyx at 1x each
+    // All agents are non-Nobulex at 1x each
     expect(result.totalRevenue).toBe(100);
-    expect(result.kervyxRevenue).toBe(0);
+    expect(result.nobulexRevenue).toBe(0);
     // liftPercentage = ((0 - 100) / 100) * 100 = -100
     expect(result.liftPercentage).toBe(-100);
   });
 
-  it('returns baseline revenue with 100% Kervyx adoption and 0% premium', () => {
+  it('returns baseline revenue with 100% Nobulex adoption and 0% premium', () => {
     const result = calculateRevenueLift({
       totalAgents: 100,
-      kervyxAdoptionRate: 1.0,
+      nobulexAdoptionRate: 1.0,
       premiumRate: 0,
       premiumPriceMultiplier: 3,
     });
-    // All agents are Kervyx standard at 1x each
+    // All agents are Nobulex standard at 1x each
     expect(result.totalRevenue).toBe(100);
-    expect(result.kervyxRevenue).toBe(100);
+    expect(result.nobulexRevenue).toBe(100);
     // liftPercentage = ((100 - 100) / 100) * 100 = 0
     expect(result.liftPercentage).toBe(0);
   });
@@ -602,42 +602,42 @@ describe('calculateRevenueLift', () => {
   it('calculates positive lift with premium multiplier', () => {
     const result = calculateRevenueLift({
       totalAgents: 100,
-      kervyxAdoptionRate: 1.0,
+      nobulexAdoptionRate: 1.0,
       premiumRate: 1.0,
       premiumPriceMultiplier: 3,
     });
-    // All 100 agents are Kervyx premium at 3x each
+    // All 100 agents are Nobulex premium at 3x each
     expect(result.totalRevenue).toBe(300);
-    expect(result.kervyxRevenue).toBe(300);
+    expect(result.nobulexRevenue).toBe(300);
     // liftPercentage = ((300 - 100) / 100) * 100 = 200
     expect(result.liftPercentage).toBe(200);
   });
 
-  it('handles partial Kervyx adoption and partial premium rate', () => {
+  it('handles partial Nobulex adoption and partial premium rate', () => {
     const result = calculateRevenueLift({
       totalAgents: 1000,
-      kervyxAdoptionRate: 0.5,
+      nobulexAdoptionRate: 0.5,
       premiumRate: 0.2,
       premiumPriceMultiplier: 5,
     });
-    // 500 Kervyx agents, 500 non-Kervyx agents
-    // 100 premium agents (500 * 0.2), 400 standard Kervyx agents
-    // nonKervyxRevenue = 500 * 1 = 500
+    // 500 Nobulex agents, 500 non-Nobulex agents
+    // 100 premium agents (500 * 0.2), 400 standard Nobulex agents
+    // nonNobulexRevenue = 500 * 1 = 500
     // standardRevenue = 400 * 1 = 400
     // premiumRevenue = 100 * 5 = 500
-    // kervyxRevenue = 400 + 500 = 900
+    // nobulexRevenue = 400 + 500 = 900
     // totalRevenue = 500 + 900 = 1400
     // baseRevenue = 1000
     // liftPercentage = ((900 - 1000) / 1000) * 100 = -10
     expect(result.totalRevenue).toBe(1400);
-    expect(result.kervyxRevenue).toBe(900);
+    expect(result.nobulexRevenue).toBe(900);
     expect(result.liftPercentage).toBe(-10);
   });
 
   it('returns 0 lift percentage when base revenue is 0', () => {
     const result = calculateRevenueLift({
       totalAgents: 0,
-      kervyxAdoptionRate: 1.0,
+      nobulexAdoptionRate: 1.0,
       premiumRate: 1.0,
       premiumPriceMultiplier: 10,
     });
@@ -647,25 +647,25 @@ describe('calculateRevenueLift', () => {
   it('handles premiumPriceMultiplier of 1 (no uplift)', () => {
     const result = calculateRevenueLift({
       totalAgents: 100,
-      kervyxAdoptionRate: 1.0,
+      nobulexAdoptionRate: 1.0,
       premiumRate: 1.0,
       premiumPriceMultiplier: 1,
     });
-    // All agents at 1x, so kervyxRevenue = 100, base = 100, lift = 0
+    // All agents at 1x, so nobulexRevenue = 100, base = 100, lift = 0
     expect(result.totalRevenue).toBe(100);
-    expect(result.kervyxRevenue).toBe(100);
+    expect(result.nobulexRevenue).toBe(100);
     expect(result.liftPercentage).toBe(0);
   });
 
   it('handles a single agent', () => {
     const result = calculateRevenueLift({
       totalAgents: 1,
-      kervyxAdoptionRate: 1.0,
+      nobulexAdoptionRate: 1.0,
       premiumRate: 1.0,
       premiumPriceMultiplier: 10,
     });
     expect(result.totalRevenue).toBe(10);
-    expect(result.kervyxRevenue).toBe(10);
+    expect(result.nobulexRevenue).toBe(10);
     // liftPercentage = ((10 - 1) / 1) * 100 = 900
     expect(result.liftPercentage).toBe(900);
   });
@@ -674,17 +674,17 @@ describe('calculateRevenueLift', () => {
     // In real usage totalAgents is likely an integer, but the math works with fractions
     const result = calculateRevenueLift({
       totalAgents: 3,
-      kervyxAdoptionRate: 1 / 3,
+      nobulexAdoptionRate: 1 / 3,
       premiumRate: 1.0,
       premiumPriceMultiplier: 2,
     });
-    // kervyxAgents = 1, nonKervyx = 2
-    // premiumAgents = 1, standardKervyx = 0
-    // nonKervyxRevenue = 2, premiumRevenue = 2, kervyxRevenue = 2
+    // nobulexAgents = 1, nonNobulex = 2
+    // premiumAgents = 1, standardNobulex = 0
+    // nonNobulexRevenue = 2, premiumRevenue = 2, nobulexRevenue = 2
     // totalRevenue = 4, base = 3
     // liftPercentage = ((2 - 3) / 3) * 100 = -33.333...
     expect(result.totalRevenue).toBeCloseTo(4);
-    expect(result.kervyxRevenue).toBeCloseTo(2);
+    expect(result.nobulexRevenue).toBeCloseTo(2);
     expect(result.liftPercentage).toBeCloseTo(-33.3333, 2);
   });
 });

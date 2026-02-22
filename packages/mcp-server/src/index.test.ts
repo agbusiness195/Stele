@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { KervyxServer, JSON_RPC_ERRORS } from './index';
+import { NobulexServer, JSON_RPC_ERRORS } from './index';
 import type {
   JsonRpcRequest,
   JsonRpcSuccessResponse,
@@ -7,11 +7,11 @@ import type {
   ToolDefinition,
   ToolResult,
 } from './index';
-import { MemoryStore } from '@kervyx/store';
-import { generateKeyPair, toHex } from '@kervyx/crypto';
-import type { KeyPair } from '@kervyx/crypto';
-import { buildCovenant } from '@kervyx/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@kervyx/core';
+import { MemoryStore } from '@nobulex/store';
+import { generateKeyPair, toHex } from '@nobulex/crypto';
+import type { KeyPair } from '@nobulex/crypto';
+import { buildCovenant } from '@nobulex/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@nobulex/core';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -84,26 +84,26 @@ async function createAndStoreCovenant(
 
 // ─── Tests ──────────────────────────────────────────────────────────────────────
 
-describe('KervyxServer', () => {
+describe('NobulexServer', () => {
   let store: MemoryStore;
-  let server: KervyxServer;
+  let server: NobulexServer;
 
   beforeEach(() => {
     store = new MemoryStore();
-    server = new KervyxServer(store);
+    server = new NobulexServer(store);
   });
 
   // ── Server initialization ───────────────────────────────────────────────
 
   describe('initialization', () => {
     it('should create a server with default options', () => {
-      expect(server).toBeInstanceOf(KervyxServer);
-      expect(server.name).toBe('kervyx-mcp-server');
+      expect(server).toBeInstanceOf(NobulexServer);
+      expect(server.name).toBe('nobulex-mcp-server');
       expect(server.version).toBe('0.1.0');
     });
 
     it('should create a server with custom name and version', () => {
-      const custom = new KervyxServer(store, { name: 'my-server', version: '2.0.0' });
+      const custom = new NobulexServer(store, { name: 'my-server', version: '2.0.0' });
       expect(custom.name).toBe('my-server');
       expect(custom.version).toBe('2.0.0');
     });
@@ -119,7 +119,7 @@ describe('KervyxServer', () => {
       expect(result.protocolVersion).toBe('2024-11-05');
       expect(result.capabilities).toBeDefined();
       expect(result.serverInfo).toEqual({
-        name: 'kervyx-mcp-server',
+        name: 'nobulex-mcp-server',
         version: '0.1.0',
       });
     });

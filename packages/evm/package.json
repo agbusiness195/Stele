@@ -1,5 +1,5 @@
 {
-  "name": "@kervyx/evm",
+  "name": "@nobulex/evm",
   "version": "2.0.0",
   "description": "EVM anchoring utilities with ABI encoding, Keccak-256 hashing, and JSON-RPC provider interface",
   "sideEffects": false,
@@ -24,9 +24,9 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@kervyx/types": "2.0.0",
-    "@kervyx/crypto": "2.0.0",
-    "@kervyx/core": "2.0.0",
+    "@nobulex/types": "2.0.0",
+    "@nobulex/crypto": "2.0.0",
+    "@nobulex/core": "2.0.0",
     "@noble/hashes": "^1.4.0"
   },
   "license": "MIT",
@@ -38,16 +38,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/evm"
   },
-  "homepage": "https://kervyx.dev",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
-  "author": "Kervyx Labs, Inc.",
+  "author": "Nobulex Labs, Inc.",
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "evm",

@@ -403,11 +403,11 @@ afterEach(() => {
   setColorsEnabled(true);
 });
 
-describe('kervyx audit command', () => {
+describe('nobulex audit command', () => {
   it('shows help with --help', async () => {
     const r = await run(['audit', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('kervyx audit');
+    expect(r.stdout).toContain('nobulex audit');
     expect(r.stdout).toContain('compliance audit');
   });
 

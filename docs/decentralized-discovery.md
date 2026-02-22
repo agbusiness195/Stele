@@ -7,7 +7,7 @@
 ## 1. Overview
 
 This document specifies the decentralized key discovery and attestation mechanism
-for the Kervyx protocol. It extends the existing `.well-known/kervyx/` discovery
+for the Nobulex protocol. It extends the existing `.well-known/nobulex/` discovery
 protocol with peer-to-peer key resolution, distributed hash table (DHT) backed
 key registries, and cross-domain attestation chains.
 
@@ -20,7 +20,7 @@ key registries, and cross-domain attestation chains.
 3. **Offline verification.** A verifier with a cached key set can verify
    covenants without network access.
 4. **Incremental adoption.** The mechanism must be backward-compatible with
-   the existing `.well-known/kervyx/` protocol.
+   the existing `.well-known/nobulex/` protocol.
 
 ---
 
@@ -57,14 +57,14 @@ A **Key Record** is a signed, self-certifying document published by an agent:
 
 ```json
 {
-  "kervyx": "1.0",
+  "nobulex": "1.0",
   "kind": "key-record",
   "agentId": "<agent-identity-hash>",
   "publicKey": "<Ed25519 public key, hex>",
   "previousKey": "<previous public key, hex | null>",
   "endpoints": [
-    "https://agent-a.example.com/.well-known/kervyx/",
-    "ipfs://Qm.../kervyx/"
+    "https://agent-a.example.com/.well-known/nobulex/",
+    "ipfs://Qm.../nobulex/"
   ],
   "capabilities": ["covenant.issue", "covenant.verify"],
   "published": "<ISO 8601 UTC>",
@@ -168,7 +168,7 @@ another agent's key binding:
 
 ```json
 {
-  "kervyx": "1.0",
+  "nobulex": "1.0",
   "kind": "key-attestation",
   "subject": {
     "agentId": "<subject agent ID>",
@@ -217,7 +217,7 @@ signed by the **previous** key:
 
 ```json
 {
-  "kervyx": "1.0",
+  "nobulex": "1.0",
   "kind": "key-rotation",
   "agentId": "<agent ID>",
   "previousKey": "<old public key, hex>",
@@ -295,7 +295,7 @@ For emergency revocation (compromised key), the agent publishes a
 
 ```json
 {
-  "kervyx": "1.0",
+  "nobulex": "1.0",
   "kind": "key-revocation",
   "agentId": "<agent ID>",
   "revokedKey": "<compromised public key, hex>",
@@ -356,7 +356,7 @@ An attacker creating many identities to attest a false key:
 
 This mechanism is fully backward-compatible with the existing discovery protocol:
 
-- Agents that only support `.well-known/kervyx/` continue to work unchanged.
+- Agents that only support `.well-known/nobulex/` continue to work unchanged.
 - DHT publication is optional; resolution falls back to `.well-known`.
 - Cross-domain attestations are supplementary, not required.
 - The key record format extends (does not replace) the existing `AgentKeyEntry`.

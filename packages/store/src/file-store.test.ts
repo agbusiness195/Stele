@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { FileStore } from './file-store';
 import type { CovenantStore, StoreEvent, StoreEventCallback } from './types';
-import type { CovenantDocument } from '@kervyx/core';
+import type { CovenantDocument } from '@nobulex/core';
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -35,7 +35,7 @@ function makeDoc(overrides: Partial<CovenantDocument> & { id: string }): Covenan
 let testDir: string;
 
 beforeEach(async () => {
-  testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'kervyx-filestore-test-'));
+  testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'nobulex-filestore-test-'));
 });
 
 afterEach(async () => {

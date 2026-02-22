@@ -1,7 +1,7 @@
 /**
- * @kervyx/cli configuration file support.
+ * @nobulex/cli configuration file support.
  *
- * Reads and writes `kervyx.config.json` in the current working directory.
+ * Reads and writes `nobulex.config.json` in the current working directory.
  * Zero external dependencies -- uses only Node built-in `fs` and `path`.
  *
  * @packageDocumentation
@@ -12,8 +12,8 @@ import { join, resolve } from 'path';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-/** Shape of a `kervyx.config.json` configuration file. */
-export interface KervyxConfig {
+/** Shape of a `nobulex.config.json` configuration file. */
+export interface NobulexConfig {
   /** Default issuer identity for `create` / `init`. */
   defaultIssuer?: { id: string; publicKey: string };
   /** Default beneficiary identity for `create`. */
@@ -27,12 +27,12 @@ export interface KervyxConfig {
 }
 
 /** Name of the configuration file. */
-export const CONFIG_FILE_NAME = 'kervyx.config.json';
+export const CONFIG_FILE_NAME = 'nobulex.config.json';
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
- * Search for a `kervyx.config.json` starting from `cwd` and walking up to the
+ * Search for a `nobulex.config.json` starting from `cwd` and walking up to the
  * filesystem root.  Returns the absolute path if found, or `undefined`.
  */
 export function findConfigFile(cwd?: string): string | undefined {
@@ -54,24 +54,24 @@ export function findConfigFile(cwd?: string): string | undefined {
 }
 
 /**
- * Load the `kervyx.config.json` starting from `cwd`.
+ * Load the `nobulex.config.json` starting from `cwd`.
  * Returns `undefined` if no config file is found.
  * Throws if the file exists but cannot be parsed.
  */
-export function loadConfig(cwd?: string): KervyxConfig | undefined {
+export function loadConfig(cwd?: string): NobulexConfig | undefined {
   const filePath = findConfigFile(cwd);
   if (!filePath) return undefined;
 
   const raw = readFileSync(filePath, 'utf-8');
-  const parsed = JSON.parse(raw) as KervyxConfig;
+  const parsed = JSON.parse(raw) as NobulexConfig;
   return parsed;
 }
 
 /**
- * Write a `kervyx.config.json` to the given directory (defaults to cwd).
+ * Write a `nobulex.config.json` to the given directory (defaults to cwd).
  * Overwrites any existing config file at that location.
  */
-export function saveConfig(config: KervyxConfig, cwd?: string): void {
+export function saveConfig(config: NobulexConfig, cwd?: string): void {
   const dir = resolve(cwd ?? '.');
   const filePath = join(dir, CONFIG_FILE_NAME);
   const json = JSON.stringify(config, null, 2) + '\n';

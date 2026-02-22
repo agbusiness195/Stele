@@ -1,7 +1,7 @@
 {
-  "name": "@kervyx/react",
+  "name": "@nobulex/react",
   "version": "2.0.0",
-  "description": "React hooks and reactive primitives for Kervyx-powered UIs",
+  "description": "React hooks and reactive primitives for Nobulex-powered UIs",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,12 +24,12 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@kervyx/ccl": "2.0.0",
-    "@kervyx/core": "2.0.0",
-    "@kervyx/identity": "2.0.0",
-    "@kervyx/sdk": "2.0.0",
-    "@kervyx/store": "2.0.0",
-    "@kervyx/types": "2.0.0"
+    "@nobulex/ccl": "2.0.0",
+    "@nobulex/core": "2.0.0",
+    "@nobulex/identity": "2.0.0",
+    "@nobulex/sdk": "2.0.0",
+    "@nobulex/store": "2.0.0",
+    "@nobulex/types": "2.0.0"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
@@ -48,16 +48,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/react"
   },
-  "homepage": "https://kervyx.dev",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
-  "author": "Kervyx Labs, Inc.",
+  "author": "Nobulex Labs, Inc.",
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "react",

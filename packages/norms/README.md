@@ -1,11 +1,11 @@
-# @kervyx/norms
+# @nobulex/norms
 
 Social norm modeling with emergence detection, conflict resolution, and governance proposal generation from covenant data.
 
 ## Installation
 
 ```bash
-npm install @kervyx/norms
+npm install @nobulex/norms
 ```
 
 ## Key APIs
@@ -20,8 +20,8 @@ npm install @kervyx/norms
 ## Usage
 
 ```typescript
-import { analyzeNorms, proposeStandard, normConflictDetection } from '@kervyx/norms';
-import type { CovenantData } from '@kervyx/norms';
+import { analyzeNorms, proposeStandard, normConflictDetection } from '@nobulex/norms';
+import type { CovenantData } from '@nobulex/norms';
 
 const covenants: CovenantData[] = [
   {
@@ -51,4 +51,4 @@ for (const norm of analysis.emergentNorms) {
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

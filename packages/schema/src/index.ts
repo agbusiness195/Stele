@@ -1,5 +1,5 @@
 /**
- * @kervyx/schema — Formal JSON Schema definitions for Kervyx protocol documents.
+ * @nobulex/schema — Formal JSON Schema definitions for Nobulex protocol documents.
  *
  * Provides machine-readable schemas (JSON Schema Draft 2020-12) for:
  * - Covenant documents
@@ -8,7 +8,7 @@
  * - CCL evaluation contexts
  *
  * These schemas enable any language implementation to validate
- * Kervyx protocol documents without the TypeScript SDK.
+ * Nobulex protocol documents without the TypeScript SDK.
  *
  * @packageDocumentation
  */

@@ -1,9 +1,9 @@
-import type { HashHex } from '@kervyx/crypto';
-import type { Severity } from '@kervyx/ccl';
+import type { HashHex } from '@nobulex/crypto';
+import type { Severity } from '@nobulex/ccl';
 
 // ─── Protocol constants ────────────────────────────────────────────────────────
 
-/** Current Kervyx Covenant protocol version. */
+/** Current Nobulex Covenant protocol version. */
 export const PROTOCOL_VERSION = '1.0';
 
 /** Maximum number of CCL constraint statements in a single covenant. */

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, sha256String } from '@kervyx/crypto';
-import type { HashHex, KeyPair } from '@kervyx/crypto';
+import { generateKeyPair, sha256String } from '@nobulex/crypto';
+import type { HashHex, KeyPair } from '@nobulex/crypto';
 import {
   Monitor,
   MonitorDeniedError,

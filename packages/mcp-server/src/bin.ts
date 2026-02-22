@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 /**
- * Kervyx MCP Server — stdio transport.
+ * Nobulex MCP Server — stdio transport.
  *
  * Reads newline-delimited JSON-RPC 2.0 messages from stdin,
- * dispatches them to the KervyxServer, and writes responses to stdout.
+ * dispatches them to the NobulexServer, and writes responses to stdout.
  *
  * Usage:
- *   npx kervyx-mcp
- *   echo '{"jsonrpc":"2.0","method":"initialize","id":1}' | npx kervyx-mcp
+ *   npx nobulex-mcp
+ *   echo '{"jsonrpc":"2.0","method":"initialize","id":1}' | npx nobulex-mcp
  */
 
-import { KervyxServer } from './index';
-import { MemoryStore } from '@kervyx/store';
+import { NobulexServer } from './index';
+import { MemoryStore } from '@nobulex/store';
 import type { JsonRpcRequest } from './types';
 
 const store = new MemoryStore();
-const server = new KervyxServer(store);
+const server = new NobulexServer(store);
 
 let buffer = '';
 

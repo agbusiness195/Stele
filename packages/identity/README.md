@@ -1,11 +1,11 @@
-# @kervyx/identity
+# @nobulex/identity
 
 Agent identity management with cryptographic lineage tracking. Create, evolve, and verify AI agent identities with reputation carry-forward across identity changes.
 
 ## Installation
 
 ```bash
-npm install @kervyx/identity
+npm install @nobulex/identity
 ```
 
 ## Usage
@@ -13,8 +13,8 @@ npm install @kervyx/identity
 ### Create an Identity
 
 ```typescript
-import { generateKeyPair } from '@kervyx/crypto';
-import { createIdentity } from '@kervyx/identity';
+import { generateKeyPair } from '@nobulex/crypto';
+import { createIdentity } from '@nobulex/identity';
 
 const kp = await generateKeyPair();
 
@@ -32,7 +32,7 @@ console.log(identity.version); // 1
 ### Evolve an Identity
 
 ```typescript
-import { evolveIdentity } from '@kervyx/identity';
+import { evolveIdentity } from '@nobulex/identity';
 
 const evolved = await evolveIdentity(identity, {
   operatorKeyPair: kp,
@@ -48,7 +48,7 @@ console.log(evolved.lineage.length);   // 2
 ### Verify, Lineage, and Serialization
 
 ```typescript
-import { verifyIdentity, getLineage, shareAncestor, serializeIdentity } from '@kervyx/identity';
+import { verifyIdentity, getLineage, shareAncestor, serializeIdentity } from '@nobulex/identity';
 
 const result = await verifyIdentity(identity);
 console.log(result.valid); // true
@@ -70,4 +70,4 @@ const json = serializeIdentity(identity);
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference and architecture guide.

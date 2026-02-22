@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * @kervyx/cli -- Command-line interface for the Kervyx covenant protocol.
+ * @nobulex/cli -- Command-line interface for the Nobulex covenant protocol.
  *
  * Provides commands for key generation, covenant creation, verification,
  * evaluation, inspection, CCL parsing, shell completions, diagnostics, and diff.
@@ -9,17 +9,17 @@
  * @packageDocumentation
  */
 
-import { generateKeyPair, toHex } from '@kervyx/crypto';
-import type { KeyPair } from '@kervyx/crypto';
+import { generateKeyPair, toHex } from '@nobulex/crypto';
+import type { KeyPair } from '@nobulex/crypto';
 import {
   buildCovenant,
   verifyCovenant,
   deserializeCovenant,
   serializeCovenant,
   PROTOCOL_VERSION,
-} from '@kervyx/core';
-import type { CovenantDocument } from '@kervyx/core';
-import { parse, evaluate, serialize as serializeCCL } from '@kervyx/ccl';
+} from '@nobulex/core';
+import type { CovenantDocument } from '@nobulex/core';
+import { parse, evaluate, serialize as serializeCCL } from '@nobulex/ccl';
 
 import {
   setColorsEnabled,
@@ -38,7 +38,7 @@ import {
   box,
 } from './format';
 import { loadConfig, saveConfig } from './config';
-import type { KervyxConfig } from './config';
+import type { NobulexConfig } from './config';
 import {
   bashCompletions,
   zshCompletions,
@@ -112,9 +112,9 @@ function hasFlag(flags: Record<string, string | boolean>, key: string): boolean 
 function buildMainHelp(): string {
   const lines: string[] = [];
   lines.push('');
-  lines.push(header('Kervyx CLI') + dim(' - Covenant Protocol Tool'));
+  lines.push(header('Nobulex CLI') + dim(' - Covenant Protocol Tool'));
   lines.push('');
-  lines.push(`${bold('Usage:')} kervyx <command> [options]`);
+  lines.push(`${bold('Usage:')} nobulex <command> [options]`);
   lines.push('');
   lines.push(bold('Commands:'));
   lines.push('');
@@ -129,7 +129,7 @@ function buildMainHelp(): string {
         ['inspect <json>', 'Pretty-print covenant details'],
         ['parse <ccl>', 'Parse CCL and output AST as JSON'],
         ['completions <shell>', 'Generate shell completion script (bash|zsh|fish)'],
-        ['doctor', 'Check Kervyx installation health'],
+        ['doctor', 'Check Nobulex installation health'],
         ['audit', 'Run compliance audit and generate report'],
         ['diff <doc1> <doc2>', 'Show differences between two covenant documents'],
         ['version', 'Print version information'],
@@ -154,17 +154,17 @@ function buildMainHelp(): string {
   return lines.join('\n');
 }
 
-const INIT_HELP = `kervyx init - Generate an Ed25519 key pair and write kervyx.config.json.
+const INIT_HELP = `nobulex init - Generate an Ed25519 key pair and write nobulex.config.json.
 
-Usage: kervyx init [--json]
+Usage: nobulex init [--json]
 
 Generates a new key pair, outputs the public key, and writes a
-kervyx.config.json configuration file in the current directory.
+nobulex.config.json configuration file in the current directory.
 With --json, outputs { publicKey, privateKey } as JSON.`;
 
-const CREATE_HELP = `kervyx create - Create and sign a covenant document.
+const CREATE_HELP = `nobulex create - Create and sign a covenant document.
 
-Usage: kervyx create --issuer <id> --beneficiary <id> --constraints <ccl> [--json]
+Usage: nobulex create --issuer <id> --beneficiary <id> --constraints <ccl> [--json]
 
 Options:
   --issuer <id>          Issuer identifier (required)
@@ -172,35 +172,35 @@ Options:
   --constraints <ccl>    CCL constraint string (required)
   --json                 Output raw JSON`;
 
-const VERIFY_HELP = `kervyx verify - Verify a covenant document.
+const VERIFY_HELP = `nobulex verify - Verify a covenant document.
 
-Usage: kervyx verify <json-string> [--json]
+Usage: nobulex verify <json-string> [--json]
 
 Runs all verification checks on the covenant and reports results.`;
 
-const EVALUATE_HELP = `kervyx evaluate - Evaluate an action against a covenant.
+const EVALUATE_HELP = `nobulex evaluate - Evaluate an action against a covenant.
 
-Usage: kervyx evaluate <json-string> <action> <resource> [--json]
+Usage: nobulex evaluate <json-string> <action> <resource> [--json]
 
 Parses the covenant's CCL constraints and evaluates the given action
 and resource against them.`;
 
-const INSPECT_HELP = `kervyx inspect - Pretty-print covenant details.
+const INSPECT_HELP = `nobulex inspect - Pretty-print covenant details.
 
-Usage: kervyx inspect <json-string> [--json]
+Usage: nobulex inspect <json-string> [--json]
 
 Displays covenant fields including parties, constraints, and metadata.`;
 
-const PARSE_HELP = `kervyx parse - Parse CCL source text and output AST.
+const PARSE_HELP = `nobulex parse - Parse CCL source text and output AST.
 
-Usage: kervyx parse <ccl-string> [--json]
+Usage: nobulex parse <ccl-string> [--json]
 
 Parses CCL and outputs the AST. With --json, outputs the full
 CCLDocument as JSON. Without --json, outputs a human-readable summary.`;
 
-const COMPLETIONS_HELP = `kervyx completions - Generate shell completion script.
+const COMPLETIONS_HELP = `nobulex completions - Generate shell completion script.
 
-Usage: kervyx completions <shell>
+Usage: nobulex completions <shell>
 
 Supported shells:
   bash    Generate Bash completion script
@@ -208,26 +208,26 @@ Supported shells:
   fish    Generate Fish completion script
 
 Pipe the output to the appropriate file:
-  kervyx completions bash > /etc/bash_completion.d/kervyx
-  kervyx completions zsh > ~/.zsh/completions/_kervyx
-  kervyx completions fish > ~/.config/fish/completions/kervyx.fish`;
+  nobulex completions bash > /etc/bash_completion.d/nobulex
+  nobulex completions zsh > ~/.zsh/completions/_nobulex
+  nobulex completions fish > ~/.config/fish/completions/nobulex.fish`;
 
-const DOCTOR_HELP = `kervyx doctor - Check Kervyx installation health.
+const DOCTOR_HELP = `nobulex doctor - Check Nobulex installation health.
 
-Usage: kervyx doctor [--json]
+Usage: nobulex doctor [--json]
 
-Runs diagnostic checks on the Kervyx installation:
+Runs diagnostic checks on the Nobulex installation:
   - Node.js version >= 18
-  - All @kervyx/* packages importable
+  - All @nobulex/* packages importable
   - Crypto key pair generation works
   - Covenant build and verify round-trip
   - CCL parsing works
   - Config file readable (if exists)
   - No stale dist files detected`;
 
-const AUDIT_HELP = `kervyx audit - Run compliance audit and generate report.
+const AUDIT_HELP = `nobulex audit - Run compliance audit and generate report.
 
-Usage: kervyx audit [options] [--json]
+Usage: nobulex audit [options] [--json]
 
 Options:
   --covenants <n>          Number of configured covenants (default: 0)
@@ -246,9 +246,9 @@ Runs a compliance audit that checks:
 
 Reports findings with severity levels, a 0-100 score, and a letter grade.`;
 
-const DIFF_HELP = `kervyx diff - Show differences between two covenant documents.
+const DIFF_HELP = `nobulex diff - Show differences between two covenant documents.
 
-Usage: kervyx diff <doc1-json> <doc2-json> [--json]
+Usage: nobulex diff <doc1-json> <doc2-json> [--json]
 
 Compares two covenant documents and highlights:
   - Changed fields (version, constraints, timestamps, etc.)
@@ -273,7 +273,7 @@ async function cmdInit(flags: Record<string, string | boolean>, configDir?: stri
   }
 
   // Write config file
-  const config: KervyxConfig = {
+  const config: NobulexConfig = {
     defaultIssuer: { id: 'default', publicKey: publicKeyHex },
     outputFormat: 'text',
   };
@@ -292,9 +292,9 @@ async function cmdInit(flags: Record<string, string | boolean>, configDir?: stri
       ['Public key', publicKeyHex],
     ]),
     '',
-    success('Wrote kervyx.config.json'),
+    success('Wrote nobulex.config.json'),
     '',
-    dim('Run "kervyx create" to build your first covenant.'),
+    dim('Run "nobulex create" to build your first covenant.'),
     '',
   ];
   return { stdout: lines.join('\n'), stderr: '', exitCode: 0 };
@@ -302,7 +302,7 @@ async function cmdInit(flags: Record<string, string | boolean>, configDir?: stri
 
 // ─── Command: create ──────────────────────────────────────────────────────────
 
-async function cmdCreate(flags: Record<string, string | boolean>, config?: KervyxConfig): Promise<RunResult> {
+async function cmdCreate(flags: Record<string, string | boolean>, config?: NobulexConfig): Promise<RunResult> {
   if (hasFlag(flags, 'help')) {
     return { stdout: CREATE_HELP, stderr: '', exitCode: 0 };
   }
@@ -723,7 +723,7 @@ async function cmdDoctor(
   }
 
   const lines: string[] = [''];
-  lines.push(header('Kervyx Doctor'));
+  lines.push(header('Nobulex Doctor'));
   lines.push('');
 
   for (const check of checks) {
@@ -1033,10 +1033,10 @@ function cmdHelp(): RunResult {
 // ─── Main run function ────────────────────────────────────────────────────────
 
 /**
- * Run the Kervyx CLI with the given argument list.
+ * Run the Nobulex CLI with the given argument list.
  *
  * @param args - The command-line arguments (without node/script prefix).
- * @param configDir - Optional directory to search for kervyx.config.json (defaults to cwd).
+ * @param configDir - Optional directory to search for nobulex.config.json (defaults to cwd).
  * @returns An object with stdout, stderr, and exitCode.
  */
 export async function run(args: string[], configDir?: string): Promise<RunResult> {
@@ -1048,7 +1048,7 @@ export async function run(args: string[], configDir?: string): Promise<RunResult
   setColorsEnabled(!noColor && !jsonMode);
 
   // Load config file (non-fatal if missing)
-  let config: KervyxConfig | undefined;
+  let config: NobulexConfig | undefined;
   try {
     config = loadConfig(configDir);
   } catch {
@@ -1095,7 +1095,7 @@ export async function run(args: string[], configDir?: string): Promise<RunResult
       default:
         return {
           stdout: '',
-          stderr: `Error: Unknown command '${parsed.command}'. Run 'kervyx help' for usage.`,
+          stderr: `Error: Unknown command '${parsed.command}'. Run 'nobulex help' for usage.`,
           exitCode: 1,
         };
     }

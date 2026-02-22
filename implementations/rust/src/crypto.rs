@@ -1,10 +1,10 @@
-//! Cryptographic primitives for the Kervyx protocol.
+//! Cryptographic primitives for the Nobulex protocol.
 //!
 //! Provides Ed25519 signing/verification via `ed25519-dalek`, SHA-256 hashing
 //! via `sha2`, JCS (RFC 8785) JSON canonicalization, and utility functions
 //! for nonce generation, timestamps, and constant-time comparison.
 
-use crate::KervyxError;
+use crate::NobulexError;
 use ed25519_dalek::{Signer, Verifier};
 use rand::RngCore;
 use sha2::{Digest, Sha256};
@@ -20,7 +20,7 @@ pub struct KeyPair {
 ///
 /// Returns a `KeyPair` with a fresh 32-byte private key, the derived public key,
 /// and the hex-encoded public key string.
-pub fn generate_key_pair() -> Result<KeyPair, KervyxError> {
+pub fn generate_key_pair() -> Result<KeyPair, NobulexError> {
     let mut rng = rand::thread_rng();
     let mut secret = [0u8; 32];
     rng.fill_bytes(&mut secret);
@@ -37,11 +37,11 @@ pub fn generate_key_pair() -> Result<KeyPair, KervyxError> {
 /// Reconstruct a `KeyPair` from a 32-byte private key.
 ///
 /// # Errors
-/// Returns `KervyxError::CryptoError` if the byte slice is not exactly 32 bytes.
-pub fn key_pair_from_private_key(bytes: &[u8]) -> Result<KeyPair, KervyxError> {
+/// Returns `NobulexError::CryptoError` if the byte slice is not exactly 32 bytes.
+pub fn key_pair_from_private_key(bytes: &[u8]) -> Result<KeyPair, NobulexError> {
     let secret: [u8; 32] = bytes
         .try_into()
-        .map_err(|_| KervyxError::CryptoError(format!("Private key must be 32 bytes, got {}", bytes.len())))?;
+        .map_err(|_| NobulexError::CryptoError(format!("Private key must be 32 bytes, got {}", bytes.len())))?;
     let signing_key = ed25519_dalek::SigningKey::from_bytes(&secret);
     let verifying_key = signing_key.verifying_key();
     let public_key_hex = hex::encode(verifying_key.as_bytes());
@@ -55,7 +55,7 @@ pub fn key_pair_from_private_key(bytes: &[u8]) -> Result<KeyPair, KervyxError> {
 /// Sign a message with an Ed25519 signing key.
 ///
 /// Returns the 64-byte signature as a `Vec<u8>`.
-pub fn sign(message: &[u8], signing_key: &ed25519_dalek::SigningKey) -> Result<Vec<u8>, KervyxError> {
+pub fn sign(message: &[u8], signing_key: &ed25519_dalek::SigningKey) -> Result<Vec<u8>, NobulexError> {
     let signature = signing_key.sign(message);
     Ok(signature.to_bytes().to_vec())
 }
@@ -98,7 +98,7 @@ pub fn sha256_string(data: &str) -> String {
 /// The value is first serialized via `canonicalize_json`, then hashed.
 /// Two structurally equal objects always produce the same hash regardless
 /// of key insertion order.
-pub fn sha256_object(obj: &serde_json::Value) -> Result<String, KervyxError> {
+pub fn sha256_object(obj: &serde_json::Value) -> Result<String, NobulexError> {
     let canonical = canonicalize_json(obj);
     Ok(sha256_string(&canonical))
 }
@@ -174,7 +174,7 @@ mod tests {
     #[test]
     fn test_generate_and_sign_verify() {
         let kp = generate_key_pair().unwrap();
-        let message = b"hello kervyx";
+        let message = b"hello nobulex";
         let sig = sign(message, &kp.signing_key).unwrap();
         assert!(verify(message, &sig, &kp.verifying_key));
         assert!(!verify(b"tampered", &sig, &kp.verifying_key));

@@ -1,8 +1,8 @@
 /**
- * Debug/verbose logging system for the Kervyx SDK.
+ * Debug/verbose logging system for the Nobulex SDK.
  *
  * Controlled by the `DEBUG` environment variable. Supports namespace
- * filtering with patterns like `kervyx`, `kervyx:*`, or `kervyx:crypto`.
+ * filtering with patterns like `nobulex`, `nobulex:*`, or `nobulex:crypto`.
  *
  * When debug is not enabled, all logging methods are no-ops with zero overhead.
  *
@@ -16,15 +16,15 @@
  *
  * Reads the `DEBUG` environment variable and checks for matching patterns.
  * Supported patterns:
- * - `kervyx`     — enables all Kervyx debug logging
- * - `kervyx:*`   — enables all Kervyx debug logging (wildcard)
- * - `kervyx:ccl` — enables only the `kervyx:ccl` namespace
+ * - `nobulex`     — enables all Nobulex debug logging
+ * - `nobulex:*`   — enables all Nobulex debug logging (wildcard)
+ * - `nobulex:ccl` — enables only the `nobulex:ccl` namespace
  * - `*`         — enables all debug logging
  *
  * Multiple patterns can be separated by commas.
  *
- * @param namespace - Optional namespace to check (e.g., `'kervyx:crypto'`).
- *   If omitted, checks whether any Kervyx debug logging is enabled.
+ * @param namespace - Optional namespace to check (e.g., `'nobulex:crypto'`).
+ *   If omitted, checks whether any Nobulex debug logging is enabled.
  * @returns `true` if debug output should be produced for this namespace.
  */
 export function isDebugEnabled(namespace?: string): boolean {
@@ -41,26 +41,26 @@ export function isDebugEnabled(namespace?: string): boolean {
       return true;
     }
 
-    // Exact match for "kervyx" enables all kervyx namespaces
-    if (pattern === 'kervyx') {
-      if (!namespace || namespace === 'kervyx' || namespace.startsWith('kervyx:')) {
+    // Exact match for "nobulex" enables all nobulex namespaces
+    if (pattern === 'nobulex') {
+      if (!namespace || namespace === 'nobulex' || namespace.startsWith('nobulex:')) {
         return true;
       }
     }
 
-    // "kervyx:*" enables all kervyx namespaces
-    if (pattern === 'kervyx:*') {
-      if (!namespace || namespace === 'kervyx' || namespace.startsWith('kervyx:')) {
+    // "nobulex:*" enables all nobulex namespaces
+    if (pattern === 'nobulex:*') {
+      if (!namespace || namespace === 'nobulex' || namespace.startsWith('nobulex:')) {
         return true;
       }
     }
 
-    // Exact namespace match (e.g., "kervyx:crypto")
+    // Exact namespace match (e.g., "nobulex:crypto")
     if (namespace && pattern === namespace) {
       return true;
     }
 
-    // Pattern with wildcard suffix (e.g., "kervyx:crypto:*")
+    // Pattern with wildcard suffix (e.g., "nobulex:crypto:*")
     if (namespace && pattern.endsWith(':*')) {
       const prefix = pattern.slice(0, -2);
       if (namespace === prefix || namespace.startsWith(prefix + ':')) {
@@ -107,16 +107,16 @@ function timestamp(): string {
  * When debug is not enabled for this namespace, all methods are no-ops
  * with zero overhead (no string formatting, no timestamp generation).
  *
- * @param namespace - The namespace for this logger (e.g., `'kervyx:crypto'`).
+ * @param namespace - The namespace for this logger (e.g., `'nobulex:crypto'`).
  * @returns A debug logger with `log`, `warn`, `error`, and `time` methods.
  *
  * @example
  * ```typescript
- * const dbg = createDebugLogger('kervyx:crypto');
+ * const dbg = createDebugLogger('nobulex:crypto');
  * dbg.log('generating keypair', { bits: 256 });
  * const stop = dbg.time('sign');
  * // ... signing operation ...
- * stop(); // logs: [kervyx:crypto] sign: 12.34ms
+ * stop(); // logs: [nobulex:crypto] sign: 12.34ms
  * ```
  */
 export function createDebugLogger(namespace: string): DebugLogger {
@@ -154,15 +154,15 @@ export function createDebugLogger(namespace: string): DebugLogger {
 // ─── Pre-created loggers ────────────────────────────────────────────────────────
 
 /**
- * Pre-created debug loggers for each Kervyx subsystem.
+ * Pre-created debug loggers for each Nobulex subsystem.
  *
  * Each logger is scoped to its subsystem namespace and will only produce
  * output when the corresponding DEBUG pattern is set.
  *
  * @example
  * ```typescript
- * // Enable with: DEBUG=kervyx:crypto node script.js
- * import { debug } from '@kervyx/types';
+ * // Enable with: DEBUG=nobulex:crypto node script.js
+ * import { debug } from '@nobulex/types';
  * debug.crypto.log('keypair generated');
  * ```
  */
@@ -175,11 +175,11 @@ export const debug: {
   identity: DebugLogger;
   enforcement: DebugLogger;
 } = {
-  crypto: createDebugLogger('kervyx:crypto'),
-  ccl: createDebugLogger('kervyx:ccl'),
-  core: createDebugLogger('kervyx:core'),
-  store: createDebugLogger('kervyx:store'),
-  sdk: createDebugLogger('kervyx:sdk'),
-  identity: createDebugLogger('kervyx:identity'),
-  enforcement: createDebugLogger('kervyx:enforcement'),
+  crypto: createDebugLogger('nobulex:crypto'),
+  ccl: createDebugLogger('nobulex:ccl'),
+  core: createDebugLogger('nobulex:core'),
+  store: createDebugLogger('nobulex:store'),
+  sdk: createDebugLogger('nobulex:sdk'),
+  identity: createDebugLogger('nobulex:identity'),
+  enforcement: createDebugLogger('nobulex:enforcement'),
 };

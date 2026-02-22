@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { generateKeyPair } from '@kervyx/crypto';
-import type { KeyPair } from '@kervyx/crypto';
+import { generateKeyPair } from '@nobulex/crypto';
+import type { KeyPair } from '@nobulex/crypto';
 import {
   buildCovenant,
   PROTOCOL_VERSION,
   MAX_CHAIN_DEPTH,
-} from '@kervyx/core';
+} from '@nobulex/core';
 import type {
   CovenantDocument,
   CovenantBuilderOptions,
   Issuer,
   Beneficiary,
   ChainReference,
-} from '@kervyx/core';
+} from '@nobulex/core';
 
 import { Verifier, verifyBatch } from './index';
 import type {
@@ -132,7 +132,7 @@ async function buildChain(length: number): Promise<{
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('@kervyx/verifier', () => {
+describe('@nobulex/verifier', () => {
   // ── Verifier constructor ─────────────────────────────────────────────
 
   describe('Verifier constructor', () => {

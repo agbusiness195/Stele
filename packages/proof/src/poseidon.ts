@@ -1,5 +1,5 @@
-import { sha256String } from '@kervyx/crypto';
-import type { HashHex } from '@kervyx/crypto';
+import { sha256String } from '@nobulex/crypto';
+import type { HashHex } from '@nobulex/crypto';
 
 /**
  * BN254 (alt_bn128) scalar field prime.

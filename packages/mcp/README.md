@@ -1,24 +1,24 @@
-# @kervyx/mcp
+# @nobulex/mcp
 
-Model Context Protocol (MCP) integration -- wraps any MCP server with Kervyx covenant enforcement, audit logging, and compliance proofs.
+Model Context Protocol (MCP) integration -- wraps any MCP server with Nobulex covenant enforcement, audit logging, and compliance proofs.
 
 ## Installation
 
 ```bash
-npm install @kervyx/mcp
+npm install @nobulex/mcp
 ```
 
 ## Key APIs
 
-- **KervyxGuard.wrap(server, options)**: Wrap an MCP server with constraint enforcement using CCL text or a preset name. Returns a `WrappedMCPServer`.
-- **KervyxGuard.fromCovenant(server, covenant, keyPair)**: Wrap an MCP server using a pre-built `CovenantDocument` (for externally managed covenants).
+- **NobulexGuard.wrap(server, options)**: Wrap an MCP server with constraint enforcement using CCL text or a preset name. Returns a `WrappedMCPServer`.
+- **NobulexGuard.fromCovenant(server, covenant, keyPair)**: Wrap an MCP server using a pre-built `CovenantDocument` (for externally managed covenants).
 - **PRESETS**: Built-in CCL constraint presets (`standard:data-isolation`, `standard:read-write`, `standard:network`, `standard:minimal`).
 - **WrappedMCPServer**: Extended server with `getMonitor()`, `getAuditLog()`, `generateProof()`, `getReceipt()`, and `getCovenant()` accessors.
 
 ## Usage
 
 ```typescript
-import { KervyxGuard } from '@kervyx/mcp';
+import { NobulexGuard } from '@nobulex/mcp';
 
 // Your existing MCP server
 const mcpServer = {
@@ -29,7 +29,7 @@ const mcpServer = {
 };
 
 // Wrap with a built-in preset (2 lines)
-const guarded = await KervyxGuard.wrap(mcpServer, {
+const guarded = await NobulexGuard.wrap(mcpServer, {
   constraints: 'standard:data-isolation',
   mode: 'enforce', // or 'log_only'
   onViolation: (v) => console.warn(`Blocked: ${v.toolName} - ${v.constraint}`),
@@ -47,14 +47,14 @@ const receipt = guarded.getReceipt();
 ### Using a pre-built covenant
 
 ```typescript
-import { KervyxGuard } from '@kervyx/mcp';
-import { buildCovenant } from '@kervyx/core';
-import { generateKeyPair } from '@kervyx/crypto';
+import { NobulexGuard } from '@nobulex/mcp';
+import { buildCovenant } from '@nobulex/core';
+import { generateKeyPair } from '@nobulex/crypto';
 
 const keyPair = await generateKeyPair();
 const covenant = await buildCovenant({ /* ... */ });
 
-const guarded = await KervyxGuard.fromCovenant(mcpServer, covenant, keyPair);
+const guarded = await NobulexGuard.fromCovenant(mcpServer, covenant, keyPair);
 ```
 
 ## Presets
@@ -68,4 +68,4 @@ const guarded = await KervyxGuard.fromCovenant(mcpServer, covenant, keyPair);
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

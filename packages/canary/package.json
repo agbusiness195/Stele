@@ -1,5 +1,5 @@
 {
-  "name": "@kervyx/canary",
+  "name": "@nobulex/canary",
   "version": "2.0.0",
   "description": "Canary token generation and tripwire monitoring",
   "sideEffects": false,
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@kervyx/ccl": "2.0.0",
-    "@kervyx/crypto": "2.0.0"
+    "@nobulex/ccl": "2.0.0",
+    "@nobulex/crypto": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -39,16 +39,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/canary"
   },
-  "homepage": "https://kervyx.dev",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
-  "author": "Kervyx Labs, Inc.",
+  "author": "Nobulex Labs, Inc.",
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "canary",

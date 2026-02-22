@@ -1,7 +1,7 @@
 {
-  "name": "@kervyx/schema",
+  "name": "@nobulex/schema",
   "version": "2.0.0",
-  "description": "Formal JSON Schema definitions for Kervyx protocol documents",
+  "description": "Formal JSON Schema definitions for Nobulex protocol documents",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,13 +27,13 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@kervyx/types": "2.0.0"
+    "@nobulex/types": "2.0.0"
   },
   "license": "MIT",
-  "author": "Kervyx Labs, Inc.",
-  "homepage": "https://kervyx.dev",
+  "author": "Nobulex Labs, Inc.",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
   "engines": {
     "node": ">=18"
@@ -43,11 +43,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/schema"
   },
   "keywords": [
-    "kervyx",
+    "nobulex",
     "schema",
     "json-schema",
     "covenant",

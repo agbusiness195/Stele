@@ -1,11 +1,11 @@
-# @kervyx/canary
+# @nobulex/canary
 
 Canary token generation, tripwire evaluation, scheduling, and breach correlation analysis.
 
 ## Installation
 
 ```bash
-npm install @kervyx/canary
+npm install @nobulex/canary
 ```
 
 ## Key APIs
@@ -26,7 +26,7 @@ import {
   detectionProbability,
   canarySchedule,
   canaryCorrelation,
-} from '@kervyx/canary';
+} from '@nobulex/canary';
 
 // Generate a canary from a CCL constraint
 const canary = generateCanary(
@@ -64,4 +64,4 @@ console.log(correlation.meaningful);  // true if sample size >= 3
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

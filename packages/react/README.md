@@ -1,11 +1,11 @@
-# @kervyx/react
+# @nobulex/react
 
-Reactive primitives and React hooks for building Kervyx-powered UIs with observable state management.
+Reactive primitives and React hooks for building Nobulex-powered UIs with observable state management.
 
 ## Installation
 
 ```bash
-npm install @kervyx/react
+npm install @nobulex/react
 ```
 
 ## Key APIs
@@ -19,8 +19,8 @@ npm install @kervyx/react
 
 ### Factory Functions
 
-- **createCovenantState(client)**: Create a `CovenantState` bound to a `KervyxClient`
-- **createIdentityState(client)**: Create an `IdentityState` bound to a `KervyxClient`
+- **createCovenantState(client)**: Create a `CovenantState` bound to a `NobulexClient`
+- **createIdentityState(client)**: Create an `IdentityState` bound to a `NobulexClient`
 - **createStoreState(store)**: Create a `StoreState` bound to a `CovenantStore`
 
 ### React Hooks (requires React >= 18)
@@ -33,12 +33,12 @@ npm install @kervyx/react
 ## Usage
 
 ```typescript
-import { useCovenant, useIdentity, useCovenantStore } from '@kervyx/react';
-import { KervyxClient } from '@kervyx/sdk';
-import { MemoryStore } from '@kervyx/store';
+import { useCovenant, useIdentity, useCovenantStore } from '@nobulex/react';
+import { NobulexClient } from '@nobulex/sdk';
+import { MemoryStore } from '@nobulex/store';
 
 function CovenantPanel() {
-  const client = new KervyxClient();
+  const client = new NobulexClient();
   const { status, document, error, create, verify } = useCovenant(client);
 
   // status: 'idle' | 'creating' | 'created' | 'verifying' | 'verified' | 'error'
@@ -46,7 +46,7 @@ function CovenantPanel() {
 }
 
 // Framework-agnostic usage
-import { Observable, createCovenantState } from '@kervyx/react';
+import { Observable, createCovenantState } from '@nobulex/react';
 
 const count = new Observable(0);
 const doubled = count.map(n => n * 2);
@@ -56,4 +56,4 @@ count.set(5); // logs "doubled: 10"
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

@@ -26,7 +26,7 @@ import {
   matchResource,
   type CCLDocument,
   type EvaluationContext,
-} from '@kervyx/ccl';
+} from '@nobulex/ccl';
 
 function main() {
   console.log('========================================');

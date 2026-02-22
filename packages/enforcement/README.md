@@ -1,11 +1,11 @@
-# @kervyx/enforcement
+# @nobulex/enforcement
 
 Runtime covenant enforcement with tamper-evident audit logging and capability-based access control.
 
 ## Installation
 
 ```bash
-npm install @kervyx/enforcement
+npm install @nobulex/enforcement
 ```
 
 ## Key APIs
@@ -20,7 +20,7 @@ npm install @kervyx/enforcement
 ## Usage
 
 ```typescript
-import { Monitor, CapabilityGate } from '@kervyx/enforcement';
+import { Monitor, CapabilityGate } from '@nobulex/enforcement';
 
 // Runtime enforcement with audit logging
 const monitor = new Monitor(covenantId, `
@@ -50,4 +50,4 @@ const valid = await CapabilityGate.verifyManifest(manifest);
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

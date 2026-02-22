@@ -6,7 +6,7 @@
 //! and records the type of change made.
 
 use crate::crypto;
-use crate::KervyxError;
+use crate::NobulexError;
 use serde::{Deserialize, Serialize};
 
 // ---------------------------------------------------------------------------
@@ -103,13 +103,13 @@ pub fn compute_identity_hash(body: &serde_json::Value) -> String {
 }
 
 /// Build the JSON body used for hashing/signing (excludes `id` and `signature`).
-fn identity_body(identity: &AgentIdentity) -> Result<serde_json::Value, KervyxError> {
+fn identity_body(identity: &AgentIdentity) -> Result<serde_json::Value, NobulexError> {
     let val = serde_json::to_value(identity)
-        .map_err(|e| KervyxError::SerializationError(format!("Failed to serialize identity: {}", e)))?;
+        .map_err(|e| NobulexError::SerializationError(format!("Failed to serialize identity: {}", e)))?;
 
     let mut obj = match val {
         serde_json::Value::Object(m) => m,
-        _ => return Err(KervyxError::SerializationError("Expected object".to_string())),
+        _ => return Err(NobulexError::SerializationError("Expected object".to_string())),
     };
 
     obj.remove("id");
@@ -128,26 +128,26 @@ fn identity_body(identity: &AgentIdentity) -> Result<serde_json::Value, KervyxEr
 /// of type `created`, and signs the whole identity with the operator key.
 ///
 /// # Errors
-/// Returns `KervyxError::InvalidInput` for missing fields or
-/// `KervyxError::CryptoError` for signing failures.
-pub fn create_identity(opts: CreateIdentityOptions) -> Result<AgentIdentity, KervyxError> {
+/// Returns `NobulexError::InvalidInput` for missing fields or
+/// `NobulexError::CryptoError` for signing failures.
+pub fn create_identity(opts: CreateIdentityOptions) -> Result<AgentIdentity, NobulexError> {
     if opts.public_key_hex.is_empty() {
-        return Err(KervyxError::InvalidInput(
+        return Err(NobulexError::InvalidInput(
             "operatorPublicKey is required".to_string(),
         ));
     }
     if opts.model.provider.is_empty() || opts.model.model_id.is_empty() {
-        return Err(KervyxError::InvalidInput(
+        return Err(NobulexError::InvalidInput(
             "model.provider and model.modelId are required".to_string(),
         ));
     }
     if opts.capabilities.is_empty() {
-        return Err(KervyxError::InvalidInput(
+        return Err(NobulexError::InvalidInput(
             "capabilities array must not be empty".to_string(),
         ));
     }
     if opts.deployment.runtime.is_empty() {
-        return Err(KervyxError::InvalidInput(
+        return Err(NobulexError::InvalidInput(
             "deployment.runtime is required".to_string(),
         ));
     }
@@ -207,19 +207,19 @@ pub fn create_identity(opts: CreateIdentityOptions) -> Result<AgentIdentity, Ker
 /// appends a lineage entry describing the change, and re-signs everything.
 ///
 /// # Errors
-/// Returns `KervyxError::InvalidInput` for invalid change types or
-/// `KervyxError::CryptoError` for signing failures.
+/// Returns `NobulexError::InvalidInput` for invalid change types or
+/// `NobulexError::CryptoError` for signing failures.
 pub fn evolve_identity(
     identity: &AgentIdentity,
     opts: EvolveIdentityOptions,
-) -> Result<AgentIdentity, KervyxError> {
+) -> Result<AgentIdentity, NobulexError> {
     if opts.change_type.is_empty() {
-        return Err(KervyxError::InvalidInput(
+        return Err(NobulexError::InvalidInput(
             "changeType is required for evolution".to_string(),
         ));
     }
     if opts.description.is_empty() {
-        return Err(KervyxError::InvalidInput(
+        return Err(NobulexError::InvalidInput(
             "description is required for evolution".to_string(),
         ));
     }
@@ -293,7 +293,7 @@ pub fn evolve_identity(
 /// 4. `version_match` -- Version matches lineage length
 pub fn verify_identity(
     identity: &AgentIdentity,
-) -> Result<IdentityVerificationResult, KervyxError> {
+) -> Result<IdentityVerificationResult, NobulexError> {
     let mut checks: Vec<IdentityCheck> = Vec::new();
 
     // 1. ID match
@@ -389,15 +389,15 @@ pub fn verify_identity(
 // ---------------------------------------------------------------------------
 
 /// Serialize an AgentIdentity to a JSON string.
-pub fn serialize_identity(identity: &AgentIdentity) -> Result<String, KervyxError> {
+pub fn serialize_identity(identity: &AgentIdentity) -> Result<String, NobulexError> {
     serde_json::to_string_pretty(identity)
-        .map_err(|e| KervyxError::SerializationError(format!("Failed to serialize identity: {}", e)))
+        .map_err(|e| NobulexError::SerializationError(format!("Failed to serialize identity: {}", e)))
 }
 
 /// Deserialize a JSON string into an AgentIdentity.
-pub fn deserialize_identity(json: &str) -> Result<AgentIdentity, KervyxError> {
+pub fn deserialize_identity(json: &str) -> Result<AgentIdentity, NobulexError> {
     serde_json::from_str(json)
-        .map_err(|e| KervyxError::SerializationError(format!("Failed to deserialize identity: {}", e)))
+        .map_err(|e| NobulexError::SerializationError(format!("Failed to deserialize identity: {}", e)))
 }
 
 #[cfg(test)]

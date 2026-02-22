@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import {
   telemetryMiddleware,
-  KervyxMetrics,
+  NobulexMetrics,
   NoopTracer,
   NoopMeter,
   NoopSpan,
@@ -24,10 +24,10 @@ import type {
   EventSource,
 } from '../src/telemetry.js';
 import { MiddlewarePipeline } from '../src/middleware.js';
-import type { KervyxMiddleware } from '../src/middleware.js';
+import type { NobulexMiddleware } from '../src/middleware.js';
 import type {
-  KervyxEventType,
-  KervyxEventMap,
+  NobulexEventType,
+  NobulexEventMap,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   EvaluationCompletedEvent,
@@ -120,11 +120,11 @@ class MockMeter implements Meter {
   }
 }
 
-/** A mock EventSource that simulates KervyxClient's on() API. */
+/** A mock EventSource that simulates NobulexClient's on() API. */
 class MockEventSource implements EventSource {
-  private readonly _handlers = new Map<KervyxEventType, Set<(data: unknown) => void>>();
+  private readonly _handlers = new Map<NobulexEventType, Set<(data: unknown) => void>>();
 
-  on<T extends KervyxEventType>(event: T, handler: (data: KervyxEventMap[T]) => void): () => void {
+  on<T extends NobulexEventType>(event: T, handler: (data: NobulexEventMap[T]) => void): () => void {
     if (!this._handlers.has(event)) {
       this._handlers.set(event, new Set());
     }
@@ -137,7 +137,7 @@ class MockEventSource implements EventSource {
   }
 
   /** Emit an event for testing. */
-  emit<T extends KervyxEventType>(event: T, data: KervyxEventMap[T]): void {
+  emit<T extends NobulexEventType>(event: T, data: NobulexEventMap[T]): void {
     const handlers = this._handlers.get(event);
     if (handlers) {
       for (const handler of handlers) {
@@ -147,7 +147,7 @@ class MockEventSource implements EventSource {
   }
 
   /** Return count of handlers for a given event. */
-  handlerCount(event: KervyxEventType): number {
+  handlerCount(event: NobulexEventType): number {
     return this._handlers.get(event)?.size ?? 0;
   }
 }
@@ -181,15 +181,15 @@ describe('telemetryMiddleware — span creation', () => {
   it('creates a span for each operation', async () => {
     await pipeline.execute('createCovenant', {}, echoOp({ id: 'cov-1' }));
     expect(tracer.spans).toHaveLength(1);
-    expect(tracer.spans[0]!.attributes['_spanName']).toBe('kervyx.createCovenant');
+    expect(tracer.spans[0]!.attributes['_spanName']).toBe('nobulex.createCovenant');
   });
 
   it('creates separate spans for separate operations', async () => {
     await pipeline.execute('createCovenant', {}, echoOp({ id: 'cov-1' }));
     await pipeline.execute('verifyCovenant', {}, echoOp({ valid: true }));
     expect(tracer.spans).toHaveLength(2);
-    expect(tracer.spans[0]!.attributes['_spanName']).toBe('kervyx.createCovenant');
-    expect(tracer.spans[1]!.attributes['_spanName']).toBe('kervyx.verifyCovenant');
+    expect(tracer.spans[0]!.attributes['_spanName']).toBe('nobulex.createCovenant');
+    expect(tracer.spans[1]!.attributes['_spanName']).toBe('nobulex.verifyCovenant');
   });
 
   it('ends the span after a successful operation', async () => {
@@ -217,44 +217,44 @@ describe('telemetryMiddleware — span attributes', () => {
     pipeline.use(telemetryMiddleware({ tracer }));
   });
 
-  it('sets kervyx.operation attribute', async () => {
+  it('sets nobulex.operation attribute', async () => {
     await pipeline.execute('createCovenant', {}, echoOp({ id: 'cov-1' }));
-    expect(tracer.spans[0]!.attributes['kervyx.operation']).toBe('createCovenant');
+    expect(tracer.spans[0]!.attributes['nobulex.operation']).toBe('createCovenant');
   });
 
-  it('sets kervyx.covenant.id when result has an id', async () => {
+  it('sets nobulex.covenant.id when result has an id', async () => {
     await pipeline.execute('createCovenant', {}, echoOp({ id: 'cov-abc-123' }));
-    expect(tracer.spans[0]!.attributes['kervyx.covenant.id']).toBe('cov-abc-123');
+    expect(tracer.spans[0]!.attributes['nobulex.covenant.id']).toBe('cov-abc-123');
   });
 
-  it('sets kervyx.verification.valid when result has valid field', async () => {
+  it('sets nobulex.verification.valid when result has valid field', async () => {
     await pipeline.execute('verifyCovenant', {}, echoOp({ valid: true, checks: [] }));
-    expect(tracer.spans[0]!.attributes['kervyx.verification.valid']).toBe(true);
+    expect(tracer.spans[0]!.attributes['nobulex.verification.valid']).toBe(true);
   });
 
-  it('sets kervyx.evaluation.permitted when result has permitted field', async () => {
+  it('sets nobulex.evaluation.permitted when result has permitted field', async () => {
     await pipeline.execute('evaluateAction', {}, echoOp({ permitted: false, allMatches: [] }));
-    expect(tracer.spans[0]!.attributes['kervyx.evaluation.permitted']).toBe(false);
+    expect(tracer.spans[0]!.attributes['nobulex.evaluation.permitted']).toBe(false);
   });
 
-  it('sets kervyx.duration_ms attribute', async () => {
+  it('sets nobulex.duration_ms attribute', async () => {
     await pipeline.execute('createCovenant', {}, echoOp({ id: 'cov-1' }));
-    expect(tracer.spans[0]!.attributes['kervyx.duration_ms']).toBeDefined();
-    expect(typeof tracer.spans[0]!.attributes['kervyx.duration_ms']).toBe('number');
+    expect(tracer.spans[0]!.attributes['nobulex.duration_ms']).toBeDefined();
+    expect(typeof tracer.spans[0]!.attributes['nobulex.duration_ms']).toBe('number');
   });
 
   it('does not set result-specific attributes for non-object results', async () => {
     await pipeline.execute('someOp', {}, echoOp('string-result'));
     const span = tracer.spans[0]!;
-    expect(span.attributes['kervyx.covenant.id']).toBeUndefined();
-    expect(span.attributes['kervyx.verification.valid']).toBeUndefined();
-    expect(span.attributes['kervyx.evaluation.permitted']).toBeUndefined();
+    expect(span.attributes['nobulex.covenant.id']).toBeUndefined();
+    expect(span.attributes['nobulex.verification.valid']).toBeUndefined();
+    expect(span.attributes['nobulex.evaluation.permitted']).toBeUndefined();
   });
 
   it('does not set result-specific attributes for null results', async () => {
     await pipeline.execute('someOp', {}, echoOp(null));
     const span = tracer.spans[0]!;
-    expect(span.attributes['kervyx.covenant.id']).toBeUndefined();
+    expect(span.attributes['nobulex.covenant.id']).toBeUndefined();
   });
 });
 
@@ -305,23 +305,23 @@ describe('telemetryMiddleware — error handling', () => {
     ).rejects.toThrow('fail');
 
     const span = tracer.spans[0]!;
-    expect(span.attributes['kervyx.duration_ms']).toBeDefined();
-    expect(typeof span.attributes['kervyx.duration_ms']).toBe('number');
+    expect(span.attributes['nobulex.duration_ms']).toBeDefined();
+    expect(typeof span.attributes['nobulex.duration_ms']).toBe('number');
   });
 });
 
-// ─── KervyxMetrics — event recording ─────────────────────────────────────────
+// ─── NobulexMetrics — event recording ─────────────────────────────────────────
 
-describe('KervyxMetrics — record()', () => {
+describe('NobulexMetrics — record()', () => {
   let meter: MockMeter;
-  let metrics: KervyxMetrics;
+  let metrics: NobulexMetrics;
 
   beforeEach(() => {
     meter = new MockMeter();
-    metrics = new KervyxMetrics(meter);
+    metrics = new NobulexMetrics(meter);
   });
 
-  it('increments kervyx.covenants.created on covenant:created', () => {
+  it('increments nobulex.covenants.created on covenant:created', () => {
     const event: CovenantCreatedEvent = {
       type: 'covenant:created',
       timestamp: new Date().toISOString(),
@@ -329,11 +329,11 @@ describe('KervyxMetrics — record()', () => {
     };
     metrics.record(event);
 
-    const counter = meter.counters.get('kervyx.covenants.created')!;
+    const counter = meter.counters.get('nobulex.covenants.created')!;
     expect(counter.total).toBe(1);
   });
 
-  it('increments kervyx.covenants.verified on covenant:verified', () => {
+  it('increments nobulex.covenants.verified on covenant:verified', () => {
     const event: CovenantVerifiedEvent = {
       type: 'covenant:verified',
       timestamp: new Date().toISOString(),
@@ -341,11 +341,11 @@ describe('KervyxMetrics — record()', () => {
     };
     metrics.record(event);
 
-    const counter = meter.counters.get('kervyx.covenants.verified')!;
+    const counter = meter.counters.get('nobulex.covenants.verified')!;
     expect(counter.total).toBe(1);
   });
 
-  it('increments kervyx.evaluations.total on evaluation:completed', () => {
+  it('increments nobulex.evaluations.total on evaluation:completed', () => {
     const event: EvaluationCompletedEvent = {
       type: 'evaluation:completed',
       timestamp: new Date().toISOString(),
@@ -355,11 +355,11 @@ describe('KervyxMetrics — record()', () => {
     };
     metrics.record(event);
 
-    const counter = meter.counters.get('kervyx.evaluations.total')!;
+    const counter = meter.counters.get('nobulex.evaluations.total')!;
     expect(counter.total).toBe(1);
   });
 
-  it('increments kervyx.evaluations.denied when evaluation is not permitted', () => {
+  it('increments nobulex.evaluations.denied when evaluation is not permitted', () => {
     const event: EvaluationCompletedEvent = {
       type: 'evaluation:completed',
       timestamp: new Date().toISOString(),
@@ -369,11 +369,11 @@ describe('KervyxMetrics — record()', () => {
     };
     metrics.record(event);
 
-    const denied = meter.counters.get('kervyx.evaluations.denied')!;
+    const denied = meter.counters.get('nobulex.evaluations.denied')!;
     expect(denied.total).toBe(1);
   });
 
-  it('does not increment kervyx.evaluations.denied when evaluation is permitted', () => {
+  it('does not increment nobulex.evaluations.denied when evaluation is permitted', () => {
     const event: EvaluationCompletedEvent = {
       type: 'evaluation:completed',
       timestamp: new Date().toISOString(),
@@ -383,7 +383,7 @@ describe('KervyxMetrics — record()', () => {
     };
     metrics.record(event);
 
-    const denied = meter.counters.get('kervyx.evaluations.denied')!;
+    const denied = meter.counters.get('nobulex.evaluations.denied')!;
     expect(denied.total).toBe(0);
   });
 
@@ -404,7 +404,7 @@ describe('KervyxMetrics — record()', () => {
       document: {} as any,
     } as CovenantCreatedEvent);
 
-    const counter = meter.counters.get('kervyx.covenants.created')!;
+    const counter = meter.counters.get('nobulex.covenants.created')!;
     expect(counter.total).toBe(3);
   });
 
@@ -423,30 +423,30 @@ describe('KervyxMetrics — record()', () => {
   it('records duration via recordDuration()', () => {
     metrics.recordDuration(42.5, { operation: 'createCovenant' });
 
-    const histogram = meter.histograms.get('kervyx.operation.duration')!;
+    const histogram = meter.histograms.get('nobulex.operation.duration')!;
     expect(histogram.calls).toHaveLength(1);
     expect(histogram.calls[0]!.value).toBe(42.5);
     expect(histogram.calls[0]!.attributes).toEqual({ operation: 'createCovenant' });
   });
 });
 
-// ─── KervyxMetrics — bindToClient ────────────────────────────────────────────
+// ─── NobulexMetrics — bindToClient ────────────────────────────────────────────
 
-describe('KervyxMetrics — bindToClient()', () => {
+describe('NobulexMetrics — bindToClient()', () => {
   let meter: MockMeter;
-  let metrics: KervyxMetrics;
+  let metrics: NobulexMetrics;
   let source: MockEventSource;
 
   beforeEach(() => {
     meter = new MockMeter();
-    metrics = new KervyxMetrics(meter);
+    metrics = new NobulexMetrics(meter);
     source = new MockEventSource();
   });
 
   it('subscribes to all event types', () => {
     metrics.bindToClient(source);
 
-    const expectedEvents: KervyxEventType[] = [
+    const expectedEvents: NobulexEventType[] = [
       'covenant:created',
       'covenant:verified',
       'covenant:countersigned',
@@ -487,7 +487,7 @@ describe('KervyxMetrics — bindToClient()', () => {
       document: {} as any,
     });
 
-    const counter = meter.counters.get('kervyx.covenants.created')!;
+    const counter = meter.counters.get('nobulex.covenants.created')!;
     expect(counter.total).toBe(1);
   });
 
@@ -502,8 +502,8 @@ describe('KervyxMetrics — bindToClient()', () => {
       resource: '/system',
     });
 
-    const total = meter.counters.get('kervyx.evaluations.total')!;
-    const denied = meter.counters.get('kervyx.evaluations.denied')!;
+    const total = meter.counters.get('nobulex.evaluations.total')!;
+    const denied = meter.counters.get('nobulex.evaluations.denied')!;
     expect(total.total).toBe(1);
     expect(denied.total).toBe(1);
   });
@@ -517,7 +517,7 @@ describe('KervyxMetrics — bindToClient()', () => {
       result: { valid: true, checks: [] } as any,
     });
 
-    const counter = meter.counters.get('kervyx.covenants.verified')!;
+    const counter = meter.counters.get('nobulex.covenants.verified')!;
     expect(counter.total).toBe(1);
   });
 });
@@ -588,7 +588,7 @@ describe('createTelemetry()', () => {
     expect(result).toHaveProperty('metrics');
   });
 
-  it('middleware is a valid KervyxMiddleware', () => {
+  it('middleware is a valid NobulexMiddleware', () => {
     const { middleware } = createTelemetry();
     expect(middleware.name).toBe('telemetry');
     expect(middleware.before).toBeDefined();
@@ -596,9 +596,9 @@ describe('createTelemetry()', () => {
     expect(middleware.onError).toBeDefined();
   });
 
-  it('metrics is a KervyxMetrics instance', () => {
+  it('metrics is a NobulexMetrics instance', () => {
     const { metrics } = createTelemetry();
-    expect(metrics).toBeInstanceOf(KervyxMetrics);
+    expect(metrics).toBeInstanceOf(NobulexMetrics);
   });
 
   it('works with no-op defaults (no tracer/meter provided)', async () => {
@@ -629,7 +629,7 @@ describe('createTelemetry()', () => {
     await pipeline.execute('createCovenant', {}, echoOp({ id: 'cov-1' }));
 
     expect(tracer.spans).toHaveLength(1);
-    expect(tracer.spans[0]!.attributes['kervyx.operation']).toBe('createCovenant');
+    expect(tracer.spans[0]!.attributes['nobulex.operation']).toBe('createCovenant');
   });
 
   it('uses provided meter for metrics', () => {
@@ -642,7 +642,7 @@ describe('createTelemetry()', () => {
       document: {} as any,
     } as CovenantCreatedEvent);
 
-    const counter = meter.counters.get('kervyx.covenants.created')!;
+    const counter = meter.counters.get('nobulex.covenants.created')!;
     expect(counter.total).toBe(1);
   });
 
@@ -671,11 +671,11 @@ describe('createTelemetry()', () => {
 
     // Verify span was created
     expect(tracer.spans).toHaveLength(1);
-    expect(tracer.spans[0]!.attributes['kervyx.covenant.id']).toBe('cov-end-to-end');
+    expect(tracer.spans[0]!.attributes['nobulex.covenant.id']).toBe('cov-end-to-end');
     expect(tracer.spans[0]!.status!.code).toBe(SpanStatusCode.OK);
 
     // Verify metric was recorded
-    const counter = meter.counters.get('kervyx.covenants.created')!;
+    const counter = meter.counters.get('nobulex.covenants.created')!;
     expect(counter.total).toBe(1);
   });
 });

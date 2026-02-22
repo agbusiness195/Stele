@@ -1,5 +1,5 @@
-import { buildCovenant, verifyCovenant } from '@kervyx/core';
-import { generateKeyPair } from '@kervyx/crypto';
+import { buildCovenant, verifyCovenant } from '@nobulex/core';
+import { generateKeyPair } from '@nobulex/crypto';
 
 // ── Presets ────────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ export interface ProtectedAgent {
  *
  * @example
  * ```typescript
- * import { protect } from '@kervyx/sdk';
+ * import { protect } from '@nobulex/sdk';
  *
  * const agent = await protect({
  *   name: 'my-agent',

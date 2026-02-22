@@ -7,10 +7,10 @@
 
 use crate::ccl;
 use crate::crypto;
-use crate::KervyxError;
+use crate::NobulexError;
 use serde::{Deserialize, Serialize};
 
-/// Current Kervyx Covenant protocol version.
+/// Current Nobulex Covenant protocol version.
 pub const PROTOCOL_VERSION: &str = "1.0";
 
 /// Maximum number of CCL constraint statements in a single covenant.
@@ -116,14 +116,14 @@ pub struct CovenantBuilderOptions {
 ///
 /// Strips `id`, `signature`, and `countersignatures`, then produces
 /// deterministic JSON via JCS (sorted keys) canonicalization.
-pub fn canonical_form(doc: &CovenantDocument) -> Result<String, KervyxError> {
+pub fn canonical_form(doc: &CovenantDocument) -> Result<String, NobulexError> {
     // Build a JSON value, then remove the mutable fields
     let val = serde_json::to_value(doc)
-        .map_err(|e| KervyxError::SerializationError(format!("Failed to convert to JSON value: {}", e)))?;
+        .map_err(|e| NobulexError::SerializationError(format!("Failed to convert to JSON value: {}", e)))?;
 
     let mut obj = match val {
         serde_json::Value::Object(m) => m,
-        _ => return Err(KervyxError::SerializationError("Expected object".to_string())),
+        _ => return Err(NobulexError::SerializationError("Expected object".to_string())),
     };
 
     // Remove fields that are not part of the canonical form
@@ -136,7 +136,7 @@ pub fn canonical_form(doc: &CovenantDocument) -> Result<String, KervyxError> {
 }
 
 /// Compute the SHA-256 document ID from its canonical form.
-pub fn compute_id(doc: &CovenantDocument) -> Result<String, KervyxError> {
+pub fn compute_id(doc: &CovenantDocument) -> Result<String, NobulexError> {
     let canonical = canonical_form(doc)?;
     Ok(crypto::sha256_string(&canonical))
 }
@@ -152,41 +152,41 @@ pub fn compute_id(doc: &CovenantDocument) -> Result<String, KervyxError> {
 /// issuer's private key, and computes the document ID.
 ///
 /// # Errors
-/// Returns `KervyxError::InvalidInput` for missing/invalid fields,
-/// `KervyxError::CCLParseError` for invalid constraints, or
-/// `KervyxError::CryptoError` for signing failures.
-pub fn build_covenant(opts: CovenantBuilderOptions) -> Result<CovenantDocument, KervyxError> {
+/// Returns `NobulexError::InvalidInput` for missing/invalid fields,
+/// `NobulexError::CCLParseError` for invalid constraints, or
+/// `NobulexError::CryptoError` for signing failures.
+pub fn build_covenant(opts: CovenantBuilderOptions) -> Result<CovenantDocument, NobulexError> {
     // Validate required inputs
     if opts.issuer.id.is_empty() {
-        return Err(KervyxError::InvalidInput("issuer.id is required".to_string()));
+        return Err(NobulexError::InvalidInput("issuer.id is required".to_string()));
     }
     if opts.issuer.public_key.is_empty() {
-        return Err(KervyxError::InvalidInput(
+        return Err(NobulexError::InvalidInput(
             "issuer.publicKey is required".to_string(),
         ));
     }
     if opts.issuer.role != "issuer" {
-        return Err(KervyxError::InvalidInput(
+        return Err(NobulexError::InvalidInput(
             "issuer.role must be \"issuer\"".to_string(),
         ));
     }
     if opts.beneficiary.id.is_empty() {
-        return Err(KervyxError::InvalidInput(
+        return Err(NobulexError::InvalidInput(
             "beneficiary.id is required".to_string(),
         ));
     }
     if opts.beneficiary.public_key.is_empty() {
-        return Err(KervyxError::InvalidInput(
+        return Err(NobulexError::InvalidInput(
             "beneficiary.publicKey is required".to_string(),
         ));
     }
     if opts.beneficiary.role != "beneficiary" {
-        return Err(KervyxError::InvalidInput(
+        return Err(NobulexError::InvalidInput(
             "beneficiary.role must be \"beneficiary\"".to_string(),
         ));
     }
     if opts.constraints.trim().is_empty() {
-        return Err(KervyxError::InvalidInput(
+        return Err(NobulexError::InvalidInput(
             "constraints is required".to_string(),
         ));
     }
@@ -194,7 +194,7 @@ pub fn build_covenant(opts: CovenantBuilderOptions) -> Result<CovenantDocument, 
     // Parse CCL to verify syntax and check constraint count
     let parsed_ccl = ccl::parse(&opts.constraints)?;
     if parsed_ccl.statements.len() > MAX_CONSTRAINTS {
-        return Err(KervyxError::InvalidInput(format!(
+        return Err(NobulexError::InvalidInput(format!(
             "Constraints exceed maximum of {} statements (got {})",
             MAX_CONSTRAINTS,
             parsed_ccl.statements.len()
@@ -204,22 +204,22 @@ pub fn build_covenant(opts: CovenantBuilderOptions) -> Result<CovenantDocument, 
     // Validate chain reference if present
     if let Some(ref chain) = opts.chain {
         if chain.parent_id.is_empty() {
-            return Err(KervyxError::InvalidInput(
+            return Err(NobulexError::InvalidInput(
                 "chain.parentId is required".to_string(),
             ));
         }
         if chain.relation.is_empty() {
-            return Err(KervyxError::InvalidInput(
+            return Err(NobulexError::InvalidInput(
                 "chain.relation is required".to_string(),
             ));
         }
         if chain.depth < 1 {
-            return Err(KervyxError::InvalidInput(
+            return Err(NobulexError::InvalidInput(
                 "chain.depth must be a positive integer".to_string(),
             ));
         }
         if chain.depth > MAX_CHAIN_DEPTH {
-            return Err(KervyxError::InvalidInput(format!(
+            return Err(NobulexError::InvalidInput(format!(
                 "chain.depth exceeds maximum of {} (got {})",
                 MAX_CHAIN_DEPTH, chain.depth
             )));
@@ -255,9 +255,9 @@ pub fn build_covenant(opts: CovenantBuilderOptions) -> Result<CovenantDocument, 
 
     // Validate serialized size
     let serialized = serde_json::to_string(&doc)
-        .map_err(|e| KervyxError::SerializationError(format!("Failed to serialize: {}", e)))?;
+        .map_err(|e| NobulexError::SerializationError(format!("Failed to serialize: {}", e)))?;
     if serialized.len() > MAX_DOCUMENT_SIZE {
-        return Err(KervyxError::InvalidInput(format!(
+        return Err(NobulexError::InvalidInput(format!(
             "Serialized document exceeds maximum size of {} bytes",
             MAX_DOCUMENT_SIZE
         )));
@@ -284,7 +284,7 @@ pub fn build_covenant(opts: CovenantBuilderOptions) -> Result<CovenantDocument, 
 ///  9. `document_size` -- Serialized size does not exceed MAX_DOCUMENT_SIZE
 /// 10. `countersignatures` -- All countersignatures are valid
 /// 11. `nonce_present` -- Nonce is present and non-empty
-pub fn verify_covenant(doc: &CovenantDocument) -> Result<VerificationResult, KervyxError> {
+pub fn verify_covenant(doc: &CovenantDocument) -> Result<VerificationResult, NobulexError> {
     let mut checks: Vec<VerificationCheck> = Vec::new();
 
     // 1. ID match
@@ -580,7 +580,7 @@ pub fn countersign_covenant(
     doc: &CovenantDocument,
     kp: &crypto::KeyPair,
     role: &str,
-) -> Result<CovenantDocument, KervyxError> {
+) -> Result<CovenantDocument, NobulexError> {
     let canonical = canonical_form(doc)?;
     let sig_bytes = crypto::sign(canonical.as_bytes(), &kp.signing_key)?;
 
@@ -604,15 +604,15 @@ pub fn countersign_covenant(
 // ---------------------------------------------------------------------------
 
 /// Serialize a CovenantDocument to a JSON string.
-pub fn serialize_covenant(doc: &CovenantDocument) -> Result<String, KervyxError> {
+pub fn serialize_covenant(doc: &CovenantDocument) -> Result<String, NobulexError> {
     serde_json::to_string_pretty(doc)
-        .map_err(|e| KervyxError::SerializationError(format!("Failed to serialize covenant: {}", e)))
+        .map_err(|e| NobulexError::SerializationError(format!("Failed to serialize covenant: {}", e)))
 }
 
 /// Deserialize a JSON string into a CovenantDocument.
-pub fn deserialize_covenant(json: &str) -> Result<CovenantDocument, KervyxError> {
+pub fn deserialize_covenant(json: &str) -> Result<CovenantDocument, NobulexError> {
     serde_json::from_str(json)
-        .map_err(|e| KervyxError::SerializationError(format!("Failed to deserialize covenant: {}", e)))
+        .map_err(|e| NobulexError::SerializationError(format!("Failed to deserialize covenant: {}", e)))
 }
 
 // ---------------------------------------------------------------------------
@@ -626,7 +626,7 @@ pub fn deserialize_covenant(json: &str) -> Result<CovenantDocument, KervyxError>
 pub fn validate_chain_narrowing(
     child: &CovenantDocument,
     parent: &CovenantDocument,
-) -> Result<ccl::NarrowingResult, KervyxError> {
+) -> Result<ccl::NarrowingResult, NobulexError> {
     let parent_ccl = ccl::parse(&parent.constraints)?;
     let child_ccl = ccl::parse(&child.constraints)?;
     Ok(ccl::validate_narrowing(&parent_ccl, &child_ccl))

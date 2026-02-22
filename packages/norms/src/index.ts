@@ -1,6 +1,6 @@
-import { sha256Object } from '@kervyx/crypto';
-import { parse, serialize } from '@kervyx/ccl';
-import type { CCLDocument, Statement } from '@kervyx/ccl';
+import { sha256Object } from '@nobulex/crypto';
+import { parse, serialize } from '@nobulex/ccl';
+import type { CCLDocument, Statement } from '@nobulex/ccl';
 
 export type {
   DiscoveredNorm,
@@ -352,7 +352,7 @@ export function generateTemplate(norms: DiscoveredNorm[]): CovenantTemplate {
   const sourceNorms = norms.map((n) => n.id);
 
   // Parse each norm as CCL and collect all statements
-  const allStatements: import('@kervyx/ccl').Statement[] = [];
+  const allStatements: import('@nobulex/ccl').Statement[] = [];
   const rawConstraints: string[] = [];
 
   for (const norm of norms) {
@@ -371,10 +371,10 @@ export function generateTemplate(norms: DiscoveredNorm[]): CovenantTemplate {
   if (allStatements.length > 0) {
     const mergedDoc: CCLDocument = {
       statements: allStatements,
-      permits: allStatements.filter((s): s is import('@kervyx/ccl').PermitDenyStatement => s.type === 'permit'),
-      denies: allStatements.filter((s): s is import('@kervyx/ccl').PermitDenyStatement => s.type === 'deny'),
-      obligations: allStatements.filter((s): s is import('@kervyx/ccl').RequireStatement => s.type === 'require'),
-      limits: allStatements.filter((s): s is import('@kervyx/ccl').LimitStatement => s.type === 'limit'),
+      permits: allStatements.filter((s): s is import('@nobulex/ccl').PermitDenyStatement => s.type === 'permit'),
+      denies: allStatements.filter((s): s is import('@nobulex/ccl').PermitDenyStatement => s.type === 'deny'),
+      obligations: allStatements.filter((s): s is import('@nobulex/ccl').RequireStatement => s.type === 'require'),
+      limits: allStatements.filter((s): s is import('@nobulex/ccl').LimitStatement => s.type === 'limit'),
     };
     // Serialize the merged CCL document back to source text
     const serialized = serialize(mergedDoc);

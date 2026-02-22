@@ -1,5 +1,5 @@
 {
-  "name": "@kervyx/verifier",
+  "name": "@nobulex/verifier",
   "version": "2.0.0",
   "description": "Standalone verification engine for third-party auditors",
   "sideEffects": false,
@@ -24,10 +24,10 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@kervyx/types": "2.0.0",
-    "@kervyx/crypto": "2.0.0",
-    "@kervyx/ccl": "2.0.0",
-    "@kervyx/core": "2.0.0"
+    "@nobulex/types": "2.0.0",
+    "@nobulex/crypto": "2.0.0",
+    "@nobulex/ccl": "2.0.0",
+    "@nobulex/core": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -38,16 +38,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/verifier"
   },
-  "homepage": "https://kervyx.dev",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
-  "author": "Kervyx Labs, Inc.",
+  "author": "Nobulex Labs, Inc.",
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "verifier",

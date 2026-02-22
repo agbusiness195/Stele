@@ -1,7 +1,7 @@
 /**
- * Trust-gated access control for the Kervyx protocol.
+ * Trust-gated access control for the Nobulex protocol.
  *
- * Agents without Kervyx covenant compliance get no access to premium APIs.
+ * Agents without Nobulex covenant compliance get no access to premium APIs.
  * Trust scores determine the access tier: denied, basic, standard, or premium.
  * Supports grace periods for new agents and bypass tokens for testing.
  *
@@ -172,50 +172,50 @@ export function evaluateAccess(
 // ─── Revenue Analysis ────────────────────────────────────────────────────────
 
 /**
- * Calculate the revenue lift from Kervyx adoption.
+ * Calculate the revenue lift from Nobulex adoption.
  *
- * Non-Kervyx agents pay basic pricing (1x). Kervyx agents at standard tier
- * also pay 1x, while Kervyx agents at premium tier pay the premium price
- * multiplier. The lift percentage measures how much more revenue Kervyx
+ * Non-Nobulex agents pay basic pricing (1x). Nobulex agents at standard tier
+ * also pay 1x, while Nobulex agents at premium tier pay the premium price
+ * multiplier. The lift percentage measures how much more revenue Nobulex
  * adoption generates compared to a baseline of all agents at 1x.
  *
  * @param params - Revenue calculation parameters.
- * @returns Total revenue, Kervyx-attributable revenue, and lift percentage.
+ * @returns Total revenue, Nobulex-attributable revenue, and lift percentage.
  */
 export function calculateRevenueLift(params: {
   totalAgents: number;
-  kervyxAdoptionRate: number;
+  nobulexAdoptionRate: number;
   premiumRate: number;
   premiumPriceMultiplier: number;
-}): { totalRevenue: number; kervyxRevenue: number; liftPercentage: number } {
-  const { totalAgents, kervyxAdoptionRate, premiumRate, premiumPriceMultiplier } = params;
+}): { totalRevenue: number; nobulexRevenue: number; liftPercentage: number } {
+  const { totalAgents, nobulexAdoptionRate, premiumRate, premiumPriceMultiplier } = params;
 
-  const kervyxAgents = totalAgents * kervyxAdoptionRate;
-  const nonKervyxAgents = totalAgents - kervyxAgents;
-  const premiumAgents = kervyxAgents * premiumRate;
-  const standardKervyxAgents = kervyxAgents - premiumAgents;
+  const nobulexAgents = totalAgents * nobulexAdoptionRate;
+  const nonNobulexAgents = totalAgents - nobulexAgents;
+  const premiumAgents = nobulexAgents * premiumRate;
+  const standardNobulexAgents = nobulexAgents - premiumAgents;
 
-  // Non-Kervyx agents: basic pricing (1x each)
-  const nonKervyxRevenue = nonKervyxAgents * 1;
+  // Non-Nobulex agents: basic pricing (1x each)
+  const nonNobulexRevenue = nonNobulexAgents * 1;
 
-  // Kervyx standard agents: 1x each
-  const standardRevenue = standardKervyxAgents * 1;
+  // Nobulex standard agents: 1x each
+  const standardRevenue = standardNobulexAgents * 1;
 
-  // Kervyx premium agents: premiumPriceMultiplier each
+  // Nobulex premium agents: premiumPriceMultiplier each
   const premiumRevenue = premiumAgents * premiumPriceMultiplier;
 
-  const kervyxRevenue = standardRevenue + premiumRevenue;
-  const totalRevenue = nonKervyxRevenue + kervyxRevenue;
+  const nobulexRevenue = standardRevenue + premiumRevenue;
+  const totalRevenue = nonNobulexRevenue + nobulexRevenue;
 
   // Baseline: all agents at 1x
   const baseRevenue = totalAgents * 1;
 
   const liftPercentage =
-    baseRevenue === 0 ? 0 : ((kervyxRevenue - baseRevenue) / baseRevenue) * 100;
+    baseRevenue === 0 ? 0 : ((nobulexRevenue - baseRevenue) / baseRevenue) * 100;
 
   return {
     totalRevenue,
-    kervyxRevenue,
+    nobulexRevenue,
     liftPercentage,
   };
 }

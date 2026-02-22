@@ -1,21 +1,21 @@
-# @kervyx/sdk
+# @nobulex/sdk
 
-High-level unified SDK for the Kervyx protocol. This is the **main entry point** -- it re-exports everything from `@kervyx/core`, `@kervyx/crypto`, `@kervyx/ccl`, `@kervyx/identity`, `@kervyx/store`, `@kervyx/verifier`, and more.
+High-level unified SDK for the Nobulex protocol. This is the **main entry point** -- it re-exports everything from `@nobulex/core`, `@nobulex/crypto`, `@nobulex/ccl`, `@nobulex/identity`, `@nobulex/store`, `@nobulex/verifier`, and more.
 
 ## Installation
 
 ```bash
-npm install @kervyx/sdk
+npm install @nobulex/sdk
 ```
 
 ## Usage
 
-### KervyxClient
+### NobulexClient
 
 ```typescript
-import { KervyxClient } from '@kervyx/sdk';
+import { NobulexClient } from '@nobulex/sdk';
 
-const client = new KervyxClient();
+const client = new NobulexClient();
 await client.generateKeyPair();
 
 // Create a covenant
@@ -47,7 +47,7 @@ const identity = await client.createIdentity({
 ### Quick Covenants
 
 ```typescript
-import { QuickCovenant } from '@kervyx/sdk';
+import { QuickCovenant } from '@nobulex/sdk';
 
 const doc = await QuickCovenant.permit('read', '/data/**', issuer, beneficiary, kp.privateKey);
 const standard = await QuickCovenant.standard(issuer, beneficiary, kp.privateKey);
@@ -56,7 +56,7 @@ const standard = await QuickCovenant.standard(issuer, beneficiary, kp.privateKey
 ### Key Rotation and Events
 
 ```typescript
-const client = new KervyxClient({
+const client = new NobulexClient({
   keyRotation: { maxAgeMs: 86_400_000, overlapPeriodMs: 3_600_000 },
 });
 await client.initializeKeyRotation();
@@ -66,14 +66,14 @@ const off = client.on('covenant:created', (e) => console.log('Created:', e.docum
 
 ## Key APIs
 
-- **KervyxClient**: `createCovenant()`, `verifyCovenant()`, `countersign()`, `evaluateAction()`, `createIdentity()`, `evolveIdentity()`, `resolveChain()`, `validateChain()`
+- **NobulexClient**: `createCovenant()`, `verifyCovenant()`, `countersign()`, `evaluateAction()`, `createIdentity()`, `evolveIdentity()`, `resolveChain()`, `validateChain()`
 - **QuickCovenant**: `permit()`, `deny()`, `standard()`
 - **CCL utilities**: `parseCCL()`, `mergeCCL()`, `serializeCCL()`
 - **Events**: `on()`, `off()`, `removeAllListeners()`
-- **Re-exports**: All APIs from `@kervyx/core`, `@kervyx/crypto`, `@kervyx/ccl`, `@kervyx/identity`, `@kervyx/store`, `@kervyx/verifier`, `@kervyx/breach`, `@kervyx/reputation`, `@kervyx/attestation`, `@kervyx/proof`
+- **Re-exports**: All APIs from `@nobulex/core`, `@nobulex/crypto`, `@nobulex/ccl`, `@nobulex/identity`, `@nobulex/store`, `@nobulex/verifier`, `@nobulex/breach`, `@nobulex/reputation`, `@nobulex/attestation`, `@nobulex/proof`
 - **Adapters**: Vercel AI, LangChain, Express middleware, OpenTelemetry
 - **Testing**: `runConformanceSuite()`, middleware pipeline
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference and architecture guide.

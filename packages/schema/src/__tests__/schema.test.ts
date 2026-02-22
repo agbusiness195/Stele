@@ -37,8 +37,8 @@ function makeValidCovenant(overrides: Record<string, unknown> = {}): Record<stri
 function makeValidDiscovery(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     issuer: 'https://platform.example.com',
-    keys_endpoint: 'https://platform.example.com/.well-known/kervyx/keys',
-    covenants_endpoint: 'https://platform.example.com/.well-known/kervyx/covenants',
+    keys_endpoint: 'https://platform.example.com/.well-known/nobulex/keys',
+    covenants_endpoint: 'https://platform.example.com/.well-known/nobulex/covenants',
     protocol_versions_supported: ['1.0'],
     signature_schemes_supported: ['ed25519'],
     hash_algorithms_supported: ['sha256'],
@@ -66,7 +66,7 @@ function makeValidAgentKey(overrides: Record<string, unknown> = {}): Record<stri
 describe('Schema Structure', () => {
   it('COVENANT_SCHEMA has correct $id and $schema', () => {
     expect(COVENANT_SCHEMA.$schema).toBe('https://json-schema.org/draft/2020-12/schema');
-    expect(COVENANT_SCHEMA.$id).toBe('https://kervyx.dev/schema/covenant-document.json');
+    expect(COVENANT_SCHEMA.$id).toBe('https://nobulex.dev/schema/covenant-document.json');
   });
 
   it('COVENANT_SCHEMA has all required fields listed', () => {
@@ -84,7 +84,7 @@ describe('Schema Structure', () => {
 
   it('DISCOVERY_DOCUMENT_SCHEMA has correct structure', () => {
     expect(DISCOVERY_DOCUMENT_SCHEMA.$schema).toBe('https://json-schema.org/draft/2020-12/schema');
-    expect(DISCOVERY_DOCUMENT_SCHEMA.$id).toBe('https://kervyx.dev/schema/discovery-document.json');
+    expect(DISCOVERY_DOCUMENT_SCHEMA.$id).toBe('https://nobulex.dev/schema/discovery-document.json');
     expect(DISCOVERY_DOCUMENT_SCHEMA.type).toBe('object');
     expect(DISCOVERY_DOCUMENT_SCHEMA.required).toContain('issuer');
     expect(DISCOVERY_DOCUMENT_SCHEMA.required).toContain('keys_endpoint');
@@ -97,7 +97,7 @@ describe('Schema Structure', () => {
 
   it('AGENT_KEY_SCHEMA has correct structure', () => {
     expect(AGENT_KEY_SCHEMA.$schema).toBe('https://json-schema.org/draft/2020-12/schema');
-    expect(AGENT_KEY_SCHEMA.$id).toBe('https://kervyx.dev/schema/agent-key.json');
+    expect(AGENT_KEY_SCHEMA.$id).toBe('https://nobulex.dev/schema/agent-key.json');
     expect(AGENT_KEY_SCHEMA.type).toBe('object');
     expect(AGENT_KEY_SCHEMA.required).toContain('kid');
     expect(AGENT_KEY_SCHEMA.required).toContain('kty');
@@ -109,7 +109,7 @@ describe('Schema Structure', () => {
 
   it('CCL_EVALUATION_CONTEXT_SCHEMA exists and has correct structure', () => {
     expect(CCL_EVALUATION_CONTEXT_SCHEMA.$schema).toBe('https://json-schema.org/draft/2020-12/schema');
-    expect(CCL_EVALUATION_CONTEXT_SCHEMA.$id).toBe('https://kervyx.dev/schema/ccl-evaluation-context.json');
+    expect(CCL_EVALUATION_CONTEXT_SCHEMA.$id).toBe('https://nobulex.dev/schema/ccl-evaluation-context.json');
     expect(CCL_EVALUATION_CONTEXT_SCHEMA.type).toBe('object');
     expect(CCL_EVALUATION_CONTEXT_SCHEMA.additionalProperties).toBe(true);
   });

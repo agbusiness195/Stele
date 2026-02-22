@@ -1,5 +1,5 @@
 /**
- * Concurrency and stress tests for the Kervyx SDK.
+ * Concurrency and stress tests for the Nobulex SDK.
  *
  * Exercises parallel operations, race conditions, and high-volume
  * scenarios across crypto, core, store, verifier, identity,
@@ -15,8 +15,8 @@ import {
   sha256,
   toHex,
   generateNonce,
-} from '@kervyx/crypto';
-import type { KeyPair, HashHex } from '@kervyx/crypto';
+} from '@nobulex/crypto';
+import type { KeyPair, HashHex } from '@nobulex/crypto';
 
 import {
   buildCovenant,
@@ -25,14 +25,14 @@ import {
   computeId,
   serializeCovenant,
   deserializeCovenant,
-} from '@kervyx/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@kervyx/core';
+} from '@nobulex/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@nobulex/core';
 
-import { parse, evaluate } from '@kervyx/ccl';
+import { parse, evaluate } from '@nobulex/ccl';
 
-import { MemoryStore } from '@kervyx/store';
+import { MemoryStore } from '@nobulex/store';
 
-import { Verifier, verifyBatch } from '@kervyx/verifier';
+import { Verifier, verifyBatch } from '@nobulex/verifier';
 
 import {
   createIdentity,
@@ -40,19 +40,19 @@ import {
   verifyIdentity,
   serializeIdentity,
   deserializeIdentity,
-} from '@kervyx/identity';
+} from '@nobulex/identity';
 
 import {
   Monitor,
   MonitorDeniedError,
   CapabilityGate,
-} from '@kervyx/enforcement';
+} from '@nobulex/enforcement';
 
 import {
   createReceipt,
   verifyReceipt,
   computeReputationScore,
-} from '@kervyx/reputation';
+} from '@nobulex/reputation';
 
 // ---------------------------------------------------------------------------
 // Helpers

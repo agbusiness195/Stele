@@ -1,5 +1,5 @@
 /**
- * Trust resolution as transaction execution for the Kervyx protocol.
+ * Trust resolution as transaction execution for the Nobulex protocol.
  *
  * Merges trust verification with transaction execution into one atomic
  * operation. Trust resolution IS the transaction -- there is no separate

@@ -1,12 +1,12 @@
 /**
- * Integration tests for error handling across the Kervyx SDK.
+ * Integration tests for error handling across the Nobulex SDK.
  *
  * Exercises error paths in crypto, CCL, core covenant operations,
- * verification, store, deserialization, and KervyxClient.
+ * verification, store, deserialization, and NobulexClient.
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { generateKeyPair, toHex } from '@kervyx/crypto';
+import { generateKeyPair, toHex } from '@nobulex/crypto';
 import {
   buildCovenant,
   verifyCovenant,
@@ -16,13 +16,13 @@ import {
   CovenantBuildError,
   PROTOCOL_VERSION,
   MAX_CHAIN_DEPTH,
-} from '@kervyx/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@kervyx/core';
-import { parse, evaluate } from '@kervyx/ccl';
-import { Verifier } from '@kervyx/verifier';
-import { MemoryStore } from '@kervyx/store';
-import { KervyxClient } from '@kervyx/sdk';
-import { createIdentity } from '@kervyx/identity';
+} from '@nobulex/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@nobulex/core';
+import { parse, evaluate } from '@nobulex/ccl';
+import { Verifier } from '@nobulex/verifier';
+import { MemoryStore } from '@nobulex/store';
+import { NobulexClient } from '@nobulex/sdk';
+import { createIdentity } from '@nobulex/identity';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -516,7 +516,7 @@ describe('Chain depth exceeded', () => {
 
 describe('Narrowing violations', () => {
   it('detects child permitting what parent denies', async () => {
-    const client = new KervyxClient();
+    const client = new NobulexClient();
     const kp = await client.generateKeyPair();
     const beneficiaryKp = await generateKeyPair();
 
@@ -569,7 +569,7 @@ describe('Narrowing violations', () => {
       },
     });
 
-    const client = new KervyxClient({ keyPair: kp });
+    const client = new NobulexClient({ keyPair: kp });
     const result = await client.validateChain([parentDoc, childDoc]);
     expect(result.narrowingViolations.length).toBe(0);
   });
@@ -801,12 +801,12 @@ describe('Deserialization errors', () => {
 });
 
 // ===========================================================================
-// 10. KervyxClient errors
+// 10. NobulexClient errors
 // ===========================================================================
 
-describe('KervyxClient errors', () => {
+describe('NobulexClient errors', () => {
   it('throws when creating covenant without key pair', async () => {
-    const client = new KervyxClient();
+    const client = new NobulexClient();
     const beneficiaryKp = await generateKeyPair();
 
     await expect(
@@ -819,14 +819,14 @@ describe('KervyxClient errors', () => {
   });
 
   it('throws when countersigning without key pair', async () => {
-    const client = new KervyxClient();
+    const client = new NobulexClient();
     const { doc } = await buildValidCovenant();
 
     await expect(client.countersign(doc)).rejects.toThrow(/No key pair/);
   });
 
   it('throws when creating identity without key pair', async () => {
-    const client = new KervyxClient();
+    const client = new NobulexClient();
 
     await expect(
       client.createIdentity({
@@ -845,7 +845,7 @@ describe('KervyxClient errors', () => {
   });
 
   it('throws when evolving identity without key pair', async () => {
-    const client = new KervyxClient();
+    const client = new NobulexClient();
     const kp = await generateKeyPair();
 
     const identity = await createIdentity({
@@ -872,7 +872,7 @@ describe('KervyxClient errors', () => {
   });
 
   it('strict mode throws on invalid verification', async () => {
-    const client = new KervyxClient({ strictMode: true });
+    const client = new NobulexClient({ strictMode: true });
     const { doc } = await buildValidCovenant();
 
     // Tamper to make it fail
@@ -882,7 +882,7 @@ describe('KervyxClient errors', () => {
   });
 
   it('non-strict mode returns result on invalid verification', async () => {
-    const client = new KervyxClient({ strictMode: false });
+    const client = new NobulexClient({ strictMode: false });
     const { doc } = await buildValidCovenant();
 
     const tampered = { ...doc, constraints: "deny all on '**'" };
@@ -894,7 +894,7 @@ describe('KervyxClient errors', () => {
   it('client with key pair can create covenants', async () => {
     const kp = await generateKeyPair();
     const beneficiaryKp = await generateKeyPair();
-    const client = new KervyxClient({ keyPair: kp });
+    const client = new NobulexClient({ keyPair: kp });
 
     const doc = await client.createCovenant({
       issuer: makeIssuer(kp.publicKeyHex),
@@ -1181,10 +1181,10 @@ describe('Event system edge cases', () => {
     expect(events.length).toBe(1); // no new events
   });
 
-  it('KervyxClient emits covenant:created event', async () => {
+  it('NobulexClient emits covenant:created event', async () => {
     const kp = await generateKeyPair();
     const beneficiaryKp = await generateKeyPair();
-    const client = new KervyxClient({ keyPair: kp });
+    const client = new NobulexClient({ keyPair: kp });
 
     let eventFired = false;
     client.on('covenant:created', () => {
@@ -1200,10 +1200,10 @@ describe('Event system edge cases', () => {
     expect(eventFired).toBe(true);
   });
 
-  it('KervyxClient removeAllListeners clears handlers', async () => {
+  it('NobulexClient removeAllListeners clears handlers', async () => {
     const kp = await generateKeyPair();
     const beneficiaryKp = await generateKeyPair();
-    const client = new KervyxClient({ keyPair: kp });
+    const client = new NobulexClient({ keyPair: kp });
 
     let count = 0;
     client.on('covenant:created', () => {

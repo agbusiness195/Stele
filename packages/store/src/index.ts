@@ -1,5 +1,5 @@
 /**
- * @kervyx/store — Pluggable storage backends for kervyx records.
+ * @nobulex/store — Pluggable storage backends for nobulex records.
  *
  * Provides a {@link CovenantStore} interface and a ready-to-use
  * {@link MemoryStore} implementation backed by a Map.
@@ -7,8 +7,8 @@
  * @packageDocumentation
  */
 
-import type { CovenantDocument } from '@kervyx/core';
-import { DocumentedKervyxError as KervyxError, DocumentedErrorCode as KervyxErrorCode } from '@kervyx/types';
+import type { CovenantDocument } from '@nobulex/core';
+import { DocumentedNobulexError as NobulexError, DocumentedErrorCode as NobulexErrorCode } from '@nobulex/types';
 
 import type {
   CovenantStore,
@@ -18,7 +18,7 @@ import type {
   StoreEventCallback,
 } from './types.js';
 
-// Re-export every type so consumers only need @kervyx/store
+// Re-export every type so consumers only need @nobulex/store
 export type {
   CovenantStore,
   StoreFilter,
@@ -141,29 +141,29 @@ export class MemoryStore implements CovenantStore {
    */
   async put(doc: CovenantDocument): Promise<void> {
     if (doc == null) {
-      throw new KervyxError(
-        KervyxErrorCode.STORE_MISSING_DOC,
+      throw new NobulexError(
+        NobulexErrorCode.STORE_MISSING_DOC,
         'put(): document is required',
         { hint: 'Pass a valid CovenantDocument object to store.' }
       );
     }
     if (typeof doc !== 'object') {
-      throw new KervyxError(
-        KervyxErrorCode.STORE_MISSING_DOC,
+      throw new NobulexError(
+        NobulexErrorCode.STORE_MISSING_DOC,
         'put(): document must be an object',
         { hint: 'Pass a valid CovenantDocument object with at least an id field.' }
       );
     }
     if (!doc.id || (typeof doc.id === 'string' && doc.id.trim().length === 0)) {
-      throw new KervyxError(
-        KervyxErrorCode.STORE_MISSING_ID,
+      throw new NobulexError(
+        NobulexErrorCode.STORE_MISSING_ID,
         'put(): document.id is required and must be a non-empty string',
         { hint: 'Ensure the document has a non-empty id field. Use buildCovenant() to generate properly identified documents.' }
       );
     }
     if (!doc.issuer || !doc.beneficiary || !doc.constraints) {
-      throw new KervyxError(
-        KervyxErrorCode.STORE_MISSING_DOC,
+      throw new NobulexError(
+        NobulexErrorCode.STORE_MISSING_DOC,
         'put(): document is missing required fields (issuer, beneficiary, or constraints)',
         { hint: 'Ensure the document has issuer, beneficiary, and constraints fields. Use buildCovenant() to generate complete documents.' }
       );
@@ -188,8 +188,8 @@ export class MemoryStore implements CovenantStore {
    */
   async get(id: string): Promise<CovenantDocument | undefined> {
     if (!id || typeof id !== 'string' || id.trim().length === 0) {
-      throw new KervyxError(
-        KervyxErrorCode.STORE_MISSING_ID,
+      throw new NobulexError(
+        NobulexErrorCode.STORE_MISSING_ID,
         'get(): id must be a non-empty string',
         { hint: 'Pass the document ID (a hex-encoded hash) to retrieve.' }
       );
@@ -216,8 +216,8 @@ export class MemoryStore implements CovenantStore {
    */
   async delete(id: string): Promise<boolean> {
     if (!id || typeof id !== 'string' || id.trim().length === 0) {
-      throw new KervyxError(
-        KervyxErrorCode.STORE_MISSING_ID,
+      throw new NobulexError(
+        NobulexErrorCode.STORE_MISSING_ID,
         'delete(): id must be a non-empty string',
         { hint: 'Pass the document ID (a hex-encoded hash) to delete.' }
       );
@@ -284,8 +284,8 @@ export class MemoryStore implements CovenantStore {
    */
   async putBatch(docs: CovenantDocument[]): Promise<void> {
     if (!Array.isArray(docs)) {
-      throw new KervyxError(
-        KervyxErrorCode.STORE_MISSING_DOC,
+      throw new NobulexError(
+        NobulexErrorCode.STORE_MISSING_DOC,
         'putBatch(): docs must be an array',
         { hint: 'Pass an array of CovenantDocument objects.' }
       );

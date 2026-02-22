@@ -1,11 +1,11 @@
 /**
- * Property-based and fuzz-style tests for the Kervyx SDK.
+ * Property-based and fuzz-style tests for the Nobulex SDK.
  *
  * Since fast-check is unavailable, we use manual random generators with
  * crypto.getRandomValues for true randomness, running 20 iterations per
  * property to cover a broad range of inputs.
  *
- * Covers: @kervyx/crypto, @kervyx/ccl, @kervyx/core, @kervyx/identity
+ * Covers: @nobulex/crypto, @nobulex/ccl, @nobulex/core, @nobulex/identity
  */
 
 import { describe, it, expect } from 'vitest';
@@ -26,8 +26,8 @@ import {
   generateNonce,
   generateId,
   constantTimeEqual,
-} from '@kervyx/crypto';
-import type { KeyPair } from '@kervyx/crypto';
+} from '@nobulex/crypto';
+import type { KeyPair } from '@nobulex/crypto';
 
 import {
   parse,
@@ -39,8 +39,8 @@ import {
   matchAction,
   matchResource,
   evaluateCondition,
-} from '@kervyx/ccl';
-import type { CCLDocument, EvaluationContext } from '@kervyx/ccl';
+} from '@nobulex/ccl';
+import type { CCLDocument, EvaluationContext } from '@nobulex/ccl';
 
 import {
   buildCovenant,
@@ -52,8 +52,8 @@ import {
   serializeCovenant,
   deserializeCovenant,
   MAX_CHAIN_DEPTH,
-} from '@kervyx/core';
-import type { CovenantDocument, CovenantBuilderOptions } from '@kervyx/core';
+} from '@nobulex/core';
+import type { CovenantDocument, CovenantBuilderOptions } from '@nobulex/core';
 
 import {
   createIdentity,
@@ -61,8 +61,8 @@ import {
   verifyIdentity,
   computeIdentityHash,
   computeCapabilityManifestHash,
-} from '@kervyx/identity';
-import type { AgentIdentity, CreateIdentityOptions } from '@kervyx/identity';
+} from '@nobulex/identity';
+import type { AgentIdentity, CreateIdentityOptions } from '@nobulex/identity';
 
 // ---------------------------------------------------------------------------
 // Random generators

@@ -1,5 +1,5 @@
 {
-  "name": "@kervyx/gametheory",
+  "name": "@nobulex/gametheory",
   "version": "2.0.0",
   "description": "Game-theoretic analysis with Nash equilibria and mechanism design",
   "sideEffects": false,
@@ -27,13 +27,13 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@kervyx/crypto": "2.0.0"
+    "@nobulex/crypto": "2.0.0"
   },
   "license": "MIT",
-  "author": "Kervyx Labs, Inc.",
-  "homepage": "https://kervyx.dev",
+  "author": "Nobulex Labs, Inc.",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
   "engines": {
     "node": ">=18"
@@ -43,11 +43,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/gametheory"
   },
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "game-theory",

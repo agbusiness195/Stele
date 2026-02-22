@@ -1,11 +1,11 @@
-# @kervyx/legal
+# @nobulex/legal
 
 Legal identity packages, regulatory compliance mapping, and jurisdiction conflict resolution for covenant systems.
 
 ## Installation
 
 ```bash
-npm install @kervyx/legal
+npm install @nobulex/legal
 ```
 
 ## Key APIs
@@ -31,7 +31,7 @@ import {
   mapToJurisdiction,
   generateComplianceReport,
   regulatoryGapAnalysis,
-} from '@kervyx/legal';
+} from '@nobulex/legal';
 
 const pkg = exportLegalPackage('agent-1', 'operator-1', {
   covenants: [{ id: 'cov-1', constraints: ['no-delete'], signedAt: Date.now(), status: 'active' }],
@@ -54,4 +54,4 @@ console.log(gaps.readinessPercentage);
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

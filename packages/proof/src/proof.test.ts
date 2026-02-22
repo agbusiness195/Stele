@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { sha256String } from '@kervyx/crypto';
-import type { HashHex } from '@kervyx/crypto';
+import { sha256String } from '@nobulex/crypto';
+import type { HashHex } from '@nobulex/crypto';
 import {
   poseidonHash,
   hashToField,

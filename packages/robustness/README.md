@@ -1,11 +1,11 @@
-# @kervyx/robustness
+# @nobulex/robustness
 
-Robustness analysis for Kervyx covenants: fuzz testing, formal verification, adversarial input generation, and composite scoring.
+Robustness analysis for Nobulex covenants: fuzz testing, formal verification, adversarial input generation, and composite scoring.
 
 ## Installation
 
 ```bash
-npm install @kervyx/robustness
+npm install @nobulex/robustness
 ```
 
 ## Key APIs
@@ -20,7 +20,7 @@ npm install @kervyx/robustness
 ## Usage
 
 ```typescript
-import { fuzz, formalVerification, robustnessScore } from '@kervyx/robustness';
+import { fuzz, formalVerification, robustnessScore } from '@nobulex/robustness';
 
 const covenant = {
   id: 'cov-1',
@@ -56,4 +56,4 @@ console.log(result.recommendations);
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

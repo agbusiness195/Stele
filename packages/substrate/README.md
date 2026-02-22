@@ -1,11 +1,11 @@
-# @kervyx/substrate
+# @nobulex/substrate
 
 Cross-substrate layer for translating and enforcing covenants across heterogeneous platforms: AI agents, robots, drones, IoT devices, autonomous vehicles, and smart contracts.
 
 ## Installation
 
 ```bash
-npm install @kervyx/substrate
+npm install @nobulex/substrate
 ```
 
 ## Key APIs
@@ -29,7 +29,7 @@ import {
   checkSafetyBound,
   substrateCompatibility,
   constraintTranslation,
-} from '@kervyx/substrate';
+} from '@nobulex/substrate';
 
 // Create substrate adapters
 const robot = createAdapter('robot', {
@@ -80,4 +80,4 @@ console.log(compat.interactionProtocol);  // 'bridged'
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

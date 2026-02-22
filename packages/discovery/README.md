@@ -1,22 +1,22 @@
-# @kervyx/discovery
+# @nobulex/discovery
 
-Cross-platform discovery protocol for `.well-known/kervyx/` endpoints. Enables agent key discovery, covenant registry lookup, cross-platform verification, and protocol negotiation.
+Cross-platform discovery protocol for `.well-known/nobulex/` endpoints. Enables agent key discovery, covenant registry lookup, cross-platform verification, and protocol negotiation.
 
 ## Installation
 
 ```bash
-npm install @kervyx/discovery
+npm install @nobulex/discovery
 ```
 
 ## Key APIs
 
-- **buildDiscoveryDocument(options)**: Generate a `.well-known/kervyx/configuration` document
+- **buildDiscoveryDocument(options)**: Generate a `.well-known/nobulex/configuration` document
 - **validateDiscoveryDocument(doc)**: Validate a discovery document's structure and fields
 - **buildKeyEntry(...)**: Create an `AgentKeyEntry` for the key registry
 - **buildKeySet(...)**: Create an `AgentKeySet` grouping multiple keys for an agent
 - **DiscoveryClient**: Fetch and validate discovery documents, key sets, and covenant registries from remote hosts
 - **DiscoveryServer**: Serve discovery endpoints with configurable route handlers
-- **WELL_KNOWN_PATH** / **CONFIGURATION_PATH** / **KERVYX_MEDIA_TYPE** / **MAX_DOCUMENT_AGE_MS**: Protocol constants
+- **WELL_KNOWN_PATH** / **CONFIGURATION_PATH** / **NOBULEX_MEDIA_TYPE** / **MAX_DOCUMENT_AGE_MS**: Protocol constants
 
 ## Usage
 
@@ -28,15 +28,15 @@ import {
   DiscoveryClient,
   DiscoveryServer,
   WELL_KNOWN_PATH,
-} from '@kervyx/discovery';
+} from '@nobulex/discovery';
 
 // Build a discovery document
 const doc = buildDiscoveryDocument({
   platformId: 'my-platform',
   platformName: 'My Platform',
-  covenantEndpoint: 'https://example.com/.well-known/kervyx/covenants',
-  keyEndpoint: 'https://example.com/.well-known/kervyx/keys',
-  negotiationEndpoint: 'https://example.com/.well-known/kervyx/negotiate',
+  covenantEndpoint: 'https://example.com/.well-known/nobulex/covenants',
+  keyEndpoint: 'https://example.com/.well-known/nobulex/keys',
+  negotiationEndpoint: 'https://example.com/.well-known/nobulex/negotiate',
 });
 
 // Validate a discovery document
@@ -65,4 +65,4 @@ const server = new DiscoveryServer({
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

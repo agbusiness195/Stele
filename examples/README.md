@@ -1,6 +1,6 @@
-# Kervyx SDK Examples
+# Nobulex SDK Examples
 
-Runnable TypeScript examples demonstrating the Kervyx protocol SDK.
+Runnable TypeScript examples demonstrating the Nobulex protocol SDK.
 
 ## Running
 

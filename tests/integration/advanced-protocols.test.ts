@@ -1,5 +1,5 @@
 /**
- * Advanced protocol integration tests for the Kervyx SDK.
+ * Advanced protocol integration tests for the Nobulex SDK.
  *
  * Covers:
  *   1. Canary System     - Canary generation, evaluation, scheduling, correlation
@@ -16,8 +16,8 @@ import {
   sha256Object,
   canonicalizeJson,
   toHex,
-} from '@kervyx/crypto';
-import type { KeyPair } from '@kervyx/crypto';
+} from '@nobulex/crypto';
+import type { KeyPair } from '@nobulex/crypto';
 
 import {
   buildCovenant,
@@ -26,18 +26,18 @@ import {
   deserializeCovenant,
   computeId,
   canonicalForm,
-} from '@kervyx/core';
-import type { CovenantDocument } from '@kervyx/core';
+} from '@nobulex/core';
+import type { CovenantDocument } from '@nobulex/core';
 
-import { parse, serialize, evaluate } from '@kervyx/ccl';
+import { parse, serialize, evaluate } from '@nobulex/ccl';
 
 import {
   createIdentity,
   serializeIdentity,
   deserializeIdentity,
-} from '@kervyx/identity';
+} from '@nobulex/identity';
 
-import { MemoryStore } from '@kervyx/store';
+import { MemoryStore } from '@nobulex/store';
 
 import {
   generateCanary,
@@ -46,7 +46,7 @@ import {
   isExpired,
   canarySchedule,
   canaryCorrelation,
-} from '@kervyx/canary';
+} from '@nobulex/canary';
 
 import {
   proveHonesty,
@@ -58,7 +58,7 @@ import {
   repeatedGameEquilibrium,
   coalitionStability,
   mechanismDesign,
-} from '@kervyx/gametheory';
+} from '@nobulex/gametheory';
 
 import {
   compose,
@@ -68,7 +68,7 @@ import {
   decomposeCovenants,
   compositionComplexity,
   proveSystemProperty,
-} from '@kervyx/composition';
+} from '@nobulex/composition';
 
 // ---------------------------------------------------------------------------
 // Helpers

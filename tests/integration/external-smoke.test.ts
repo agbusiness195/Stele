@@ -16,15 +16,15 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { run } from '@kervyx/cli';
-import { KervyxServer } from '@kervyx/mcp-server';
-import { MemoryStore } from '@kervyx/store';
+import { run } from '@nobulex/cli';
+import { NobulexServer } from '@nobulex/mcp-server';
+import { MemoryStore } from '@nobulex/store';
 
 describe('CLI smoke tests', () => {
   it('prints help text with exit code 0', async () => {
     const result = await run(['help']);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('kervyx');
+    expect(result.stdout).toContain('nobulex');
     expect(result.stderr).toBe('');
   });
 
@@ -59,13 +59,13 @@ describe('CLI smoke tests', () => {
 describe('MCP Server smoke tests', () => {
   it('creates a server instance', () => {
     const store = new MemoryStore();
-    const server = new KervyxServer(store);
+    const server = new NobulexServer(store);
     expect(server).toBeDefined();
   });
 
   it('responds to initialize message', async () => {
     const store = new MemoryStore();
-    const server = new KervyxServer(store);
+    const server = new NobulexServer(store);
     const response = await server.handleMessage({
       jsonrpc: '2.0',
       method: 'initialize',
@@ -77,7 +77,7 @@ describe('MCP Server smoke tests', () => {
 
   it('returns error for unknown method', async () => {
     const store = new MemoryStore();
-    const server = new KervyxServer(store);
+    const server = new NobulexServer(store);
     const response = await server.handleMessage({
       jsonrpc: '2.0',
       method: 'nonexistent/method',

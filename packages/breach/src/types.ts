@@ -1,5 +1,5 @@
-import type { HashHex } from '@kervyx/crypto';
-import type { Severity } from '@kervyx/ccl';
+import type { HashHex } from '@nobulex/crypto';
+import type { Severity } from '@nobulex/ccl';
 
 export type TrustStatus = 'trusted' | 'degraded' | 'restricted' | 'revoked' | 'unknown';
 

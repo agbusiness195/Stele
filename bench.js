@@ -1,5 +1,5 @@
-const { buildCovenant, verifyCovenant } = require('@kervyx/core');
-const { generateKeyPair } = require('@kervyx/crypto');
+const { buildCovenant, verifyCovenant } = require('@nobulex/core');
+const { generateKeyPair } = require('@nobulex/crypto');
 
 (async () => {
   const issuer = await generateKeyPair();

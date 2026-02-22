@@ -1,11 +1,11 @@
-# @kervyx/gametheory
+# @nobulex/gametheory
 
 Game-theoretic analysis for covenant systems, including Nash equilibria, mechanism design, and coalition stability.
 
 ## Installation
 
 ```bash
-npm install @kervyx/gametheory
+npm install @nobulex/gametheory
 ```
 
 ## Key APIs
@@ -23,7 +23,7 @@ npm install @kervyx/gametheory
 ## Usage
 
 ```typescript
-import { proveHonesty, repeatedGameEquilibrium, mechanismDesign } from '@kervyx/gametheory';
+import { proveHonesty, repeatedGameEquilibrium, mechanismDesign } from '@nobulex/gametheory';
 
 // Prove honesty is the dominant strategy
 const proof = proveHonesty({
@@ -56,4 +56,4 @@ console.log(mechanism.minimumPenalty); // 200
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

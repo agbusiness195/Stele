@@ -1,9 +1,9 @@
 /**
- * Typed event emitter for the Kervyx SDK lifecycle.
+ * Typed event emitter for the Nobulex SDK lifecycle.
  *
  * Provides a fully typed, zero-dependency event emitter that tracks
  * covenant creation, verification, signing, action evaluation, and errors.
- * All event payloads are strictly typed via {@link KervyxEventMap}.
+ * All event payloads are strictly typed via {@link NobulexEventMap}.
  *
  * @packageDocumentation
  */
@@ -16,7 +16,7 @@
  * Each key is a lifecycle event emitted by the SDK; the corresponding
  * value type describes the data delivered to listeners.
  */
-export type KervyxLifecycleEventMap = {
+export type NobulexLifecycleEventMap = {
   /** Emitted when a new covenant document is created. */
   'covenant:created': { documentId: string; issuerId: string };
   /** Emitted when a covenant document has been verified. */
@@ -49,17 +49,17 @@ interface ListenerEntry<T> {
   once: boolean;
 }
 
-// ─── KervyxEventEmitter ──────────────────────────────────────────────────────────
+// ─── NobulexEventEmitter ──────────────────────────────────────────────────────────
 
 /**
- * A strongly-typed event emitter for Kervyx SDK lifecycle events.
+ * A strongly-typed event emitter for Nobulex SDK lifecycle events.
  *
  * This implementation has **no dependency on Node's `events` module** and
  * can run in any JavaScript environment (Node, Deno, browser, edge workers).
  *
  * @example
  * ```typescript
- * const emitter = new KervyxEventEmitter();
+ * const emitter = new NobulexEventEmitter();
  *
  * emitter.on('covenant:created', (data) => {
  *   console.log(`Created: ${data.documentId} by ${data.issuerId}`);
@@ -71,13 +71,13 @@ interface ListenerEntry<T> {
  * });
  * ```
  */
-export class KervyxEventEmitter {
+export class NobulexEventEmitter {
   /**
    * Internal map of event names to their ordered listener entries.
    * Uses an array (rather than a Set) to preserve insertion order and
    * to allow the same function reference to be registered more than once.
    */
-  private readonly _listeners = new Map<keyof KervyxLifecycleEventMap, ListenerEntry<KervyxLifecycleEventMap[keyof KervyxLifecycleEventMap]>[]>();
+  private readonly _listeners = new Map<keyof NobulexLifecycleEventMap, ListenerEntry<NobulexLifecycleEventMap[keyof NobulexLifecycleEventMap]>[]>();
 
   // ── on ──────────────────────────────────────────────────────────────────
 
@@ -96,16 +96,16 @@ export class KervyxEventEmitter {
    * });
    * ```
    */
-  on<K extends keyof KervyxLifecycleEventMap>(
+  on<K extends keyof NobulexLifecycleEventMap>(
     event: K,
-    listener: Listener<KervyxLifecycleEventMap[K]>,
+    listener: Listener<NobulexLifecycleEventMap[K]>,
   ): this {
     let entries = this._listeners.get(event);
     if (!entries) {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener as Listener<KervyxLifecycleEventMap[keyof KervyxLifecycleEventMap]>, once: false });
+    entries.push({ fn: listener as Listener<NobulexLifecycleEventMap[keyof NobulexLifecycleEventMap]>, once: false });
     return this;
   }
 
@@ -129,9 +129,9 @@ export class KervyxEventEmitter {
    * emitter.off('covenant:signed', handler);
    * ```
    */
-  off<K extends keyof KervyxLifecycleEventMap>(
+  off<K extends keyof NobulexLifecycleEventMap>(
     event: K,
-    listener: Listener<KervyxLifecycleEventMap[K]>,
+    listener: Listener<NobulexLifecycleEventMap[K]>,
   ): this {
     const entries = this._listeners.get(event);
     if (!entries) return this;
@@ -164,16 +164,16 @@ export class KervyxEventEmitter {
    * });
    * ```
    */
-  once<K extends keyof KervyxLifecycleEventMap>(
+  once<K extends keyof NobulexLifecycleEventMap>(
     event: K,
-    listener: Listener<KervyxLifecycleEventMap[K]>,
+    listener: Listener<NobulexLifecycleEventMap[K]>,
   ): this {
     let entries = this._listeners.get(event);
     if (!entries) {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener as Listener<KervyxLifecycleEventMap[keyof KervyxLifecycleEventMap]>, once: true });
+    entries.push({ fn: listener as Listener<NobulexLifecycleEventMap[keyof NobulexLifecycleEventMap]>, once: true });
     return this;
   }
 
@@ -198,9 +198,9 @@ export class KervyxEventEmitter {
    * });
    * ```
    */
-  emit<K extends keyof KervyxLifecycleEventMap>(
+  emit<K extends keyof NobulexLifecycleEventMap>(
     event: K,
-    data: KervyxLifecycleEventMap[K],
+    data: NobulexLifecycleEventMap[K],
   ): boolean {
     const entries = this._listeners.get(event);
     if (!entries || entries.length === 0) return false;
@@ -244,7 +244,7 @@ export class KervyxEventEmitter {
    * console.log(emitter.listenerCount('error')); // 1
    * ```
    */
-  listenerCount(event: keyof KervyxLifecycleEventMap): number {
+  listenerCount(event: keyof NobulexLifecycleEventMap): number {
     const entries = this._listeners.get(event);
     return entries ? entries.length : 0;
   }
@@ -265,7 +265,7 @@ export class KervyxEventEmitter {
    * emitter.removeAllListeners();              // clear everything
    * ```
    */
-  removeAllListeners(event?: keyof KervyxLifecycleEventMap): this {
+  removeAllListeners(event?: keyof NobulexLifecycleEventMap): this {
     if (event !== undefined) {
       this._listeners.delete(event);
     } else {

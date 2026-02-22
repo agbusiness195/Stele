@@ -1,4 +1,4 @@
-//! Integration tests for the Kervyx protocol Rust implementation.
+//! Integration tests for the Nobulex protocol Rust implementation.
 //!
 //! These tests exercise all core operations: key generation, signing,
 //! CCL parsing/evaluation, covenant building/verification/chaining,
@@ -6,16 +6,16 @@
 
 use std::collections::HashMap;
 
-use kervyx::ccl;
-use kervyx::covenant::{
+use nobulex::ccl;
+use nobulex::covenant::{
     self, ChainReference, CovenantBuilderOptions, CovenantDocument, Party,
     PROTOCOL_VERSION, MAX_CHAIN_DEPTH,
 };
-use kervyx::crypto;
-use kervyx::identity::{
+use nobulex::crypto;
+use nobulex::identity::{
     self, CreateIdentityOptions, DeploymentInfo, EvolveIdentityOptions, ModelInfo,
 };
-use kervyx::store::{MemoryStore, Store};
+use nobulex::store::{MemoryStore, Store};
 
 // ---------------------------------------------------------------------------
 // Helpers

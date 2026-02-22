@@ -1,11 +1,11 @@
-# @kervyx/recursive
+# @nobulex/recursive
 
 Recursive covenant structures with self-referential constraints, DAG-based termination proofs, and transitive trust computation.
 
 ## Installation
 
 ```bash
-npm install @kervyx/recursive
+npm install @nobulex/recursive
 ```
 
 ## Key APIs
@@ -26,7 +26,7 @@ import {
   addLayer,
   proveTermination,
   computeTrustTransitivity,
-} from '@kervyx/recursive';
+} from '@nobulex/recursive';
 
 // Build a recursive covenant chain
 const base = createMetaCovenant('covenant', ['no-exfiltration']);
@@ -59,4 +59,4 @@ console.log(trust.path);          // ['alice', 'bob', 'carol']
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

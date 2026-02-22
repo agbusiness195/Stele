@@ -1,4 +1,4 @@
-import type { Severity } from '@kervyx/ccl';
+import type { Severity } from '@nobulex/ccl';
 
 export interface MCPServer {
   tools?: MCPTool[];
@@ -12,24 +12,24 @@ export interface MCPTool {
   inputSchema?: Record<string, unknown>;
 }
 
-export interface KervyxGuardOptions {
+export interface NobulexGuardOptions {
   constraints: string;
   mode?: 'enforce' | 'log_only';
   proofType?: 'audit_log' | 'capability_manifest';
-  operatorKeyPair?: import('@kervyx/crypto').KeyPair;
+  operatorKeyPair?: import('@nobulex/crypto').KeyPair;
   agentIdentifier?: string;
-  model?: import('@kervyx/identity').ModelAttestation;
+  model?: import('@nobulex/identity').ModelAttestation;
   onViolation?: (details: ViolationDetails) => void;
   onToolCall?: (details: ToolCallDetails) => void;
 }
 
 export interface WrappedMCPServer extends MCPServer {
-  getMonitor(): import('@kervyx/enforcement').Monitor;
-  getIdentity(): import('@kervyx/identity').AgentIdentity;
-  getAuditLog(): import('@kervyx/enforcement').AuditLog;
-  generateProof(): Promise<import('@kervyx/proof').ComplianceProof>;
-  getReceipt(): import('@kervyx/reputation').ExecutionReceipt | null;
-  getCovenant(): import('@kervyx/core').CovenantDocument;
+  getMonitor(): import('@nobulex/enforcement').Monitor;
+  getIdentity(): import('@nobulex/identity').AgentIdentity;
+  getAuditLog(): import('@nobulex/enforcement').AuditLog;
+  generateProof(): Promise<import('@nobulex/proof').ComplianceProof>;
+  getReceipt(): import('@nobulex/reputation').ExecutionReceipt | null;
+  getCovenant(): import('@nobulex/core').CovenantDocument;
 }
 
 export interface ViolationDetails {

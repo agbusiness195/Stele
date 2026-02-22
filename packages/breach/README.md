@@ -1,11 +1,11 @@
-# @kervyx/breach
+# @nobulex/breach
 
 Breach detection, trust graph propagation, lifecycle tracking, and reputation recovery.
 
 ## Installation
 
 ```bash
-npm install @kervyx/breach
+npm install @nobulex/breach
 ```
 
 ## Key APIs
@@ -29,7 +29,7 @@ import {
   BreachStateMachine,
   RecoveryModel,
   RepeatOffenderDetector,
-} from '@kervyx/breach';
+} from '@nobulex/breach';
 
 // Create and verify a breach attestation
 const attestation = await createBreachAttestation(
@@ -68,4 +68,4 @@ console.log(profile.dominantPattern); // most common resource:action pattern
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

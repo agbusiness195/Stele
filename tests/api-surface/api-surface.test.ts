@@ -11,10 +11,10 @@ import { describe, it, expect } from 'vitest';
 
 describe('API Surface Tests', () => {
 
-  // ─── @kervyx/crypto ──────────────────────────────────────────────────────────
+  // ─── @nobulex/crypto ──────────────────────────────────────────────────────────
 
-  it('@kervyx/crypto exports', async () => {
-    const mod = await import('@kervyx/crypto');
+  it('@nobulex/crypto exports', async () => {
+    const mod = await import('@nobulex/crypto');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'KeyManager',
@@ -39,10 +39,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @kervyx/ccl ─────────────────────────────────────────────────────────────
+  // ─── @nobulex/ccl ─────────────────────────────────────────────────────────────
 
-  it('@kervyx/ccl exports', async () => {
-    const mod = await import('@kervyx/ccl');
+  it('@nobulex/ccl exports', async () => {
+    const mod = await import('@nobulex/ccl');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'CCLSyntaxError',
@@ -62,10 +62,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @kervyx/core ────────────────────────────────────────────────────────────
+  // ─── @nobulex/core ────────────────────────────────────────────────────────────
 
-  it('@kervyx/core exports', async () => {
-    const mod = await import('@kervyx/core');
+  it('@nobulex/core exports', async () => {
+    const mod = await import('@nobulex/core');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'CovenantBuildError',
@@ -95,10 +95,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @kervyx/store ───────────────────────────────────────────────────────────
+  // ─── @nobulex/store ───────────────────────────────────────────────────────────
 
-  it('@kervyx/store exports', async () => {
-    const mod = await import('@kervyx/store');
+  it('@nobulex/store exports', async () => {
+    const mod = await import('@nobulex/store');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'FileStore',
@@ -112,10 +112,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @kervyx/types ───────────────────────────────────────────────────────────
+  // ─── @nobulex/types ───────────────────────────────────────────────────────────
 
-  it('@kervyx/types exports', async () => {
-    const mod = await import('@kervyx/types');
+  it('@nobulex/types exports', async () => {
+    const mod = await import('@nobulex/types');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'ActiveSpan',
@@ -126,7 +126,7 @@ describe('API Surface Tests', () => {
       'CryptoError',
       'DEFAULT_SEVERITY',
       'DocumentedErrorCode',
-      'DocumentedKervyxError',
+      'DocumentedNobulexError',
       'Gauge',
       'HealthChecker',
       'Histogram',
@@ -134,11 +134,11 @@ describe('API Surface Tests', () => {
       'LogLevel',
       'Logger',
       'MetricsRegistry',
-      'KERVYX_VERSION',
+      'NOBULEX_VERSION',
       'SUPPORTED_HASH_ALGORITHMS',
       'SUPPORTED_SIGNATURE_SCHEMES',
-      'KervyxError',
-      'KervyxErrorCode',
+      'NobulexError',
+      'NobulexErrorCode',
       'StorageError',
       'Tracer',
       'ValidationError',
@@ -178,10 +178,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @kervyx/identity ────────────────────────────────────────────────────────
+  // ─── @nobulex/identity ────────────────────────────────────────────────────────
 
-  it('@kervyx/identity exports', async () => {
-    const mod = await import('@kervyx/identity');
+  it('@nobulex/identity exports', async () => {
+    const mod = await import('@nobulex/identity');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'AdaptiveCarryForward',
@@ -208,10 +208,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @kervyx/verifier ────────────────────────────────────────────────────────
+  // ─── @nobulex/verifier ────────────────────────────────────────────────────────
 
-  it('@kervyx/verifier exports', async () => {
-    const mod = await import('@kervyx/verifier');
+  it('@nobulex/verifier exports', async () => {
+    const mod = await import('@nobulex/verifier');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'Verifier',
@@ -219,10 +219,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @kervyx/enforcement ─────────────────────────────────────────────────────
+  // ─── @nobulex/enforcement ─────────────────────────────────────────────────────
 
-  it('@kervyx/enforcement exports', async () => {
-    const mod = await import('@kervyx/enforcement');
+  it('@nobulex/enforcement exports', async () => {
+    const mod = await import('@nobulex/enforcement');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'AuditChain',
@@ -242,10 +242,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @kervyx/sdk ─────────────────────────────────────────────────────────────
+  // ─── @nobulex/sdk ─────────────────────────────────────────────────────────────
 
-  it('@kervyx/sdk exports', async () => {
-    const mod = await import('@kervyx/sdk');
+  it('@nobulex/sdk exports', async () => {
+    const mod = await import('@nobulex/sdk');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'AGENT_KEY_SCHEMA',
@@ -320,14 +320,14 @@ describe('API Surface Tests', () => {
       'STAKE_TIERS',
       'STANDARD_ALIGNMENT_PROPERTIES',
       'STANDARD_METRICS',
-      'KERVYX_MEDIA_TYPE',
+      'NOBULEX_MEDIA_TYPE',
       'SUBSTRATE_DEFAULTS',
       'SpanStatusCode',
       'SqliteStore',
-      'KervyxAccessDeniedError',
-      'KervyxCallbackHandler',
-      'KervyxClient',
-      'KervyxMetrics',
+      'NobulexAccessDeniedError',
+      'NobulexCallbackHandler',
+      'NobulexClient',
+      'NobulexMetrics',
       'StoreIndex',
       'StreamlinedBFT',
       'StressResponseCurve',
@@ -624,8 +624,8 @@ describe('API Surface Tests', () => {
       'signString',
       'slashStake',
       'specificity',
-      'kervyxGuardHandler',
-      'kervyxMiddleware',
+      'nobulexGuardHandler',
+      'nobulexMiddleware',
       'stressTest',
       'substrateCapabilityMatrix',
       'substrateCompatibility',
@@ -678,9 +678,9 @@ describe('API Surface Tests', () => {
       'verifyReceiptChain',
       'verifyRecursively',
       'voteForAntibody',
-      'withKervyx',
-      'withKervyxTool',
-      'withKervyxTools',
+      'withNobulex',
+      'withNobulexTool',
+      'withNobulexTools',
       'zeuthenStrategy',
     ].sort());
   });
@@ -690,32 +690,32 @@ describe('API Surface Tests', () => {
   describe('Cross-package consistency', () => {
 
     it('PROTOCOL_VERSION is consistent across core and sdk', async () => {
-      const core = await import('@kervyx/core');
-      const sdk = await import('@kervyx/sdk');
+      const core = await import('@nobulex/core');
+      const sdk = await import('@nobulex/sdk');
       expect(core.PROTOCOL_VERSION).toBe(sdk.PROTOCOL_VERSION);
     });
 
     it('MAX_CHAIN_DEPTH is consistent across core and sdk', async () => {
-      const core = await import('@kervyx/core');
-      const sdk = await import('@kervyx/sdk');
+      const core = await import('@nobulex/core');
+      const sdk = await import('@nobulex/sdk');
       expect(core.MAX_CHAIN_DEPTH).toBe(sdk.MAX_CHAIN_DEPTH);
     });
 
     it('buildCovenant is the same function in core and sdk', async () => {
-      const core = await import('@kervyx/core');
-      const sdk = await import('@kervyx/sdk');
+      const core = await import('@nobulex/core');
+      const sdk = await import('@nobulex/sdk');
       expect(core.buildCovenant).toBe(sdk.buildCovenant);
     });
 
     it('generateKeyPair is the same function in crypto and sdk', async () => {
-      const crypto = await import('@kervyx/crypto');
-      const sdk = await import('@kervyx/sdk');
+      const crypto = await import('@nobulex/crypto');
+      const sdk = await import('@nobulex/sdk');
       expect(crypto.generateKeyPair).toBe(sdk.generateKeyPair);
     });
 
     it('parse from ccl is the same function as parseCCL from sdk', async () => {
-      const ccl = await import('@kervyx/ccl');
-      const sdk = await import('@kervyx/sdk');
+      const ccl = await import('@nobulex/ccl');
+      const sdk = await import('@nobulex/sdk');
       expect(ccl.parse).toBe(sdk.parseCCL);
     });
   });

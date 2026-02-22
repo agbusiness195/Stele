@@ -1,4 +1,4 @@
-import { sha256Object, generateId } from '@kervyx/crypto';
+import { sha256Object, generateId } from '@nobulex/crypto';
 
 export type {
   MetaTargetType,

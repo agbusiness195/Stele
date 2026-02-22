@@ -1,11 +1,11 @@
-# @kervyx/ccl
+# @nobulex/ccl
 
-Covenant Constraint Language (CCL) parser and evaluator. CCL is a domain-specific language for expressing access control policies in Kervyx covenants.
+Covenant Constraint Language (CCL) parser and evaluator. CCL is a domain-specific language for expressing access control policies in Nobulex covenants.
 
 ## Installation
 
 ```bash
-npm install @kervyx/ccl
+npm install @nobulex/ccl
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @kervyx/ccl
 ### Parse and Evaluate
 
 ```typescript
-import { parse, evaluate } from '@kervyx/ccl';
+import { parse, evaluate } from '@nobulex/ccl';
 
 const doc = parse(`
   permit read on '/data/**'
@@ -45,7 +45,7 @@ console.log(result.permitted); // true
 ### Merge and Narrowing
 
 ```typescript
-import { parse, merge, validateNarrowing, serialize } from '@kervyx/ccl';
+import { parse, merge, validateNarrowing, serialize } from '@nobulex/ccl';
 
 const parent = parse("permit read on '**'");
 const child = parse("permit read on '/data/**'\ndeny write on '**'");
@@ -76,4 +76,4 @@ const text = serialize(merged);
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference and architecture guide.

@@ -1,5 +1,5 @@
 /**
- * Runtime type guards and input sanitization utilities for the Kervyx protocol.
+ * Runtime type guards and input sanitization utilities for the Nobulex protocol.
  * Use these at system boundaries (API inputs, deserialization, user-facing functions).
  */
 

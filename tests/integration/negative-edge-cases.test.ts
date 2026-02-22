@@ -1,6 +1,6 @@
 /**
  * Comprehensive negative / edge-case / boundary-condition integration tests
- * for the Kervyx SDK.
+ * for the Nobulex SDK.
  *
  * Covers: crypto, CCL, core covenant operations, store, identity, enforcement.
  * Target: ~75 tests exercising malformed input, corruption, and boundary scenarios.
@@ -23,7 +23,7 @@ import {
   generateId,
   keyPairFromPrivateKey,
   keyPairFromPrivateKeyHex,
-} from '@kervyx/crypto';
+} from '@nobulex/crypto';
 
 import {
   parse,
@@ -33,7 +33,7 @@ import {
   validateNarrowing,
   tokenize,
   CCLSyntaxError,
-} from '@kervyx/ccl';
+} from '@nobulex/ccl';
 
 import {
   buildCovenant,
@@ -46,10 +46,10 @@ import {
   MemoryChainResolver,
   resolveChain,
   validateChainNarrowing,
-} from '@kervyx/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@kervyx/core';
+} from '@nobulex/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@nobulex/core';
 
-import { MemoryStore } from '@kervyx/store';
+import { MemoryStore } from '@nobulex/store';
 
 import {
   createIdentity,
@@ -58,14 +58,14 @@ import {
   serializeIdentity,
   deserializeIdentity,
   computeIdentityHash,
-} from '@kervyx/identity';
+} from '@nobulex/identity';
 
 import {
   Monitor,
   CapabilityGate,
   MonitorDeniedError,
   verifyMerkleProof,
-} from '@kervyx/enforcement';
+} from '@nobulex/enforcement';
 
 // ---------------------------------------------------------------------------
 // Shared helpers

@@ -1,13 +1,13 @@
 /**
- * @kervyx/discovery/server — Discovery server for serving .well-known/kervyx endpoints.
+ * @nobulex/discovery/server — Discovery server for serving .well-known/nobulex endpoints.
  *
  * Provides a framework-agnostic discovery server that manages discovery documents,
  * key sets, and covenant registries. Can be mounted in Express, Fastify, or
  * any HTTP framework.
  */
 
-import type { CovenantDocument } from '@kervyx/core';
-import { verifyCovenant } from '@kervyx/core';
+import type { CovenantDocument } from '@nobulex/core';
+import { verifyCovenant } from '@nobulex/core';
 
 import type {
   DiscoveryDocument,
@@ -18,7 +18,7 @@ import type {
   CrossPlatformVerificationRequest,
   CrossPlatformVerificationResponse,
 } from './types.js';
-import { buildDiscoveryDocument, buildKeyEntry, KERVYX_MEDIA_TYPE, type BuildDiscoveryDocumentOptions } from './well-known.js';
+import { buildDiscoveryDocument, buildKeyEntry, NOBULEX_MEDIA_TYPE, type BuildDiscoveryDocumentOptions } from './well-known.js';
 
 // ─── Discovery Server ────────────────────────────────────────────────────────
 
@@ -28,7 +28,7 @@ export interface DiscoveryServerOptions extends BuildDiscoveryDocumentOptions {
 }
 
 /**
- * A framework-agnostic discovery server for the Kervyx protocol.
+ * A framework-agnostic discovery server for the Nobulex protocol.
  *
  * Manages discovery documents, agent key registries, and covenant registries.
  * Provides handler functions that can be mounted in any HTTP framework.
@@ -48,9 +48,9 @@ export interface DiscoveryServerOptions extends BuildDiscoveryDocumentOptions {
  * server.registerCovenant(covenantDoc);
  *
  * // Mount handlers (framework-specific, e.g. Express):
- * app.get('/.well-known/kervyx/configuration', (req, res) => {
+ * app.get('/.well-known/nobulex/configuration', (req, res) => {
  *   const doc = server.getDiscoveryDocument();
- *   res.type('application/kervyx+json').json(doc);
+ *   res.type('application/nobulex+json').json(doc);
  * });
  * ```
  */
@@ -186,7 +186,7 @@ export class DiscoveryServer {
       expires_at: doc.expiresAt,
       status: this._computeCovenantStatus(doc),
       protocol_version: doc.version,
-      document_url: `${this._options.issuer.replace(/\/+$/, '')}/.well-known/kervyx/covenants/${doc.id}`,
+      document_url: `${this._options.issuer.replace(/\/+$/, '')}/.well-known/nobulex/covenants/${doc.id}`,
     };
 
     this._covenants.set(doc.id, entry);
@@ -293,24 +293,24 @@ export class DiscoveryServer {
   getRouteHandlers(): Map<string, RouteHandler> {
     const handlers = new Map<string, RouteHandler>();
 
-    handlers.set('GET /.well-known/kervyx/configuration', async () => ({
+    handlers.set('GET /.well-known/nobulex/configuration', async () => ({
       status: 200,
-      headers: { 'Content-Type': KERVYX_MEDIA_TYPE, 'Cache-Control': 'public, max-age=3600' },
+      headers: { 'Content-Type': NOBULEX_MEDIA_TYPE, 'Cache-Control': 'public, max-age=3600' },
       body: await this.getDiscoveryDocument(),
     }));
 
-    handlers.set('GET /.well-known/kervyx/keys', async (query) => ({
+    handlers.set('GET /.well-known/nobulex/keys', async (query) => ({
       status: 200,
-      headers: { 'Content-Type': KERVYX_MEDIA_TYPE },
+      headers: { 'Content-Type': NOBULEX_MEDIA_TYPE },
       body: this.getKeySet({
         agentId: query?.agent_id as string | undefined,
         kid: query?.kid as string | undefined,
       }),
     }));
 
-    handlers.set('GET /.well-known/kervyx/covenants', async (query) => ({
+    handlers.set('GET /.well-known/nobulex/covenants', async (query) => ({
       status: 200,
-      headers: { 'Content-Type': KERVYX_MEDIA_TYPE },
+      headers: { 'Content-Type': NOBULEX_MEDIA_TYPE },
       body: this.queryCovenants({
         issuerId: query?.issuer_id as string | undefined,
         beneficiaryId: query?.beneficiary_id as string | undefined,
@@ -320,12 +320,12 @@ export class DiscoveryServer {
       }),
     }));
 
-    handlers.set('POST /.well-known/kervyx/verify', async (_query, body) => {
+    handlers.set('POST /.well-known/nobulex/verify', async (_query, body) => {
       const request = body as CrossPlatformVerificationRequest;
       const result = await this.handleVerificationRequest(request);
       return {
         status: 200,
-        headers: { 'Content-Type': KERVYX_MEDIA_TYPE },
+        headers: { 'Content-Type': NOBULEX_MEDIA_TYPE },
         body: result,
       };
     });

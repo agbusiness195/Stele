@@ -1,11 +1,11 @@
-# @kervyx/core
+# @nobulex/core
 
-Covenant document lifecycle: build, sign, verify, countersign, chain, and serialize. This is the protocol engine that ties `@kervyx/crypto` and `@kervyx/ccl` together.
+Covenant document lifecycle: build, sign, verify, countersign, chain, and serialize. This is the protocol engine that ties `@nobulex/crypto` and `@nobulex/ccl` together.
 
 ## Installation
 
 ```bash
-npm install @kervyx/core
+npm install @nobulex/core
 ```
 
 ## Usage
@@ -13,8 +13,8 @@ npm install @kervyx/core
 ### Build and Verify a Covenant
 
 ```typescript
-import { generateKeyPair } from '@kervyx/crypto';
-import { buildCovenant, verifyCovenant } from '@kervyx/core';
+import { generateKeyPair } from '@nobulex/crypto';
+import { buildCovenant, verifyCovenant } from '@nobulex/core';
 
 const issuerKp = await generateKeyPair();
 const beneficiaryKp = await generateKeyPair();
@@ -34,7 +34,7 @@ console.log(result.checks.map(c => `${c.name}: ${c.passed}`));
 ### Countersign
 
 ```typescript
-import { countersignCovenant } from '@kervyx/core';
+import { countersignCovenant } from '@nobulex/core';
 
 const auditorKp = await generateKeyPair();
 const audited = await countersignCovenant(doc, auditorKp, 'auditor');
@@ -44,7 +44,7 @@ console.log(audited.countersignatures?.length); // 1
 ### Delegation Chains
 
 ```typescript
-import { resolveChain, validateChainNarrowing, MemoryChainResolver } from '@kervyx/core';
+import { resolveChain, validateChainNarrowing, MemoryChainResolver } from '@nobulex/core';
 
 const resolver = new MemoryChainResolver();
 resolver.add(parentDoc);
@@ -57,7 +57,7 @@ console.log(narrowing.valid); // true if child only restricts parent
 ### Serialization
 
 ```typescript
-import { serializeCovenant, deserializeCovenant } from '@kervyx/core';
+import { serializeCovenant, deserializeCovenant } from '@nobulex/core';
 
 const json = serializeCovenant(doc);
 const restored = deserializeCovenant(json);
@@ -77,4 +77,4 @@ const restored = deserializeCovenant(json);
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference and architecture guide.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, sha256String, toHex } from '@kervyx/crypto';
-import type { KeyPair, HashHex } from '@kervyx/crypto';
+import { generateKeyPair, sha256String, toHex } from '@nobulex/crypto';
+import type { KeyPair, HashHex } from '@nobulex/crypto';
 import {
   buildCovenant,
   verifyCovenant,
@@ -10,17 +10,17 @@ import {
   validateChainNarrowing,
   serializeCovenant,
   deserializeCovenant,
-} from '@kervyx/core';
-import type { CovenantDocument } from '@kervyx/core';
-import { evaluate, parse } from '@kervyx/ccl';
-import { Monitor, MonitorDeniedError } from '@kervyx/enforcement';
-import { KervyxGuard } from '@kervyx/mcp';
-import type { MCPServer, WrappedMCPServer, ViolationDetails, ToolCallDetails } from '@kervyx/mcp';
-import { createReceipt, verifyReceipt, computeReputationScore, createEndorsement, verifyEndorsement } from '@kervyx/reputation';
-import type { ExecutionReceipt } from '@kervyx/reputation';
-import { generateComplianceProof, verifyComplianceProof } from '@kervyx/proof';
-import { createIdentity, evolveIdentity, verifyIdentity, serializeIdentity, deserializeIdentity } from '@kervyx/identity';
-import { createBreachAttestation, verifyBreachAttestation, TrustGraph } from '@kervyx/breach';
+} from '@nobulex/core';
+import type { CovenantDocument } from '@nobulex/core';
+import { evaluate, parse } from '@nobulex/ccl';
+import { Monitor, MonitorDeniedError } from '@nobulex/enforcement';
+import { NobulexGuard } from '@nobulex/mcp';
+import type { MCPServer, WrappedMCPServer, ViolationDetails, ToolCallDetails } from '@nobulex/mcp';
+import { createReceipt, verifyReceipt, computeReputationScore, createEndorsement, verifyEndorsement } from '@nobulex/reputation';
+import type { ExecutionReceipt } from '@nobulex/reputation';
+import { generateComplianceProof, verifyComplianceProof } from '@nobulex/proof';
+import { createIdentity, evolveIdentity, verifyIdentity, serializeIdentity, deserializeIdentity } from '@nobulex/identity';
+import { createBreachAttestation, verifyBreachAttestation, TrustGraph } from '@nobulex/breach';
 
 // ---------------------------------------------------------------------------
 // Scenario 1: Chain Delegation with Constraint Narrowing (3 levels)
@@ -420,12 +420,12 @@ describe('Scenario 2: MCP Server Wrap, Execute, Receipt, and Reputation', () => 
     };
   }
 
-  // ── Step 1: Wrap the MCP server with KervyxGuard ───────────────────────
+  // ── Step 1: Wrap the MCP server with NobulexGuard ───────────────────────
 
-  it('Step 1: wraps the MCP server with KervyxGuard and constraints', async () => {
+  it('Step 1: wraps the MCP server with NobulexGuard and constraints', async () => {
     operatorKeyPair = await generateKeyPair();
 
-    wrappedServer = await KervyxGuard.wrap(createMockMCPServer(), {
+    wrappedServer = await NobulexGuard.wrap(createMockMCPServer(), {
       constraints: SERVER_CONSTRAINTS,
       mode: 'enforce',
       operatorKeyPair,

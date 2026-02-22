@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { CovenantDocument } from '@kervyx/core';
+import type { CovenantDocument } from '@nobulex/core';
 
 import type { CovenantStore } from './types.js';
 

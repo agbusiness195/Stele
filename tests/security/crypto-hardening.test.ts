@@ -1,5 +1,5 @@
 /**
- * Crypto hardening tests for @kervyx/crypto.
+ * Crypto hardening tests for @nobulex/crypto.
  *
  * Exercises edge cases, known-answer vectors, encoding roundtrips,
  * constant-time comparison, and signature manipulation scenarios
@@ -26,7 +26,7 @@ import {
   timestamp,
   keyPairFromPrivateKey,
   keyPairFromPrivateKeyHex,
-} from '@kervyx/crypto';
+} from '@nobulex/crypto';
 
 // ---------------------------------------------------------------------------
 // Key generation hardening
@@ -132,7 +132,7 @@ describe('Signature edge cases', () => {
 
   it('signString signs and verifies via raw bytes', async () => {
     const kp = await generateKeyPair();
-    const text = 'hello kervyx';
+    const text = 'hello nobulex';
     const sig = await signString(text, kp.privateKey);
     const msgBytes = new TextEncoder().encode(text);
     const ok = await verify(msgBytes, sig, kp.publicKey);

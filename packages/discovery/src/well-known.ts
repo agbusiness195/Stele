@@ -1,26 +1,26 @@
 /**
- * @kervyx/discovery/well-known — Discovery document generation and validation.
+ * @nobulex/discovery/well-known — Discovery document generation and validation.
  *
- * Implements RFC 5785-compliant `.well-known/kervyx/` endpoint handling
- * for the Kervyx cross-platform discovery protocol.
+ * Implements RFC 5785-compliant `.well-known/nobulex/` endpoint handling
+ * for the Nobulex cross-platform discovery protocol.
  */
 
-import { sha256String, signString, verify, canonicalizeJson, timestamp, generateNonce, toHex, fromHex } from '@kervyx/crypto';
-import type { KeyPair } from '@kervyx/crypto';
-import { PROTOCOL_VERSION } from '@kervyx/core';
+import { sha256String, signString, verify, canonicalizeJson, timestamp, generateNonce, toHex, fromHex } from '@nobulex/crypto';
+import type { KeyPair } from '@nobulex/crypto';
+import { PROTOCOL_VERSION } from '@nobulex/core';
 
 import type { DiscoveryDocument, AgentKeyEntry, AgentKeySet } from './types.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-/** The well-known path prefix for Kervyx discovery. */
-export const WELL_KNOWN_PATH = '/.well-known/kervyx';
+/** The well-known path prefix for Nobulex discovery. */
+export const WELL_KNOWN_PATH = '/.well-known/nobulex';
 
 /** The well-known configuration path. */
 export const CONFIGURATION_PATH = `${WELL_KNOWN_PATH}/configuration`;
 
-/** The MIME type for Kervyx discovery documents. */
-export const KERVYX_MEDIA_TYPE = 'application/kervyx+json';
+/** The MIME type for Nobulex discovery documents. */
+export const NOBULEX_MEDIA_TYPE = 'application/nobulex+json';
 
 /** Maximum age for a discovery document before it should be refreshed (24 hours). */
 export const MAX_DOCUMENT_AGE_MS = 86_400_000;
@@ -57,7 +57,7 @@ export interface BuildDiscoveryDocumentOptions {
  * Build a complete discovery document for a platform.
  *
  * @param options - Configuration for the discovery document.
- * @returns A signed DiscoveryDocument ready to serve at `/.well-known/kervyx/configuration`.
+ * @returns A signed DiscoveryDocument ready to serve at `/.well-known/nobulex/configuration`.
  */
 export async function buildDiscoveryDocument(
   options: BuildDiscoveryDocumentOptions,

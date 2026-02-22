@@ -1,11 +1,11 @@
-# @kervyx/verifier
+# @nobulex/verifier
 
 Independent verification engine for third-party auditors. Wraps core verification with history tracking, batch processing, chain integrity validation, and action-level evaluation.
 
 ## Installation
 
 ```bash
-npm install @kervyx/verifier
+npm install @nobulex/verifier
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @kervyx/verifier
 ### Single Document Verification
 
 ```typescript
-import { Verifier } from '@kervyx/verifier';
+import { Verifier } from '@nobulex/verifier';
 
 const verifier = new Verifier({ strictMode: true });
 
@@ -50,7 +50,7 @@ console.log(report.reason);         // human-readable explanation
 ### Batch Verification
 
 ```typescript
-import { verifyBatch } from '@kervyx/verifier';
+import { verifyBatch } from '@nobulex/verifier';
 
 const report = await verifyBatch([doc1, doc2, doc3]);
 console.log(`${report.summary.passed}/${report.summary.total} passed`);
@@ -77,4 +77,4 @@ verifier.clearHistory();
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference and architecture guide.

@@ -1,5 +1,5 @@
 /**
- * Trust data aggregation and analytics for the Kervyx protocol.
+ * Trust data aggregation and analytics for the Nobulex protocol.
  *
  * Aggregates individual trust data points into insights, anonymizes datasets
  * for sharing, and computes trends over time. Supports both k-anonymity and

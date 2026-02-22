@@ -780,7 +780,7 @@ export function defineConjecture(params: {
 }
 
 /**
- * Return the four standard conjectures of the Kervyx/Kervyx protocol:
+ * Return the four standard conjectures of the Nobulex/Nobulex protocol:
  *
  * 1. Observation Bound — verification cost proportional to action space
  * 2. Trust-Privacy Tradeoff — trust and privacy cannot both be maximized
@@ -1365,7 +1365,7 @@ function createSeededRng(seed: number): () => number {
 }
 
 /**
- * Validate the Kervyx vision's claimed detection rates via Monte Carlo simulation.
+ * Validate the Nobulex vision's claimed detection rates via Monte Carlo simulation.
  *
  * Claimed detection rates by tier:
  *   - solo: 60-70% (single-party runtime self-verification)

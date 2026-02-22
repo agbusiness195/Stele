@@ -12,7 +12,7 @@ import {
   fromHex,
   sha256String,
   timestamp,
-} from '@kervyx/crypto';
+} from '@nobulex/crypto';
 
 /**
  * Options for configuring the authentication middleware.

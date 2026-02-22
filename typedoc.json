@@ -3,7 +3,7 @@
   "entryPointStrategy": "packages",
   "entryPoints": ["packages/*"],
   "out": "docs/api-generated",
-  "name": "Kervyx Protocol — API Reference",
+  "name": "Nobulex Protocol — API Reference",
   "excludePrivate": true,
   "excludeInternal": true,
   "readme": "README.md",

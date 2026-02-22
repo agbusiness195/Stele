@@ -12,15 +12,15 @@
  */
 
 import {
-  KervyxClient,
+  NobulexClient,
   generateKeyPair,
   countersignCovenant,
   type Issuer,
   type Beneficiary,
   type CovenantDocument,
-} from '@kervyx/sdk';
+} from '@nobulex/sdk';
 
-import { Verifier } from '@kervyx/verifier';
+import { Verifier } from '@nobulex/verifier';
 
 async function main() {
   console.log('========================================');
@@ -60,7 +60,7 @@ async function main() {
     name: 'Trading Bot v2',
   };
 
-  const client = new KervyxClient({ keyPair: issuerKeys });
+  const client = new NobulexClient({ keyPair: issuerKeys });
 
   const covenant = await client.createCovenant({
     issuer,

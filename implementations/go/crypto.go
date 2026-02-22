@@ -1,4 +1,4 @@
-package kervyx
+package nobulex
 
 import (
 	"crypto/ed25519"
@@ -25,7 +25,7 @@ type KeyPair struct {
 func GenerateKeyPair() (*KeyPair, error) {
 	pub, priv, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
-		return nil, fmt.Errorf("kervyx: failed to generate Ed25519 key pair: %w", err)
+		return nil, fmt.Errorf("nobulex: failed to generate Ed25519 key pair: %w", err)
 	}
 	return &KeyPair{
 		PrivateKey:   priv,
@@ -39,7 +39,7 @@ func GenerateKeyPair() (*KeyPair, error) {
 // format which includes the public key suffix).
 func KeyPairFromPrivateKey(privateKey ed25519.PrivateKey) (*KeyPair, error) {
 	if len(privateKey) != ed25519.PrivateKeySize {
-		return nil, fmt.Errorf("kervyx: private key must be %d bytes, got %d", ed25519.PrivateKeySize, len(privateKey))
+		return nil, fmt.Errorf("nobulex: private key must be %d bytes, got %d", ed25519.PrivateKeySize, len(privateKey))
 	}
 	pub := privateKey.Public().(ed25519.PublicKey)
 	keyCopy := make(ed25519.PrivateKey, len(privateKey))
@@ -55,7 +55,7 @@ func KeyPairFromPrivateKey(privateKey ed25519.PrivateKey) (*KeyPair, error) {
 // the 64-byte signature.
 func Sign(message []byte, privateKey ed25519.PrivateKey) ([]byte, error) {
 	if len(privateKey) != ed25519.PrivateKeySize {
-		return nil, fmt.Errorf("kervyx: private key must be %d bytes, got %d", ed25519.PrivateKeySize, len(privateKey))
+		return nil, fmt.Errorf("nobulex: private key must be %d bytes, got %d", ed25519.PrivateKeySize, len(privateKey))
 	}
 	sig := ed25519.Sign(privateKey, message)
 	return sig, nil
@@ -104,7 +104,7 @@ func CanonicalizeJSON(obj interface{}) (string, error) {
 	sorted := sortKeys(obj)
 	b, err := json.Marshal(sorted)
 	if err != nil {
-		return "", fmt.Errorf("kervyx: failed to marshal canonical JSON: %w", err)
+		return "", fmt.Errorf("nobulex: failed to marshal canonical JSON: %w", err)
 	}
 	return string(b), nil
 }
@@ -195,7 +195,7 @@ func ToHex(data []byte) string {
 func FromHex(hexStr string) ([]byte, error) {
 	b, err := hex.DecodeString(hexStr)
 	if err != nil {
-		return nil, fmt.Errorf("kervyx: invalid hex string: %w", err)
+		return nil, fmt.Errorf("nobulex: invalid hex string: %w", err)
 	}
 	return b, nil
 }
@@ -205,7 +205,7 @@ func GenerateNonce() ([]byte, error) {
 	nonce := make([]byte, 32)
 	_, err := rand.Read(nonce)
 	if err != nil {
-		return nil, fmt.Errorf("kervyx: failed to generate nonce: %w", err)
+		return nil, fmt.Errorf("nobulex: failed to generate nonce: %w", err)
 	}
 	return nonce, nil
 }

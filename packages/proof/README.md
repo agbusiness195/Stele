@@ -1,11 +1,11 @@
-# @kervyx/proof
+# @nobulex/proof
 
 Compliance proof generation and verification using Poseidon hash commitments over audit logs and covenant constraints.
 
 ## Installation
 
 ```bash
-npm install @kervyx/proof
+npm install @nobulex/proof
 ```
 
 ## Key APIs
@@ -25,7 +25,7 @@ npm install @kervyx/proof
 import {
   generateComplianceProof,
   verifyComplianceProof,
-} from '@kervyx/proof';
+} from '@nobulex/proof';
 
 // Generate a proof that audit entries comply with constraints
 const proof = await generateComplianceProof({
@@ -50,4 +50,4 @@ console.log(result.errors);  // []
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

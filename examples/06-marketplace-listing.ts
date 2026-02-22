@@ -1,5 +1,5 @@
 /**
- * Kervyx Marketplace Example
+ * Nobulex Marketplace Example
  *
  * Shows agent discovery and trust-gated marketplace interactions.
  * Agents are listed, searched, and evaluated for marketplace access.
@@ -38,7 +38,7 @@ const AGENTS: MarketplaceAgent[] = [
 
 function main() {
   console.log('========================================');
-  console.log('  Kervyx Marketplace Example');
+  console.log('  Nobulex Marketplace Example');
   console.log('========================================\n');
 
   // ── Step 1: List available agents ────────────────────────────────────
@@ -81,15 +81,15 @@ function main() {
 
   const revenue = calculateRevenueLift({
     totalAgents: 1000,
-    kervyxAdoptionRate: 0.6,
+    nobulexAdoptionRate: 0.6,
     premiumRate: 0.3,
     premiumPriceMultiplier: 5,
   });
 
   console.log(`  Total agents:    1000`);
-  console.log(`  Kervyx adoption:   60%`);
+  console.log(`  Nobulex adoption:   60%`);
   console.log(`  Total revenue:   $${revenue.totalRevenue.toFixed(0)}`);
-  console.log(`  Kervyx revenue:    $${revenue.kervyxRevenue.toFixed(0)}`);
+  console.log(`  Nobulex revenue:    $${revenue.nobulexRevenue.toFixed(0)}`);
   console.log(`  Revenue lift:    ${revenue.liftPercentage.toFixed(1)}%`);
 
   console.log('\n========================================');

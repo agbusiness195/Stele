@@ -1,5 +1,5 @@
 /**
- * Lightweight metrics collection for the Kervyx SDK.
+ * Lightweight metrics collection for the Nobulex SDK.
  *
  * Provides Counter, Gauge, Histogram, and a MetricsRegistry for
  * collecting operational metrics without any external dependencies.

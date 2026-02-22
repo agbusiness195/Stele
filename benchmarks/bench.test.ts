@@ -6,7 +6,7 @@ import {
   verify,
   sha256,
   canonicalizeJson,
-} from '@kervyx/crypto';
+} from '@nobulex/crypto';
 
 import {
   parse,
@@ -14,7 +14,7 @@ import {
   merge,
   serialize,
   validateNarrowing,
-} from '@kervyx/ccl';
+} from '@nobulex/ccl';
 
 import {
   buildCovenant,
@@ -23,9 +23,9 @@ import {
   resolveChain,
   computeEffectiveConstraints,
   MemoryChainResolver,
-} from '@kervyx/core';
+} from '@nobulex/core';
 
-import { MemoryStore } from '@kervyx/store';
+import { MemoryStore } from '@nobulex/store';
 
 // ---------------------------------------------------------------------------
 // Benchmark helper

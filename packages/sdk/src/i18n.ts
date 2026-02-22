@@ -1,5 +1,5 @@
 /**
- * Basic i18n (internationalization) foundation for the Kervyx protocol.
+ * Basic i18n (internationalization) foundation for the Nobulex protocol.
  *
  * Provides translated protocol messages in five languages:
  * English, German, French, Spanish, and Japanese.

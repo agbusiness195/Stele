@@ -1,55 +1,55 @@
-# @kervyx/cli
+# @nobulex/cli
 
-Command-line interface for the Kervyx covenant protocol. Provides commands for key generation, covenant creation, verification, evaluation, inspection, CCL parsing, shell completions, diagnostics, and diff.
+Command-line interface for the Nobulex covenant protocol. Provides commands for key generation, covenant creation, verification, evaluation, inspection, CCL parsing, shell completions, diagnostics, and diff.
 
 ## Installation
 
 ```bash
-npm install @kervyx/cli
+npm install @nobulex/cli
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `kervyx init` | Generate an Ed25519 key pair and config file |
-| `kervyx create` | Create and sign a covenant document |
-| `kervyx verify <json>` | Verify a covenant document |
-| `kervyx evaluate <json> <action> <resource>` | Evaluate an action against a covenant |
-| `kervyx inspect <json>` | Pretty-print covenant details |
-| `kervyx parse <ccl>` | Parse CCL and output AST as JSON |
-| `kervyx completions <shell>` | Generate shell completion script (bash/zsh/fish) |
-| `kervyx doctor` | Check Kervyx installation health |
-| `kervyx diff <doc1> <doc2>` | Show differences between two covenant documents |
-| `kervyx version` | Print version information |
+| `nobulex init` | Generate an Ed25519 key pair and config file |
+| `nobulex create` | Create and sign a covenant document |
+| `nobulex verify <json>` | Verify a covenant document |
+| `nobulex evaluate <json> <action> <resource>` | Evaluate an action against a covenant |
+| `nobulex inspect <json>` | Pretty-print covenant details |
+| `nobulex parse <ccl>` | Parse CCL and output AST as JSON |
+| `nobulex completions <shell>` | Generate shell completion script (bash/zsh/fish) |
+| `nobulex doctor` | Check Nobulex installation health |
+| `nobulex diff <doc1> <doc2>` | Show differences between two covenant documents |
+| `nobulex version` | Print version information |
 
 ## Key APIs
 
 - **run(args, configDir?)**: Programmatic entry point -- runs a CLI command and returns `{ stdout, stderr, exitCode }`
-- **loadConfig / saveConfig**: Read and write `kervyx.config.json`
+- **loadConfig / saveConfig**: Read and write `nobulex.config.json`
 - **bashCompletions / zshCompletions / fishCompletions**: Generate shell completion scripts
-- **runDoctor**: Run diagnostic checks on the Kervyx installation
+- **runDoctor**: Run diagnostic checks on the Nobulex installation
 
 ## Usage
 
 ```bash
 # Generate a new key pair
-kervyx init
+nobulex init
 
 # Create a covenant
-kervyx create --issuer alice --beneficiary bob --constraints "permit read /data/**"
+nobulex create --issuer alice --beneficiary bob --constraints "permit read /data/**"
 
 # Verify a covenant document
-kervyx verify '{"id":"...","version":"1.0",...}'
+nobulex verify '{"id":"...","version":"1.0",...}'
 
 # Evaluate an action
-kervyx evaluate '{"id":"..."}' read /data/reports
+nobulex evaluate '{"id":"..."}' read /data/reports
 
 # Parse CCL
-kervyx parse "permit read /data/**"
+nobulex parse "permit read /data/**"
 
 # Check installation health
-kervyx doctor
+nobulex doctor
 ```
 
 ### Global Flags
@@ -60,4 +60,4 @@ kervyx doctor
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

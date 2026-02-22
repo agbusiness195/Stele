@@ -6,10 +6,10 @@ import {
   fromHex,
   verify,
   canonicalizeJson,
-} from '@kervyx/crypto';
-import type { KeyPair } from '@kervyx/crypto';
-import { buildCovenant, PROTOCOL_VERSION } from '@kervyx/core';
-import type { CovenantDocument } from '@kervyx/core';
+} from '@nobulex/crypto';
+import type { KeyPair } from '@nobulex/crypto';
+import { buildCovenant, PROTOCOL_VERSION } from '@nobulex/core';
+import type { CovenantDocument } from '@nobulex/core';
 
 import {
   buildDiscoveryDocument,
@@ -18,7 +18,7 @@ import {
   buildKeySet,
   WELL_KNOWN_PATH,
   CONFIGURATION_PATH,
-  KERVYX_MEDIA_TYPE,
+  NOBULEX_MEDIA_TYPE,
   MAX_DOCUMENT_AGE_MS,
   DiscoveryClient,
   DiscoveryServer,
@@ -54,8 +54,8 @@ const TEST_ISSUER = 'https://platform.example';
 function makeMinimalDoc(): DiscoveryDocument {
   return {
     issuer: TEST_ISSUER,
-    keys_endpoint: `${TEST_ISSUER}/.well-known/kervyx/keys`,
-    covenants_endpoint: `${TEST_ISSUER}/.well-known/kervyx/covenants`,
+    keys_endpoint: `${TEST_ISSUER}/.well-known/nobulex/keys`,
+    covenants_endpoint: `${TEST_ISSUER}/.well-known/nobulex/covenants`,
     protocol_versions_supported: ['1.0'],
     signature_schemes_supported: ['ed25519'],
     hash_algorithms_supported: ['sha256'],
@@ -108,16 +108,16 @@ async function buildTestCovenant(kp: KeyPair): Promise<CovenantDocument> {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 describe('Constants', () => {
-  it('WELL_KNOWN_PATH is /.well-known/kervyx', () => {
-    expect(WELL_KNOWN_PATH).toBe('/.well-known/kervyx');
+  it('WELL_KNOWN_PATH is /.well-known/nobulex', () => {
+    expect(WELL_KNOWN_PATH).toBe('/.well-known/nobulex');
   });
 
-  it('CONFIGURATION_PATH is /.well-known/kervyx/configuration', () => {
-    expect(CONFIGURATION_PATH).toBe('/.well-known/kervyx/configuration');
+  it('CONFIGURATION_PATH is /.well-known/nobulex/configuration', () => {
+    expect(CONFIGURATION_PATH).toBe('/.well-known/nobulex/configuration');
   });
 
-  it('KERVYX_MEDIA_TYPE is application/kervyx+json', () => {
-    expect(KERVYX_MEDIA_TYPE).toBe('application/kervyx+json');
+  it('NOBULEX_MEDIA_TYPE is application/nobulex+json', () => {
+    expect(NOBULEX_MEDIA_TYPE).toBe('application/nobulex+json');
   });
 
   it('MAX_DOCUMENT_AGE_MS is 24 hours in milliseconds', () => {
@@ -132,11 +132,11 @@ describe('buildDiscoveryDocument', () => {
     const doc = await buildDiscoveryDocument({ issuer: TEST_ISSUER });
 
     expect(doc.issuer).toBe(TEST_ISSUER);
-    expect(doc.keys_endpoint).toBe(`${TEST_ISSUER}/.well-known/kervyx/keys`);
-    expect(doc.covenants_endpoint).toBe(`${TEST_ISSUER}/.well-known/kervyx/covenants`);
-    expect(doc.verification_endpoint).toBe(`${TEST_ISSUER}/.well-known/kervyx/verify`);
-    expect(doc.reputation_endpoint).toBe(`${TEST_ISSUER}/.well-known/kervyx/reputation`);
-    expect(doc.breach_endpoint).toBe(`${TEST_ISSUER}/.well-known/kervyx/breach`);
+    expect(doc.keys_endpoint).toBe(`${TEST_ISSUER}/.well-known/nobulex/keys`);
+    expect(doc.covenants_endpoint).toBe(`${TEST_ISSUER}/.well-known/nobulex/covenants`);
+    expect(doc.verification_endpoint).toBe(`${TEST_ISSUER}/.well-known/nobulex/verify`);
+    expect(doc.reputation_endpoint).toBe(`${TEST_ISSUER}/.well-known/nobulex/reputation`);
+    expect(doc.breach_endpoint).toBe(`${TEST_ISSUER}/.well-known/nobulex/breach`);
     expect(doc.protocol_versions_supported).toContain(PROTOCOL_VERSION);
     expect(doc.signature_schemes_supported).toContain('ed25519');
     expect(doc.hash_algorithms_supported).toContain('sha256');
@@ -785,19 +785,19 @@ describe('DiscoveryServer', () => {
       const handlers = server.getRouteHandlers();
 
       expect(handlers).toBeInstanceOf(Map);
-      expect(handlers.has('GET /.well-known/kervyx/configuration')).toBe(true);
-      expect(handlers.has('GET /.well-known/kervyx/keys')).toBe(true);
-      expect(handlers.has('GET /.well-known/kervyx/covenants')).toBe(true);
-      expect(handlers.has('POST /.well-known/kervyx/verify')).toBe(true);
+      expect(handlers.has('GET /.well-known/nobulex/configuration')).toBe(true);
+      expect(handlers.has('GET /.well-known/nobulex/keys')).toBe(true);
+      expect(handlers.has('GET /.well-known/nobulex/covenants')).toBe(true);
+      expect(handlers.has('POST /.well-known/nobulex/verify')).toBe(true);
     });
 
     it('configuration handler returns the discovery document', async () => {
       const handlers = server.getRouteHandlers();
-      const handler = handlers.get('GET /.well-known/kervyx/configuration')!;
+      const handler = handlers.get('GET /.well-known/nobulex/configuration')!;
 
       const result = await handler();
       expect(result.status).toBe(200);
-      expect(result.headers['Content-Type']).toBe(KERVYX_MEDIA_TYPE);
+      expect(result.headers['Content-Type']).toBe(NOBULEX_MEDIA_TYPE);
       expect((result.body as DiscoveryDocument).issuer).toBe(TEST_ISSUER);
     });
 
@@ -806,7 +806,7 @@ describe('DiscoveryServer', () => {
       server.registerAgentKey('agent-1', kp.publicKeyHex);
 
       const handlers = server.getRouteHandlers();
-      const handler = handlers.get('GET /.well-known/kervyx/keys')!;
+      const handler = handlers.get('GET /.well-known/nobulex/keys')!;
 
       const result = await handler({ agent_id: 'agent-1' });
       expect(result.status).toBe(200);
@@ -820,7 +820,7 @@ describe('DiscoveryServer', () => {
       server.registerCovenant(cov);
 
       const handlers = server.getRouteHandlers();
-      const handler = handlers.get('GET /.well-known/kervyx/covenants')!;
+      const handler = handlers.get('GET /.well-known/nobulex/covenants')!;
 
       const result = await handler();
       expect(result.status).toBe(200);
@@ -834,7 +834,7 @@ describe('DiscoveryServer', () => {
       server.registerCovenant(cov);
 
       const handlers = server.getRouteHandlers();
-      const handler = handlers.get('POST /.well-known/kervyx/verify')!;
+      const handler = handlers.get('POST /.well-known/nobulex/verify')!;
 
       const request: CrossPlatformVerificationRequest = {
         covenant_id: cov.id,
@@ -926,13 +926,13 @@ describe('DiscoveryClient', () => {
       expect(calledUrl).toBe(`${TEST_ISSUER}${CONFIGURATION_PATH}`);
     });
 
-    it('passes Accept header with kervyx media type', async () => {
+    it('passes Accept header with nobulex media type', async () => {
       mockFetch.mockResolvedValueOnce(mockResponse(validDoc));
 
       await client.discover(TEST_ISSUER);
 
       const calledInit = mockFetch.mock.calls[0]![1];
-      expect(calledInit.headers.Accept).toContain('application/kervyx+json');
+      expect(calledInit.headers.Accept).toContain('application/nobulex+json');
     });
 
     it('verifies signature when configured to do so', async () => {
@@ -1030,7 +1030,7 @@ describe('DiscoveryClient', () => {
             created_at: new Date().toISOString(),
             status: 'active',
             protocol_version: '1.0',
-            document_url: `${TEST_ISSUER}/.well-known/kervyx/covenants/cov-1`,
+            document_url: `${TEST_ISSUER}/.well-known/nobulex/covenants/cov-1`,
           },
         ],
         total: 1,
@@ -1113,7 +1113,7 @@ describe('DiscoveryClient', () => {
 
       const postInit = mockFetch.mock.calls[1]![1];
       expect(postInit.method).toBe('POST');
-      expect(postInit.headers['Content-Type']).toBe('application/kervyx+json');
+      expect(postInit.headers['Content-Type']).toBe('application/nobulex+json');
     });
 
     it('throws when verification endpoint returns error', async () => {

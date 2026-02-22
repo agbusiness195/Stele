@@ -1,11 +1,11 @@
 /**
- * @kervyx/sdk type definitions.
+ * @nobulex/sdk type definitions.
  *
  * SDK-specific types that wrap and extend the lower-level package types
  * into a unified, ergonomic API surface.
  */
 
-import type { KeyPair } from '@kervyx/crypto';
+import type { KeyPair } from '@nobulex/crypto';
 import type {
   CovenantDocument,
   VerificationResult,
@@ -19,24 +19,24 @@ import type {
   CovenantMetadata,
   Obligation,
   PartyRole,
-} from '@kervyx/core';
+} from '@nobulex/core';
 import type {
   CCLDocument,
   EvaluationResult as CCLEvaluationResult,
   Statement,
   Severity,
-} from '@kervyx/ccl';
+} from '@nobulex/ccl';
 import type {
   AgentIdentity,
   ModelAttestation,
   DeploymentContext,
   LineageEntry,
-} from '@kervyx/identity';
+} from '@nobulex/identity';
 
 // ─── Client options ─────────────────────────────────────────────────────────
 
-/** Options for constructing a KervyxClient instance. */
-export interface KervyxClientOptions {
+/** Options for constructing a NobulexClient instance. */
+export interface NobulexClientOptions {
   /** Optional pre-generated key pair for signing operations. */
   keyPair?: KeyPair;
   /** Optional agent identifier for identity operations. */
@@ -167,8 +167,8 @@ export interface NarrowingViolationEntry {
 
 // ─── Events ─────────────────────────────────────────────────────────────────
 
-/** Event types emitted by KervyxClient. */
-export type KervyxEventType =
+/** Event types emitted by NobulexClient. */
+export type NobulexEventType =
   | 'covenant:created'
   | 'covenant:verified'
   | 'covenant:countersigned'
@@ -180,59 +180,59 @@ export type KervyxEventType =
   | 'key:rotated';
 
 /** Base event payload. */
-export interface KervyxEvent {
+export interface NobulexEvent {
   /** The event type. */
-  type: KervyxEventType;
+  type: NobulexEventType;
   /** ISO 8601 timestamp of when the event occurred. */
   timestamp: string;
 }
 
 /** Event emitted when a covenant is created. */
-export interface CovenantCreatedEvent extends KervyxEvent {
+export interface CovenantCreatedEvent extends NobulexEvent {
   type: 'covenant:created';
   document: CovenantDocument;
 }
 
 /** Event emitted when a covenant is verified. */
-export interface CovenantVerifiedEvent extends KervyxEvent {
+export interface CovenantVerifiedEvent extends NobulexEvent {
   type: 'covenant:verified';
   result: VerificationResult;
 }
 
 /** Event emitted when a covenant is countersigned. */
-export interface CovenantCountersignedEvent extends KervyxEvent {
+export interface CovenantCountersignedEvent extends NobulexEvent {
   type: 'covenant:countersigned';
   document: CovenantDocument;
   signerRole: PartyRole;
 }
 
 /** Event emitted when an identity is created. */
-export interface IdentityCreatedEvent extends KervyxEvent {
+export interface IdentityCreatedEvent extends NobulexEvent {
   type: 'identity:created';
   identity: AgentIdentity;
 }
 
 /** Event emitted when an identity is evolved. */
-export interface IdentityEvolvedEvent extends KervyxEvent {
+export interface IdentityEvolvedEvent extends NobulexEvent {
   type: 'identity:evolved';
   identity: AgentIdentity;
   changeType: LineageEntry['changeType'];
 }
 
 /** Event emitted when a chain is resolved. */
-export interface ChainResolvedEvent extends KervyxEvent {
+export interface ChainResolvedEvent extends NobulexEvent {
   type: 'chain:resolved';
   documents: CovenantDocument[];
 }
 
 /** Event emitted when a chain is validated. */
-export interface ChainValidatedEvent extends KervyxEvent {
+export interface ChainValidatedEvent extends NobulexEvent {
   type: 'chain:validated';
   result: ChainValidationResult;
 }
 
 /** Event emitted when an action is evaluated. */
-export interface EvaluationCompletedEvent extends KervyxEvent {
+export interface EvaluationCompletedEvent extends NobulexEvent {
   type: 'evaluation:completed';
   result: EvaluationResult;
   action: string;
@@ -240,14 +240,14 @@ export interface EvaluationCompletedEvent extends KervyxEvent {
 }
 
 /** Event emitted when a key rotation occurs. */
-export interface KeyRotatedEvent extends KervyxEvent {
+export interface KeyRotatedEvent extends NobulexEvent {
   type: 'key:rotated';
   previousPublicKey: string;
   currentPublicKey: string;
 }
 
 /** Map of event types to their payloads. */
-export interface KervyxEventMap {
+export interface NobulexEventMap {
   'covenant:created': CovenantCreatedEvent;
   'covenant:verified': CovenantVerifiedEvent;
   'covenant:countersigned': CovenantCountersignedEvent;
@@ -260,7 +260,7 @@ export interface KervyxEventMap {
 }
 
 /** Event handler function type. */
-export type KervyxEventHandler<T extends KervyxEventType> = (event: KervyxEventMap[T]) => void;
+export type NobulexEventHandler<T extends NobulexEventType> = (event: NobulexEventMap[T]) => void;
 
 // ─── Re-exports for convenience ─────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 {
-  "name": "@kervyx/discovery",
+  "name": "@nobulex/discovery",
   "version": "2.0.0",
-  "description": "Cross-platform discovery protocol for .well-known/kervyx/ endpoints",
+  "description": "Cross-platform discovery protocol for .well-known/nobulex/ endpoints",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,9 +27,9 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@kervyx/core": "2.0.0",
-    "@kervyx/crypto": "2.0.0",
-    "@kervyx/types": "2.0.0"
+    "@nobulex/core": "2.0.0",
+    "@nobulex/crypto": "2.0.0",
+    "@nobulex/types": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -40,16 +40,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/discovery"
   },
-  "homepage": "https://kervyx.dev",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
-  "author": "Kervyx Labs, Inc.",
+  "author": "Nobulex Labs, Inc.",
   "keywords": [
-    "kervyx",
+    "nobulex",
     "discovery",
     "well-known",
     "cross-platform",

@@ -8,11 +8,11 @@ import {
   fromHex,
   timestamp,
   generateId,
-} from '@kervyx/crypto';
+} from '@nobulex/crypto';
 
-import type { HashHex, KeyPair } from '@kervyx/crypto';
+import type { HashHex, KeyPair } from '@nobulex/crypto';
 
-import { DocumentedKervyxError as KervyxError, DocumentedErrorCode as KervyxErrorCode } from '@kervyx/types';
+import { DocumentedNobulexError as NobulexError, DocumentedErrorCode as NobulexErrorCode } from '@nobulex/types';
 
 import {
   parse,
@@ -21,7 +21,7 @@ import {
   checkRateLimit as cclCheckRateLimit,
   serialize as cclSerialize,
   evaluateCondition,
-} from '@kervyx/ccl';
+} from '@nobulex/ccl';
 
 import type {
   CCLDocument,
@@ -31,7 +31,7 @@ import type {
   EvaluationContext,
   PermitDenyStatement,
   LimitStatement,
-} from '@kervyx/ccl';
+} from '@nobulex/ccl';
 
 export type {
   ExecutionOutcome,
@@ -65,7 +65,7 @@ const GENESIS_HASH: HashHex = '0000000000000000000000000000000000000000000000000
 /**
  * Thrown when the Monitor denies an action in 'enforce' mode.
  */
-export class MonitorDeniedError extends KervyxError {
+export class MonitorDeniedError extends NobulexError {
   readonly action: string;
   readonly resource: string;
   readonly matchedRule: Statement | undefined;
@@ -81,7 +81,7 @@ export class MonitorDeniedError extends KervyxError {
       ? `matched ${matchedRule.type} rule`
       : 'no matching permit rule';
     super(
-      KervyxErrorCode.ACTION_DENIED,
+      NobulexErrorCode.ACTION_DENIED,
       `Action '${action}' on resource '${resource}' denied: ${ruleDesc}`,
       {
         hint: `Check the CCL constraints for action '${action}' on resource '${resource}'.`,
@@ -99,12 +99,12 @@ export class MonitorDeniedError extends KervyxError {
 /**
  * Thrown when a CapabilityGate operation fails due to missing or invalid capabilities.
  */
-export class CapabilityError extends KervyxError {
+export class CapabilityError extends NobulexError {
   readonly action: string;
 
   constructor(action: string, message?: string) {
     super(
-      KervyxErrorCode.ACTION_DENIED,
+      NobulexErrorCode.ACTION_DENIED,
       message ?? `No capability registered for action '${action}'`,
       {
         hint: `Ensure the action '${action}' is permitted by the CCL constraints before registering a handler.`,
@@ -190,15 +190,15 @@ export class Monitor {
     config?: Partial<MonitorConfig>,
   ) {
     if (!covenantId || typeof covenantId !== 'string' || covenantId.trim().length === 0) {
-      throw new KervyxError(
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new NobulexError(
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
         'Monitor requires a non-empty covenantId',
         { hint: 'Pass the covenant document ID (a hex-encoded hash) as the first argument.' }
       );
     }
     if (!constraints || typeof constraints !== 'string' || constraints.trim().length === 0) {
-      throw new KervyxError(
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new NobulexError(
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
         'Monitor requires a non-empty constraints string',
         { hint: 'Pass valid CCL constraint text as the second argument.' }
       );
@@ -237,15 +237,15 @@ export class Monitor {
     context?: Record<string, unknown>,
   ): Promise<EvaluationResult> {
     if (!action || typeof action !== 'string' || action.trim().length === 0) {
-      throw new KervyxError(
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new NobulexError(
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
         'Monitor.evaluate() requires a non-empty action string',
         { hint: 'Pass an action name like "file.read" or "data.write".' }
       );
     }
     if (typeof resource !== 'string') {
-      throw new KervyxError(
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new NobulexError(
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
         'Monitor.evaluate() requires a resource string',
         { hint: 'Pass a resource path like "/data/users" or "**".' }
       );
@@ -333,22 +333,22 @@ export class Monitor {
     context?: Record<string, unknown>,
   ): Promise<T> {
     if (!action || typeof action !== 'string' || action.trim().length === 0) {
-      throw new KervyxError(
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new NobulexError(
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
         'Monitor.execute() requires a non-empty action string',
         { hint: 'Pass an action name like "file.read" or "data.write".' }
       );
     }
     if (typeof resource !== 'string') {
-      throw new KervyxError(
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new NobulexError(
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
         'Monitor.execute() requires a resource string',
         { hint: 'Pass a resource path like "/data/users" or "**".' }
       );
     }
     if (typeof handler !== 'function') {
-      throw new KervyxError(
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new NobulexError(
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
         'Monitor.execute() requires a handler function',
         { hint: 'Pass an async function (resource, context) => T as the handler.' }
       );
@@ -523,7 +523,7 @@ export class Monitor {
    *
    * @param entryIndex - The index of the audit entry.
    * @returns A MerkleProof that can be verified with verifyMerkleProof().
-   * @throws {KervyxError} If the entry index is out of range.
+   * @throws {NobulexError} If the entry index is out of range.
    *
    * @example
    * ```ts
@@ -533,8 +533,8 @@ export class Monitor {
    */
   generateMerkleProof(entryIndex: number): MerkleProof {
     if (entryIndex < 0 || entryIndex >= this.entries.length) {
-      throw new KervyxError(
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new NobulexError(
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
         `Entry index ${entryIndex} is out of range [0, ${this.entries.length})`,
         { hint: `Provide an entry index between 0 and ${this.entries.length - 1}.` }
       );

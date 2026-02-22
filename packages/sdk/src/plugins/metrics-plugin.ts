@@ -1,13 +1,13 @@
 /**
- * Metrics middleware plugin for the Kervyx SDK.
+ * Metrics middleware plugin for the Nobulex SDK.
  *
- * Automatically records operational metrics using the @kervyx/types
+ * Automatically records operational metrics using the @nobulex/types
  * MetricsRegistry. Tracks total operations, errors, duration, and
  * active operation count.
  */
 
-import { MetricsRegistry, createMetricsRegistry } from '@kervyx/types';
-import type { KervyxMiddleware, MiddlewareContext } from '../middleware.js';
+import { MetricsRegistry, createMetricsRegistry } from '@nobulex/types';
+import type { NobulexMiddleware, MiddlewareContext } from '../middleware.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -15,7 +15,7 @@ import type { KervyxMiddleware, MiddlewareContext } from '../middleware.js';
 export interface MetricsPluginOptions {
   /** Optional pre-existing MetricsRegistry to use. Creates a new one if omitted. */
   registry?: MetricsRegistry;
-  /** Prefix for all metric names. Default: "kervyx". */
+  /** Prefix for all metric names. Default: "nobulex". */
   prefix?: string;
 }
 
@@ -31,13 +31,13 @@ export interface MetricsPluginOptions {
  * - `{prefix}.operations.active` — Gauge: currently active operations
  *
  * @param options - Optional metrics configuration.
- * @returns A KervyxMiddleware with an exposed `registry` property.
+ * @returns A NobulexMiddleware with an exposed `registry` property.
  */
 export function metricsMiddleware(
   options?: MetricsPluginOptions,
-): KervyxMiddleware & { registry: MetricsRegistry } {
+): NobulexMiddleware & { registry: MetricsRegistry } {
   const registry = options?.registry ?? createMetricsRegistry();
-  const prefix = options?.prefix ?? 'kervyx';
+  const prefix = options?.prefix ?? 'nobulex';
 
   const totalCounter = registry.counter(
     `${prefix}.operations.total`,
@@ -57,7 +57,7 @@ export function metricsMiddleware(
     'Number of currently active operations',
   );
 
-  const middleware: KervyxMiddleware & { registry: MetricsRegistry } = {
+  const middleware: NobulexMiddleware & { registry: MetricsRegistry } = {
     name: 'metrics',
 
     async before(ctx: MiddlewareContext) {

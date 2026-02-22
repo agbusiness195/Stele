@@ -15,27 +15,27 @@
 import {
   Monitor,
   type AuditEntry,
-} from '@kervyx/enforcement';
+} from '@nobulex/enforcement';
 
 import {
   createReceipt,
   computeReputationScore,
   createEndorsement,
   type ExecutionReceipt,
-} from '@kervyx/reputation';
+} from '@nobulex/reputation';
 
 import {
   createBreachAttestation,
   TrustGraph,
-} from '@kervyx/breach';
+} from '@nobulex/breach';
 
 import {
   buildCovenant,
   type Issuer,
   type Beneficiary,
-} from '@kervyx/core';
+} from '@nobulex/core';
 
-import { generateKeyPair, sha256String, toHex, type HashHex } from '@kervyx/crypto';
+import { generateKeyPair, sha256String, toHex, type HashHex } from '@nobulex/crypto';
 
 async function main() {
   console.log('========================================');

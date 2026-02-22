@@ -1,5 +1,5 @@
 /**
- * Fee calculation and revenue projection for the Kervyx protocol.
+ * Fee calculation and revenue projection for the Nobulex protocol.
  *
  * Implements a trust tax and value-proportional pricing system. Fees are
  * determined by transaction value tiers and clamped to configured minimums

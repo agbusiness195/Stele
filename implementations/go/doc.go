@@ -1,7 +1,7 @@
-// Package kervyx provides a Go implementation of the Kervyx protocol for
+// Package nobulex provides a Go implementation of the Nobulex protocol for
 // cryptographic accountability of AI agents.
 //
-// Kervyx introduces behavioral commitments as a first-class primitive for
+// Nobulex introduces behavioral commitments as a first-class primitive for
 // AI agents. Before acting, an agent inscribes a covenant -- a signed,
 // content-addressed document specifying its intended behavior, constraints,
 // and scope. During operation, every action is logged against this covenant
@@ -22,7 +22,7 @@
 //
 // # Protocol Version
 //
-// This implementation targets Kervyx protocol version 1.0.
+// This implementation targets Nobulex protocol version 1.0.
 //
 // # CCL Grammar
 //
@@ -48,4 +48,4 @@
 // Covenant verification performs 11 checks: id_match, signature_valid,
 // not_expired, active, ccl_parses, enforcement_valid, proof_valid,
 // chain_depth, document_size, countersignatures, and nonce_present.
-package kervyx
+package nobulex

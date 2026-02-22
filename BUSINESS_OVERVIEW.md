@@ -1,6 +1,6 @@
-# Kervyx SDK - Business & Product Overview
+# Nobulex SDK - Business & Product Overview
 
-**Company**: Kervyx Labs, Inc. (2026)
+**Company**: Nobulex Labs, Inc. (2026)
 **Product**: Open-source accountability framework for AI agents
 **License**: MIT
 
@@ -8,9 +8,9 @@
 
 ## Executive Summary
 
-Kervyx is an open-source **accountability framework for AI agents** that uses cryptographic behavioral commitments (called "Covenants") to solve the trust and compliance problem in AI deployment: how do you prove an AI agent is actually following its stated policies?
+Nobulex is an open-source **accountability framework for AI agents** that uses cryptographic behavioral commitments (called "Covenants") to solve the trust and compliance problem in AI deployment: how do you prove an AI agent is actually following its stated policies?
 
-Traditional solutions (firewalls, API rate limits, audit logs) are insufficient because they're reactive, centralized, and forgeable. Kervyx inverts the trust model: agents publish cryptographic behavioral commitments signed with their private keys, which anyone can verify without a trusted third party.
+Traditional solutions (firewalls, API rate limits, audit logs) are insufficient because they're reactive, centralized, and forgeable. Nobulex inverts the trust model: agents publish cryptographic behavioral commitments signed with their private keys, which anyone can verify without a trusted third party.
 
 ---
 
@@ -103,7 +103,7 @@ limit api.call 500 per 3600 seconds
 +---------------------------------------------+
 |  Interop (Discovery, Schema)                 |
 +---------------------------------------------+
-|  SDK (KervyxClient - Unified API)             |
+|  SDK (NobulexClient - Unified API)             |
 +---------------------------------------------+
 |  Protocol (17 advanced modules)              |
 +---------------------------------------------+
@@ -113,20 +113,20 @@ limit api.call 500 per 3600 seconds
 ```
 
 ### Foundation Layer (7 packages)
-- **@kervyx/types**: Error codes, validation, Result type, type guards
-- **@kervyx/crypto**: Ed25519, SHA-256, JCS canonicalization, hex encoding
-- **@kervyx/ccl**: CCL parser & evaluator (deny-wins, resource globs, rate limits)
-- **@kervyx/core**: Covenant build/sign/verify/chain/serialize (11-check verification)
-- **@kervyx/store**: MemoryStore + FileStore + SQLite (pluggable, queryable, event system)
-- **@kervyx/verifier**: Stateful verification with caching
-- **@kervyx/identity**: Agent identity lifecycle & lineage tracking
+- **@nobulex/types**: Error codes, validation, Result type, type guards
+- **@nobulex/crypto**: Ed25519, SHA-256, JCS canonicalization, hex encoding
+- **@nobulex/ccl**: CCL parser & evaluator (deny-wins, resource globs, rate limits)
+- **@nobulex/core**: Covenant build/sign/verify/chain/serialize (11-check verification)
+- **@nobulex/store**: MemoryStore + FileStore + SQLite (pluggable, queryable, event system)
+- **@nobulex/verifier**: Stateful verification with caching
+- **@nobulex/identity**: Agent identity lifecycle & lineage tracking
 
 ### Enforcement Layer (5 packages)
-- **@kervyx/enforcement**: Real-time constraint evaluation + audit trail
-- **@kervyx/proof**: ZK proof generation (compliance proof)
-- **@kervyx/breach**: Breach detection, attestation, trust graph propagation
-- **@kervyx/reputation**: Trust scoring, decay curves, stake-weighted reputation
-- **@kervyx/mcp**: MCP middleware guard for tool-call enforcement
+- **@nobulex/enforcement**: Real-time constraint evaluation + audit trail
+- **@nobulex/proof**: ZK proof generation (compliance proof)
+- **@nobulex/breach**: Breach detection, attestation, trust graph propagation
+- **@nobulex/reputation**: Trust scoring, decay curves, stake-weighted reputation
+- **@nobulex/mcp**: MCP middleware guard for tool-call enforcement
 
 ### Protocol Layer (17 packages)
 Advanced features for enterprise use:
@@ -137,16 +137,16 @@ Advanced features for enterprise use:
 - Trust derivatives, Legal compliance mapping
 
 ### SDK & Interop (4 packages)
-- **@kervyx/sdk**: Unified KervyxClient API, QuickCovenant builders, event system
-- **@kervyx/discovery**: `.well-known/kervyx/` protocol, key registry, cross-platform negotiation
-- **@kervyx/schema**: JSON Schema (Draft 2020-12) for all document types
-- **@kervyx/mcp-server**: JSON-RPC 2.0 MCP server exposing Kervyx as tools
+- **@nobulex/sdk**: Unified NobulexClient API, QuickCovenant builders, event system
+- **@nobulex/discovery**: `.well-known/nobulex/` protocol, key registry, cross-platform negotiation
+- **@nobulex/schema**: JSON Schema (Draft 2020-12) for all document types
+- **@nobulex/mcp-server**: JSON-RPC 2.0 MCP server exposing Nobulex as tools
 
 ### Platform Integrations (4 packages)
-- **@kervyx/react**: Reactive UI primitives
-- **@kervyx/evm**: Ethereum/blockchain anchoring
-- **@kervyx/cli**: Command-line interface
-- **@kervyx/mcp-server**: MCP server integration
+- **@nobulex/react**: Reactive UI primitives
+- **@nobulex/evm**: Ethereum/blockchain anchoring
+- **@nobulex/cli**: Command-line interface
+- **@nobulex/mcp-server**: MCP server integration
 
 ---
 
@@ -154,12 +154,12 @@ Advanced features for enterprise use:
 
 | Framework | Adapter | Description |
 |-----------|---------|-------------|
-| **Vercel AI SDK** | `withKervyx()` / `withKervyxTools()` | Wraps AI SDK tool calls for enforcement |
-| **LangChain** | `KervyxCallbackHandler` / `withKervyxTool()` | Enforces tool constraints in chains |
-| **Express/Node.js** | `kervyxMiddleware()` | Zero-config HTTP covenant enforcement |
+| **Vercel AI SDK** | `withNobulex()` / `withNobulexTools()` | Wraps AI SDK tool calls for enforcement |
+| **LangChain** | `NobulexCallbackHandler` / `withNobulexTool()` | Enforces tool constraints in chains |
+| **Express/Node.js** | `nobulexMiddleware()` | Zero-config HTTP covenant enforcement |
 | **OpenTelemetry** | `telemetryMiddleware()` | Bring-your-own-tracer integration |
-| **Ethereum/EVM** | `@kervyx/evm` | On-chain covenant registry |
-| **MCP (Claude)** | `@kervyx/mcp-server` | Model Context Protocol integration |
+| **Ethereum/EVM** | `@nobulex/evm` | On-chain covenant registry |
+| **MCP (Claude)** | `@nobulex/mcp-server` | Model Context Protocol integration |
 
 ---
 
@@ -253,14 +253,14 @@ Advanced features for enterprise use:
 
 ### Indirect Competitors
 
-| Category | Players | Kervyx's Advantage |
+| Category | Players | Nobulex's Advantage |
 |----------|---------|-------------------|
-| API Gateways | Kong, Traefik | Kervyx is agent-centric, semantic, cryptographic |
-| Identity/IAM | Okta, Auth0 | Kervyx covers AI agent policy, not just human users |
-| Audit/Logging | Datadog, Splunk | Kervyx is real-time + non-repudiable + immutable |
-| Policy Engines | OPA, Kyverno | Kervyx is AI-specific + cryptographic + decentralized |
-| AI Safety | Constitutional AI, RLHF | Kervyx is deployment-layer; complements model safety |
-| Container Security | Docker, K8s | Kervyx is policy-layer; orthogonal |
+| API Gateways | Kong, Traefik | Nobulex is agent-centric, semantic, cryptographic |
+| Identity/IAM | Okta, Auth0 | Nobulex covers AI agent policy, not just human users |
+| Audit/Logging | Datadog, Splunk | Nobulex is real-time + non-repudiable + immutable |
+| Policy Engines | OPA, Kyverno | Nobulex is AI-specific + cryptographic + decentralized |
+| AI Safety | Constitutional AI, RLHF | Nobulex is deployment-layer; complements model safety |
+| Container Security | Docker, K8s | Nobulex is policy-layer; orthogonal |
 
 ### Competitive Moats
 
@@ -275,7 +275,7 @@ Advanced features for enterprise use:
 
 ## Regulatory Alignment
 
-| Regulation | How Kervyx Helps |
+| Regulation | How Nobulex Helps |
 |------------|-----------------|
 | **EU AI Act** | Verifiable compliance trail (Article 6 requirements) |
 | **US Executive Orders on AI** | Aligns with "algorithmic accountability" requirements |
@@ -360,16 +360,16 @@ Advanced features for enterprise use:
 
 ---
 
-## Why Kervyx Could Be Big
+## Why Nobulex Could Be Big
 
-Kervyx sits at the intersection of four accelerating mega-trends:
+Nobulex sits at the intersection of four accelerating mega-trends:
 
 1. **AI Adoption**: Enterprise AI deployments growing exponentially
 2. **Regulatory Tightening**: Governments moving from principles to requirements
 3. **Zero-Trust Security**: Shift from perimeter defense to continuous verification
 4. **Cryptographic Verification**: Blockchain-era trust primitives going mainstream
 
-The AI governance crisis is coming. As AI agents become more autonomous, the cost of unaccountable AI grows exponentially. Kervyx is the missing infrastructure layer -- the cryptographic accountability primitive that the entire ecosystem will need.
+The AI governance crisis is coming. As AI agents become more autonomous, the cost of unaccountable AI grows exponentially. Nobulex is the missing infrastructure layer -- the cryptographic accountability primitive that the entire ecosystem will need.
 
 ---
 
@@ -389,5 +389,5 @@ The AI governance crisis is coming. As AI agents become more autonomous, the cos
 ---
 
 *Prepared for financial analysis and valuation purposes.*
-*Product: Kervyx SDK by Kervyx Labs, Inc.*
+*Product: Nobulex SDK by Nobulex Labs, Inc.*
 *Date: February 2026*

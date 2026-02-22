@@ -8,7 +8,7 @@ import {
   verify,
   toHex,
   fromHex,
-} from '@kervyx/crypto';
+} from '@nobulex/crypto';
 import {
   buildCovenant,
   verifyCovenant,
@@ -17,8 +17,8 @@ import {
   canonicalForm,
   computeId,
   PROTOCOL_VERSION,
-} from '@kervyx/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@kervyx/core';
+} from '@nobulex/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@nobulex/core';
 import {
   parse,
   evaluate,
@@ -26,11 +26,11 @@ import {
   matchResource,
   checkRateLimit,
   serialize,
-} from '@kervyx/ccl';
-import { createIdentity, evolveIdentity } from '@kervyx/identity';
+} from '@nobulex/ccl';
+import { createIdentity, evolveIdentity } from '@nobulex/identity';
 
 /**
- * Canonical Test Vectors for the Kervyx Protocol.
+ * Canonical Test Vectors for the Nobulex Protocol.
  *
  * These vectors enable cross-implementation verification.
  * Any conformant implementation in any language MUST produce
@@ -120,7 +120,7 @@ describe('Canonical Test Vector Generation', () => {
 
     const messages = [
       'hello world',
-      'The Kervyx Protocol',
+      'The Nobulex Protocol',
       JSON.stringify({ action: 'read', resource: '/data' }),
     ];
 
@@ -794,9 +794,9 @@ describe('Canonical Test Vector Generation', () => {
       _meta: {
         generated_at: '2026-01-01T00:00:00.000Z',
         protocol_version: PROTOCOL_VERSION,
-        generator: '@kervyx/test-vectors',
+        generator: '@nobulex/test-vectors',
         description:
-          'Canonical test vectors for the Kervyx protocol. Any conformant implementation MUST produce identical results for these inputs.',
+          'Canonical test vectors for the Nobulex protocol. Any conformant implementation MUST produce identical results for these inputs.',
         total_vectors: vectors.length,
         categories: Object.keys(grouped),
         category_counts: Object.fromEntries(

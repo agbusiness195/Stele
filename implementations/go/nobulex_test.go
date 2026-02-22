@@ -1,4 +1,4 @@
-package kervyx
+package nobulex
 
 import (
 	"crypto/ed25519"
@@ -57,7 +57,7 @@ func TestSignVerifyRoundTrip(t *testing.T) {
 		t.Fatalf("GenerateKeyPair() error: %v", err)
 	}
 
-	message := []byte("hello kervyx protocol")
+	message := []byte("hello nobulex protocol")
 	sig, err := Sign(message, kp.PrivateKey)
 	if err != nil {
 		t.Fatalf("Sign() error: %v", err)

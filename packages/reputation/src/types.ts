@@ -1,4 +1,4 @@
-import type { HashHex } from '@kervyx/crypto';
+import type { HashHex } from '@nobulex/crypto';
 
 export interface ExecutionReceipt {
   id: HashHex;
@@ -6,7 +6,7 @@ export interface ExecutionReceipt {
   agentIdentityHash: HashHex;
   principalPublicKey: string;
   outcome: 'fulfilled' | 'partial' | 'failed' | 'breached';
-  breachSeverity?: import('@kervyx/ccl').Severity;
+  breachSeverity?: import('@nobulex/ccl').Severity;
   proofHash: HashHex;
   durationMs: number;
   completedAt: string;
@@ -72,7 +72,7 @@ export interface Endorsement {
 export interface ScoringConfig {
   recencyDecay: number;
   recencyPeriod: number;
-  breachPenalty: Record<import('@kervyx/ccl').Severity, number>;
+  breachPenalty: Record<import('@nobulex/ccl').Severity, number>;
   minimumExecutions: number;
   endorsementWeight: number;
 }

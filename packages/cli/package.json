@@ -1,7 +1,7 @@
 {
-  "name": "@kervyx/cli",
+  "name": "@nobulex/cli",
   "version": "2.0.0",
-  "description": "Command-line interface for the Kervyx covenant framework",
+  "description": "Command-line interface for the Nobulex covenant framework",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "kervyx": "./dist/index.js"
+    "nobulex": "./dist/index.js"
   },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
@@ -29,15 +29,15 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@kervyx/crypto": "2.0.0",
-    "@kervyx/ccl": "2.0.0",
-    "@kervyx/core": "2.0.0",
-    "@kervyx/identity": "2.0.0",
-    "@kervyx/enforcement": "2.0.0",
-    "@kervyx/proof": "2.0.0",
-    "@kervyx/reputation": "2.0.0",
-    "@kervyx/breach": "2.0.0",
-    "@kervyx/mcp": "2.0.0"
+    "@nobulex/crypto": "2.0.0",
+    "@nobulex/ccl": "2.0.0",
+    "@nobulex/core": "2.0.0",
+    "@nobulex/identity": "2.0.0",
+    "@nobulex/enforcement": "2.0.0",
+    "@nobulex/proof": "2.0.0",
+    "@nobulex/reputation": "2.0.0",
+    "@nobulex/breach": "2.0.0",
+    "@nobulex/mcp": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -48,16 +48,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://kervyx.dev",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
-  "author": "Kervyx Labs, Inc.",
+  "author": "Nobulex Labs, Inc.",
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "cli",

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, sha256String, toHex } from '@kervyx/crypto';
-import type { KeyPair, HashHex } from '@kervyx/crypto';
+import { generateKeyPair, sha256String, toHex } from '@nobulex/crypto';
+import type { KeyPair, HashHex } from '@nobulex/crypto';
 import {
   createReceipt,
   verifyReceipt,

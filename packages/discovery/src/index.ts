@@ -1,7 +1,7 @@
 /**
- * @kervyx/discovery — Cross-platform discovery protocol for Kervyx.
+ * @nobulex/discovery — Cross-platform discovery protocol for Nobulex.
  *
- * Implements the `.well-known/kervyx/` endpoint specification,
+ * Implements the `.well-known/nobulex/` endpoint specification,
  * enabling cross-platform agent verification, key discovery,
  * and protocol negotiation.
  *
@@ -30,7 +30,7 @@ export {
   buildKeySet,
   WELL_KNOWN_PATH,
   CONFIGURATION_PATH,
-  KERVYX_MEDIA_TYPE,
+  NOBULEX_MEDIA_TYPE,
   MAX_DOCUMENT_AGE_MS,
 } from './well-known.js';
 export type { BuildDiscoveryDocumentOptions, DiscoveryValidationResult } from './well-known.js';

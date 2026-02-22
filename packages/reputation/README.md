@@ -1,11 +1,11 @@
-# @kervyx/reputation
+# @nobulex/reputation
 
-Reputation scoring, stake management, endorsements, and receipt-chain verification for Kervyx covenant agents.
+Reputation scoring, stake management, endorsements, and receipt-chain verification for Nobulex covenant agents.
 
 ## Installation
 
 ```bash
-npm install @kervyx/reputation
+npm install @nobulex/reputation
 ```
 
 ## Key APIs
@@ -40,8 +40,8 @@ npm install @kervyx/reputation
 ## Usage
 
 ```typescript
-import { createReceipt, computeReputationScore, createStake } from '@kervyx/reputation';
-import { generateKeyPair } from '@kervyx/crypto';
+import { createReceipt, computeReputationScore, createStake } from '@nobulex/reputation';
+import { generateKeyPair } from '@nobulex/crypto';
 
 const keys = await generateKeyPair();
 
@@ -69,4 +69,4 @@ const stake = await createStake(agentIdentityHash, covenantId, 0.5, keys);
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

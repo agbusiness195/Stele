@@ -1,12 +1,12 @@
 {
-  "name": "@kervyx/proof",
+  "name": "@nobulex/proof",
   "version": "2.0.0",
-  "description": "Proof generation and verification for the Kervyx covenant framework",
+  "description": "Proof generation and verification for the Nobulex covenant framework",
   "license": "MIT",
-  "author": "Kervyx Labs, Inc.",
-  "homepage": "https://kervyx.dev",
+  "author": "Nobulex Labs, Inc.",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,11 +32,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/proof"
   },
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "proof",
@@ -52,8 +52,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@kervyx/ccl": "2.0.0",
-    "@kervyx/crypto": "2.0.0",
-    "@kervyx/types": "2.0.0"
+    "@nobulex/ccl": "2.0.0",
+    "@nobulex/crypto": "2.0.0",
+    "@nobulex/types": "2.0.0"
   }
 }

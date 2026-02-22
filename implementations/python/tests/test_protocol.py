@@ -1,5 +1,5 @@
 """
-Comprehensive test suite for the Kervyx protocol Python implementation.
+Comprehensive test suite for the Nobulex protocol Python implementation.
 
 Covers: crypto, CCL, covenant, identity, and store modules.
 """
@@ -12,7 +12,7 @@ import time
 
 import pytest
 
-from kervyx import crypto, ccl, covenant, identity, store
+from nobulex import crypto, ccl, covenant, identity, store
 
 
 # ==========================================================================
@@ -64,7 +64,7 @@ class TestSignAndVerify:
 
     def test_sign_and_verify_round_trip(self):
         kp = crypto.generate_key_pair()
-        message = b"hello kervyx"
+        message = b"hello nobulex"
         sig = crypto.sign(message, kp["private_key"])
         assert len(sig) == 64
         assert crypto.verify(message, sig, kp["public_key"]) is True

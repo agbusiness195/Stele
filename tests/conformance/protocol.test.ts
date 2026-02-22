@@ -1,5 +1,5 @@
 /**
- * Kervyx Protocol Conformance Test Suite
+ * Nobulex Protocol Conformance Test Suite
  *
  * These tests verify that the protocol implementation conforms to its specification.
  * Each test is a real assertion that exercises the actual implementation, not a stub.
@@ -23,7 +23,7 @@ import {
   timestamp,
   base64urlEncode,
   base64urlDecode,
-} from '@kervyx/crypto';
+} from '@nobulex/crypto';
 
 import {
   buildCovenant,
@@ -40,9 +40,9 @@ import {
   resolveChain,
   computeEffectiveConstraints,
   validateChainNarrowing,
-} from '@kervyx/core';
+} from '@nobulex/core';
 
-import type { CovenantDocument } from '@kervyx/core';
+import type { CovenantDocument } from '@nobulex/core';
 
 import {
   parse,
@@ -52,7 +52,7 @@ import {
   serialize,
   merge,
   checkRateLimit,
-} from '@kervyx/ccl';
+} from '@nobulex/ccl';
 
 import {
   createIdentity,
@@ -61,7 +61,7 @@ import {
   serializeIdentity,
   deserializeIdentity,
   computeIdentityHash,
-} from '@kervyx/identity';
+} from '@nobulex/identity';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -89,7 +89,7 @@ async function makeTestCovenant(constraints = "permit read on '/data/**'") {
 
 // ─── Test Suite ───────────────────────────────────────────────────────────────
 
-describe('Kervyx Protocol Conformance', () => {
+describe('Nobulex Protocol Conformance', () => {
 
   // ── Covenant Document Specification ─────────────────────────────────────────
 
@@ -922,7 +922,7 @@ describe('Kervyx Protocol Conformance', () => {
     it('SPEC-130: Public key is deterministically derived from private key', async () => {
       const kp1 = await generateKeyPair();
       // Import the same private key to get the same public key
-      const { keyPairFromPrivateKey } = await import('@kervyx/crypto');
+      const { keyPairFromPrivateKey } = await import('@nobulex/crypto');
       const kp2 = await keyPairFromPrivateKey(kp1.privateKey);
       expect(kp2.publicKeyHex).toBe(kp1.publicKeyHex);
     });
@@ -1439,7 +1439,7 @@ describe('Kervyx Protocol Conformance', () => {
 
     it('SPEC-400: Re-signing produces a new valid document with different ID', async () => {
       const { doc, issuerKp } = await makeTestCovenant();
-      const { resignCovenant } = await import('@kervyx/core');
+      const { resignCovenant } = await import('@nobulex/core');
       const resigned = await resignCovenant(doc, issuerKp.privateKey);
 
       // New document has a different ID due to new nonce

@@ -7,10 +7,10 @@
  * bound. If a test fails, it means something has regressed badly.
  */
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, sign, verify, sha256 } from '@kervyx/crypto';
-import { parse, evaluate } from '@kervyx/ccl';
-import { buildCovenant, verifyCovenant } from '@kervyx/core';
-import { MemoryStore } from '@kervyx/store';
+import { generateKeyPair, sign, verify, sha256 } from '@nobulex/crypto';
+import { parse, evaluate } from '@nobulex/ccl';
+import { buildCovenant, verifyCovenant } from '@nobulex/core';
+import { MemoryStore } from '@nobulex/store';
 
 // ---------------------------------------------------------------------------
 // Helpers

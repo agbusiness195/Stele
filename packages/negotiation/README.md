@@ -1,11 +1,11 @@
-# @kervyx/negotiation
+# @nobulex/negotiation
 
 Multi-party covenant negotiation with Nash bargaining, Zeuthen strategies, Pareto frontier analysis, and concession protocols.
 
 ## Installation
 
 ```bash
-npm install @kervyx/negotiation
+npm install @nobulex/negotiation
 ```
 
 ## Key APIs
@@ -27,8 +27,8 @@ npm install @kervyx/negotiation
 ## Usage
 
 ```typescript
-import { initiate, propose, evaluate, agree } from '@kervyx/negotiation';
-import type { NegotiationPolicy, Proposal } from '@kervyx/negotiation';
+import { initiate, propose, evaluate, agree } from '@nobulex/negotiation';
+import type { NegotiationPolicy, Proposal } from '@nobulex/negotiation';
 
 const policy: NegotiationPolicy = {
   requiredConstraints: ['deny:exfiltrate-data'],
@@ -61,4 +61,4 @@ if (decision === 'accept') {
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

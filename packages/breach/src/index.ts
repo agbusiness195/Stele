@@ -5,9 +5,9 @@ export type {
   BreachEvent,
 } from './types.js';
 
-import type { KeyPair, HashHex } from '@kervyx/crypto';
-import type { Severity } from '@kervyx/ccl';
-import { KervyxError, KervyxErrorCode } from '@kervyx/types';
+import type { KeyPair, HashHex } from '@nobulex/crypto';
+import type { Severity } from '@nobulex/ccl';
+import { NobulexError, NobulexErrorCode } from '@nobulex/types';
 import {
   sha256Object,
   canonicalizeJson,
@@ -16,7 +16,7 @@ import {
   toHex,
   fromHex,
   timestamp,
-} from '@kervyx/crypto';
+} from '@nobulex/crypto';
 
 import type {
   BreachAttestation,
@@ -533,15 +533,15 @@ export class ExponentialDegradation {
 
   constructor(config: ExponentialDegradationConfig) {
     if (config.baseLoss <= 0 || config.baseLoss > 1) {
-      throw new KervyxError(
+      throw new NobulexError(
         'ExponentialDegradation baseLoss must be in (0, 1]',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (config.lambda <= 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'ExponentialDegradation lambda must be > 0',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.baseLoss = config.baseLoss;
@@ -555,9 +555,9 @@ export class ExponentialDegradation {
    */
   computeLoss(hopDistance: number): number {
     if (hopDistance < 0 || !Number.isFinite(hopDistance)) {
-      throw new KervyxError(
+      throw new NobulexError(
         'hopDistance must be a non-negative finite number',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     return this.baseLoss * Math.exp(-this.lambda * hopDistance);
@@ -571,9 +571,9 @@ export class ExponentialDegradation {
    */
   degrade(currentTrust: number, hopDistance: number): number {
     if (currentTrust < 0 || currentTrust > 1) {
-      throw new KervyxError(
+      throw new NobulexError(
         'currentTrust must be in [0, 1]',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     const loss = this.computeLoss(hopDistance);
@@ -586,9 +586,9 @@ export class ExponentialDegradation {
    */
   profile(maxHops: number): number[] {
     if (maxHops < 0 || !Number.isInteger(maxHops)) {
-      throw new KervyxError(
+      throw new NobulexError(
         'maxHops must be a non-negative integer',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     const result: number[] = [];
@@ -606,9 +606,9 @@ export class ExponentialDegradation {
    */
   effectiveRadius(threshold: number): number {
     if (threshold <= 0 || threshold > 1) {
-      throw new KervyxError(
+      throw new NobulexError(
         'threshold must be in (0, 1]',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.baseLoss < threshold) {
@@ -680,9 +680,9 @@ export class BreachStateMachine {
 
   constructor(breachId: string, config?: Partial<BreachStateMachineConfig>) {
     if (!breachId || breachId.trim().length === 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'breachId must be a non-empty string',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.breachId = breachId;
@@ -726,20 +726,20 @@ export class BreachStateMachine {
    * @param to - Target state.
    * @param actor - Identifier of the entity performing the transition.
    * @param evidence - Evidence supporting the transition.
-   * @throws KervyxError if the transition is invalid.
+   * @throws NobulexError if the transition is invalid.
    */
   transition(to: BreachState, actor: string, evidence: BreachEvidence[] = []): void {
     const allowedTargets = VALID_TRANSITIONS[this._state];
     if (!allowedTargets.includes(to)) {
-      throw new KervyxError(
+      throw new NobulexError(
         `Invalid breach state transition: ${this._state} -> ${to}. Allowed: [${allowedTargets.join(', ')}]`,
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!actor || actor.trim().length === 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'actor must be a non-empty string',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -832,21 +832,21 @@ export class RecoveryModel {
 
   constructor(config: RecoveryModelConfig) {
     if (config.maxRecovery <= 0 || config.maxRecovery > 1) {
-      throw new KervyxError(
+      throw new NobulexError(
         'maxRecovery must be in (0, 1]',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (config.steepness <= 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'steepness must be > 0',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (config.midpointMs <= 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'midpointMs must be > 0',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.config = { ...config };
@@ -859,9 +859,9 @@ export class RecoveryModel {
    */
   recoveryFraction(elapsedMs: number): number {
     if (elapsedMs < 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'elapsedMs must be non-negative',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     const { maxRecovery, steepness, midpointMs } = this.config;
@@ -886,21 +886,21 @@ export class RecoveryModel {
     elapsedMs: number,
   ): number {
     if (preBreachTrust < 0 || preBreachTrust > 1) {
-      throw new KervyxError(
+      throw new NobulexError(
         'preBreachTrust must be in [0, 1]',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (historicalReliability < 0 || historicalReliability > 1) {
-      throw new KervyxError(
+      throw new NobulexError(
         'historicalReliability must be in [0, 1]',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (elapsedMs < 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'elapsedMs must be non-negative',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1034,21 +1034,21 @@ export class RepeatOffenderDetector {
   constructor(config?: Partial<RepeatOffenderConfig>) {
     this.config = { ...DEFAULT_OFFENDER_CONFIG, ...config };
     if (this.config.warningThreshold <= 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'warningThreshold must be > 0',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.restrictionThreshold <= this.config.warningThreshold) {
-      throw new KervyxError(
+      throw new NobulexError(
         'restrictionThreshold must be > warningThreshold',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.revocationThreshold <= this.config.restrictionThreshold) {
-      throw new KervyxError(
+      throw new NobulexError(
         'revocationThreshold must be > restrictionThreshold',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
   }
@@ -1058,9 +1058,9 @@ export class RepeatOffenderDetector {
    */
   recordBreach(agentId: string, record: BreachRecord): void {
     if (!agentId || agentId.trim().length === 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'agentId must be a non-empty string',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     let records = this.history.get(agentId);

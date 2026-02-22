@@ -1,11 +1,11 @@
-# @kervyx/derivatives
+# @nobulex/derivatives
 
 Covenant derivative instruments and transformation calculus. Provides risk assessment, insurance policy pricing, trust futures, Black-Scholes option pricing for behavioral contracts, Value at Risk (VaR), and hedge ratio computation.
 
 ## Installation
 
 ```bash
-npm install @kervyx/derivatives
+npm install @nobulex/derivatives
 ```
 
 ## Key APIs
@@ -31,7 +31,7 @@ import {
   settleFuture,
   blackScholesPrice,
   valueAtRisk,
-} from '@kervyx/derivatives';
+} from '@nobulex/derivatives';
 
 // Assess agent risk from reputation data
 const risk = assessRisk('agent-1', {
@@ -84,4 +84,4 @@ console.log(`VaR: ${var95.valueAtRisk}`);
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

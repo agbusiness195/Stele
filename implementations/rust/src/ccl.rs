@@ -1,7 +1,7 @@
 //! Covenant Constraint Language (CCL) parser and evaluator.
 //!
 //! CCL is a domain-specific language for expressing access control policies
-//! in Kervyx covenants. It supports four statement types:
+//! in Nobulex covenants. It supports four statement types:
 //!
 //! - `permit <action> on <resource>` -- allow access
 //! - `deny <action> on <resource>` -- deny access
@@ -11,7 +11,7 @@
 //! Evaluation semantics: default deny, deny wins at equal specificity,
 //! most specific matching rule takes precedence.
 
-use crate::KervyxError;
+use crate::NobulexError;
 use std::collections::HashMap;
 
 // ---------------------------------------------------------------------------
@@ -552,11 +552,11 @@ impl Parser {
         self.current().token_type == *tt
     }
 
-    fn expect(&mut self, tt: &TokenType, msg: &str) -> Result<Token, KervyxError> {
+    fn expect(&mut self, tt: &TokenType, msg: &str) -> Result<Token, NobulexError> {
         if self.current().token_type == *tt {
             Ok(self.advance())
         } else {
-            Err(KervyxError::CCLParseError(format!(
+            Err(NobulexError::CCLParseError(format!(
                 "{}, but got '{}' at line {} column {}",
                 msg,
                 self.current().value,
@@ -579,7 +579,7 @@ impl Parser {
         }
     }
 
-    fn parse(&mut self) -> Result<CCLDocument, KervyxError> {
+    fn parse(&mut self) -> Result<CCLDocument, NobulexError> {
         let mut statements = Vec::new();
 
         self.skip_newlines_and_comments();
@@ -603,12 +603,12 @@ impl Parser {
         Ok(build_document(statements))
     }
 
-    fn parse_statement(&mut self) -> Result<Statement, KervyxError> {
+    fn parse_statement(&mut self) -> Result<Statement, NobulexError> {
         match self.current().token_type {
             TokenType::Permit | TokenType::Deny => self.parse_permit_deny(),
             TokenType::Require => self.parse_require(),
             TokenType::Limit => self.parse_limit(),
-            _ => Err(KervyxError::CCLParseError(format!(
+            _ => Err(NobulexError::CCLParseError(format!(
                 "Expected statement keyword (permit, deny, require, or limit), got '{}' at line {} column {}",
                 self.current().value,
                 self.current().line,
@@ -617,7 +617,7 @@ impl Parser {
         }
     }
 
-    fn parse_permit_deny(&mut self) -> Result<Statement, KervyxError> {
+    fn parse_permit_deny(&mut self) -> Result<Statement, NobulexError> {
         let keyword = self.advance();
         let stmt_type = if keyword.token_type == TokenType::Permit {
             StatementType::Permit
@@ -657,7 +657,7 @@ impl Parser {
         })
     }
 
-    fn parse_require(&mut self) -> Result<Statement, KervyxError> {
+    fn parse_require(&mut self) -> Result<Statement, NobulexError> {
         self.advance(); // consume 'require'
         let action = self.parse_action()?;
         self.expect(&TokenType::On, "Expected 'on' after action")?;
@@ -689,7 +689,7 @@ impl Parser {
         })
     }
 
-    fn parse_limit(&mut self) -> Result<Statement, KervyxError> {
+    fn parse_limit(&mut self) -> Result<Statement, NobulexError> {
         self.advance(); // consume 'limit'
         let action = self.parse_action()?;
 
@@ -698,7 +698,7 @@ impl Parser {
         let count: f64 = count_tok
             .value
             .parse()
-            .map_err(|_| KervyxError::CCLParseError(format!("Invalid count number: {}", count_tok.value)))?;
+            .map_err(|_| NobulexError::CCLParseError(format!("Invalid count number: {}", count_tok.value)))?;
 
         self.expect(&TokenType::Per, "Expected 'per' in limit statement")?;
 
@@ -707,7 +707,7 @@ impl Parser {
         let raw_period: f64 = period_tok
             .value
             .parse()
-            .map_err(|_| KervyxError::CCLParseError(format!("Invalid period number: {}", period_tok.value)))?;
+            .map_err(|_| NobulexError::CCLParseError(format!("Invalid period number: {}", period_tok.value)))?;
 
         // Parse time unit
         let unit_tok = self.expect(&TokenType::TimeUnit, "Expected time unit (seconds, minutes, hours, days)")?;
@@ -734,7 +734,7 @@ impl Parser {
         })
     }
 
-    fn parse_action(&mut self) -> Result<String, KervyxError> {
+    fn parse_action(&mut self) -> Result<String, NobulexError> {
         let mut parts = Vec::new();
 
         if self.check(&TokenType::DoubleWildcard) {
@@ -748,7 +748,7 @@ impl Parser {
         } else if self.check(&TokenType::Identifier) {
             parts.push(self.advance().value);
         } else {
-            return Err(KervyxError::CCLParseError(format!(
+            return Err(NobulexError::CCLParseError(format!(
                 "Expected action identifier, got '{}' at line {} column {}",
                 self.current().value,
                 self.current().line,
@@ -767,7 +767,7 @@ impl Parser {
                 parts.push("**".to_string());
                 self.advance();
             } else {
-                return Err(KervyxError::CCLParseError(format!(
+                return Err(NobulexError::CCLParseError(format!(
                     "Expected identifier or wildcard after dot, got '{}' at line {} column {}",
                     self.current().value,
                     self.current().line,
@@ -779,7 +779,7 @@ impl Parser {
         Ok(parts.join("."))
     }
 
-    fn parse_resource(&mut self) -> Result<String, KervyxError> {
+    fn parse_resource(&mut self) -> Result<String, NobulexError> {
         match self.current().token_type {
             TokenType::StringLit => Ok(self.advance().value),
             TokenType::Wildcard => {
@@ -791,7 +791,7 @@ impl Parser {
                 Ok("**".to_string())
             }
             TokenType::Identifier => Ok(self.advance().value),
-            _ => Err(KervyxError::CCLParseError(format!(
+            _ => Err(NobulexError::CCLParseError(format!(
                 "Expected resource (string or pattern), got '{}' at line {} column {}",
                 self.current().value,
                 self.current().line,
@@ -800,13 +800,13 @@ impl Parser {
         }
     }
 
-    fn parse_condition(&mut self) -> Result<Condition, KervyxError> {
+    fn parse_condition(&mut self) -> Result<Condition, NobulexError> {
         // Parse the field
         let field = self.parse_field()?;
 
         // Parse the operator
         if self.current().token_type != TokenType::Operator {
-            return Err(KervyxError::CCLParseError(format!(
+            return Err(NobulexError::CCLParseError(format!(
                 "Expected operator after field '{}', got '{}' at line {} column {}",
                 field,
                 self.current().value,
@@ -826,9 +826,9 @@ impl Parser {
         })
     }
 
-    fn parse_field(&mut self) -> Result<String, KervyxError> {
+    fn parse_field(&mut self) -> Result<String, NobulexError> {
         if self.current().token_type != TokenType::Identifier {
-            return Err(KervyxError::CCLParseError(format!(
+            return Err(NobulexError::CCLParseError(format!(
                 "Expected field identifier, got '{}' at line {} column {}",
                 self.current().value,
                 self.current().line,
@@ -841,7 +841,7 @@ impl Parser {
         while self.check(&TokenType::Dot) {
             self.advance();
             if self.current().token_type != TokenType::Identifier {
-                return Err(KervyxError::CCLParseError(format!(
+                return Err(NobulexError::CCLParseError(format!(
                     "Expected identifier after dot in field, got '{}' at line {} column {}",
                     self.current().value,
                     self.current().line,
@@ -855,12 +855,12 @@ impl Parser {
         Ok(field)
     }
 
-    fn parse_value(&mut self) -> Result<String, KervyxError> {
+    fn parse_value(&mut self) -> Result<String, NobulexError> {
         match self.current().token_type {
             TokenType::StringLit => Ok(self.advance().value),
             TokenType::Number => Ok(self.advance().value),
             TokenType::Identifier => Ok(self.advance().value),
-            _ => Err(KervyxError::CCLParseError(format!(
+            _ => Err(NobulexError::CCLParseError(format!(
                 "Expected value, got '{}' at line {} column {}",
                 self.current().value,
                 self.current().line,
@@ -911,15 +911,15 @@ fn build_document(statements: Vec<Statement>) -> CCLDocument {
 /// Parse CCL source text into a `CCLDocument`.
 ///
 /// # Errors
-/// Returns `KervyxError::CCLParseError` if the source contains syntax errors.
+/// Returns `NobulexError::CCLParseError` if the source contains syntax errors.
 ///
 /// # Example
 /// ```
-/// use kervyx::ccl::parse;
+/// use nobulex::ccl::parse;
 /// let doc = parse("permit read on '/data/**'").unwrap();
 /// assert_eq!(doc.permits.len(), 1);
 /// ```
-pub fn parse(source: &str) -> Result<CCLDocument, KervyxError> {
+pub fn parse(source: &str) -> Result<CCLDocument, NobulexError> {
     let tokens = tokenize(source);
     let mut parser = Parser::new(tokens);
     parser.parse()

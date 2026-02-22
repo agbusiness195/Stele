@@ -1,13 +1,13 @@
 /**
- * @kervyx/discovery/client — Cross-platform discovery client.
+ * @nobulex/discovery/client — Cross-platform discovery client.
  *
  * Fetches, validates, and caches discovery documents from remote platforms.
  * This is what Agent A uses when it needs to verify Agent B's covenant
  * on a different platform.
  */
 
-import { generateNonce, timestamp, toHex } from '@kervyx/crypto';
-import type { KeyPair } from '@kervyx/crypto';
+import { generateNonce, timestamp, toHex } from '@nobulex/crypto';
+import type { KeyPair } from '@nobulex/crypto';
 
 import type {
   DiscoveryDocument,
@@ -39,9 +39,9 @@ export interface DiscoveryClientOptions {
 }
 
 /**
- * Client for the Kervyx cross-platform discovery protocol.
+ * Client for the Nobulex cross-platform discovery protocol.
  *
- * Discovers, caches, and interacts with remote Kervyx platform endpoints.
+ * Discovers, caches, and interacts with remote Nobulex platform endpoints.
  * This is the primary interface for cross-platform agent verification.
  *
  * @example
@@ -80,9 +80,9 @@ export class DiscoveryClient {
   }
 
   /**
-   * Discover a remote platform's Kervyx configuration.
+   * Discover a remote platform's Nobulex configuration.
    *
-   * Fetches the discovery document from `{platformUrl}/.well-known/kervyx/configuration`,
+   * Fetches the discovery document from `{platformUrl}/.well-known/nobulex/configuration`,
    * validates its structure, and optionally verifies its signature.
    *
    * @param platformUrl - The platform's base URL (e.g., "https://platform.example").
@@ -235,7 +235,7 @@ export class DiscoveryClient {
     const response = await this._fetchFn(discovery.verification_endpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/kervyx+json',
+        'Content-Type': 'application/nobulex+json',
         ...opts.headers,
       },
       body: JSON.stringify(request),
@@ -322,7 +322,7 @@ export class DiscoveryClient {
   private async _fetch(url: string, opts: FetchOptions): Promise<Response> {
     const response = await this._fetchFn(url, {
       headers: {
-        Accept: 'application/kervyx+json, application/json',
+        Accept: 'application/nobulex+json, application/json',
         ...opts.headers,
       },
       signal: opts.timeout ? AbortSignal.timeout(opts.timeout) : undefined,

@@ -1,5 +1,5 @@
 /**
- * @kervyx/evm — EVM anchoring utilities for on-chain covenant verification.
+ * @nobulex/evm — EVM anchoring utilities for on-chain covenant verification.
  *
  * Provides ABI encoding/decoding, contract interface definitions, and
  * anchor/verify helpers for EVM-compatible blockchains. No ethers.js dependency.
@@ -8,7 +8,7 @@
  */
 
 import { keccak_256 } from '@noble/hashes/sha3';
-import { sha256String } from '@kervyx/crypto';
+import { sha256String } from '@nobulex/crypto';
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
@@ -308,10 +308,10 @@ export function computeAnchorHash(anchor: CovenantAnchor): string {
 // ─── Contract ABI Definition ────────────────────────────────────────────────────
 
 /**
- * JSON ABI array for the Kervyx on-chain registry contract.
+ * JSON ABI array for the Nobulex on-chain registry contract.
  * Defines the methods: anchor(), verify(), and getAnchor().
  */
-export const KERVYX_REGISTRY_ABI = [
+export const NOBULEX_REGISTRY_ABI = [
   {
     name: 'anchor',
     type: 'function',
@@ -347,9 +347,9 @@ export const KERVYX_REGISTRY_ABI = [
 ] as const;
 
 /**
- * TypeScript interface matching the Kervyx on-chain registry contract ABI.
+ * TypeScript interface matching the Nobulex on-chain registry contract ABI.
  */
-export interface KervyxRegistryInterface {
+export interface NobulexRegistryInterface {
   /** Anchor a covenant on-chain. */
   anchor(
     covenantId: string,
@@ -478,7 +478,7 @@ export interface TransactionReceipt {
  *
  * @example
  * ```typescript
- * import { EVMClient } from '@kervyx/evm';
+ * import { EVMClient } from '@nobulex/evm';
  *
  * // Plug in any provider (ethers, viem, raw fetch, etc.)
  * const client = new EVMClient(myProvider, '0xRegistryAddress');

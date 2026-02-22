@@ -1,11 +1,11 @@
 /**
- * Property-based / fuzz tests for the Kervyx SDK.
+ * Property-based / fuzz tests for the Nobulex SDK.
  *
  * Uses a hand-rolled `property()` helper that runs a generator+predicate
  * function N times with random inputs and asserts the predicate holds
  * for every generated value.  No external dependencies beyond vitest.
  *
- * Covers invariants across @kervyx/crypto, @kervyx/ccl, @kervyx/core, @kervyx/store.
+ * Covers invariants across @nobulex/crypto, @nobulex/ccl, @nobulex/core, @nobulex/store.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -21,9 +21,9 @@ import {
   base64urlEncode,
   base64urlDecode,
   generateNonce,
-} from '@kervyx/crypto';
+} from '@nobulex/crypto';
 
-import { parse, evaluate, merge, serialize } from '@kervyx/ccl';
+import { parse, evaluate, merge, serialize } from '@nobulex/ccl';
 
 import {
   buildCovenant,
@@ -32,9 +32,9 @@ import {
   canonicalForm,
   serializeCovenant,
   deserializeCovenant,
-} from '@kervyx/core';
+} from '@nobulex/core';
 
-import { MemoryStore } from '@kervyx/store';
+import { MemoryStore } from '@nobulex/store';
 
 // ---------------------------------------------------------------------------
 // Property-testing helper

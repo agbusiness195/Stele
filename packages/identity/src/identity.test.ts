@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair } from '@kervyx/crypto';
-import type { KeyPair } from '@kervyx/crypto';
+import { generateKeyPair } from '@nobulex/crypto';
+import type { KeyPair } from '@nobulex/crypto';
 
 import {
   createIdentity,
@@ -77,7 +77,7 @@ async function createTestIdentity(
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('@kervyx/identity', () => {
+describe('@nobulex/identity', () => {
   // ── createIdentity ─────────────────────────────────────────────────────
 
   describe('createIdentity', () => {

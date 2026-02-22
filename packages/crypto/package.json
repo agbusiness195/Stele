@@ -1,7 +1,7 @@
 {
-  "name": "@kervyx/crypto",
+  "name": "@nobulex/crypto",
   "version": "2.0.0",
-  "description": "Cryptographic primitives for the Kervyx covenant framework",
+  "description": "Cryptographic primitives for the Nobulex covenant framework",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,16 +27,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/crypto"
   },
-  "homepage": "https://kervyx.dev",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
-  "author": "Kervyx Labs, Inc.",
+  "author": "Nobulex Labs, Inc.",
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "cryptography",
@@ -55,6 +55,6 @@
   "dependencies": {
     "@noble/ed25519": "^2.1.0",
     "@noble/hashes": "^1.4.0",
-    "@kervyx/types": "2.0.0"
+    "@nobulex/types": "2.0.0"
   }
 }

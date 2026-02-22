@@ -1,5 +1,5 @@
 /**
- * OpenTelemetry-compatible instrumentation for the Kervyx SDK.
+ * OpenTelemetry-compatible instrumentation for the Nobulex SDK.
  *
  * Follows the "bring your own tracer" pattern: all OTel interfaces are
  * defined inline so consumers can plug in their own OTel SDK without
@@ -8,11 +8,11 @@
  * @packageDocumentation
  */
 
-import type { KervyxMiddleware, MiddlewareContext, MiddlewareResult } from './middleware.js';
+import type { NobulexMiddleware, MiddlewareContext, MiddlewareResult } from './middleware.js';
 import type {
-  KervyxEventType,
-  KervyxEventMap,
-  KervyxEvent,
+  NobulexEventType,
+  NobulexEventMap,
+  NobulexEvent,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   EvaluationCompletedEvent,
@@ -102,30 +102,30 @@ export interface TelemetryMiddlewareOptions {
 }
 
 /**
- * Create a KervyxMiddleware that wraps each operation with an OTel span.
+ * Create a NobulexMiddleware that wraps each operation with an OTel span.
  *
  * For every operation that passes through the middleware pipeline, this
  * middleware:
- * - Creates a span named after the operation (e.g. `kervyx.createCovenant`)
- * - Sets attributes: `kervyx.operation`, and any result-specific attributes
- *   such as `kervyx.covenant.id`, `kervyx.evaluation.permitted`
- * - Records duration via `kervyx.duration_ms`
+ * - Creates a span named after the operation (e.g. `nobulex.createCovenant`)
+ * - Sets attributes: `nobulex.operation`, and any result-specific attributes
+ *   such as `nobulex.covenant.id`, `nobulex.evaluation.permitted`
+ * - Records duration via `nobulex.duration_ms`
  * - Sets the span status to OK or ERROR
  * - Records exceptions on failure
  *
  * @param options - Optional configuration with a custom tracer.
- * @returns A KervyxMiddleware instance.
+ * @returns A NobulexMiddleware instance.
  */
-export function telemetryMiddleware(options?: TelemetryMiddlewareOptions): KervyxMiddleware {
+export function telemetryMiddleware(options?: TelemetryMiddlewareOptions): NobulexMiddleware {
   const tracer = options?.tracer ?? new NoopTracer();
 
   return {
     name: 'telemetry',
 
     async before(ctx: MiddlewareContext): Promise<MiddlewareResult> {
-      const span = tracer.startSpan(`kervyx.${ctx.operation}`, {
+      const span = tracer.startSpan(`nobulex.${ctx.operation}`, {
         attributes: {
-          'kervyx.operation': ctx.operation,
+          'nobulex.operation': ctx.operation,
         },
       });
       ctx.metadata._telemetrySpan = span;
@@ -138,19 +138,19 @@ export function telemetryMiddleware(options?: TelemetryMiddlewareOptions): Kervy
       if (span) {
         const start = ctx.metadata._telemetryStart as number;
         const durationMs = performance.now() - start;
-        span.setAttribute('kervyx.duration_ms', durationMs);
+        span.setAttribute('nobulex.duration_ms', durationMs);
 
         // Set result-specific attributes
         if (result && typeof result === 'object') {
           const r = result as Record<string, unknown>;
           if ('id' in r && typeof r.id === 'string') {
-            span.setAttribute('kervyx.covenant.id', r.id);
+            span.setAttribute('nobulex.covenant.id', r.id);
           }
           if ('valid' in r && typeof r.valid === 'boolean') {
-            span.setAttribute('kervyx.verification.valid', r.valid);
+            span.setAttribute('nobulex.verification.valid', r.valid);
           }
           if ('permitted' in r && typeof r.permitted === 'boolean') {
-            span.setAttribute('kervyx.evaluation.permitted', r.permitted);
+            span.setAttribute('nobulex.evaluation.permitted', r.permitted);
           }
         }
 
@@ -168,7 +168,7 @@ export function telemetryMiddleware(options?: TelemetryMiddlewareOptions): Kervy
       if (span) {
         const start = ctx.metadata._telemetryStart as number;
         const durationMs = performance.now() - start;
-        span.setAttribute('kervyx.duration_ms', durationMs);
+        span.setAttribute('nobulex.duration_ms', durationMs);
         span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
         span.recordException(error);
         span.end();
@@ -180,25 +180,25 @@ export function telemetryMiddleware(options?: TelemetryMiddlewareOptions): Kervy
   };
 }
 
-// ─── KervyxMetrics ───────────────────────────────────────────────────────────
+// ─── NobulexMetrics ───────────────────────────────────────────────────────────
 
 /**
  * A minimal interface for an object that exposes `on()` for event subscription.
  *
- * This matches KervyxClient's public API without importing the class directly,
+ * This matches NobulexClient's public API without importing the class directly,
  * keeping the telemetry module loosely coupled.
  */
 export interface EventSource {
-  on<T extends KervyxEventType>(event: T, handler: (data: KervyxEventMap[T]) => void): () => void;
+  on<T extends NobulexEventType>(event: T, handler: (data: NobulexEventMap[T]) => void): () => void;
 }
 
 /**
- * Metrics collector for Kervyx SDK operations.
+ * Metrics collector for Nobulex SDK operations.
  *
  * Creates OTel-compatible counters and histograms and exposes a `record()`
- * method to update them from KervyxClient lifecycle events.
+ * method to update them from NobulexClient lifecycle events.
  */
-export class KervyxMetrics {
+export class NobulexMetrics {
   private readonly _covenantsCreated: Counter;
   private readonly _covenantsVerified: Counter;
   private readonly _evaluationsTotal: Counter;
@@ -206,29 +206,29 @@ export class KervyxMetrics {
   private readonly _operationDuration: Histogram;
 
   constructor(meter: Meter) {
-    this._covenantsCreated = meter.createCounter('kervyx.covenants.created', {
+    this._covenantsCreated = meter.createCounter('nobulex.covenants.created', {
       description: 'Number of covenants created',
     });
-    this._covenantsVerified = meter.createCounter('kervyx.covenants.verified', {
+    this._covenantsVerified = meter.createCounter('nobulex.covenants.verified', {
       description: 'Number of covenants verified',
     });
-    this._evaluationsTotal = meter.createCounter('kervyx.evaluations.total', {
+    this._evaluationsTotal = meter.createCounter('nobulex.evaluations.total', {
       description: 'Total number of evaluations performed',
     });
-    this._evaluationsDenied = meter.createCounter('kervyx.evaluations.denied', {
+    this._evaluationsDenied = meter.createCounter('nobulex.evaluations.denied', {
       description: 'Number of evaluations that were denied',
     });
-    this._operationDuration = meter.createHistogram('kervyx.operation.duration', {
+    this._operationDuration = meter.createHistogram('nobulex.operation.duration', {
       description: 'Duration of operations in milliseconds',
     });
   }
 
   /**
-   * Record a KervyxClient event, updating the appropriate metrics.
+   * Record a NobulexClient event, updating the appropriate metrics.
    *
-   * @param event - A KervyxClient lifecycle event (from the `on()` callback).
+   * @param event - A NobulexClient lifecycle event (from the `on()` callback).
    */
-  record(event: KervyxEvent): void {
+  record(event: NobulexEvent): void {
     switch (event.type) {
       case 'covenant:created':
         this._covenantsCreated.add(1);
@@ -264,15 +264,15 @@ export class KervyxMetrics {
   }
 
   /**
-   * Subscribe to all KervyxClient events and automatically record metrics.
+   * Subscribe to all NobulexClient events and automatically record metrics.
    *
-   * @param client - An object with an `on()` method matching KervyxClient's API.
+   * @param client - An object with an `on()` method matching NobulexClient's API.
    * @returns An array of disposal functions that unsubscribe all listeners.
    */
   bindToClient(client: EventSource): (() => void)[] {
     const disposers: (() => void)[] = [];
 
-    const eventTypes: KervyxEventType[] = [
+    const eventTypes: NobulexEventType[] = [
       'covenant:created',
       'covenant:verified',
       'covenant:countersigned',
@@ -285,7 +285,7 @@ export class KervyxMetrics {
 
     for (const eventType of eventTypes) {
       const dispose = client.on(eventType, (data) => {
-        this.record(data as KervyxEvent);
+        this.record(data as NobulexEvent);
       });
       disposers.push(dispose);
     }
@@ -307,7 +307,7 @@ export interface CreateTelemetryOptions {
 /**
  * Create a matched pair of telemetry middleware and metrics collector.
  *
- * This is the recommended entry point for instrumenting the Kervyx SDK.
+ * This is the recommended entry point for instrumenting the Nobulex SDK.
  * If no tracer or meter is provided, no-op implementations are used
  * so that application code compiles and runs without any OTel dependency.
  *
@@ -316,7 +316,7 @@ export interface CreateTelemetryOptions {
  *
  * @example
  * ```typescript
- * import { createTelemetry } from '@kervyx/sdk';
+ * import { createTelemetry } from '@nobulex/sdk';
  *
  * // With real OTel SDK:
  * const { middleware, metrics } = createTelemetry({
@@ -329,14 +329,14 @@ export interface CreateTelemetryOptions {
  * ```
  */
 export function createTelemetry(options?: CreateTelemetryOptions): {
-  middleware: KervyxMiddleware;
-  metrics: KervyxMetrics;
+  middleware: NobulexMiddleware;
+  metrics: NobulexMetrics;
 } {
   const tracer = options?.tracer ?? new NoopTracer();
   const meter = options?.meter ?? new NoopMeter();
 
   return {
     middleware: telemetryMiddleware({ tracer }),
-    metrics: new KervyxMetrics(meter),
+    metrics: new NobulexMetrics(meter),
   };
 }

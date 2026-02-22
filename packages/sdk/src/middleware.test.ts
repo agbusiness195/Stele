@@ -1,9 +1,9 @@
 /**
- * Tests for the Kervyx SDK middleware system.
+ * Tests for the Nobulex SDK middleware system.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Logger, LogLevel } from '@kervyx/types';
+import { Logger, LogLevel } from '@nobulex/types';
 
 import {
   MiddlewarePipeline,
@@ -15,7 +15,7 @@ import {
 import type {
   MiddlewareContext,
   MiddlewareResult,
-  KervyxMiddleware,
+  NobulexMiddleware,
 } from './middleware.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -33,12 +33,12 @@ function failingOp(message: string): () => Promise<never> {
 }
 
 /** Create a simple pass-through middleware for testing. */
-function passthroughMiddleware(name: string): KervyxMiddleware {
+function passthroughMiddleware(name: string): NobulexMiddleware {
   return { name };
 }
 
 /** Create a middleware that records calls for order verification. */
-function orderTrackingMiddleware(name: string, calls: string[]): KervyxMiddleware {
+function orderTrackingMiddleware(name: string, calls: string[]): NobulexMiddleware {
   return {
     name,
     async before(ctx) {
@@ -86,8 +86,8 @@ describe('MiddlewarePipeline — use / remove / list / clear', () => {
   });
 
   it('replaces middleware with the same name', () => {
-    const first: KervyxMiddleware = { name: 'dup', async before() { return { proceed: true, metadata: { v: 1 } }; } };
-    const second: KervyxMiddleware = { name: 'dup', async before() { return { proceed: true, metadata: { v: 2 } }; } };
+    const first: NobulexMiddleware = { name: 'dup', async before() { return { proceed: true, metadata: { v: 1 } }; } };
+    const second: NobulexMiddleware = { name: 'dup', async before() { return { proceed: true, metadata: { v: 2 } }; } };
     pipeline.use(first);
     pipeline.use(second);
     expect(pipeline.list()).toEqual(['dup']);

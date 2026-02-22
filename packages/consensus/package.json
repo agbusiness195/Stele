@@ -1,5 +1,5 @@
 {
-  "name": "@kervyx/consensus",
+  "name": "@nobulex/consensus",
   "version": "2.0.0",
   "description": "Byzantine fault-tolerant consensus protocols for covenant agreement",
   "sideEffects": false,
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@kervyx/crypto": "2.0.0",
-    "@kervyx/types": "2.0.0"
+    "@nobulex/crypto": "2.0.0",
+    "@nobulex/types": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -39,16 +39,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/consensus"
   },
-  "homepage": "https://kervyx.dev",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
-  "author": "Kervyx Labs, Inc.",
+  "author": "Nobulex Labs, Inc.",
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "consensus",

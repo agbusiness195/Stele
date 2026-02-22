@@ -1,5 +1,5 @@
 /**
- * Certification authority for the Kervyx protocol.
+ * Certification authority for the Nobulex protocol.
  *
  * Certifies agents like UL certifies electronics. Agents earn certificates
  * at basic, standard, or enterprise tiers based on trust history, attestation

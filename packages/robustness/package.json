@@ -1,5 +1,5 @@
 {
-  "name": "@kervyx/robustness",
+  "name": "@nobulex/robustness",
   "version": "2.0.0",
   "description": "Robustness analysis with fault injection and resilience metrics",
   "sideEffects": false,
@@ -27,14 +27,14 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@kervyx/ccl": "2.0.0",
-    "@kervyx/crypto": "2.0.0"
+    "@nobulex/ccl": "2.0.0",
+    "@nobulex/crypto": "2.0.0"
   },
   "license": "MIT",
-  "author": "Kervyx Labs, Inc.",
-  "homepage": "https://kervyx.dev",
+  "author": "Nobulex Labs, Inc.",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
   "engines": {
     "node": ">=18"
@@ -44,11 +44,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/robustness"
   },
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "robustness",

@@ -1,5 +1,5 @@
-import { generateId } from '@kervyx/crypto';
-import { KervyxError, KervyxErrorCode } from '@kervyx/types';
+import { generateId } from '@nobulex/crypto';
+import { NobulexError, NobulexErrorCode } from '@nobulex/types';
 
 export type {
   BreachAntibody,
@@ -49,12 +49,12 @@ const CATEGORY_KEYWORDS: Array<{ category: string; keywords: string[] }> = [
  */
 function validateBreach(breach: BreachSummary): void {
   if (!breach.violatedConstraint || breach.violatedConstraint.trim().length === 0) {
-    throw new KervyxError('BreachSummary.violatedConstraint must be a non-empty string', KervyxErrorCode.INVALID_INPUT);
+    throw new NobulexError('BreachSummary.violatedConstraint must be a non-empty string', NobulexErrorCode.INVALID_INPUT);
   }
   if (!VALID_SEVERITIES.has(breach.severity)) {
-    throw new KervyxError(
+    throw new NobulexError(
       `BreachSummary.severity must be one of: ${[...VALID_SEVERITIES].join(', ')}. Got: "${breach.severity}"`,
-      KervyxErrorCode.INVALID_INPUT,
+      NobulexErrorCode.INVALID_INPUT,
     );
   }
 }
@@ -64,7 +64,7 @@ function validateBreach(breach: BreachSummary): void {
  */
 function validateAntibody(antibody: BreachAntibody): void {
   if (antibody.adoptionVotes < 0) {
-    throw new KervyxError('BreachAntibody.adoptionVotes must be non-negative', KervyxErrorCode.INVALID_INPUT);
+    throw new NobulexError('BreachAntibody.adoptionVotes must be non-negative', NobulexErrorCode.INVALID_INPUT);
   }
 }
 
@@ -179,7 +179,7 @@ export function generateAntibody(breach: BreachSummary, adoptionThreshold = 3): 
   validateBreach(breach);
 
   if (adoptionThreshold < 0) {
-    throw new KervyxError('adoptionThreshold must be non-negative', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new NobulexError('adoptionThreshold must be non-negative', NobulexErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const category = breach.category ?? deriveCategory(breach.violatedConstraint);
@@ -264,10 +264,10 @@ export function networkHealth(
 export function adoptAntibody(antibody: BreachAntibody): BreachAntibody {
   validateAntibody(antibody);
   if (antibody.adoptionVotes < antibody.adoptionThreshold) {
-    throw new KervyxError(
+    throw new NobulexError(
       `Cannot adopt antibody: ${antibody.adoptionVotes} votes < threshold ${antibody.adoptionThreshold}. ` +
       `Use forceAdopt() for governance override.`,
-      KervyxErrorCode.INVALID_INPUT,
+      NobulexErrorCode.INVALID_INPUT,
     );
   }
   return { ...antibody, status: 'adopted' };
@@ -329,10 +329,10 @@ export function stressTest(
   intensityMultiplier = 2,
 ): StressTestResult {
   if (rounds < 1) {
-    throw new KervyxError('rounds must be at least 1', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new NobulexError('rounds must be at least 1', NobulexErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (intensityMultiplier < 1) {
-    throw new KervyxError('intensityMultiplier must be at least 1', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new NobulexError('intensityMultiplier must be at least 1', NobulexErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const severityProgression: Array<BreachSummary['severity']> = ['low', 'medium', 'high', 'critical'];
@@ -409,7 +409,7 @@ export function antifragilityIndex(
   waves = 5,
 ): AntifragilityIndexResult {
   if (waves < 2) {
-    throw new KervyxError('waves must be at least 2 to measure trend', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new NobulexError('waves must be at least 2 to measure trend', NobulexErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const result = stressTest(breaches, waves, 2);
@@ -473,21 +473,21 @@ export class StressResponseCurve {
 
   constructor(config: StressResponseConfig) {
     if (!Number.isFinite(config.inflectionPoint)) {
-      throw new KervyxError(
+      throw new NobulexError(
         'inflectionPoint must be a finite number',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(config.steepness) || config.steepness <= 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'steepness must be a positive finite number',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(config.saturation) || config.saturation <= 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'saturation must be a positive finite number',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.config = { ...config };
@@ -499,7 +499,7 @@ export class StressResponseCurve {
    */
   logistic(stress: number): number {
     if (!Number.isFinite(stress)) {
-      throw new KervyxError('stress must be a finite number', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new NobulexError('stress must be a finite number', NobulexErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const { saturation: L, steepness: k, inflectionPoint: x0 } = this.config;
     return L / (1 + Math.exp(-k * (stress - x0)));
@@ -511,7 +511,7 @@ export class StressResponseCurve {
    */
   exponential(stress: number): number {
     if (!Number.isFinite(stress)) {
-      throw new KervyxError('stress must be a finite number', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new NobulexError('stress must be a finite number', NobulexErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const { saturation: L, steepness: k } = this.config;
     if (stress <= 0) return 0;
@@ -524,7 +524,7 @@ export class StressResponseCurve {
    */
   threshold(stress: number): number {
     if (!Number.isFinite(stress)) {
-      throw new KervyxError('stress must be a finite number', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new NobulexError('stress must be a finite number', NobulexErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const { saturation: L, steepness: k, inflectionPoint: x0 } = this.config;
     // Use a steep sigmoid to approximate a step function
@@ -538,7 +538,7 @@ export class StressResponseCurve {
    */
   logisticDerivative(stress: number): number {
     if (!Number.isFinite(stress)) {
-      throw new KervyxError('stress must be a finite number', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new NobulexError('stress must be a finite number', NobulexErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const response = this.logistic(stress);
     const { saturation: L, steepness: k } = this.config;
@@ -597,9 +597,9 @@ export class PhaseTransitionDetector {
    */
   constructor(windowSize = 10) {
     if (!Number.isInteger(windowSize) || windowSize < 3) {
-      throw new KervyxError(
+      throw new NobulexError(
         'windowSize must be an integer >= 3',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.windowSize = windowSize;
@@ -608,15 +608,15 @@ export class PhaseTransitionDetector {
   /** Record a new metric observation. */
   addObservation(obs: MetricObservation): void {
     if (!Number.isFinite(obs.value)) {
-      throw new KervyxError(
+      throw new NobulexError(
         'observation value must be a finite number',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(obs.timestamp)) {
-      throw new KervyxError(
+      throw new NobulexError(
         'observation timestamp must be a finite number',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.observations.push({ ...obs });
@@ -646,22 +646,22 @@ export class PhaseTransitionDetector {
    * critical slowing down, a hallmark of approaching phase transitions.
    *
    * @param sensitivityThreshold Variance increase ratio to flag a transition (default: 2.0).
-   * @throws {KervyxError} if fewer than windowSize * 2 observations are available.
+   * @throws {NobulexError} if fewer than windowSize * 2 observations are available.
    */
   analyze(sensitivityThreshold = 2.0): PhaseTransitionResult {
     if (!Number.isFinite(sensitivityThreshold) || sensitivityThreshold <= 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'sensitivityThreshold must be a positive finite number',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
     const sorted = this.getObservations();
     const minRequired = this.windowSize * 2;
     if (sorted.length < minRequired) {
-      throw new KervyxError(
+      throw new NobulexError(
         `Need at least ${minRequired} observations (windowSize * 2), got ${sorted.length}`,
-        KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED,
+        NobulexErrorCode.PROTOCOL_COMPUTATION_FAILED,
       );
     }
 
@@ -789,27 +789,27 @@ export class FitnessEvolution {
   constructor(config: Partial<FitnessEvolutionConfig> = {}) {
     this.config = { ...DEFAULT_FITNESS_CONFIG, ...config };
     if (this.config.maxPopulation < 2) {
-      throw new KervyxError(
+      throw new NobulexError(
         'maxPopulation must be at least 2',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.pruneThreshold < 0 || this.config.pruneThreshold > 1) {
-      throw new KervyxError(
+      throw new NobulexError(
         'pruneThreshold must be between 0 and 1',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.mutationRate < 0 || this.config.mutationRate > 1) {
-      throw new KervyxError(
+      throw new NobulexError(
         'mutationRate must be between 0 and 1',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.tournamentSize < 2) {
-      throw new KervyxError(
+      throw new NobulexError(
         'tournamentSize must be at least 2',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
   }
@@ -817,9 +817,9 @@ export class FitnessEvolution {
   /** Seed the population with initial antibodies, all starting at fitness 0.5. */
   seed(antibodies: BreachAntibody[]): void {
     if (antibodies.length === 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'Must seed with at least one antibody',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     for (const ab of antibodies) {
@@ -880,9 +880,9 @@ export class FitnessEvolution {
    */
   evolve(): void {
     if (this.population.length === 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'Cannot evolve an empty population; call seed() first',
-        KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED,
+        NobulexErrorCode.PROTOCOL_COMPUTATION_FAILED,
       );
     }
 
@@ -1029,7 +1029,7 @@ export interface CalibratedAntifragilityResult {
  * @param breaches Breaches to use as attack patterns.
  * @param waves Number of attack waves (default: 10). More waves = tighter CI.
  * @param confidenceLevel Confidence level for the interval (default: 0.95).
- * @throws {KervyxError} if waves < 3 or confidenceLevel is invalid.
+ * @throws {NobulexError} if waves < 3 or confidenceLevel is invalid.
  */
 export function calibratedAntifragilityIndex(
   breaches: BreachSummary[],
@@ -1037,15 +1037,15 @@ export function calibratedAntifragilityIndex(
   confidenceLevel = 0.95,
 ): CalibratedAntifragilityResult {
   if (waves < 3) {
-    throw new KervyxError(
+    throw new NobulexError(
       'waves must be at least 3 for statistical calibration',
-      KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+      NobulexErrorCode.PROTOCOL_INVALID_INPUT,
     );
   }
   if (confidenceLevel <= 0 || confidenceLevel >= 1) {
-    throw new KervyxError(
+    throw new NobulexError(
       'confidenceLevel must be between 0 and 1 (exclusive)',
-      KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+      NobulexErrorCode.PROTOCOL_INVALID_INPUT,
     );
   }
 
@@ -1059,9 +1059,9 @@ export function calibratedAntifragilityIndex(
   }
 
   if (deltas.length === 0) {
-    throw new KervyxError(
+    throw new NobulexError(
       'Insufficient data to compute deltas',
-      KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED,
+      NobulexErrorCode.PROTOCOL_COMPUTATION_FAILED,
     );
   }
 

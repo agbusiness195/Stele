@@ -1,4 +1,4 @@
-# KERVYX
+# NOBULEX
 
 **The accountability primitive for AI agents.**
 
@@ -9,7 +9,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
 ![Node](https://img.shields.io/badge/node-18%20%7C%2020%20%7C%2022-green)
 
-## What Kervyx Does
+## What Nobulex Does
 
 Agents publish signed **Covenants** -- cryptographic behavioral commitments declaring
 what they will do, what they will not do, and what happens when they violate.
@@ -20,13 +20,13 @@ signatures and SHA-256 content addressing. No trusted third party required.
 ## Quick Start
 
 ```bash
-npm install @kervyx/sdk
+npm install @nobulex/sdk
 ```
 
 ```typescript
-import { KervyxClient } from '@kervyx/sdk';
+import { NobulexClient } from '@nobulex/sdk';
 
-const client = new KervyxClient();
+const client = new NobulexClient();
 await client.generateKeyPair();
 
 // Create a covenant
@@ -47,7 +47,7 @@ console.log(eval.permitted); // true
 
 ## The Protocol
 
-Kervyx works in three steps:
+Nobulex works in three steps:
 
 1. **Inscribe** -- An agent publishes a signed Covenant: a cryptographic document
    specifying behavioral constraints, the issuer who operates the agent, and the
@@ -68,65 +68,65 @@ Kervyx works in three steps:
 
 | Package | Description |
 |---------|-------------|
-| `@kervyx/types` | Error hierarchy, validation guards, logging, tracing, retry utilities |
-| `@kervyx/crypto` | Ed25519 signing, SHA-256 hashing, JCS canonicalization |
-| `@kervyx/ccl` | Covenant Constraint Language parser & evaluator |
-| `@kervyx/core` | Covenant build, verify, chain, serialize, countersign |
-| `@kervyx/store` | MemoryStore + FileStore pluggable persistence |
-| `@kervyx/verifier` | Stateful verification engine with 11 specification checks |
-| `@kervyx/identity` | Agent identity creation, evolution & lineage tracking |
+| `@nobulex/types` | Error hierarchy, validation guards, logging, tracing, retry utilities |
+| `@nobulex/crypto` | Ed25519 signing, SHA-256 hashing, JCS canonicalization |
+| `@nobulex/ccl` | Covenant Constraint Language parser & evaluator |
+| `@nobulex/core` | Covenant build, verify, chain, serialize, countersign |
+| `@nobulex/store` | MemoryStore + FileStore pluggable persistence |
+| `@nobulex/verifier` | Stateful verification engine with 11 specification checks |
+| `@nobulex/identity` | Agent identity creation, evolution & lineage tracking |
 
 ### SDK
 
 | Package | Description |
 |---------|-------------|
-| `@kervyx/sdk` | KervyxClient unified API, QuickCovenant builders, event system |
+| `@nobulex/sdk` | NobulexClient unified API, QuickCovenant builders, event system |
 
 ### Enforcement
 
 | Package | Description |
 |---------|-------------|
-| `@kervyx/enforcement` | Runtime enforcement monitor with audit trail |
-| `@kervyx/proof` | Poseidon-based compliance proof generation |
-| `@kervyx/breach` | Breach detection, attestation & trust graph propagation |
-| `@kervyx/reputation` | Trust scoring with decay and stake-weighted reputation |
-| `@kervyx/mcp` | MCP middleware guard for tool-call enforcement |
+| `@nobulex/enforcement` | Runtime enforcement monitor with audit trail |
+| `@nobulex/proof` | Poseidon-based compliance proof generation |
+| `@nobulex/breach` | Breach detection, attestation & trust graph propagation |
+| `@nobulex/reputation` | Trust scoring with decay and stake-weighted reputation |
+| `@nobulex/mcp` | MCP middleware guard for tool-call enforcement |
 
 ### Protocol
 
 | Package | Description |
 |---------|-------------|
-| `@kervyx/attestation` | External attestation reconciliation |
-| `@kervyx/canary` | Canary testing framework for constraint validation |
-| `@kervyx/gametheory` | Game-theoretic honesty proofs and incentive analysis |
-| `@kervyx/composition` | Formal constraint composition and verification |
-| `@kervyx/antifragile` | Breach-to-improvement antifragility engine |
-| `@kervyx/negotiation` | Multi-party covenant negotiation sessions |
-| `@kervyx/consensus` | Accountability-based consensus protocol |
-| `@kervyx/robustness` | Formal robustness and coverage analysis |
-| `@kervyx/temporal` | Temporal evolution, triggers & scheduled transitions |
-| `@kervyx/recursive` | Meta-covenants and recursive verification |
-| `@kervyx/alignment` | AI alignment property verification |
-| `@kervyx/norms` | Emergent norm discovery from behavioral patterns |
-| `@kervyx/substrate` | Cross-substrate constraint translation |
-| `@kervyx/derivatives` | Trust futures, insurance & derivative instruments |
-| `@kervyx/legal` | Legal compliance mapping and audit trails |
+| `@nobulex/attestation` | External attestation reconciliation |
+| `@nobulex/canary` | Canary testing framework for constraint validation |
+| `@nobulex/gametheory` | Game-theoretic honesty proofs and incentive analysis |
+| `@nobulex/composition` | Formal constraint composition and verification |
+| `@nobulex/antifragile` | Breach-to-improvement antifragility engine |
+| `@nobulex/negotiation` | Multi-party covenant negotiation sessions |
+| `@nobulex/consensus` | Accountability-based consensus protocol |
+| `@nobulex/robustness` | Formal robustness and coverage analysis |
+| `@nobulex/temporal` | Temporal evolution, triggers & scheduled transitions |
+| `@nobulex/recursive` | Meta-covenants and recursive verification |
+| `@nobulex/alignment` | AI alignment property verification |
+| `@nobulex/norms` | Emergent norm discovery from behavioral patterns |
+| `@nobulex/substrate` | Cross-substrate constraint translation |
+| `@nobulex/derivatives` | Trust futures, insurance & derivative instruments |
+| `@nobulex/legal` | Legal compliance mapping and audit trails |
 
 ### Interop
 
 | Package | Description |
 |---------|-------------|
-| `@kervyx/discovery` | `.well-known/kervyx/` discovery protocol, key registry & negotiation |
-| `@kervyx/schema` | JSON Schema (Draft 2020-12) validation for all document types |
+| `@nobulex/discovery` | `.well-known/nobulex/` discovery protocol, key registry & negotiation |
+| `@nobulex/schema` | JSON Schema (Draft 2020-12) validation for all document types |
 
 ### Platform
 
 | Package | Description |
 |---------|-------------|
-| `@kervyx/react` | Reactive UI primitives (Observable, CovenantState) |
-| `@kervyx/evm` | EVM anchoring, ABI encoding & on-chain registry |
-| `@kervyx/mcp-server` | JSON-RPC 2.0 MCP server exposing Kervyx tools |
-| `@kervyx/cli` | Command-line interface for the Kervyx protocol |
+| `@nobulex/react` | Reactive UI primitives (Observable, CovenantState) |
+| `@nobulex/evm` | EVM anchoring, ABI encoding & on-chain registry |
+| `@nobulex/mcp-server` | JSON-RPC 2.0 MCP server exposing Nobulex tools |
+| `@nobulex/cli` | Command-line interface for the Nobulex protocol |
 
 ## CCL (Covenant Constraint Language)
 
@@ -170,7 +170,7 @@ layers below it:
 |              discovery  .  schema                     |
 +-----------------------------------------------------+
 |                        SDK                           |
-|           sdk (KervyxClient, QuickCovenant)            |
+|           sdk (NobulexClient, QuickCovenant)            |
 +-----------------------------------------------------+
 |                      Protocol                        |
 |    attestation . canary . gametheory . composition    |
@@ -200,7 +200,7 @@ composition, antifragility, negotiation, consensus, robustness, temporal
 evolution, recursive meta-covenants, alignment verification, emergent norms,
 cross-substrate translation, trust derivatives, and legal compliance.
 
-**SDK** is a thin unification layer (`KervyxClient`) that wraps Foundation
+**SDK** is a thin unification layer (`NobulexClient`) that wraps Foundation
 packages into a single ergonomic API with a typed event system.
 
 **Platform** provides integration adapters: reactive UI primitives, EVM
@@ -210,8 +210,8 @@ blockchain anchoring, a JSON-RPC MCP server, and a CLI.
 
 ```bash
 # Clone the repository
-git clone https://github.com/agbusiness195/kervyx.git
-cd kervyx
+git clone https://github.com/agbusiness195/nobulex.git
+cd nobulex
 
 # Install all dependencies (npm workspaces)
 npm install

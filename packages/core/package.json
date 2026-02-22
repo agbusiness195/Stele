@@ -1,7 +1,7 @@
 {
-  "name": "@kervyx/core",
+  "name": "@nobulex/core",
   "version": "2.0.0",
-  "description": "Core covenant lifecycle management for the Kervyx framework",
+  "description": "Core covenant lifecycle management for the Nobulex framework",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,16 +27,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/core"
   },
-  "homepage": "https://kervyx.dev",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
-  "author": "Kervyx Labs, Inc.",
+  "author": "Nobulex Labs, Inc.",
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "core",
@@ -52,7 +52,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@kervyx/crypto": "2.0.0",
-    "@kervyx/ccl": "2.0.0"
+    "@nobulex/crypto": "2.0.0",
+    "@nobulex/ccl": "2.0.0"
   }
 }

@@ -1,11 +1,11 @@
-# @kervyx/antifragile
+# @nobulex/antifragile
 
 Antifragility analysis with stress testing, recovery metrics, and evolutionary antibody fitness.
 
 ## Installation
 
 ```bash
-npm install @kervyx/antifragile
+npm install @nobulex/antifragile
 ```
 
 ## Key APIs
@@ -35,7 +35,7 @@ import {
   stressTest,
   antifragilityIndex,
   StressResponseCurve,
-} from '@kervyx/antifragile';
+} from '@nobulex/antifragile';
 
 // Generate an antibody from a detected breach
 const antibody = generateAntibody({
@@ -67,4 +67,4 @@ console.log(curve.logistic(0.8)); // S-curve response at stress level 0.8
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

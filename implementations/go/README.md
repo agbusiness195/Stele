@@ -1,10 +1,10 @@
-# Kervyx Go Implementation
+# Nobulex Go Implementation
 
-A complete Go implementation of the Kervyx protocol for cryptographic accountability of AI agents.
+A complete Go implementation of the Nobulex protocol for cryptographic accountability of AI agents.
 
 ## Overview
 
-This package implements the core Kervyx protocol primitives:
+This package implements the core Nobulex protocol primitives:
 
 - **Crypto** (`crypto.go`) -- Ed25519 signing/verification, SHA-256 hashing, JCS (RFC 8785) JSON canonicalization
 - **CCL** (`ccl.go`) -- Covenant Constraint Language parser and evaluator with wildcard matching, rate limits, and narrowing validation
@@ -20,7 +20,7 @@ This package implements the core Kervyx protocol primitives:
 ## Installation
 
 ```bash
-go get github.com/agbusiness195/kervyx/implementations/go
+go get github.com/agbusiness195/nobulex/implementations/go
 ```
 
 ## Quick Start
@@ -30,22 +30,22 @@ package main
 
 import (
     "fmt"
-    kervyx "github.com/agbusiness195/kervyx/implementations/go"
+    nobulex "github.com/agbusiness195/nobulex/implementations/go"
 )
 
 func main() {
     // Generate key pairs
-    issuerKP, _ := kervyx.GenerateKeyPair()
-    beneficiaryKP, _ := kervyx.GenerateKeyPair()
+    issuerKP, _ := nobulex.GenerateKeyPair()
+    beneficiaryKP, _ := nobulex.GenerateKeyPair()
 
     // Build a covenant
-    doc, _ := kervyx.BuildCovenant(&kervyx.CovenantBuilderOptions{
-        Issuer: kervyx.Party{
+    doc, _ := nobulex.BuildCovenant(&nobulex.CovenantBuilderOptions{
+        Issuer: nobulex.Party{
             ID:        "alice",
             PublicKey: issuerKP.PublicKeyHex,
             Role:      "issuer",
         },
-        Beneficiary: kervyx.Party{
+        Beneficiary: nobulex.Party{
             ID:        "bob",
             PublicKey: beneficiaryKP.PublicKeyHex,
             Role:      "beneficiary",
@@ -55,12 +55,12 @@ func main() {
     })
 
     // Verify the covenant
-    result, _ := kervyx.VerifyCovenant(doc)
+    result, _ := nobulex.VerifyCovenant(doc)
     fmt.Println("Valid:", result.Valid)
 
     // Evaluate CCL constraints
-    ccl, _ := kervyx.Parse(doc.Constraints)
-    eval := kervyx.Evaluate(ccl, "read", "/data/users", nil)
+    ccl, _ := nobulex.Parse(doc.Constraints)
+    eval := nobulex.Evaluate(ccl, "read", "/data/users", nil)
     fmt.Println("Permitted:", eval.Permitted)
 }
 ```
@@ -73,7 +73,7 @@ go test -v ./...
 
 ## Protocol Version
 
-This implementation targets Kervyx protocol version 1.0.
+This implementation targets Nobulex protocol version 1.0.
 
 ## Architecture
 

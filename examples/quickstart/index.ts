@@ -1,13 +1,13 @@
 /**
- * Kervyx SDK Quickstart
+ * Nobulex SDK Quickstart
  *
  * Demonstrates the basic flow: generate keys, build a covenant,
  * verify it, enforce constraints through a Monitor, and inspect
  * the tamper-evident audit log.
  */
-import { generateKeyPair } from '@kervyx/crypto';
-import { buildCovenant, verifyCovenant } from '@kervyx/core';
-import { Monitor, MonitorDeniedError } from '@kervyx/enforcement';
+import { generateKeyPair } from '@nobulex/crypto';
+import { buildCovenant, verifyCovenant } from '@nobulex/core';
+import { Monitor, MonitorDeniedError } from '@nobulex/enforcement';
 
 async function main() {
   // 1. Generate an Ed25519 key pair

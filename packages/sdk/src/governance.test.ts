@@ -1,5 +1,5 @@
 /**
- * Edge-case tests for the Kervyx SDK governance module.
+ * Edge-case tests for the Nobulex SDK governance module.
  */
 
 import { describe, it, expect } from 'vitest';

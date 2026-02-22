@@ -1,17 +1,17 @@
 /**
  * Regression test suite for known bugs and gotchas discovered during
- * development of the Kervyx SDK.
+ * development of the Nobulex SDK.
  *
  * Each test documents a specific issue that was encountered, along with
  * the correct behavior, to prevent future regressions.
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { generateKeyPair, toHex } from '@kervyx/crypto';
-import { buildCovenant, verifyCovenant, resignCovenant, countersignCovenant, computeId, canonicalForm } from '@kervyx/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@kervyx/core';
-import { parse, evaluate, merge, validateNarrowing } from '@kervyx/ccl';
-import { MemoryStore } from '@kervyx/store';
+import { generateKeyPair, toHex } from '@nobulex/crypto';
+import { buildCovenant, verifyCovenant, resignCovenant, countersignCovenant, computeId, canonicalForm } from '@nobulex/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@nobulex/core';
+import { parse, evaluate, merge, validateNarrowing } from '@nobulex/ccl';
+import { MemoryStore } from '@nobulex/store';
 
 // ---------------------------------------------------------------------------
 // Helpers

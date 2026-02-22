@@ -1,10 +1,10 @@
-# Kervyx - Rust Implementation
+# Nobulex - Rust Implementation
 
 The accountability primitive for AI agents, implemented in Rust.
 
 ## Overview
 
-This crate provides a complete Rust implementation of the Kervyx protocol, covering
+This crate provides a complete Rust implementation of the Nobulex protocol, covering
 all core primitives needed for interoperability with the reference TypeScript
 implementation.
 
@@ -37,11 +37,11 @@ cargo test
 ## Usage
 
 ```rust
-use kervyx::crypto;
-use kervyx::covenant::{self, CovenantBuilderOptions, Party};
-use kervyx::ccl;
-use kervyx::identity::{self, CreateIdentityOptions, ModelInfo, DeploymentInfo};
-use kervyx::store::{MemoryStore, Store};
+use nobulex::crypto;
+use nobulex::covenant::{self, CovenantBuilderOptions, Party};
+use nobulex::ccl;
+use nobulex::identity::{self, CreateIdentityOptions, ModelInfo, DeploymentInfo};
+use nobulex::store::{MemoryStore, Store};
 
 // Generate key pairs
 let issuer_kp = crypto::generate_key_pair().unwrap();
@@ -80,7 +80,7 @@ assert!(eval.permitted);
 
 ## Protocol Version
 
-This implementation targets Kervyx Protocol v1.0.
+This implementation targets Nobulex Protocol v1.0.
 
 ## License
 

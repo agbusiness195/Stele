@@ -1,11 +1,11 @@
 /**
- * Lightweight tracing utilities for the Kervyx SDK.
+ * Lightweight tracing utilities for the Nobulex SDK.
  * Provides Span-based instrumentation without OpenTelemetry dependency.
  *
  * @packageDocumentation
  */
 
-import { generateId } from '@kervyx/crypto';
+import { generateId } from '@nobulex/crypto';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 

@@ -1,10 +1,10 @@
 /**
- * Kervyx adapter for Vercel AI SDK.
+ * Nobulex adapter for Vercel AI SDK.
  *
  * Wraps AI SDK tool definitions with covenant enforcement.
  * Before a tool's `execute()` is called, the action/resource pair is
  * evaluated against the covenant's CCL constraints. If denied, a
- * `KervyxAccessDeniedError` is thrown (or the custom `onDenied` handler
+ * `NobulexAccessDeniedError` is thrown (or the custom `onDenied` handler
  * is invoked). If permitted, the original `execute()` runs normally.
  *
  * **Status: Stable** (promoted from beta in v1.0.0)
@@ -13,32 +13,32 @@
  *
  * @example
  * ```typescript
- * import { KervyxClient, withKervyx, withKervyxTools } from '@kervyx/sdk';
+ * import { NobulexClient, withNobulex, withNobulexTools } from '@nobulex/sdk';
  *
- * const protectedTool = withKervyx(myTool, { client, covenant });
- * const protectedTools = withKervyxTools({ search, browse }, { client, covenant });
+ * const protectedTool = withNobulex(myTool, { client, covenant });
+ * const protectedTools = withNobulexTools({ search, browse }, { client, covenant });
  * ```
  */
 
-import type { KervyxClient } from '../index.js';
-import type { CovenantDocument } from '@kervyx/core';
+import type { NobulexClient } from '../index.js';
+import type { CovenantDocument } from '@nobulex/core';
 import type { EvaluationResult } from '../types.js';
 
 // ─── Error ───────────────────────────────────────────────────────────────────
 
 /**
- * Error thrown when a tool call is denied by a Kervyx covenant.
+ * Error thrown when a tool call is denied by a Nobulex covenant.
  *
  * Carries the full `EvaluationResult` so callers can inspect the
  * matched rule, severity, and reason for the denial.
  */
-export class KervyxAccessDeniedError extends Error {
+export class NobulexAccessDeniedError extends Error {
   /** The evaluation result that triggered the denial. */
   readonly evaluationResult: EvaluationResult;
 
   constructor(message: string, result: EvaluationResult) {
     super(message);
-    this.name = 'KervyxAccessDeniedError';
+    this.name = 'NobulexAccessDeniedError';
     this.evaluationResult = result;
   }
 }
@@ -59,11 +59,11 @@ export interface ToolLike {
 }
 
 /**
- * Options for wrapping Vercel AI SDK tools with Kervyx enforcement.
+ * Options for wrapping Vercel AI SDK tools with Nobulex enforcement.
  */
-export interface KervyxToolOptions {
-  /** The KervyxClient instance for covenant evaluation. */
-  client: KervyxClient;
+export interface NobulexToolOptions {
+  /** The NobulexClient instance for covenant evaluation. */
+  client: NobulexClient;
   /** The covenant document whose constraints are enforced. */
   covenant: CovenantDocument;
   /**
@@ -79,15 +79,15 @@ export interface KervyxToolOptions {
   /**
    * Custom handler invoked when a tool call is denied. If provided,
    * its return value is returned instead of throwing. If not provided,
-   * a `KervyxAccessDeniedError` is thrown.
+   * a `NobulexAccessDeniedError` is thrown.
    */
   onDenied?: (tool: ToolLike, result: EvaluationResult) => unknown;
 }
 
-// ─── withKervyx ───────────────────────────────────────────────────────────────
+// ─── withNobulex ───────────────────────────────────────────────────────────────
 
 /**
- * Wrap a single Vercel AI SDK tool with Kervyx covenant enforcement.
+ * Wrap a single Vercel AI SDK tool with Nobulex covenant enforcement.
  *
  * Returns a new tool object whose `execute()` evaluates the
  * action/resource against the covenant before delegating to the
@@ -99,11 +99,11 @@ export interface KervyxToolOptions {
  *
  * @example
  * ```typescript
- * const protectedTool = withKervyx(myTool, { client, covenant });
+ * const protectedTool = withNobulex(myTool, { client, covenant });
  * await protectedTool.execute('arg1'); // throws if denied
  * ```
  */
-export function withKervyx<T extends ToolLike>(tool: T, options: KervyxToolOptions): T {
+export function withNobulex<T extends ToolLike>(tool: T, options: NobulexToolOptions): T {
   const { client, covenant, actionFromTool, resourceFromTool, onDenied } = options;
 
   const originalExecute = tool.execute;
@@ -127,7 +127,7 @@ export function withKervyx<T extends ToolLike>(tool: T, options: KervyxToolOptio
       if (onDenied) {
         return onDenied(tool, result);
       }
-      throw new KervyxAccessDeniedError(
+      throw new NobulexAccessDeniedError(
         `Action '${action}' on resource '${resource}' denied by covenant`,
         result,
       );
@@ -139,43 +139,43 @@ export function withKervyx<T extends ToolLike>(tool: T, options: KervyxToolOptio
   return wrapped;
 }
 
-// ─── withKervyxTools ──────────────────────────────────────────────────────────
+// ─── withNobulexTools ──────────────────────────────────────────────────────────
 
 /**
- * Wrap an array of tools with Kervyx covenant enforcement.
+ * Wrap an array of tools with Nobulex covenant enforcement.
  *
  * @param tools   - Array of tools to wrap.
  * @param options - Enforcement options.
  * @returns A new array of wrapped tools.
  */
-export function withKervyxTools(
+export function withNobulexTools(
   tools: ToolLike[],
-  options: KervyxToolOptions,
+  options: NobulexToolOptions,
 ): ToolLike[];
 
 /**
- * Wrap a record of tools with Kervyx covenant enforcement.
+ * Wrap a record of tools with Nobulex covenant enforcement.
  *
  * @param tools   - Record of named tools to wrap.
  * @param options - Enforcement options.
  * @returns A new record with the same keys and wrapped tool values.
  */
-export function withKervyxTools(
+export function withNobulexTools(
   tools: Record<string, ToolLike>,
-  options: KervyxToolOptions,
+  options: NobulexToolOptions,
 ): Record<string, ToolLike>;
 
-export function withKervyxTools(
+export function withNobulexTools(
   tools: ToolLike[] | Record<string, ToolLike>,
-  options: KervyxToolOptions,
+  options: NobulexToolOptions,
 ): ToolLike[] | Record<string, ToolLike> {
   if (Array.isArray(tools)) {
-    return tools.map((tool) => withKervyx(tool, options));
+    return tools.map((tool) => withNobulex(tool, options));
   }
 
   const wrapped: Record<string, ToolLike> = {};
   for (const [key, tool] of Object.entries(tools)) {
-    wrapped[key] = withKervyx(tool, options);
+    wrapped[key] = withNobulex(tool, options);
   }
   return wrapped;
 }
@@ -185,7 +185,7 @@ export function withKervyxTools(
 /**
  * Create a reusable guard function that enforces a covenant on any tool call.
  *
- * Unlike `withKervyx` which returns a new tool, `createToolGuard` returns a
+ * Unlike `withNobulex` which returns a new tool, `createToolGuard` returns a
  * function you call manually, passing the tool and arguments each time.
  *
  * @param options - Enforcement options.
@@ -199,7 +199,7 @@ export function withKervyxTools(
  * ```
  */
 export function createToolGuard(
-  options: KervyxToolOptions,
+  options: NobulexToolOptions,
 ): (tool: ToolLike, ...args: unknown[]) => Promise<unknown> {
   const { client, covenant, actionFromTool, resourceFromTool, onDenied } = options;
 
@@ -217,7 +217,7 @@ export function createToolGuard(
       if (onDenied) {
         return onDenied(tool, result);
       }
-      throw new KervyxAccessDeniedError(
+      throw new NobulexAccessDeniedError(
         `Action '${action}' on resource '${resource}' denied by covenant`,
         result,
       );

@@ -1,20 +1,20 @@
 /**
- * Kervyx SDK - Multi-Agent Chain Delegation
+ * Nobulex SDK - Multi-Agent Chain Delegation
  *
  * Demonstrates parent-child covenant chains where a child covenant
  * narrows the parent's constraints. Shows chain resolution, narrowing
  * validation, identity creation, and differential enforcement across
  * two agents operating under different constraint scopes.
  */
-import { generateKeyPair } from '@kervyx/crypto';
+import { generateKeyPair } from '@nobulex/crypto';
 import {
   buildCovenant,
   MemoryChainResolver,
   resolveChain,
   validateChainNarrowing,
-} from '@kervyx/core';
-import { Monitor, MonitorDeniedError } from '@kervyx/enforcement';
-import { createIdentity, verifyIdentity } from '@kervyx/identity';
+} from '@nobulex/core';
+import { Monitor, MonitorDeniedError } from '@nobulex/enforcement';
+import { createIdentity, verifyIdentity } from '@nobulex/identity';
 
 async function main() {
   // 1. Create two key pairs: one for the parent operator, one for the child

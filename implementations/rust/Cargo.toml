@@ -1,10 +1,10 @@
 [package]
-name = "kervyx"
+name = "nobulex"
 version = "1.0.0"
 edition = "2021"
 description = "The accountability primitive for AI agents - Rust implementation"
 license = "MIT"
-repository = "https://github.com/agbusiness195/kervyx"
+repository = "https://github.com/agbusiness195/nobulex"
 
 [dependencies]
 ed25519-dalek = { version = "2", features = ["rand_core"] }

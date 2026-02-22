@@ -1,7 +1,7 @@
 /**
- * @kervyx/sdk -- High-level TypeScript SDK that unifies the entire Kervyx protocol.
+ * @nobulex/sdk -- High-level TypeScript SDK that unifies the entire Nobulex protocol.
  *
- * Provides a single entry point (KervyxClient) for key management, covenant
+ * Provides a single entry point (NobulexClient) for key management, covenant
  * lifecycle, identity management, chain operations, and CCL utilities.
  *
  * @packageDocumentation
@@ -13,8 +13,8 @@ import {
   generateKeyPair as cryptoGenerateKeyPair,
   timestamp,
   KeyManager,
-} from '@kervyx/crypto';
-import type { KeyPair, KeyRotationPolicy, ManagedKeyPair } from '@kervyx/crypto';
+} from '@nobulex/crypto';
+import type { KeyPair, KeyRotationPolicy, ManagedKeyPair } from '@nobulex/crypto';
 
 import {
   buildCovenant,
@@ -35,7 +35,7 @@ import {
   resignCovenant,
   serializeCovenant,
   deserializeCovenant,
-} from '@kervyx/core';
+} from '@nobulex/core';
 import type {
   CovenantDocument,
   VerificationResult,
@@ -43,7 +43,7 @@ import type {
   Issuer,
   Beneficiary,
   PartyRole,
-} from '@kervyx/core';
+} from '@nobulex/core';
 
 import {
   parse as cclParse,
@@ -54,27 +54,27 @@ import {
   serialize as cclSerialize,
   checkRateLimit as cclCheckRateLimit,
   validateNarrowing as cclValidateNarrowing,
-} from '@kervyx/ccl';
-import type { CCLDocument, EvaluationContext } from '@kervyx/ccl';
+} from '@nobulex/ccl';
+import type { CCLDocument, EvaluationContext } from '@nobulex/ccl';
 
 import {
   createIdentity as identityCreate,
   evolveIdentity as identityEvolve,
   verifyIdentity as identityVerify,
-} from '@kervyx/identity';
-import type { AgentIdentity } from '@kervyx/identity';
+} from '@nobulex/identity';
+import type { AgentIdentity } from '@nobulex/identity';
 
 import type {
-  KervyxClientOptions,
+  NobulexClientOptions,
   CreateCovenantOptions,
   EvaluationResult,
   CreateIdentityOptions,
   EvolveOptions,
   ChainValidationResult,
   NarrowingViolationEntry,
-  KervyxEventType,
-  KervyxEventMap,
-  KervyxEventHandler,
+  NobulexEventType,
+  NobulexEventMap,
+  NobulexEventHandler,
 } from './types.js';
 
 // ─── Re-exports ─────────────────────────────────────────────────────────────
@@ -96,7 +96,7 @@ export type {
 
 // Re-export middleware system
 export { MiddlewarePipeline, loggingMiddleware, validationMiddleware, timingMiddleware, rateLimitMiddleware } from './middleware.js';
-export type { MiddlewareContext, MiddlewareResult, MiddlewareFn, KervyxMiddleware } from './middleware.js';
+export type { MiddlewareContext, MiddlewareResult, MiddlewareFn, NobulexMiddleware } from './middleware.js';
 
 // Re-export plugins
 export * from './plugins/index.js';
@@ -104,7 +104,7 @@ export * from './plugins/index.js';
 // Re-export telemetry
 export {
   telemetryMiddleware,
-  KervyxMetrics,
+  NobulexMetrics,
   NoopTracer,
   NoopMeter,
   NoopSpan,
@@ -126,16 +126,16 @@ export type {
 
 // Re-export all SDK types
 export type {
-  KervyxClientOptions,
+  NobulexClientOptions,
   CreateCovenantOptions,
   EvaluationResult,
   CreateIdentityOptions,
   EvolveOptions,
   ChainValidationResult,
   NarrowingViolationEntry,
-  KervyxEventType,
-  KervyxEventMap,
-  KervyxEventHandler,
+  NobulexEventType,
+  NobulexEventMap,
+  NobulexEventHandler,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   CovenantCountersignedEvent,
@@ -145,7 +145,7 @@ export type {
   ChainValidatedEvent,
   EvaluationCompletedEvent,
   KeyRotatedEvent,
-  KervyxEvent,
+  NobulexEvent,
 } from './types.js';
 
 // Re-export core types
@@ -170,7 +170,7 @@ export type {
   ProofType,
   RevocationMethod,
   Severity,
-} from '@kervyx/core';
+} from '@nobulex/core';
 
 export {
   PROTOCOL_VERSION,
@@ -191,9 +191,9 @@ export {
   resolveChain as resolveChain_core,
   computeEffectiveConstraints,
   validateChainNarrowing,
-} from '@kervyx/core';
+} from '@nobulex/core';
 
-export type { ChainResolver } from '@kervyx/core';
+export type { ChainResolver } from '@nobulex/core';
 
 // Re-export crypto types and functions
 export type {
@@ -207,7 +207,7 @@ export type {
   Nonce,
   KeyRotationPolicy,
   ManagedKeyPair,
-} from '@kervyx/crypto';
+} from '@nobulex/crypto';
 
 export {
   generateKeyPair,
@@ -229,7 +229,7 @@ export {
   keyPairFromPrivateKey,
   keyPairFromPrivateKeyHex,
   KeyManager,
-} from '@kervyx/crypto';
+} from '@nobulex/crypto';
 
 // Re-export CCL types and functions
 export type {
@@ -243,7 +243,7 @@ export type {
   Condition,
   CompoundCondition,
   NarrowingViolation,
-} from '@kervyx/ccl';
+} from '@nobulex/ccl';
 
 export {
   parse as parseCCL,
@@ -260,7 +260,7 @@ export {
   parseTokens,
   CCLSyntaxError,
   CCLValidationError,
-} from '@kervyx/ccl';
+} from '@nobulex/ccl';
 
 // Re-export identity types and functions
 export type {
@@ -272,7 +272,7 @@ export type {
   CreateIdentityOptions as CoreCreateIdentityOptions,
   EvolveIdentityOptions as CoreEvolveIdentityOptions,
   RuntimeType,
-} from '@kervyx/identity';
+} from '@nobulex/identity';
 
 export {
   createIdentity as createIdentity_core,
@@ -289,20 +289,20 @@ export {
   triggerReverification,
   computeDecayedTrust,
   completeReverification,
-} from '@kervyx/identity';
+} from '@nobulex/identity';
 
-// ─── KervyxClient ────────────────────────────────────────────────────────────
+// ─── NobulexClient ────────────────────────────────────────────────────────────
 
 /**
- * The main entry point for the Kervyx SDK.
+ * The main entry point for the Nobulex SDK.
  *
- * Provides a unified, high-level API for the entire Kervyx protocol:
+ * Provides a unified, high-level API for the entire Nobulex protocol:
  * key management, covenant lifecycle, identity management, chain
  * operations, and CCL utilities.
  *
  * @example
  * ```typescript
- * const client = new KervyxClient();
+ * const client = new NobulexClient();
  * await client.generateKeyPair();
  *
  * const doc = await client.createCovenant({
@@ -315,14 +315,14 @@ export {
  * console.log(result.valid); // true
  * ```
  */
-export class KervyxClient {
+export class NobulexClient {
   private _keyPair: KeyPair | undefined;
   private readonly _agentId: string | undefined;
   private readonly _strictMode: boolean;
-  private readonly _listeners: Map<KervyxEventType, Set<KervyxEventHandler<KervyxEventType>>>;
+  private readonly _listeners: Map<NobulexEventType, Set<NobulexEventHandler<NobulexEventType>>>;
   private _keyManager: KeyManager | undefined;
 
-  constructor(options: KervyxClientOptions = {}) {
+  constructor(options: NobulexClientOptions = {}) {
     this._keyPair = options.keyPair;
     this._agentId = options.agentId;
     this._strictMode = options.strictMode ?? false;
@@ -471,17 +471,17 @@ export class KervyxClient {
     // ── Input validation (Stripe-quality errors at the public API boundary) ──
     if (!options.issuer || !options.issuer.id) {
       throw new Error(
-        "KervyxClient.createCovenant(): issuer.id is required. Provide a non-empty string identifying the issuing party.",
+        "NobulexClient.createCovenant(): issuer.id is required. Provide a non-empty string identifying the issuing party.",
       );
     }
     if (!options.beneficiary || !options.beneficiary.id) {
       throw new Error(
-        "KervyxClient.createCovenant(): beneficiary.id is required. Provide a non-empty string identifying the beneficiary party.",
+        "NobulexClient.createCovenant(): beneficiary.id is required. Provide a non-empty string identifying the beneficiary party.",
       );
     }
     if (!options.constraints || options.constraints.trim().length === 0) {
       throw new Error(
-        "KervyxClient.createCovenant(): constraints must be a non-empty CCL string. Example: permit read on '/data/**'",
+        "NobulexClient.createCovenant(): constraints must be a non-empty CCL string. Example: permit read on '/data/**'",
       );
     }
 
@@ -497,7 +497,7 @@ export class KervyxClient {
     const privateKey = options.privateKey ?? this._keyPair?.privateKey;
     if (!privateKey) {
       throw new Error(
-        "KervyxClient.createCovenant(): No private key available. Either call client.generateKeyPair() first, or pass { privateKey } in the options.",
+        "NobulexClient.createCovenant(): No private key available. Either call client.generateKeyPair() first, or pass { privateKey } in the options.",
       );
     }
 
@@ -600,7 +600,7 @@ export class KervyxClient {
     const kp = signerKeyPair ?? this._keyPair;
     if (!kp) {
       throw new Error(
-        "KervyxClient.countersign(): No key pair available. Either call client.generateKeyPair() first, or pass a KeyPair as the third argument.",
+        "NobulexClient.countersign(): No key pair available. Either call client.generateKeyPair() first, or pass a KeyPair as the third argument.",
       );
     }
 
@@ -643,12 +643,12 @@ export class KervyxClient {
   ): Promise<EvaluationResult> {
     if (!action || action.trim().length === 0) {
       throw new Error(
-        "KervyxClient.evaluateAction(): action must be a non-empty string (e.g., 'read', 'write', 'api.call').",
+        "NobulexClient.evaluateAction(): action must be a non-empty string (e.g., 'read', 'write', 'api.call').",
       );
     }
     if (!resource || resource.trim().length === 0) {
       throw new Error(
-        "KervyxClient.evaluateAction(): resource must be a non-empty string (e.g., '/data/**', '/api/endpoint').",
+        "NobulexClient.evaluateAction(): resource must be a non-empty string (e.g., '/data/**', '/api/endpoint').",
       );
     }
 
@@ -699,7 +699,7 @@ export class KervyxClient {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
       throw new Error(
-        "KervyxClient.createIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
+        "NobulexClient.createIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
 
@@ -748,7 +748,7 @@ export class KervyxClient {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
       throw new Error(
-        "KervyxClient.evolveIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
+        "NobulexClient.evolveIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
 
@@ -929,18 +929,18 @@ export class KervyxClient {
    * // later: off() to unsubscribe
    * ```
    */
-  on<T extends KervyxEventType>(
+  on<T extends NobulexEventType>(
     event: T,
-    handler: KervyxEventHandler<T>,
+    handler: NobulexEventHandler<T>,
   ): () => void {
     if (!this._listeners.has(event)) {
       this._listeners.set(event, new Set());
     }
     const handlers = this._listeners.get(event)!;
-    handlers.add(handler as KervyxEventHandler<KervyxEventType>);
+    handlers.add(handler as NobulexEventHandler<NobulexEventType>);
 
     return () => {
-      handlers.delete(handler as KervyxEventHandler<KervyxEventType>);
+      handlers.delete(handler as NobulexEventHandler<NobulexEventType>);
     };
   }
 
@@ -950,13 +950,13 @@ export class KervyxClient {
    * @param event - The event type.
    * @param handler - The handler function to remove.
    */
-  off<T extends KervyxEventType>(
+  off<T extends NobulexEventType>(
     event: T,
-    handler: KervyxEventHandler<T>,
+    handler: NobulexEventHandler<T>,
   ): void {
     const handlers = this._listeners.get(event);
     if (handlers) {
-      handlers.delete(handler as KervyxEventHandler<KervyxEventType>);
+      handlers.delete(handler as NobulexEventHandler<NobulexEventType>);
     }
   }
 
@@ -966,7 +966,7 @@ export class KervyxClient {
    *
    * @param event - Optional event type. If omitted, removes all handlers.
    */
-  removeAllListeners(event?: KervyxEventType): void {
+  removeAllListeners(event?: NobulexEventType): void {
     if (event) {
       this._listeners.delete(event);
     } else {
@@ -975,9 +975,9 @@ export class KervyxClient {
   }
 
   /** Emit an event to all registered handlers. */
-  private _emit<T extends KervyxEventType>(
+  private _emit<T extends NobulexEventType>(
     event: T,
-    payload: KervyxEventMap[T],
+    payload: NobulexEventMap[T],
   ): void {
     const handlers = this._listeners.get(event);
     if (handlers) {
@@ -1099,7 +1099,7 @@ export class QuickCovenant {
 export * from './adapters/index.js';
 
 // ─── Store ────────────────────────────────────────────────────────────────────
-export { MemoryStore, FileStore, SqliteStore, QueryBuilder, createQuery, StoreIndex, IndexedStore, createTransaction } from '@kervyx/store';
+export { MemoryStore, FileStore, SqliteStore, QueryBuilder, createQuery, StoreIndex, IndexedStore, createTransaction } from '@nobulex/store';
 export type {
   CovenantStore,
   StoreFilter,
@@ -1113,7 +1113,7 @@ export type {
   SortOrder,
   IndexField,
   Transaction,
-} from '@kervyx/store';
+} from '@nobulex/store';
 
 // ─── Breach Detection ─────────────────────────────────────────────────────────
 export {
@@ -1129,13 +1129,13 @@ export {
   createIncidentReport,
   escalateIncident,
   resolveIncident,
-} from '@kervyx/breach';
+} from '@nobulex/breach';
 export type {
   BreachAttestation,
   TrustStatus,
   TrustNode,
   BreachEvent,
-} from '@kervyx/breach';
+} from '@nobulex/breach';
 
 // ─── Reputation ───────────────────────────────────────────────────────────────
 export {
@@ -1170,7 +1170,7 @@ export {
   createStakedAgent,
   recordQuery,
   computeGovernanceVote,
-} from '@kervyx/reputation';
+} from '@nobulex/reputation';
 export type {
   ReputationScore,
   ExecutionReceipt,
@@ -1185,7 +1185,7 @@ export type {
   StakeTier,
   StakeTierConfig,
   StakedAgent,
-} from '@kervyx/reputation';
+} from '@nobulex/reputation';
 
 // ─── Proof ────────────────────────────────────────────────────────────────────
 export {
@@ -1197,13 +1197,13 @@ export {
   hashToField,
   fieldToHex,
   FIELD_PRIME,
-} from '@kervyx/proof';
+} from '@nobulex/proof';
 export type {
   ComplianceProof,
   ProofVerificationResult,
   ProofGenerationOptions,
   AuditEntryData,
-} from '@kervyx/proof';
+} from '@nobulex/proof';
 
 // ─── Attestation ──────────────────────────────────────────────────────────────
 export {
@@ -1219,7 +1219,7 @@ export {
   buildEntanglementNetwork,
   verifyEntangled,
   assessConditionalRisk,
-} from '@kervyx/attestation';
+} from '@nobulex/attestation';
 export type {
   ExternalAttestation,
   AttestationReconciliation,
@@ -1229,10 +1229,10 @@ export type {
   ChainVerificationResult,
   AgentAction,
   AttestationCoverageResult,
-} from '@kervyx/attestation';
+} from '@nobulex/attestation';
 
 // ─── Verifier ─────────────────────────────────────────────────────────────────
-export { Verifier, verifyBatch } from '@kervyx/verifier';
+export { Verifier, verifyBatch } from '@nobulex/verifier';
 export type {
   VerifierOptions,
   VerificationReport,
@@ -1245,7 +1245,7 @@ export type {
   BatchSummary,
   VerificationRecord,
   VerificationKind,
-} from '@kervyx/verifier';
+} from '@nobulex/verifier';
 
 // ─── Discovery ─────────────────────────────────────────────────────────────────
 export {
@@ -1257,7 +1257,7 @@ export {
   buildKeySet,
   WELL_KNOWN_PATH,
   CONFIGURATION_PATH,
-  KERVYX_MEDIA_TYPE,
+  NOBULEX_MEDIA_TYPE,
   MAX_DOCUMENT_AGE_MS,
   createFederationConfig,
   addResolver,
@@ -1270,7 +1270,7 @@ export {
   createTransaction as createMarketplaceTransaction,
   completeTransaction,
   disputeTransaction,
-} from '@kervyx/discovery';
+} from '@nobulex/discovery';
 export type {
   DiscoveryDocument,
   AgentKeyEntry,
@@ -1294,7 +1294,7 @@ export type {
   MarketplaceConfig,
   MarketplaceQuery,
   MarketplaceTransaction,
-} from '@kervyx/discovery';
+} from '@nobulex/discovery';
 
 // ─── Schema ────────────────────────────────────────────────────────────────────
 export {
@@ -1306,11 +1306,11 @@ export {
   validateDiscoverySchema,
   validateAgentKeySchema,
   getAllSchemas,
-} from '@kervyx/schema';
+} from '@nobulex/schema';
 export type {
   SchemaValidationError,
   SchemaValidationResult,
-} from '@kervyx/schema';
+} from '@nobulex/schema';
 
 // ─── Temporal ─────────────────────────────────────────────────────────────────
 export {
@@ -1330,7 +1330,7 @@ export {
   evaluatePhaseTransition,
   transitionPhase,
   computeVotingPower,
-} from '@kervyx/temporal';
+} from '@nobulex/temporal';
 export type {
   TriggerType,
   TriggerAction,
@@ -1355,7 +1355,7 @@ export type {
   GovernancePhase,
   GovernanceState,
   GovernanceBootstrapConfig,
-} from '@kervyx/temporal';
+} from '@nobulex/temporal';
 
 // ─── Trust Gate ───────────────────────────────────────────────────────────────
 export { createTrustGate, evaluateAccess, calculateRevenueLift } from './trust-gate.js';
@@ -1454,7 +1454,7 @@ export {
   isExpired as isCanaryExpired,
   canarySchedule,
   canaryCorrelation,
-} from '@kervyx/canary';
+} from '@nobulex/canary';
 export type {
   ChallengePayload,
   Canary,
@@ -1462,7 +1462,7 @@ export type {
   CanaryScheduleEntry,
   CanaryScheduleResult,
   CanaryCorrelationResult,
-} from '@kervyx/canary';
+} from '@nobulex/canary';
 
 // ─── Game Theory ──────────────────────────────────────────────────────────────
 export {
@@ -1480,7 +1480,7 @@ export {
   defineConjecture,
   getStandardConjectures,
   analyzeImpossibilityBounds,
-} from '@kervyx/gametheory';
+} from '@nobulex/gametheory';
 export type {
   HonestyParameters,
   HonestyProof,
@@ -1497,7 +1497,7 @@ export type {
   ConjectureStatus,
   Conjecture,
   ImpossibilityBound,
-} from '@kervyx/gametheory';
+} from '@nobulex/gametheory';
 
 // ─── Composition ──────────────────────────────────────────────────────────────
 export {
@@ -1520,7 +1520,7 @@ export {
   proposeImprovement,
   applyImprovement,
   verifyEnvelopeIntegrity,
-} from '@kervyx/composition';
+} from '@nobulex/composition';
 export type {
   CompositionProof,
   ComposedConstraint,
@@ -1533,7 +1533,7 @@ export type {
   SafetyEnvelope,
   ImprovementProposal,
   ImprovementResult,
-} from '@kervyx/composition';
+} from '@nobulex/composition';
 
 // ─── Antifragile ──────────────────────────────────────────────────────────────
 export {
@@ -1551,7 +1551,7 @@ export {
   PhaseTransitionDetector,
   FitnessEvolution,
   calibratedAntifragilityIndex,
-} from '@kervyx/antifragile';
+} from '@nobulex/antifragile';
 export type {
   BreachAntibody,
   NetworkHealth,
@@ -1565,7 +1565,7 @@ export type {
   ScoredAntibody,
   FitnessEvolutionConfig,
   CalibratedAntifragilityResult,
-} from '@kervyx/antifragile';
+} from '@nobulex/antifragile';
 
 // ─── Consensus ────────────────────────────────────────────────────────────────
 export {
@@ -1584,7 +1584,7 @@ export {
   DynamicQuorum,
   PipelineSimulator,
   QuorumIntersectionVerifier,
-} from '@kervyx/consensus';
+} from '@nobulex/consensus';
 export type {
   AccountabilityTier,
   AccountabilityScore,
@@ -1607,7 +1607,7 @@ export type {
   NetworkCondition,
   PipelineSimulationResult,
   QuorumIntersectionResult,
-} from '@kervyx/consensus';
+} from '@nobulex/consensus';
 
 // ─── Robustness ───────────────────────────────────────────────────────────────
 export {
@@ -1617,7 +1617,7 @@ export {
   generateAdversarialInputs,
   formalVerification,
   robustnessScore,
-} from '@kervyx/robustness';
+} from '@nobulex/robustness';
 export type {
   RobustnessProof,
   InputBound,
@@ -1630,7 +1630,7 @@ export type {
   Contradiction,
   RobustnessScoreResult,
   RobustnessFactor,
-} from '@kervyx/robustness';
+} from '@nobulex/robustness';
 
 // ─── Recursive ────────────────────────────────────────────────────────────────
 export {
@@ -1641,7 +1641,7 @@ export {
   addLayer,
   computeTrustTransitivity,
   findMinimalVerificationSet,
-} from '@kervyx/recursive';
+} from '@nobulex/recursive';
 export type {
   MetaTargetType,
   MetaCovenant,
@@ -1653,7 +1653,7 @@ export type {
   TransitiveTrustResult,
   VerifierNode,
   MinimalVerificationSetResult,
-} from '@kervyx/recursive';
+} from '@nobulex/recursive';
 
 // ─── Alignment ────────────────────────────────────────────────────────────────
 export {
@@ -1668,7 +1668,7 @@ export {
   DriftForecaster,
   AlignmentSurface,
   AlignmentFeedbackLoop,
-} from '@kervyx/alignment';
+} from '@nobulex/alignment';
 export type {
   AlignmentProperty,
   AlignmentCovenant,
@@ -1687,7 +1687,7 @@ export type {
   FeedbackLoopConfig,
   AlignmentOutcome,
   FeedbackLoopState,
-} from '@kervyx/alignment';
+} from '@nobulex/alignment';
 
 // ─── Norms ────────────────────────────────────────────────────────────────────
 export {
@@ -1697,7 +1697,7 @@ export {
   generateTemplate,
   normConflictDetection,
   normPrecedence,
-} from '@kervyx/norms';
+} from '@nobulex/norms';
 export type {
   DiscoveredNorm,
   NormAnalysis,
@@ -1708,7 +1708,7 @@ export type {
   NormDefinition,
   NormConflict,
   NormPrecedenceResult,
-} from '@kervyx/norms';
+} from '@nobulex/norms';
 
 // ─── Substrate ────────────────────────────────────────────────────────────────
 export {
@@ -1721,7 +1721,7 @@ export {
   substrateCompatibility,
   constraintTranslation,
   substrateCapabilityMatrix,
-} from '@kervyx/substrate';
+} from '@nobulex/substrate';
 export type {
   SubstrateType,
   SubstrateAdapter,
@@ -1736,7 +1736,7 @@ export type {
   CapabilityEntry,
   CapabilityMatrixRow,
   CapabilityMatrix,
-} from '@kervyx/substrate';
+} from '@nobulex/substrate';
 
 // ─── Derivatives ──────────────────────────────────────────────────────────────
 export {
@@ -1749,7 +1749,7 @@ export {
   blackScholesPrice,
   valueAtRisk,
   hedgeRatio,
-} from '@kervyx/derivatives';
+} from '@nobulex/derivatives';
 export type {
   TrustFuture,
   AgentInsurancePolicy,
@@ -1764,7 +1764,7 @@ export type {
   VaRResult,
   HedgeRatioParams,
   HedgeRatioResult,
-} from '@kervyx/derivatives';
+} from '@nobulex/derivatives';
 
 // ─── Legal ────────────────────────────────────────────────────────────────────
 export {
@@ -1786,7 +1786,7 @@ export {
   takeSnapshot,
   analyzeTrajectory,
   generateRegulatoryReport,
-} from '@kervyx/legal';
+} from '@nobulex/legal';
 export type {
   LegalIdentityPackage,
   ComplianceRecord,
@@ -1824,7 +1824,7 @@ export type {
   ComplianceSnapshot,
   ComplianceAlert,
   ComplianceAutopilotTrajectory,
-} from '@kervyx/legal';
+} from '@nobulex/legal';
 
 // ─── Enforcement ──────────────────────────────────────────────────────────────
 export {
@@ -1842,7 +1842,7 @@ export {
   addDefenseLayer,
   disableLayer,
   AuditChain,
-} from '@kervyx/enforcement';
+} from '@nobulex/enforcement';
 export type {
   ExecutionOutcome,
   AuditEntry,
@@ -1859,7 +1859,7 @@ export type {
   DefenseInDepthConfig,
   DefenseAnalysis,
   ChainedAuditEntry,
-} from '@kervyx/enforcement';
+} from '@nobulex/enforcement';
 
 // ─── Negotiation ──────────────────────────────────────────────────────────────
 export {
@@ -1878,7 +1878,7 @@ export {
   IncrementalParetoFrontier,
   zeuthenStrategy,
   runZeuthenNegotiation,
-} from '@kervyx/negotiation';
+} from '@nobulex/negotiation';
 export type {
   NegotiationSession,
   Proposal,
@@ -1893,5 +1893,5 @@ export type {
   ConcessionEvent,
   ConcessionConfig,
   ZeuthenResult,
-} from '@kervyx/negotiation';
+} from '@nobulex/negotiation';
 export { protect, listPresets, getPreset } from './easy';

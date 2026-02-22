@@ -1,16 +1,16 @@
-# Kervyx Protocol - Python Implementation
+# Nobulex Protocol - Python Implementation
 
-A complete Python implementation of the Kervyx protocol core primitives for AI covenant management.
+A complete Python implementation of the Nobulex protocol core primitives for AI covenant management.
 
 ## Overview
 
-This package implements the Kervyx protocol, providing:
+This package implements the Nobulex protocol, providing:
 
-- **Crypto** (`kervyx.crypto`) -- Ed25519 signing/verification, SHA-256 hashing, JCS canonicalization (RFC 8785)
-- **CCL** (`kervyx.ccl`) -- Constraint Commitment Language parser and evaluator
-- **Covenant** (`kervyx.covenant`) -- Covenant document build, verify, chain, serialize/deserialize
-- **Identity** (`kervyx.identity`) -- Agent identity creation, evolution, verification
-- **Store** (`kervyx.store`) -- In-memory covenant document storage
+- **Crypto** (`nobulex.crypto`) -- Ed25519 signing/verification, SHA-256 hashing, JCS canonicalization (RFC 8785)
+- **CCL** (`nobulex.ccl`) -- Constraint Commitment Language parser and evaluator
+- **Covenant** (`nobulex.covenant`) -- Covenant document build, verify, chain, serialize/deserialize
+- **Identity** (`nobulex.identity`) -- Agent identity creation, evolution, verification
+- **Store** (`nobulex.store`) -- In-memory covenant document storage
 
 ## Installation
 
@@ -26,7 +26,7 @@ pip install -e ".[dev]"
 ## Quick Start
 
 ```python
-from kervyx import crypto, covenant
+from nobulex import crypto, covenant
 
 # Generate key pairs
 issuer_kp = crypto.generate_key_pair()
@@ -72,4 +72,4 @@ reference implementation. Key interoperability points:
 
 ## Protocol Version
 
-This implementation targets Kervyx protocol version 1.0.
+This implementation targets Nobulex protocol version 1.0.

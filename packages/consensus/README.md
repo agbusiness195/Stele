@@ -1,11 +1,11 @@
-# @kervyx/consensus
+# @nobulex/consensus
 
-Byzantine fault-tolerant consensus protocols for the Kervyx covenant framework. Includes accountability scoring, BFT analysis, quorum computation, latency estimation, a HotStuff-inspired pipelined BFT implementation, dynamic quorum reconfiguration, pipeline simulation, and quorum intersection verification.
+Byzantine fault-tolerant consensus protocols for the Nobulex covenant framework. Includes accountability scoring, BFT analysis, quorum computation, latency estimation, a HotStuff-inspired pipelined BFT implementation, dynamic quorum reconfiguration, pipeline simulation, and quorum intersection verification.
 
 ## Installation
 
 ```bash
-npm install @kervyx/consensus
+npm install @nobulex/consensus
 ```
 
 ## Key APIs
@@ -29,7 +29,7 @@ import {
   quorumSize,
   StreamlinedBFT,
   DynamicQuorum,
-} from '@kervyx/consensus';
+} from '@nobulex/consensus';
 
 // Compute accountability score
 const score = computeAccountability('agent-1', {
@@ -74,4 +74,4 @@ dq.transition(['n1', 'n2', 'n3']);
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

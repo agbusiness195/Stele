@@ -1,11 +1,11 @@
-# @kervyx/store
+# @nobulex/store
 
 Pluggable storage backends for covenant documents. Ships with `MemoryStore`, `FileStore`, and `SqliteStore`.
 
 ## Installation
 
 ```bash
-npm install @kervyx/store
+npm install @nobulex/store
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @kervyx/store
 ### MemoryStore
 
 ```typescript
-import { MemoryStore } from '@kervyx/store';
+import { MemoryStore } from '@nobulex/store';
 
 const store = new MemoryStore();
 
@@ -38,7 +38,7 @@ const docs = await store.getBatch([id1, id2]);
 ### FileStore
 
 ```typescript
-import { FileStore } from '@kervyx/store';
+import { FileStore } from '@nobulex/store';
 
 const store = new FileStore('/path/to/covenants');
 await store.put(doc);
@@ -48,8 +48,8 @@ const retrieved = await store.get(doc.id);
 ### SqliteStore (bring-your-own-driver)
 
 ```typescript
-import { SqliteStore } from '@kervyx/store';
-import type { SQLiteDriver } from '@kervyx/store';
+import { SqliteStore } from '@nobulex/store';
+import type { SQLiteDriver } from '@nobulex/store';
 
 const driver: SQLiteDriver = { /* your sqlite driver implementation */ };
 const store = new SqliteStore(driver);
@@ -61,7 +61,7 @@ await store.put(doc);
 ```typescript
 store.onEvent((event) => console.log(`${event.type}: ${event.documentId}`));
 
-import { createQuery } from '@kervyx/store';
+import { createQuery } from '@nobulex/store';
 const query = createQuery().where({ issuerId: 'alice' }).sortBy('createdAt', 'desc');
 ```
 
@@ -76,4 +76,4 @@ const query = createQuery().where({ issuerId: 'alice' }).sortBy('createdAt', 'de
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference and architecture guide.

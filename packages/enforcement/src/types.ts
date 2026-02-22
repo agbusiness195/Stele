@@ -1,5 +1,5 @@
-import type { HashHex } from '@kervyx/crypto';
-import type { Statement, Severity, EvaluationResult } from '@kervyx/ccl';
+import type { HashHex } from '@nobulex/crypto';
+import type { Statement, Severity, EvaluationResult } from '@nobulex/ccl';
 
 export type ExecutionOutcome = 'EXECUTED' | 'DENIED' | 'IMPOSSIBLE';
 

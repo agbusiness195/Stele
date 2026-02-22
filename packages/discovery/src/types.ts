@@ -1,7 +1,7 @@
 /**
- * @kervyx/discovery — Types for the Kervyx cross-platform discovery protocol.
+ * @nobulex/discovery — Types for the Nobulex cross-platform discovery protocol.
  *
- * Defines the `.well-known/kervyx/` endpoint format, key discovery (JWKS-like),
+ * Defines the `.well-known/nobulex/` endpoint format, key discovery (JWKS-like),
  * protocol version negotiation, and cross-platform covenant resolution.
  *
  * @packageDocumentation
@@ -10,7 +10,7 @@
 // ─── Discovery Document ─────────────────────────────────────────────────────
 
 /**
- * The discovery document served at `/.well-known/kervyx/configuration`.
+ * The discovery document served at `/.well-known/nobulex/configuration`.
  *
  * Modeled after OAuth 2.0 Authorization Server Metadata (RFC 8414)
  * and OpenID Connect Discovery. This is the entry point for any
@@ -18,8 +18,8 @@
  *
  * @example
  * ```
- * GET https://platform.example/.well-known/kervyx/configuration
- * Content-Type: application/kervyx+json
+ * GET https://platform.example/.well-known/nobulex/configuration
+ * Content-Type: application/nobulex+json
  * ```
  */
 export interface DiscoveryDocument {
@@ -41,7 +41,7 @@ export interface DiscoveryDocument {
   /** URL of the breach reporting endpoint. */
   breach_endpoint?: string;
 
-  /** Kervyx protocol versions supported by this platform. */
+  /** Nobulex protocol versions supported by this platform. */
   protocol_versions_supported: string[];
 
   /** Signature schemes supported (e.g., ["ed25519"]). */
@@ -84,7 +84,7 @@ export interface AgentKeyEntry {
   /** Unique key identifier (hex-encoded SHA-256 of the public key). */
   kid: string;
 
-  /** Key type (always "Ed25519" for Kervyx). */
+  /** Key type (always "Ed25519" for Nobulex). */
   kty: 'Ed25519';
 
   /** Hex-encoded Ed25519 public key. */

@@ -1,16 +1,16 @@
 /**
- * Cross-package integration tests for the Kervyx SDK.
+ * Cross-package integration tests for the Nobulex SDK.
  *
- * This test exercises the full lifecycle of the Kervyx protocol across
+ * This test exercises the full lifecycle of the Nobulex protocol across
  * all core packages:
  *
- *   @kervyx/crypto     - Key generation and hashing primitives
- *   @kervyx/identity   - Agent identity creation and verification
- *   @kervyx/core       - Covenant document building and verification
- *   @kervyx/enforcement - Runtime constraint monitoring with audit logging
- *   @kervyx/breach     - Breach attestation creation and trust graph propagation
- *   @kervyx/proof      - Zero-knowledge compliance proof generation and verification
- *   @kervyx/reputation - Execution receipts, receipt chains, and reputation scoring
+ *   @nobulex/crypto     - Key generation and hashing primitives
+ *   @nobulex/identity   - Agent identity creation and verification
+ *   @nobulex/core       - Covenant document building and verification
+ *   @nobulex/enforcement - Runtime constraint monitoring with audit logging
+ *   @nobulex/breach     - Breach attestation creation and trust graph propagation
+ *   @nobulex/proof      - Zero-knowledge compliance proof generation and verification
+ *   @nobulex/reputation - Execution receipts, receipt chains, and reputation scoring
  *
  * Scenario: An AI code-review agent operates under a covenant that permits
  * reading source files and generating reviews, but denies writing to
@@ -27,15 +27,15 @@ import {
   sha256Object,
   toHex,
   timestamp,
-} from '@kervyx/crypto';
-import type { KeyPair, HashHex } from '@kervyx/crypto';
+} from '@nobulex/crypto';
+import type { KeyPair, HashHex } from '@nobulex/crypto';
 
 import {
   createIdentity,
   evolveIdentity,
   verifyIdentity,
-} from '@kervyx/identity';
-import type { AgentIdentity } from '@kervyx/identity';
+} from '@nobulex/identity';
+import type { AgentIdentity } from '@nobulex/identity';
 
 import {
   buildCovenant,
@@ -44,28 +44,28 @@ import {
   resolveChain,
   computeEffectiveConstraints,
   validateChainNarrowing,
-} from '@kervyx/core';
-import type { CovenantDocument } from '@kervyx/core';
+} from '@nobulex/core';
+import type { CovenantDocument } from '@nobulex/core';
 
 import {
   Monitor,
   MonitorDeniedError,
   verifyMerkleProof,
-} from '@kervyx/enforcement';
-import type { AuditEntry } from '@kervyx/enforcement';
+} from '@nobulex/enforcement';
+import type { AuditEntry } from '@nobulex/enforcement';
 
 import {
   createBreachAttestation,
   verifyBreachAttestation,
   TrustGraph,
-} from '@kervyx/breach';
-import type { BreachAttestation, BreachEvent } from '@kervyx/breach';
+} from '@nobulex/breach';
+import type { BreachAttestation, BreachEvent } from '@nobulex/breach';
 
 import {
   generateComplianceProof,
   verifyComplianceProof,
-} from '@kervyx/proof';
-import type { AuditEntryData } from '@kervyx/proof';
+} from '@nobulex/proof';
+import type { AuditEntryData } from '@nobulex/proof';
 
 import {
   createReceipt,
@@ -77,8 +77,8 @@ import {
   burnStake,
   createDelegation,
   coBurnDelegation,
-} from '@kervyx/reputation';
-import type { ExecutionReceipt } from '@kervyx/reputation';
+} from '@nobulex/reputation';
+import type { ExecutionReceipt } from '@nobulex/reputation';
 
 // ---------------------------------------------------------------------------
 // Shared CCL constraint definitions used across all tests.
@@ -102,7 +102,7 @@ const CONSTRAINTS = [
 // Top-level describe
 // ---------------------------------------------------------------------------
 
-describe('Kervyx SDK: Full cross-package integration flow', () => {
+describe('Nobulex SDK: Full cross-package integration flow', () => {
   // Shared state across sequential test blocks. Each describe block
   // produces artifacts consumed by the next one, mirroring a real
   // deployment lifecycle.
@@ -122,7 +122,7 @@ describe('Kervyx SDK: Full cross-package integration flow', () => {
   // Step 0: Key generation
   // =========================================================================
 
-  describe('Step 0 - Cryptographic key generation (@kervyx/crypto)', () => {
+  describe('Step 0 - Cryptographic key generation (@nobulex/crypto)', () => {
     it('should generate distinct key pairs for operator, beneficiary, agent, and reporter', async () => {
       [operatorKeyPair, beneficiaryKeyPair, agentKeyPair, reporterKeyPair] =
         await Promise.all([
@@ -151,10 +151,10 @@ describe('Kervyx SDK: Full cross-package integration flow', () => {
   });
 
   // =========================================================================
-  // Step 1: Agent identity creation and verification (@kervyx/identity)
+  // Step 1: Agent identity creation and verification (@nobulex/identity)
   // =========================================================================
 
-  describe('Step 1 - Agent identity creation (@kervyx/identity)', () => {
+  describe('Step 1 - Agent identity creation (@nobulex/identity)', () => {
     it('should create a valid agent identity with model attestation and capabilities', async () => {
       agentIdentity = await createIdentity({
         operatorKeyPair,
@@ -208,10 +208,10 @@ describe('Kervyx SDK: Full cross-package integration flow', () => {
   });
 
   // =========================================================================
-  // Step 2: Covenant creation and verification (@kervyx/core)
+  // Step 2: Covenant creation and verification (@nobulex/core)
   // =========================================================================
 
-  describe('Step 2 - Covenant building (@kervyx/core)', () => {
+  describe('Step 2 - Covenant building (@nobulex/core)', () => {
     it('should build a signed covenant document with CCL constraints', async () => {
       covenant = await buildCovenant({
         issuer: {
@@ -273,10 +273,10 @@ describe('Kervyx SDK: Full cross-package integration flow', () => {
   });
 
   // =========================================================================
-  // Step 3: Runtime enforcement monitoring (@kervyx/enforcement)
+  // Step 3: Runtime enforcement monitoring (@nobulex/enforcement)
   // =========================================================================
 
-  describe('Step 3 - Constraint enforcement and audit logging (@kervyx/enforcement)', () => {
+  describe('Step 3 - Constraint enforcement and audit logging (@nobulex/enforcement)', () => {
     it('should create a monitor from the covenant constraints in enforce mode', () => {
       monitor = new Monitor(covenant.id, CONSTRAINTS, {
         mode: 'enforce',
@@ -397,10 +397,10 @@ describe('Kervyx SDK: Full cross-package integration flow', () => {
   });
 
   // =========================================================================
-  // Step 4: Breach detection, attestation, and trust graph (@kervyx/breach)
+  // Step 4: Breach detection, attestation, and trust graph (@nobulex/breach)
   // =========================================================================
 
-  describe('Step 4 - Breach attestation and trust graph propagation (@kervyx/breach)', () => {
+  describe('Step 4 - Breach attestation and trust graph propagation (@nobulex/breach)', () => {
     it('should create a signed breach attestation for the denied db.write action', async () => {
       const auditLog = monitor.getAuditLog();
       const deniedEntry = auditLog.entries.find(
@@ -518,10 +518,10 @@ describe('Kervyx SDK: Full cross-package integration flow', () => {
   });
 
   // =========================================================================
-  // Step 5: Compliance proof generation and verification (@kervyx/proof)
+  // Step 5: Compliance proof generation and verification (@nobulex/proof)
   // =========================================================================
 
-  describe('Step 5 - Compliance proof generation and verification (@kervyx/proof)', () => {
+  describe('Step 5 - Compliance proof generation and verification (@nobulex/proof)', () => {
     let auditEntryData: AuditEntryData[];
 
     it('should convert audit log entries into proof-compatible format', () => {
@@ -634,10 +634,10 @@ describe('Kervyx SDK: Full cross-package integration flow', () => {
 
   // =========================================================================
   // Step 6: Execution receipts, chain verification, and reputation scoring
-  //         (@kervyx/reputation)
+  //         (@nobulex/reputation)
   // =========================================================================
 
-  describe('Step 6 - Execution receipts and reputation scoring (@kervyx/reputation)', () => {
+  describe('Step 6 - Execution receipts and reputation scoring (@nobulex/reputation)', () => {
     const receipts: ExecutionReceipt[] = [];
 
     it('should create a fulfilled execution receipt for the compliant execution', async () => {
@@ -881,7 +881,7 @@ describe('Kervyx SDK: Full cross-package integration flow', () => {
   // Step 8: Log-only mode (non-throwing) enforcement
   // =========================================================================
 
-  describe('Step 8 - Log-only mode enforcement (@kervyx/enforcement)', () => {
+  describe('Step 8 - Log-only mode enforcement (@nobulex/enforcement)', () => {
     it('should not throw on denied actions in log_only mode', async () => {
       const logOnlyMonitor = new Monitor(covenant.id, CONSTRAINTS, {
         mode: 'log_only',

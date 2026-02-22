@@ -1,7 +1,7 @@
 /**
- * @kervyx/cli doctor command.
+ * @nobulex/cli doctor command.
  *
- * Checks the health of the Kervyx installation by running a series of
+ * Checks the health of the Nobulex installation by running a series of
  * diagnostic tests: Node.js version, package importability, crypto
  * operations, covenant build/verify round-trip, CCL parsing, config
  * file readability, and stale dist file detection.
@@ -48,13 +48,13 @@ function checkNodeVersion(): DoctorCheck {
 }
 
 /**
- * Check that core @kervyx/* packages can be imported.
+ * Check that core @nobulex/* packages can be imported.
  */
 async function checkPackageImports(): Promise<DoctorCheck> {
   const packages = [
-    '@kervyx/crypto',
-    '@kervyx/ccl',
-    '@kervyx/core',
+    '@nobulex/crypto',
+    '@nobulex/ccl',
+    '@nobulex/core',
   ];
 
   const failed: string[] = [];
@@ -71,7 +71,7 @@ async function checkPackageImports(): Promise<DoctorCheck> {
     return {
       name: 'Package imports',
       status: 'ok',
-      message: 'All @kervyx/* packages importable (crypto, ccl, core)',
+      message: 'All @nobulex/* packages importable (crypto, ccl, core)',
     };
   }
 
@@ -87,7 +87,7 @@ async function checkPackageImports(): Promise<DoctorCheck> {
  */
 async function checkCrypto(): Promise<DoctorCheck> {
   try {
-    const { generateKeyPair } = await import('@kervyx/crypto');
+    const { generateKeyPair } = await import('@nobulex/crypto');
     const kp = await generateKeyPair();
 
     if (kp.publicKeyHex && kp.publicKeyHex.length === 64) {
@@ -118,8 +118,8 @@ async function checkCrypto(): Promise<DoctorCheck> {
  */
 async function checkCore(): Promise<DoctorCheck> {
   try {
-    const { generateKeyPair } = await import('@kervyx/crypto');
-    const { buildCovenant, verifyCovenant } = await import('@kervyx/core');
+    const { generateKeyPair } = await import('@nobulex/crypto');
+    const { buildCovenant, verifyCovenant } = await import('@nobulex/core');
 
     const kp = await generateKeyPair();
     const doc = await buildCovenant({
@@ -172,7 +172,7 @@ async function checkCore(): Promise<DoctorCheck> {
  */
 async function checkCCL(): Promise<DoctorCheck> {
   try {
-    const { parse } = await import('@kervyx/ccl');
+    const { parse } = await import('@nobulex/ccl');
     const doc = parse("permit read on '**'\ndeny write on '/system/**'");
 
     if (doc.permits.length === 1 && doc.denies.length === 1) {
@@ -209,7 +209,7 @@ function checkConfig(configDir?: string): DoctorCheck {
       return {
         name: 'Config',
         status: 'warn',
-        message: 'No kervyx.config.json found (optional)',
+        message: 'No nobulex.config.json found (optional)',
       };
     }
 
@@ -245,7 +245,7 @@ function checkStaleDist(): DoctorCheck {
     // Verify that the main require paths resolve without error
     // This is a heuristic check -- if we got this far, the CLI itself is running
     // which means the dist is not completely stale.
-    const cliPackageJson = require.resolve('@kervyx/cli/package.json');
+    const cliPackageJson = require.resolve('@nobulex/cli/package.json');
 
     if (cliPackageJson) {
       return {
@@ -277,14 +277,14 @@ function checkStaleDist(): DoctorCheck {
  *
  * The checks verify:
  * - Node.js version is >= 18
- * - All @kervyx/* packages can be imported
+ * - All @nobulex/* packages can be imported
  * - Crypto key pair generation works
  * - Covenant build and verify round-trip succeeds
  * - CCL parsing works
  * - Config file is readable (if exists)
  * - No stale dist files detected
  *
- * @param configDir - Optional directory to search for kervyx.config.json.
+ * @param configDir - Optional directory to search for nobulex.config.json.
  * @returns An array of DoctorCheck results.
  *
  * @example

@@ -1,16 +1,16 @@
-# @kervyx/mcp-server
+# @nobulex/mcp-server
 
-Model Context Protocol (MCP) server that exposes Kervyx covenant operations as tools to any AI agent via JSON-RPC 2.0.
+Model Context Protocol (MCP) server that exposes Nobulex covenant operations as tools to any AI agent via JSON-RPC 2.0.
 
 ## Installation
 
 ```bash
-npm install @kervyx/mcp-server
+npm install @nobulex/mcp-server
 ```
 
 ## Key APIs
 
-- **KervyxServer**: MCP server class that handles JSON-RPC 2.0 messages and exposes Kervyx tools. Supports `initialize`, `tools/list`, `tools/call`, and `ping` methods.
+- **NobulexServer**: MCP server class that handles JSON-RPC 2.0 messages and exposes Nobulex tools. Supports `initialize`, `tools/list`, `tools/call`, and `ping` methods.
 - **createAuthMiddleware()**: Authentication middleware for securing MCP endpoints.
 - **JSON_RPC_ERRORS**: Standard JSON-RPC 2.0 error code constants.
 
@@ -28,11 +28,11 @@ npm install @kervyx/mcp-server
 ## Usage
 
 ```typescript
-import { KervyxServer } from '@kervyx/mcp-server';
-import { MemoryStore } from '@kervyx/store';
+import { NobulexServer } from '@nobulex/mcp-server';
+import { MemoryStore } from '@nobulex/store';
 
-const server = new KervyxServer(new MemoryStore(), {
-  name: 'my-kervyx-server',
+const server = new NobulexServer(new MemoryStore(), {
+  name: 'my-nobulex-server',
   version: '1.0.0',
 });
 
@@ -54,4 +54,4 @@ const result = await server.callTool('evaluate_action', {
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

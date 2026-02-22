@@ -18,8 +18,8 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-import type { CovenantDocument } from '@kervyx/core';
-import { DocumentedKervyxError as KervyxError, DocumentedErrorCode as KervyxErrorCode } from '@kervyx/types';
+import type { CovenantDocument } from '@nobulex/core';
+import { DocumentedNobulexError as NobulexError, DocumentedErrorCode as NobulexErrorCode } from '@nobulex/types';
 
 import type {
   CovenantStore,
@@ -212,15 +212,15 @@ export class FileStore implements CovenantStore {
 
   async put(doc: CovenantDocument): Promise<void> {
     if (doc == null) {
-      throw new KervyxError(
-        KervyxErrorCode.STORE_MISSING_DOC,
+      throw new NobulexError(
+        NobulexErrorCode.STORE_MISSING_DOC,
         'put(): document is required',
         { hint: 'Pass a valid CovenantDocument object to store.' }
       );
     }
     if (!doc.id || (typeof doc.id === 'string' && doc.id.trim().length === 0)) {
-      throw new KervyxError(
-        KervyxErrorCode.STORE_MISSING_ID,
+      throw new NobulexError(
+        NobulexErrorCode.STORE_MISSING_ID,
         'put(): document.id is required and must be a non-empty string',
         { hint: 'Ensure the document has a non-empty id field. Use buildCovenant() to generate properly identified documents.' }
       );

@@ -1,5 +1,5 @@
 /**
- * @kervyx/verifier — Standalone verification engine for third-party auditors.
+ * @nobulex/verifier — Standalone verification engine for third-party auditors.
  *
  * Provides a stateful {@link Verifier} class that wraps the core
  * `verifyCovenant` function with history tracking, batch processing,
@@ -14,12 +14,12 @@ import {
   canonicalForm,
   validateChainNarrowing,
   MAX_CHAIN_DEPTH,
-} from '@kervyx/core';
+} from '@nobulex/core';
 
 import type {
   CovenantDocument,
   VerificationResult,
-} from '@kervyx/core';
+} from '@nobulex/core';
 
 import {
   parse,
@@ -27,12 +27,12 @@ import {
   matchAction,
   matchResource,
   validateNarrowing,
-} from '@kervyx/ccl';
+} from '@nobulex/ccl';
 
-import type { EvaluationContext } from '@kervyx/ccl';
+import type { EvaluationContext } from '@nobulex/ccl';
 
-import { generateId } from '@kervyx/crypto';
-import { DocumentedKervyxError as KervyxError, DocumentedErrorCode as KervyxErrorCode } from '@kervyx/types';
+import { generateId } from '@nobulex/crypto';
+import { DocumentedNobulexError as NobulexError, DocumentedErrorCode as NobulexErrorCode } from '@nobulex/types';
 
 import type {
   VerifierOptions,
@@ -220,15 +220,15 @@ export class Verifier {
    */
   async verify(doc: CovenantDocument): Promise<VerificationReport> {
     if (!doc || typeof doc !== 'object') {
-      throw new KervyxError(
-        KervyxErrorCode.SIGNATURE_INVALID,
+      throw new NobulexError(
+        NobulexErrorCode.SIGNATURE_INVALID,
         'verify() requires a valid CovenantDocument object',
-        { hint: 'Pass a CovenantDocument produced by buildCovenant() from @kervyx/core.' }
+        { hint: 'Pass a CovenantDocument produced by buildCovenant() from @nobulex/core.' }
       );
     }
     if (!doc.id || typeof doc.id !== 'string') {
-      throw new KervyxError(
-        KervyxErrorCode.SIGNATURE_INVALID,
+      throw new NobulexError(
+        NobulexErrorCode.SIGNATURE_INVALID,
         'verify() requires a document with a valid id field',
         { hint: 'Ensure the document has a non-empty id field. Use buildCovenant() to generate properly identified documents.' }
       );
@@ -447,22 +447,22 @@ export class Verifier {
     context?: EvaluationContext,
   ): Promise<ActionVerificationReport> {
     if (!doc || typeof doc !== 'object') {
-      throw new KervyxError(
-        KervyxErrorCode.SIGNATURE_INVALID,
+      throw new NobulexError(
+        NobulexErrorCode.SIGNATURE_INVALID,
         'verifyAction() requires a valid CovenantDocument object',
-        { hint: 'Pass a CovenantDocument produced by buildCovenant() from @kervyx/core.' }
+        { hint: 'Pass a CovenantDocument produced by buildCovenant() from @nobulex/core.' }
       );
     }
     if (!action || typeof action !== 'string' || action.trim().length === 0) {
-      throw new KervyxError(
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new NobulexError(
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
         'verifyAction() requires a non-empty action string',
         { hint: 'Pass an action name like "read", "write", or "file.read".' }
       );
     }
     if (typeof resource !== 'string') {
-      throw new KervyxError(
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+      throw new NobulexError(
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
         'verifyAction() requires a resource string',
         { hint: 'Pass a resource path like "/data/users" or "**".' }
       );
@@ -546,8 +546,8 @@ export async function verifyBatch(
   options?: VerifierOptions,
 ): Promise<BatchVerificationReport> {
   if (!Array.isArray(docs)) {
-    throw new KervyxError(
-      KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new NobulexError(
+      NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       'verifyBatch() requires an array of CovenantDocument objects',
       { hint: 'Pass an array of documents to verify in batch.' }
     );

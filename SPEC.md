@@ -1,6 +1,6 @@
-# Kervyx Protocol Specification
+# Nobulex Protocol Specification
 
-The full Kervyx Covenant Protocol specification lives in [SPECIFICATION.md](./SPECIFICATION.md).
+The full Nobulex Covenant Protocol specification lives in [SPECIFICATION.md](./SPECIFICATION.md).
 
 It covers:
 

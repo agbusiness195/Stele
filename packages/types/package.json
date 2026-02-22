@@ -1,5 +1,5 @@
 {
-  "name": "@kervyx/types",
+  "name": "@nobulex/types",
   "version": "2.0.0",
   "description": "Shared TypeScript type definitions and protocol schemas",
   "sideEffects": false,
@@ -32,19 +32,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/types"
   },
-  "homepage": "https://kervyx.dev",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
-  "author": "Kervyx Labs, Inc.",
+  "author": "Nobulex Labs, Inc.",
   "dependencies": {
-    "@kervyx/crypto": "2.0.0"
+    "@nobulex/crypto": "2.0.0"
   },
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "types",

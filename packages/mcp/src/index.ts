@@ -1,22 +1,22 @@
-import { generateKeyPair, timestamp, sha256Object } from '@kervyx/crypto';
-import type { KeyPair, HashHex } from '@kervyx/crypto';
-import { parse } from '@kervyx/ccl';
-import type { Severity } from '@kervyx/ccl';
-import { buildCovenant } from '@kervyx/core';
-import type { CovenantDocument } from '@kervyx/core';
-import { Monitor } from '@kervyx/enforcement';
-import type { AuditLog, AuditEntry } from '@kervyx/enforcement';
-import { createIdentity } from '@kervyx/identity';
-import type { AgentIdentity, ModelAttestation } from '@kervyx/identity';
-import { createReceipt } from '@kervyx/reputation';
-import type { ExecutionReceipt } from '@kervyx/reputation';
-import { generateComplianceProof } from '@kervyx/proof';
-import type { ComplianceProof, AuditEntryData } from '@kervyx/proof';
+import { generateKeyPair, timestamp, sha256Object } from '@nobulex/crypto';
+import type { KeyPair, HashHex } from '@nobulex/crypto';
+import { parse } from '@nobulex/ccl';
+import type { Severity } from '@nobulex/ccl';
+import { buildCovenant } from '@nobulex/core';
+import type { CovenantDocument } from '@nobulex/core';
+import { Monitor } from '@nobulex/enforcement';
+import type { AuditLog, AuditEntry } from '@nobulex/enforcement';
+import { createIdentity } from '@nobulex/identity';
+import type { AgentIdentity, ModelAttestation } from '@nobulex/identity';
+import { createReceipt } from '@nobulex/reputation';
+import type { ExecutionReceipt } from '@nobulex/reputation';
+import { generateComplianceProof } from '@nobulex/proof';
+import type { ComplianceProof, AuditEntryData } from '@nobulex/proof';
 
 import { PRESETS } from './presets.js';
 import type {
   MCPServer,
-  KervyxGuardOptions,
+  NobulexGuardOptions,
   WrappedMCPServer,
   ViolationDetails,
   ToolCallDetails,
@@ -26,7 +26,7 @@ import type {
 export type {
   MCPServer,
   MCPTool,
-  KervyxGuardOptions,
+  NobulexGuardOptions,
   WrappedMCPServer,
   ViolationDetails,
   ToolCallDetails,
@@ -111,24 +111,24 @@ function extractConstraint(matchedRule: unknown): string {
 }
 
 // ---------------------------------------------------------------------------
-// KervyxGuard
+// NobulexGuard
 // ---------------------------------------------------------------------------
 
 /**
- * KervyxGuard wraps any MCP server with Kervyx accountability.
+ * NobulexGuard wraps any MCP server with Nobulex accountability.
  *
  * Usage (2 lines):
  * ```ts
- * import { KervyxGuard } from '@kervyx/mcp';
- * const server = await KervyxGuard.wrap(myMcpServer, { constraints: 'standard:data-isolation' });
+ * import { NobulexGuard } from '@nobulex/mcp';
+ * const server = await NobulexGuard.wrap(myMcpServer, { constraints: 'standard:data-isolation' });
  * ```
  */
-export class KervyxGuard {
+export class NobulexGuard {
   // Private constructor - use static factory methods
   private constructor() {}
 
   /**
-   * Wrap an MCP server with Kervyx accountability using constraint text
+   * Wrap an MCP server with Nobulex accountability using constraint text
    * (either a preset name or raw CCL).
    *
    * Generates a keypair if one is not provided, creates an agent identity,
@@ -137,7 +137,7 @@ export class KervyxGuard {
    */
   static async wrap(
     server: MCPServer,
-    options: KervyxGuardOptions,
+    options: NobulexGuardOptions,
   ): Promise<WrappedMCPServer> {
     // 1. Resolve constraints
     const constraintSource = resolveConstraints(options.constraints);
@@ -195,7 +195,7 @@ export class KervyxGuard {
     });
 
     // 6. Build the wrapped server
-    return KervyxGuard.buildWrappedServer(
+    return NobulexGuard.buildWrappedServer(
       server,
       monitor,
       identity,
@@ -240,7 +240,7 @@ export class KervyxGuard {
       mode,
     });
 
-    return KervyxGuard.buildWrappedServer(
+    return NobulexGuard.buildWrappedServer(
       server,
       monitor,
       identity,
@@ -260,7 +260,7 @@ export class KervyxGuard {
     identity: AgentIdentity,
     covenant: CovenantDocument,
     operatorKeyPair: KeyPair,
-    options: Partial<KervyxGuardOptions>,
+    options: Partial<NobulexGuardOptions>,
   ): WrappedMCPServer {
     // Track state for receipt generation
     let totalToolCalls = 0;
@@ -391,7 +391,7 @@ export class KervyxGuard {
     };
 
     // Build the wrapped server object by copying all original properties
-    // and adding the Kervyx methods
+    // and adding the Nobulex methods
     const wrapped: WrappedMCPServer = Object.create(null);
 
     // Copy all properties from the original server
@@ -410,7 +410,7 @@ export class KervyxGuard {
     // Set the intercepted handler
     wrapped.handleToolCall = interceptedHandleToolCall;
 
-    // Expose Kervyx accessors
+    // Expose Nobulex accessors
     wrapped.getMonitor = (): Monitor => monitor;
     wrapped.getIdentity = (): AgentIdentity => identity;
     wrapped.getAuditLog = (): AuditLog => monitor.getAuditLog();

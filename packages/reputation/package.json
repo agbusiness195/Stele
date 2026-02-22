@@ -1,12 +1,12 @@
 {
-  "name": "@kervyx/reputation",
+  "name": "@nobulex/reputation",
   "version": "2.0.0",
-  "description": "Reputation scoring and trust management for the Kervyx covenant framework",
+  "description": "Reputation scoring and trust management for the Nobulex covenant framework",
   "license": "MIT",
-  "author": "Kervyx Labs, Inc.",
-  "homepage": "https://kervyx.dev",
+  "author": "Nobulex Labs, Inc.",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,11 +32,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/reputation"
   },
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "reputation",
@@ -52,10 +52,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@kervyx/ccl": "2.0.0",
-    "@kervyx/core": "2.0.0",
-    "@kervyx/crypto": "2.0.0",
-    "@kervyx/identity": "2.0.0",
-    "@kervyx/types": "2.0.0"
+    "@nobulex/ccl": "2.0.0",
+    "@nobulex/core": "2.0.0",
+    "@nobulex/crypto": "2.0.0",
+    "@nobulex/identity": "2.0.0",
+    "@nobulex/types": "2.0.0"
   }
 }

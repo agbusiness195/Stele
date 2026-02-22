@@ -1,4 +1,4 @@
-package kervyx
+package nobulex
 
 import (
 	"crypto/ed25519"
@@ -90,7 +90,7 @@ func CanonicalForm(doc *CovenantDocument) (string, error) {
 	// Convert to map, then strip the three mutable fields
 	m, err := objectToMap(doc)
 	if err != nil {
-		return "", fmt.Errorf("kervyx: failed to convert document to map: %w", err)
+		return "", fmt.Errorf("nobulex: failed to convert document to map: %w", err)
 	}
 
 	delete(m, "id")
@@ -99,7 +99,7 @@ func CanonicalForm(doc *CovenantDocument) (string, error) {
 
 	canonical, err := CanonicalizeJSON(m)
 	if err != nil {
-		return "", fmt.Errorf("kervyx: failed to canonicalize document: %w", err)
+		return "", fmt.Errorf("nobulex: failed to canonicalize document: %w", err)
 	}
 
 	return canonical, nil
@@ -120,52 +120,52 @@ func ComputeID(doc *CovenantDocument) (string, error) {
 func BuildCovenant(opts *CovenantBuilderOptions) (*CovenantDocument, error) {
 	// Validate required inputs
 	if opts.Issuer.ID == "" {
-		return nil, fmt.Errorf("kervyx: issuer.id is required")
+		return nil, fmt.Errorf("nobulex: issuer.id is required")
 	}
 	if opts.Issuer.PublicKey == "" {
-		return nil, fmt.Errorf("kervyx: issuer.publicKey is required")
+		return nil, fmt.Errorf("nobulex: issuer.publicKey is required")
 	}
 	if opts.Issuer.Role != "issuer" {
-		return nil, fmt.Errorf("kervyx: issuer.role must be 'issuer'")
+		return nil, fmt.Errorf("nobulex: issuer.role must be 'issuer'")
 	}
 	if opts.Beneficiary.ID == "" {
-		return nil, fmt.Errorf("kervyx: beneficiary.id is required")
+		return nil, fmt.Errorf("nobulex: beneficiary.id is required")
 	}
 	if opts.Beneficiary.PublicKey == "" {
-		return nil, fmt.Errorf("kervyx: beneficiary.publicKey is required")
+		return nil, fmt.Errorf("nobulex: beneficiary.publicKey is required")
 	}
 	if opts.Beneficiary.Role != "beneficiary" {
-		return nil, fmt.Errorf("kervyx: beneficiary.role must be 'beneficiary'")
+		return nil, fmt.Errorf("nobulex: beneficiary.role must be 'beneficiary'")
 	}
 	if strings.TrimSpace(opts.Constraints) == "" {
-		return nil, fmt.Errorf("kervyx: constraints is required")
+		return nil, fmt.Errorf("nobulex: constraints is required")
 	}
 	if len(opts.PrivateKey) != ed25519.PrivateKeySize {
-		return nil, fmt.Errorf("kervyx: privateKey must be %d bytes", ed25519.PrivateKeySize)
+		return nil, fmt.Errorf("nobulex: privateKey must be %d bytes", ed25519.PrivateKeySize)
 	}
 
 	// Parse CCL to verify syntax and check constraint count
 	parsedCCL, err := Parse(opts.Constraints)
 	if err != nil {
-		return nil, fmt.Errorf("kervyx: invalid CCL constraints: %w", err)
+		return nil, fmt.Errorf("nobulex: invalid CCL constraints: %w", err)
 	}
 	if len(parsedCCL.Statements) > MaxConstraints {
-		return nil, fmt.Errorf("kervyx: constraints exceed maximum of %d statements (got %d)", MaxConstraints, len(parsedCCL.Statements))
+		return nil, fmt.Errorf("nobulex: constraints exceed maximum of %d statements (got %d)", MaxConstraints, len(parsedCCL.Statements))
 	}
 
 	// Validate chain reference
 	if opts.Chain != nil {
 		if opts.Chain.ParentID == "" {
-			return nil, fmt.Errorf("kervyx: chain.parentId is required")
+			return nil, fmt.Errorf("nobulex: chain.parentId is required")
 		}
 		if opts.Chain.Relation == "" {
-			return nil, fmt.Errorf("kervyx: chain.relation is required")
+			return nil, fmt.Errorf("nobulex: chain.relation is required")
 		}
 		if opts.Chain.Depth < 1 {
-			return nil, fmt.Errorf("kervyx: chain.depth must be a positive integer")
+			return nil, fmt.Errorf("nobulex: chain.depth must be a positive integer")
 		}
 		if opts.Chain.Depth > MaxChainDepth {
-			return nil, fmt.Errorf("kervyx: chain.depth exceeds maximum of %d (got %d)", MaxChainDepth, opts.Chain.Depth)
+			return nil, fmt.Errorf("nobulex: chain.depth exceeds maximum of %d (got %d)", MaxChainDepth, opts.Chain.Depth)
 		}
 	}
 
@@ -210,7 +210,7 @@ func BuildCovenant(opts *CovenantBuilderOptions) (*CovenantDocument, error) {
 
 	sigBytes, err := Sign([]byte(canonical), opts.PrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("kervyx: failed to sign covenant: %w", err)
+		return nil, fmt.Errorf("nobulex: failed to sign covenant: %w", err)
 	}
 	doc.Signature = ToHex(sigBytes)
 	doc.ID = SHA256String(canonical)
@@ -218,10 +218,10 @@ func BuildCovenant(opts *CovenantBuilderOptions) (*CovenantDocument, error) {
 	// Validate serialized size
 	serialized, err := json.Marshal(doc)
 	if err != nil {
-		return nil, fmt.Errorf("kervyx: failed to serialize covenant: %w", err)
+		return nil, fmt.Errorf("nobulex: failed to serialize covenant: %w", err)
 	}
 	if len(serialized) > MaxDocumentSize {
-		return nil, fmt.Errorf("kervyx: serialized document exceeds maximum size of %d bytes", MaxDocumentSize)
+		return nil, fmt.Errorf("nobulex: serialized document exceeds maximum size of %d bytes", MaxDocumentSize)
 	}
 
 	return doc, nil
@@ -515,7 +515,7 @@ func CountersignCovenant(doc *CovenantDocument, kp *KeyPair, role string) (*Cove
 
 	sigBytes, err := Sign([]byte(canonical), kp.PrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("kervyx: failed to countersign: %w", err)
+		return nil, fmt.Errorf("nobulex: failed to countersign: %w", err)
 	}
 
 	cs := Countersignature{
@@ -538,7 +538,7 @@ func CountersignCovenant(doc *CovenantDocument, kp *KeyPair, role string) (*Cove
 func SerializeCovenant(doc *CovenantDocument) (string, error) {
 	b, err := json.Marshal(doc)
 	if err != nil {
-		return "", fmt.Errorf("kervyx: failed to serialize covenant: %w", err)
+		return "", fmt.Errorf("nobulex: failed to serialize covenant: %w", err)
 	}
 	return string(b), nil
 }
@@ -548,51 +548,51 @@ func SerializeCovenant(doc *CovenantDocument) (string, error) {
 func DeserializeCovenant(jsonStr string) (*CovenantDocument, error) {
 	var doc CovenantDocument
 	if err := json.Unmarshal([]byte(jsonStr), &doc); err != nil {
-		return nil, fmt.Errorf("kervyx: invalid JSON: %w", err)
+		return nil, fmt.Errorf("nobulex: invalid JSON: %w", err)
 	}
 
 	// Validate required fields
 	if doc.ID == "" {
-		return nil, fmt.Errorf("kervyx: missing required field: id")
+		return nil, fmt.Errorf("nobulex: missing required field: id")
 	}
 	if doc.Version == "" {
-		return nil, fmt.Errorf("kervyx: missing required field: version")
+		return nil, fmt.Errorf("nobulex: missing required field: version")
 	}
 	if doc.Version != ProtocolVersion {
-		return nil, fmt.Errorf("kervyx: unsupported protocol version: %s (expected %s)", doc.Version, ProtocolVersion)
+		return nil, fmt.Errorf("nobulex: unsupported protocol version: %s (expected %s)", doc.Version, ProtocolVersion)
 	}
 	if doc.Issuer.ID == "" || doc.Issuer.PublicKey == "" || doc.Issuer.Role != "issuer" {
-		return nil, fmt.Errorf("kervyx: invalid issuer: must have id, publicKey, and role='issuer'")
+		return nil, fmt.Errorf("nobulex: invalid issuer: must have id, publicKey, and role='issuer'")
 	}
 	if doc.Beneficiary.ID == "" || doc.Beneficiary.PublicKey == "" || doc.Beneficiary.Role != "beneficiary" {
-		return nil, fmt.Errorf("kervyx: invalid beneficiary: must have id, publicKey, and role='beneficiary'")
+		return nil, fmt.Errorf("nobulex: invalid beneficiary: must have id, publicKey, and role='beneficiary'")
 	}
 	if doc.Constraints == "" {
-		return nil, fmt.Errorf("kervyx: missing required field: constraints")
+		return nil, fmt.Errorf("nobulex: missing required field: constraints")
 	}
 	if doc.Nonce == "" {
-		return nil, fmt.Errorf("kervyx: missing required field: nonce")
+		return nil, fmt.Errorf("nobulex: missing required field: nonce")
 	}
 	if doc.CreatedAt == "" {
-		return nil, fmt.Errorf("kervyx: missing required field: createdAt")
+		return nil, fmt.Errorf("nobulex: missing required field: createdAt")
 	}
 	if doc.Signature == "" {
-		return nil, fmt.Errorf("kervyx: missing required field: signature")
+		return nil, fmt.Errorf("nobulex: missing required field: signature")
 	}
 
 	// Validate chain if present
 	if doc.Chain != nil {
 		if doc.Chain.ParentID == "" {
-			return nil, fmt.Errorf("kervyx: invalid chain.parentId: must be a string")
+			return nil, fmt.Errorf("nobulex: invalid chain.parentId: must be a string")
 		}
 		if doc.Chain.Relation == "" {
-			return nil, fmt.Errorf("kervyx: invalid chain.relation: must be a string")
+			return nil, fmt.Errorf("nobulex: invalid chain.relation: must be a string")
 		}
 	}
 
 	// Validate document size
 	if len(jsonStr) > MaxDocumentSize {
-		return nil, fmt.Errorf("kervyx: document size %d bytes exceeds maximum of %d bytes", len(jsonStr), MaxDocumentSize)
+		return nil, fmt.Errorf("nobulex: document size %d bytes exceeds maximum of %d bytes", len(jsonStr), MaxDocumentSize)
 	}
 
 	return &doc, nil
@@ -603,11 +603,11 @@ func DeserializeCovenant(jsonStr string) (*CovenantDocument, error) {
 func ValidateChainNarrowing(child, parent *CovenantDocument) (*NarrowingResult, error) {
 	parentCCL, err := Parse(parent.Constraints)
 	if err != nil {
-		return nil, fmt.Errorf("kervyx: failed to parse parent constraints: %w", err)
+		return nil, fmt.Errorf("nobulex: failed to parse parent constraints: %w", err)
 	}
 	childCCL, err := Parse(child.Constraints)
 	if err != nil {
-		return nil, fmt.Errorf("kervyx: failed to parse child constraints: %w", err)
+		return nil, fmt.Errorf("nobulex: failed to parse child constraints: %w", err)
 	}
 	return ValidateNarrowing(parentCCL, childCCL), nil
 }

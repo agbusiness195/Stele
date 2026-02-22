@@ -2,10 +2,10 @@
 pragma solidity ^0.8.24;
 
 /**
- * @title KervyxRegistry
- * @author Kervyx Protocol
+ * @title NobulexRegistry
+ * @author Nobulex Protocol
  * @notice On-chain registry for anchoring and verifying covenant constraints.
- * @dev Implements the interface defined by @kervyx/evm's KERVYX_REGISTRY_ABI.
+ * @dev Implements the interface defined by @nobulex/evm's NOBULEX_REGISTRY_ABI.
  *
  * Each covenant is identified by a unique bytes32 `covenantId`. An anchor
  * stores the constraints hash, issuer, beneficiary, and timestamp. Once
@@ -14,10 +14,10 @@ pragma solidity ^0.8.24;
  *
  * The contract is intentionally minimal and ownerless -- there is no admin
  * key, no upgrade proxy, and no pause mechanism. Immutability of the
- * registry logic is a design goal aligned with the Kervyx protocol's
+ * registry logic is a design goal aligned with the Nobulex protocol's
  * trust model.
  */
-contract KervyxRegistry {
+contract NobulexRegistry {
     // ─── Storage ────────────────────────────────────────────────────────────────
 
     /**

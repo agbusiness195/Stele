@@ -1,5 +1,5 @@
 /**
- * @kervyx/sdk -- Performance benchmark suite with SLA targets.
+ * @nobulex/sdk -- Performance benchmark suite with SLA targets.
  *
  * Defines production-quality SLA targets for all critical protocol operations
  * and provides a benchmark runner that validates them. This proves the protocol
@@ -8,17 +8,17 @@
  * @packageDocumentation
  */
 
-import { generateKeyPair, sign, verify, sha256, sha256String } from '@kervyx/crypto';
-import { buildCovenant, verifyCovenant } from '@kervyx/core';
-import { parse as cclParse, evaluate as cclEvaluate } from '@kervyx/ccl';
-import { MemoryStore } from '@kervyx/store';
-import { KervyxClient } from './index.js';
+import { generateKeyPair, sign, verify, sha256, sha256String } from '@nobulex/crypto';
+import { buildCovenant, verifyCovenant } from '@nobulex/core';
+import { parse as cclParse, evaluate as cclEvaluate } from '@nobulex/ccl';
+import { MemoryStore } from '@nobulex/store';
+import { NobulexClient } from './index.js';
 import {
   initiate as negotiationInitiate,
   propose as negotiationPropose,
   agree as negotiationAgree,
   evaluate as negotiationEvaluate,
-} from '@kervyx/negotiation';
+} from '@nobulex/negotiation';
 
 // ─── SLA Targets ────────────────────────────────────────────────────────────
 
@@ -33,7 +33,7 @@ export interface SLATarget {
 }
 
 /**
- * Production SLA targets for all critical Kervyx protocol operations.
+ * Production SLA targets for all critical Nobulex protocol operations.
  *
  * These targets are conservative and should be met by any modern machine.
  * All latencies are p99 in milliseconds.
@@ -211,7 +211,7 @@ export async function runBenchmarkSuite(): Promise<BenchmarkSuiteResult> {
   // Pre-generate keys for benchmarks that need them
   const kp = await generateKeyPair();
   const kp2 = await generateKeyPair();
-  const message = new TextEncoder().encode('benchmark payload for Kervyx protocol');
+  const message = new TextEncoder().encode('benchmark payload for Nobulex protocol');
   const signature = await sign(message, kp.privateKey);
   const oneKBData = new Uint8Array(1024);
   for (let i = 0; i < 1024; i++) oneKBData[i] = i & 0xff;
@@ -258,7 +258,7 @@ export async function runBenchmarkSuite(): Promise<BenchmarkSuiteResult> {
   }
 
   // SDK client for evaluateAction benchmark
-  const client = new KervyxClient({ keyPair: kp });
+  const client = new NobulexClient({ keyPair: kp });
 
   // ── Benchmarks ───────────────────────────────────────────────────────────
 
@@ -392,7 +392,7 @@ export function formatBenchmarkResults(results: BenchmarkSuiteResult): string {
   // Header
   const sep = '+' + '-'.repeat(32) + '+' + '-'.repeat(10) + '+' + '-'.repeat(10) + '+' + '-'.repeat(10) + '+' + '-'.repeat(10) + '+' + '-'.repeat(8) + '+';
   lines.push('');
-  lines.push('  Kervyx Performance Benchmark Suite');
+  lines.push('  Nobulex Performance Benchmark Suite');
   lines.push('  ' + results.timestamp);
   lines.push('');
   lines.push(sep);

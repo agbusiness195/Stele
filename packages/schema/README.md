@@ -1,18 +1,18 @@
-# @kervyx/schema
+# @nobulex/schema
 
-JSON Schema definitions (Draft 2020-12) for Kervyx protocol documents, enabling cross-language validation without the TypeScript SDK.
+JSON Schema definitions (Draft 2020-12) for Nobulex protocol documents, enabling cross-language validation without the TypeScript SDK.
 
 ## Installation
 
 ```bash
-npm install @kervyx/schema
+npm install @nobulex/schema
 ```
 
 ## Key APIs
 
 ### Schema Constants
 - **COVENANT_SCHEMA**: JSON Schema for `CovenantDocument` objects
-- **DISCOVERY_DOCUMENT_SCHEMA**: JSON Schema for `.well-known/kervyx/` discovery documents
+- **DISCOVERY_DOCUMENT_SCHEMA**: JSON Schema for `.well-known/nobulex/` discovery documents
 - **AGENT_KEY_SCHEMA**: JSON Schema for `AgentKeyEntry` objects
 - **CCL_EVALUATION_CONTEXT_SCHEMA**: JSON Schema for CCL evaluation contexts
 
@@ -34,7 +34,7 @@ import {
   validateCovenantSchema,
   validateDiscoverySchema,
   getAllSchemas,
-} from '@kervyx/schema';
+} from '@nobulex/schema';
 
 // Validate a covenant document
 const result = validateCovenantSchema({
@@ -61,4 +61,4 @@ console.log(Object.keys(all)); // ['covenant', 'discovery', 'agentKey', 'cclCont
 
 ## Docs
 
-See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
+See the [Nobulex SDK root documentation](../../README.md) for the full API reference.

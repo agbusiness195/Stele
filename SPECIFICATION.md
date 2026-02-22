@@ -1,4 +1,4 @@
-# Kervyx Covenant Protocol Specification
+# Nobulex Covenant Protocol Specification
 
 | Field   | Value                  |
 |---------|------------------------|
@@ -31,9 +31,9 @@
 
 ## 1. Introduction
 
-This document is the formal, implementation-independent specification of the Kervyx Covenant Protocol version 1.0. It defines the data structures, algorithms, and invariants that any conformant implementation MUST satisfy. The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119.
+This document is the formal, implementation-independent specification of the Nobulex Covenant Protocol version 1.0. It defines the data structures, algorithms, and invariants that any conformant implementation MUST satisfy. The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119.
 
-The Kervyx Covenant Protocol provides cryptographic behavioral commitments for autonomous AI agents. A covenant is a signed, content-addressed document in which a party declares behavioral constraints. Covenants are immutable once signed, independently verifiable without trusted intermediaries, and composable through delegation chains with monotonic constraint narrowing.
+The Nobulex Covenant Protocol provides cryptographic behavioral commitments for autonomous AI agents. A covenant is a signed, content-addressed document in which a party declares behavioral constraints. Covenants are immutable once signed, independently verifiable without trusted intermediaries, and composable through delegation chains with monotonic constraint narrowing.
 
 This specification is sufficient for building an interoperable implementation from scratch. Any two conformant implementations MUST produce identical results for the same inputs across all deterministic operations defined herein.
 
@@ -43,7 +43,7 @@ This specification is sufficient for building an interoperable implementation fr
 
 **Covenant.** A signed, content-addressed JSON document that declares behavioral constraints binding an issuer's actions with respect to a beneficiary. A covenant is immutable once signed: its identifier is derived from its content, and any modification invalidates both the identifier and the cryptographic signature.
 
-**Agent.** An autonomous software entity capable of executing actions on external systems. In the Kervyx protocol, an agent is identified by an Ed25519 key pair and participates in covenants as either an issuer or a beneficiary.
+**Agent.** An autonomous software entity capable of executing actions on external systems. In the Nobulex protocol, an agent is identified by an Ed25519 key pair and participates in covenants as either an issuer or a beneficiary.
 
 **Issuer.** The party that creates, signs, and is bound by a covenant. The issuer's Ed25519 private key produces the covenant's signature. The issuer commits to operating within the constraints declared in the covenant.
 
@@ -516,7 +516,7 @@ function compute_id(doc):
 
 ## 8. Signing and Verification
 
-All signatures in the Kervyx protocol use the Ed25519 digital signature algorithm as specified in RFC 8032.
+All signatures in the Nobulex protocol use the Ed25519 digital signature algorithm as specified in RFC 8032.
 
 ### 8.1 Signing Algorithm
 
@@ -1042,9 +1042,9 @@ Input message: `"hello world"`
 Expected signature: `897540d6afac1c2f38e0c1445c8a0e93df595c7b8ec5401db0f27d702c0ef101dac13cfe864fe9bba521d3ce978bb6524cc33a3ddbd611a8f1d836bb8153950a`
 Expected verification result: `true`
 
-**Vector A.3.2: Sign "The Kervyx Protocol"**
+**Vector A.3.2: Sign "The Nobulex Protocol"**
 
-Input message: `"The Kervyx Protocol"`
+Input message: `"The Nobulex Protocol"`
 Expected signature: `933256a7e4130a6f3c93a73170af28fcdc5edd4fd13c271c4bd60844017e4dcd2041334ae09b039367b7dfadaea0ed1dcbc74c705511e1b5efd72e79d9bd720f`
 Expected verification result: `true`
 
@@ -1206,9 +1206,9 @@ The following JSON Schema (Draft 2020-12) definitions provide machine-readable v
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://kervyx.dev/schema/covenant-document/1.0",
+  "$id": "https://nobulex.dev/schema/covenant-document/1.0",
   "title": "CovenantDocument",
-  "description": "A complete, signed Kervyx Covenant document conforming to protocol version 1.0.",
+  "description": "A complete, signed Nobulex Covenant document conforming to protocol version 1.0.",
   "type": "object",
   "required": [
     "id",

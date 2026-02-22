@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { run } from './index';
-import { buildCovenant, serializeCovenant, PROTOCOL_VERSION } from '@kervyx/core';
-import { generateKeyPair } from '@kervyx/crypto';
+import { buildCovenant, serializeCovenant, PROTOCOL_VERSION } from '@nobulex/core';
+import { generateKeyPair } from '@nobulex/crypto';
 import { setColorsEnabled, stripAnsi } from './format';
 import { mkdtempSync, readFileSync, existsSync, rmSync } from 'fs';
 import { join } from 'path';
@@ -53,11 +53,11 @@ afterEach(() => {
 // help / --help
 // ===========================================================================
 
-describe('kervyx help', () => {
+describe('nobulex help', () => {
   it('shows help with no arguments', async () => {
     const r = await run([]);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('Kervyx CLI');
+    expect(r.stdout).toContain('Nobulex CLI');
     expect(r.stdout).toContain('Commands');
     expect(r.stdout).toContain('init');
     expect(r.stdout).toContain('create');
@@ -76,14 +76,14 @@ describe('kervyx help', () => {
   it('shows help with "help" command', async () => {
     const r = await run(['help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('Kervyx CLI');
+    expect(r.stdout).toContain('Nobulex CLI');
     expect(r.stderr).toBe('');
   });
 
   it('shows help with --help on a subcommand', async () => {
     const r = await run(['init', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('kervyx init');
+    expect(r.stdout).toContain('nobulex init');
     expect(r.stderr).toBe('');
   });
 
@@ -95,7 +95,7 @@ describe('kervyx help', () => {
   it('strips ANSI from help when --no-color is set', async () => {
     const r = await run(['--no-color']);
     expect(hasAnsi(r.stdout)).toBe(false);
-    expect(r.stdout).toContain('Kervyx CLI');
+    expect(r.stdout).toContain('Nobulex CLI');
   });
 });
 
@@ -103,7 +103,7 @@ describe('kervyx help', () => {
 // version
 // ===========================================================================
 
-describe('kervyx version', () => {
+describe('nobulex version', () => {
   it('prints 0.1.0', async () => {
     const r = await run(['version']);
     expect(r.exitCode).toBe(0);
@@ -125,9 +125,9 @@ describe('kervyx version', () => {
 // init
 // ===========================================================================
 
-describe('kervyx init', () => {
+describe('nobulex init', () => {
   it('generates a key pair and prints public key', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'kervyx-test-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'nobulex-test-'));
     try {
       const r = await run(['init'], tmp);
       expect(r.exitCode).toBe(0);
@@ -157,16 +157,16 @@ describe('kervyx init', () => {
   it('shows help with --help', async () => {
     const r = await run(['init', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('kervyx init');
+    expect(r.stdout).toContain('nobulex init');
     expect(r.stdout).toContain('Generate');
   });
 
-  it('writes kervyx.config.json on init', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'kervyx-test-'));
+  it('writes nobulex.config.json on init', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'nobulex-test-'));
     try {
       const r = await run(['init'], tmp);
       expect(r.exitCode).toBe(0);
-      const configPath = join(tmp, 'kervyx.config.json');
+      const configPath = join(tmp, 'nobulex.config.json');
       expect(existsSync(configPath)).toBe(true);
       const config = JSON.parse(readFileSync(configPath, 'utf-8'));
       expect(config.defaultIssuer).toBeDefined();
@@ -178,7 +178,7 @@ describe('kervyx init', () => {
   });
 
   it('init output contains ANSI when colors enabled', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'kervyx-test-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'nobulex-test-'));
     try {
       const r = await run(['init'], tmp);
       expect(hasAnsi(r.stdout)).toBe(true);
@@ -188,7 +188,7 @@ describe('kervyx init', () => {
   });
 
   it('init output has no ANSI with --no-color', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'kervyx-test-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'nobulex-test-'));
     try {
       const r = await run(['init', '--no-color'], tmp);
       expect(hasAnsi(r.stdout)).toBe(false);
@@ -203,7 +203,7 @@ describe('kervyx init', () => {
 // create
 // ===========================================================================
 
-describe('kervyx create', () => {
+describe('nobulex create', () => {
   it('creates a covenant and outputs formatted text', async () => {
     const r = await run([
       'create',
@@ -282,7 +282,7 @@ describe('kervyx create', () => {
   it('shows help with --help', async () => {
     const r = await run(['create', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('kervyx create');
+    expect(r.stdout).toContain('nobulex create');
     expect(r.stdout).toContain('--issuer');
   });
 
@@ -313,7 +313,7 @@ describe('kervyx create', () => {
 // verify
 // ===========================================================================
 
-describe('kervyx verify', () => {
+describe('nobulex verify', () => {
   it('verifies a valid covenant with colored output', async () => {
     const json = await makeCovenantJson();
     const r = await run(['verify', json]);
@@ -385,7 +385,7 @@ describe('kervyx verify', () => {
   it('shows help with --help', async () => {
     const r = await run(['verify', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('kervyx verify');
+    expect(r.stdout).toContain('nobulex verify');
   });
 
   it('verify output includes box-drawing summary', async () => {
@@ -401,7 +401,7 @@ describe('kervyx verify', () => {
 // evaluate
 // ===========================================================================
 
-describe('kervyx evaluate', () => {
+describe('nobulex evaluate', () => {
   it('evaluates a permitted action with PERMITTED text', async () => {
     const json = await makeCovenantJson("permit read on '**'");
     const r = await run(['evaluate', json, 'read', '/data']);
@@ -469,7 +469,7 @@ describe('kervyx evaluate', () => {
   it('shows help with --help', async () => {
     const r = await run(['evaluate', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('kervyx evaluate');
+    expect(r.stdout).toContain('nobulex evaluate');
   });
 });
 
@@ -477,7 +477,7 @@ describe('kervyx evaluate', () => {
 // inspect
 // ===========================================================================
 
-describe('kervyx inspect', () => {
+describe('nobulex inspect', () => {
   it('pretty-prints covenant details with boxes', async () => {
     const json = await makeCovenantJson("permit read on '**'\ndeny write on '/system/**'");
     const r = await run(['inspect', json]);
@@ -533,7 +533,7 @@ describe('kervyx inspect', () => {
   it('shows help with --help', async () => {
     const r = await run(['inspect', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('kervyx inspect');
+    expect(r.stdout).toContain('nobulex inspect');
   });
 });
 
@@ -541,7 +541,7 @@ describe('kervyx inspect', () => {
 // parse
 // ===========================================================================
 
-describe('kervyx parse', () => {
+describe('nobulex parse', () => {
   it('parses valid CCL and shows formatted summary', async () => {
     const r = await run(['parse', "permit read on '**'"]);
     expect(r.exitCode).toBe(0);
@@ -596,7 +596,7 @@ describe('kervyx parse', () => {
   it('shows help with --help', async () => {
     const r = await run(['parse', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('kervyx parse');
+    expect(r.stdout).toContain('nobulex parse');
   });
 });
 
@@ -604,11 +604,11 @@ describe('kervyx parse', () => {
 // completions
 // ===========================================================================
 
-describe('kervyx completions', () => {
+describe('nobulex completions', () => {
   it('generates bash completion script', async () => {
     const r = await run(['completions', 'bash']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('_kervyx_completions');
+    expect(r.stdout).toContain('_nobulex_completions');
     expect(r.stdout).toContain('complete -F');
     expect(r.stdout).toContain('compgen');
     expect(r.stdout).toContain('init');
@@ -622,8 +622,8 @@ describe('kervyx completions', () => {
   it('generates zsh completion script', async () => {
     const r = await run(['completions', 'zsh']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('#compdef kervyx');
-    expect(r.stdout).toContain('_kervyx');
+    expect(r.stdout).toContain('#compdef nobulex');
+    expect(r.stdout).toContain('_nobulex');
     expect(r.stdout).toContain('_arguments');
     expect(r.stdout).toContain('init');
     expect(r.stdout).toContain('create');
@@ -635,7 +635,7 @@ describe('kervyx completions', () => {
   it('generates fish completion script', async () => {
     const r = await run(['completions', 'fish']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('complete -c kervyx');
+    expect(r.stdout).toContain('complete -c nobulex');
     expect(r.stdout).toContain('init');
     expect(r.stdout).toContain('create');
     expect(r.stdout).toContain('doctor');
@@ -661,7 +661,7 @@ describe('kervyx completions', () => {
   it('shows help with --help', async () => {
     const r = await run(['completions', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('kervyx completions');
+    expect(r.stdout).toContain('nobulex completions');
     expect(r.stdout).toContain('bash');
     expect(r.stdout).toContain('zsh');
     expect(r.stdout).toContain('fish');
@@ -685,7 +685,7 @@ describe('unknown command', () => {
     const r = await run(['foobar']);
     expect(r.exitCode).toBe(1);
     expect(r.stderr).toContain("Unknown command 'foobar'");
-    expect(r.stderr).toContain('kervyx help');
+    expect(r.stderr).toContain('nobulex help');
   });
 });
 
@@ -695,12 +695,12 @@ describe('unknown command', () => {
 
 describe('config loading', () => {
   it('loads config from specified directory', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'kervyx-cfg-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'nobulex-cfg-'));
     try {
       // Write a config file
       const { writeFileSync } = await import('fs');
       writeFileSync(
-        join(tmp, 'kervyx.config.json'),
+        join(tmp, 'nobulex.config.json'),
         JSON.stringify({
           defaultIssuer: { id: 'cfg-issuer', publicKey: 'a'.repeat(64) },
           defaultBeneficiary: { id: 'cfg-beneficiary', publicKey: 'b'.repeat(64) },
@@ -724,11 +724,11 @@ describe('config loading', () => {
   });
 
   it('CLI flags override config defaults', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'kervyx-cfg-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'nobulex-cfg-'));
     try {
       const { writeFileSync } = await import('fs');
       writeFileSync(
-        join(tmp, 'kervyx.config.json'),
+        join(tmp, 'nobulex.config.json'),
         JSON.stringify({
           defaultIssuer: { id: 'cfg-issuer', publicKey: 'a'.repeat(64) },
           defaultBeneficiary: { id: 'cfg-beneficiary', publicKey: 'b'.repeat(64) },
@@ -753,7 +753,7 @@ describe('config loading', () => {
   });
 
   it('works gracefully when no config file exists', async () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'kervyx-nocfg-'));
+    const tmp = mkdtempSync(join(tmpdir(), 'nobulex-nocfg-'));
     try {
       const r = await run(['version'], tmp);
       expect(r.exitCode).toBe(0);
@@ -813,11 +813,11 @@ describe('--json flag produces clean JSON without ANSI', () => {
 // doctor
 // ===========================================================================
 
-describe('kervyx doctor', () => {
+describe('nobulex doctor', () => {
   it('returns checks with colored output', async () => {
     const r = await run(['doctor']);
     expect(r.exitCode).toBe(0);
-    expect(stripAnsi(r.stdout)).toContain('Kervyx Doctor');
+    expect(stripAnsi(r.stdout)).toContain('Nobulex Doctor');
     expect(stripAnsi(r.stdout)).toContain('Node.js version');
     expect(stripAnsi(r.stdout)).toContain('Crypto');
     expect(stripAnsi(r.stdout)).toContain('Core');
@@ -844,7 +844,7 @@ describe('kervyx doctor', () => {
   it('shows help with --help', async () => {
     const r = await run(['doctor', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('kervyx doctor');
+    expect(r.stdout).toContain('nobulex doctor');
     expect(r.stdout).toContain('diagnostic');
   });
 
@@ -852,7 +852,7 @@ describe('kervyx doctor', () => {
     const r = await run(['doctor', '--no-color']);
     expect(r.exitCode).toBe(0);
     expect(hasAnsi(r.stdout)).toBe(false);
-    expect(r.stdout).toContain('Kervyx Doctor');
+    expect(r.stdout).toContain('Nobulex Doctor');
   });
 
   it('doctor output includes summary box', async () => {
@@ -867,7 +867,7 @@ describe('kervyx doctor', () => {
 // diff
 // ===========================================================================
 
-describe('kervyx diff', () => {
+describe('nobulex diff', () => {
   it('shows differences between two covenants', async () => {
     const json1 = await makeCovenantJson("permit read on '**'");
     const json2 = await makeCovenantJson("permit write on '**'");
@@ -971,7 +971,7 @@ describe('kervyx diff', () => {
   it('shows help with --help', async () => {
     const r = await run(['diff', '--help']);
     expect(r.exitCode).toBe(0);
-    expect(r.stdout).toContain('kervyx diff');
+    expect(r.stdout).toContain('nobulex diff');
     expect(r.stdout).toContain('differences');
   });
 });

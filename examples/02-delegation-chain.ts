@@ -14,12 +14,12 @@
  */
 
 import {
-  KervyxClient,
+  NobulexClient,
   generateKeyPair,
   serializeCCL,
   type Issuer,
   type Beneficiary,
-} from '@kervyx/sdk';
+} from '@nobulex/sdk';
 
 async function main() {
   console.log('========================================');
@@ -51,7 +51,7 @@ async function main() {
     name: 'Data Engineering Team',
   };
 
-  const client = new KervyxClient();
+  const client = new NobulexClient();
 
   const rootCovenant = await client.createCovenant({
     issuer: orgIssuer,
@@ -210,7 +210,7 @@ async function main() {
 
   // Root: no ancestors, effective = own constraints
   const rootChain = await client.resolveChain(rootCovenant, []);
-  const rootEffective = await import('@kervyx/core').then(core =>
+  const rootEffective = await import('@nobulex/core').then(core =>
     core.computeEffectiveConstraints(rootCovenant, rootChain)
   );
   console.log('Root effective constraints:');
@@ -218,7 +218,7 @@ async function main() {
 
   // Child: one ancestor (root)
   const childChain = await client.resolveChain(childCovenant, [rootCovenant]);
-  const childEffective = await import('@kervyx/core').then(core =>
+  const childEffective = await import('@nobulex/core').then(core =>
     core.computeEffectiveConstraints(childCovenant, childChain)
   );
   console.log('\nChild effective constraints:');
@@ -229,7 +229,7 @@ async function main() {
     rootCovenant,
     childCovenant,
   ]);
-  const grandchildEffective = await import('@kervyx/core').then(core =>
+  const grandchildEffective = await import('@nobulex/core').then(core =>
     core.computeEffectiveConstraints(grandchildCovenant, grandchildChain)
   );
   console.log('\nGrandchild effective constraints:');

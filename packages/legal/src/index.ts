@@ -1,5 +1,5 @@
-import { sha256Object } from '@kervyx/crypto';
-import { KervyxError, KervyxErrorCode } from '@kervyx/types';
+import { sha256Object } from '@nobulex/crypto';
+import { NobulexError, NobulexErrorCode } from '@nobulex/types';
 
 export type {
   LegalIdentityPackage,
@@ -855,9 +855,9 @@ export class ComplianceSurface {
    */
   addRequirement(name: string): void {
     if (!name || name.trim() === '') {
-      throw new KervyxError(
+      throw new NobulexError(
         'Requirement name must be a non-empty string',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.requirementNames.add(name);
@@ -869,21 +869,21 @@ export class ComplianceSurface {
    */
   addDependency(dep: RequirementDependency): void {
     if (!dep.dependentRequirement || dep.dependentRequirement.trim() === '') {
-      throw new KervyxError(
+      throw new NobulexError(
         'dependentRequirement must be a non-empty string',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!dep.prerequisiteRequirement || dep.prerequisiteRequirement.trim() === '') {
-      throw new KervyxError(
+      throw new NobulexError(
         'prerequisiteRequirement must be a non-empty string',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(dep.couplingStrength) || dep.couplingStrength < 0 || dep.couplingStrength > 1) {
-      throw new KervyxError(
+      throw new NobulexError(
         'couplingStrength must be between 0 and 1',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.requirementNames.add(dep.dependentRequirement);
@@ -910,16 +910,16 @@ export class ComplianceSurface {
     // Validate all requirement names have scores
     for (const name of this.requirementNames) {
       if (!(name in rawScores)) {
-        throw new KervyxError(
+        throw new NobulexError(
           `Missing score for requirement "${name}"`,
-          KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+          NobulexErrorCode.PROTOCOL_INVALID_INPUT,
         );
       }
       const score = rawScores[name]!;
       if (!Number.isFinite(score) || score < 0 || score > 1) {
-        throw new KervyxError(
+        throw new NobulexError(
           `Score for "${name}" must be between 0 and 1, got ${score}`,
-          KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+          NobulexErrorCode.PROTOCOL_INVALID_INPUT,
         );
       }
     }
@@ -1059,9 +1059,9 @@ export class ComplianceTrajectory {
    */
   constructor(breachThreshold = 0.7) {
     if (!Number.isFinite(breachThreshold) || breachThreshold < 0 || breachThreshold > 1) {
-      throw new KervyxError(
+      throw new NobulexError(
         'breachThreshold must be between 0 and 1',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.breachThreshold = breachThreshold;
@@ -1072,15 +1072,15 @@ export class ComplianceTrajectory {
    */
   record(obs: ComplianceObservation): void {
     if (!Number.isFinite(obs.score) || obs.score < 0 || obs.score > 1) {
-      throw new KervyxError(
+      throw new NobulexError(
         'Compliance score must be between 0 and 1',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(obs.timestamp)) {
-      throw new KervyxError(
+      throw new NobulexError(
         'Timestamp must be a finite number',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.observations.push({ ...obs });
@@ -1092,13 +1092,13 @@ export class ComplianceTrajectory {
    * Computes a least-squares trend line and estimates when (if ever)
    * the compliance score will breach the threshold.
    *
-   * @throws {KervyxError} if fewer than 2 observations are recorded.
+   * @throws {NobulexError} if fewer than 2 observations are recorded.
    */
   analyze(): ComplianceTrajectoryResult {
     if (this.observations.length < 2) {
-      throw new KervyxError(
+      throw new NobulexError(
         'Need at least 2 observations for trajectory analysis',
-        KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED,
+        NobulexErrorCode.PROTOCOL_COMPUTATION_FAILED,
       );
     }
 
@@ -1234,9 +1234,9 @@ export class RemediationPlanner {
    */
   plan(currentScores: Record<string, number>, targetImprovement = 0.1): RemediationPlanResult {
     if (targetImprovement <= 0 || targetImprovement > 1) {
-      throw new KervyxError(
+      throw new NobulexError(
         'targetImprovement must be between 0 (exclusive) and 1 (inclusive)',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1371,27 +1371,27 @@ export class JurisdictionConflictResolver {
    */
   addRequirement(req: JurisdictionalRequirement): void {
     if (!req.jurisdiction || req.jurisdiction.trim() === '') {
-      throw new KervyxError(
+      throw new NobulexError(
         'jurisdiction must be a non-empty string',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!req.requirementId || req.requirementId.trim() === '') {
-      throw new KervyxError(
+      throw new NobulexError(
         'requirementId must be a non-empty string',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(req.threshold) || req.threshold < 0 || req.threshold > 1) {
-      throw new KervyxError(
+      throw new NobulexError(
         'threshold must be between 0 and 1',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!req.category || req.category.trim() === '') {
-      throw new KervyxError(
+      throw new NobulexError(
         'category must be a non-empty string',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.requirements.push({ ...req });
@@ -1407,9 +1407,9 @@ export class JurisdictionConflictResolver {
    */
   resolve(strategy: ResolutionStrategy = 'strictest-wins'): JurisdictionConflictResult {
     if (!['strictest-wins', 'lex-specialis', 'proportionality'].includes(strategy)) {
-      throw new KervyxError(
+      throw new NobulexError(
         `Unknown resolution strategy: "${strategy}"`,
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1635,15 +1635,15 @@ export class RegulatoryImpactAnalyzer {
     weights: ComplianceWeights = DEFAULT_WEIGHTS,
   ): RegulatoryImpactResult {
     if (!change.changeId || change.changeId.trim() === '') {
-      throw new KervyxError(
+      throw new NobulexError(
         'changeId must be a non-empty string',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!change.affectedStandard) {
-      throw new KervyxError(
+      throw new NobulexError(
         'affectedStandard must be specified',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     validateComplianceRecord(currentCompliance);
@@ -1651,9 +1651,9 @@ export class RegulatoryImpactAnalyzer {
     // Get current standard requirements
     const currentStandard = COMPLIANCE_STANDARDS[change.affectedStandard];
     if (!currentStandard) {
-      throw new KervyxError(
+      throw new NobulexError(
         `Unknown compliance standard: "${change.affectedStandard}"`,
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1775,9 +1775,9 @@ export class RegulatoryImpactAnalyzer {
     totalRecommendations: string[];
   } {
     if (changes.length === 0) {
-      throw new KervyxError(
+      throw new NobulexError(
         'Must provide at least one regulatory change',
-        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
+        NobulexErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 

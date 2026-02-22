@@ -1,7 +1,7 @@
 {
-  "name": "@kervyx/mcp-server",
+  "name": "@nobulex/mcp-server",
   "version": "2.0.0",
-  "description": "Model Context Protocol server with stdio transport that exposes Kervyx covenant tools to AI agents",
+  "description": "Model Context Protocol server with stdio transport that exposes Nobulex covenant tools to AI agents",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "kervyx-mcp": "dist/bin.js"
+    "nobulex-mcp": "dist/bin.js"
   },
   "files": [
     "dist",
@@ -27,12 +27,12 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@kervyx/types": "2.0.0",
-    "@kervyx/crypto": "2.0.0",
-    "@kervyx/core": "2.0.0",
-    "@kervyx/store": "2.0.0",
-    "@kervyx/verifier": "2.0.0",
-    "@kervyx/sdk": "2.0.0"
+    "@nobulex/types": "2.0.0",
+    "@nobulex/crypto": "2.0.0",
+    "@nobulex/core": "2.0.0",
+    "@nobulex/store": "2.0.0",
+    "@nobulex/verifier": "2.0.0",
+    "@nobulex/sdk": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -43,16 +43,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/kervyx.git",
+    "url": "https://github.com/agbusiness195/nobulex.git",
     "directory": "packages/mcp-server"
   },
-  "homepage": "https://kervyx.dev",
+  "homepage": "https://nobulex.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/kervyx/issues"
+    "url": "https://github.com/agbusiness195/nobulex/issues"
   },
-  "author": "Kervyx Labs, Inc.",
+  "author": "Nobulex Labs, Inc.",
   "keywords": [
-    "kervyx",
+    "nobulex",
     "covenant",
     "ai-accountability",
     "mcp",

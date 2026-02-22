@@ -1,11 +1,11 @@
 /**
- * Cross-package lifecycle integration tests for the Kervyx SDK.
+ * Cross-package lifecycle integration tests for the Nobulex SDK.
  *
  * Tests FULL LIFECYCLE flows that span multiple packages working together:
  *
  *   1. Covenant -> Enforcement -> Reputation -> Breach pipeline
  *   2. Identity evolution + covenant binding
- *   3. SDK KervyxClient full workflow
+ *   3. SDK NobulexClient full workflow
  *   4. Store + Verifier batch operations
  *   5. Attestation + Reputation cross-validation
  *
@@ -20,8 +20,8 @@ import {
   sha256Object,
   toHex,
   timestamp,
-} from '@kervyx/crypto';
-import type { KeyPair, HashHex } from '@kervyx/crypto';
+} from '@nobulex/crypto';
+import type { KeyPair, HashHex } from '@nobulex/crypto';
 
 import {
   buildCovenant,
@@ -34,17 +34,17 @@ import {
   serializeCovenant,
   deserializeCovenant,
   CovenantBuildError,
-} from '@kervyx/core';
-import type { CovenantDocument } from '@kervyx/core';
+} from '@nobulex/core';
+import type { CovenantDocument } from '@nobulex/core';
 
-import { parse, evaluate, merge, serialize, validateNarrowing } from '@kervyx/ccl';
+import { parse, evaluate, merge, serialize, validateNarrowing } from '@nobulex/ccl';
 
-import { MemoryStore } from '@kervyx/store';
-import type { StoreEvent } from '@kervyx/store';
+import { MemoryStore } from '@nobulex/store';
+import type { StoreEvent } from '@nobulex/store';
 
-import { Verifier, verifyBatch } from '@kervyx/verifier';
+import { Verifier, verifyBatch } from '@nobulex/verifier';
 
-import { KervyxClient, QuickCovenant } from '@kervyx/sdk';
+import { NobulexClient, QuickCovenant } from '@nobulex/sdk';
 import type {
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
@@ -54,7 +54,7 @@ import type {
   ChainResolvedEvent,
   ChainValidatedEvent,
   EvaluationCompletedEvent,
-} from '@kervyx/sdk';
+} from '@nobulex/sdk';
 
 import {
   createIdentity,
@@ -63,14 +63,14 @@ import {
   serializeIdentity,
   deserializeIdentity,
   computeIdentityHash,
-} from '@kervyx/identity';
-import type { AgentIdentity } from '@kervyx/identity';
+} from '@nobulex/identity';
+import type { AgentIdentity } from '@nobulex/identity';
 
 import {
   Monitor,
   MonitorDeniedError,
   verifyMerkleProof,
-} from '@kervyx/enforcement';
+} from '@nobulex/enforcement';
 
 import {
   createReceipt,
@@ -82,15 +82,15 @@ import {
   createEndorsement,
   verifyEndorsement,
   verifyReceiptChain,
-} from '@kervyx/reputation';
-import type { ExecutionReceipt, Endorsement } from '@kervyx/reputation';
+} from '@nobulex/reputation';
+import type { ExecutionReceipt, Endorsement } from '@nobulex/reputation';
 
 import {
   createBreachAttestation,
   verifyBreachAttestation,
   TrustGraph,
-} from '@kervyx/breach';
-import type { BreachEvent } from '@kervyx/breach';
+} from '@nobulex/breach';
+import type { BreachEvent } from '@nobulex/breach';
 
 import {
   createAttestation,
@@ -99,15 +99,15 @@ import {
   reconcile,
   getDiscrepancies,
   computeAttestationCoverage,
-} from '@kervyx/attestation';
-import type { ReceiptSummary, AgentAction } from '@kervyx/attestation';
+} from '@nobulex/attestation';
+import type { ReceiptSummary, AgentAction } from '@nobulex/attestation';
 
 import {
   generateCanary,
   evaluateCanary,
   detectionProbability,
   isExpired,
-} from '@kervyx/canary';
+} from '@nobulex/canary';
 
 
 // ===========================================================================
@@ -615,15 +615,15 @@ describe('Identity evolution + covenant binding', () => {
 
 
 // ===========================================================================
-// 3. SDK KervyxClient full workflow
+// 3. SDK NobulexClient full workflow
 // ===========================================================================
 
-describe('SDK KervyxClient full workflow', () => {
-  let client: KervyxClient;
+describe('SDK NobulexClient full workflow', () => {
+  let client: NobulexClient;
   let auditorKp: KeyPair;
 
   beforeEach(async () => {
-    client = new KervyxClient();
+    client = new NobulexClient();
     auditorKp = await generateKeyPair();
   });
 

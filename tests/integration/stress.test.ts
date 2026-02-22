@@ -1,17 +1,17 @@
 /**
- * Stress tests for the Kervyx SDK.
+ * Stress tests for the Nobulex SDK.
  *
  * Exercises high-volume, concurrent, and boundary-condition scenarios
  * across crypto, core, CCL, store, and verifier packages.
  */
 
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, toHex } from '@kervyx/crypto';
-import { buildCovenant, verifyCovenant } from '@kervyx/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@kervyx/core';
-import { parse, evaluate, merge, serialize } from '@kervyx/ccl';
-import { MemoryStore } from '@kervyx/store';
-import { Verifier, verifyBatch } from '@kervyx/verifier';
+import { generateKeyPair, toHex } from '@nobulex/crypto';
+import { buildCovenant, verifyCovenant } from '@nobulex/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@nobulex/core';
+import { parse, evaluate, merge, serialize } from '@nobulex/ccl';
+import { MemoryStore } from '@nobulex/store';
+import { Verifier, verifyBatch } from '@nobulex/verifier';
 
 // ---------------------------------------------------------------------------
 // Helpers

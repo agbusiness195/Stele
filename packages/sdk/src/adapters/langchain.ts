@@ -1,7 +1,7 @@
 /**
- * Kervyx adapter for LangChain.
+ * Nobulex adapter for LangChain.
  *
- * Provides a callback handler that logs agent actions to the Kervyx
+ * Provides a callback handler that logs agent actions to the Nobulex
  * audit trail, and tool/chain wrappers that enforce covenant constraints
  * before execution.
  *
@@ -11,20 +11,20 @@
  *
  * @example
  * ```typescript
- * import { KervyxClient, KervyxCallbackHandler, withKervyxTool } from '@kervyx/sdk';
+ * import { NobulexClient, NobulexCallbackHandler, withNobulexTool } from '@nobulex/sdk';
  *
- * const handler = new KervyxCallbackHandler({ client, covenant });
- * const protectedTool = withKervyxTool(myTool, { client, covenant });
+ * const handler = new NobulexCallbackHandler({ client, covenant });
+ * const protectedTool = withNobulexTool(myTool, { client, covenant });
  * ```
  */
 
-import type { KervyxClient } from '../index.js';
-import type { CovenantDocument } from '@kervyx/core';
+import type { NobulexClient } from '../index.js';
+import type { CovenantDocument } from '@nobulex/core';
 import type { EvaluationResult } from '../types.js';
-import { KervyxAccessDeniedError } from './vercel-ai.js';
+import { NobulexAccessDeniedError } from './vercel-ai.js';
 
 // Re-export the shared error so consumers can import from either adapter
-export { KervyxAccessDeniedError } from './vercel-ai.js';
+export { NobulexAccessDeniedError } from './vercel-ai.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -52,11 +52,11 @@ export interface LangChainToolLike {
 }
 
 /**
- * Options for wrapping LangChain tools with Kervyx enforcement.
+ * Options for wrapping LangChain tools with Nobulex enforcement.
  */
-export interface KervyxLangChainOptions {
-  /** The KervyxClient instance for covenant evaluation. */
-  client: KervyxClient;
+export interface NobulexLangChainOptions {
+  /** The NobulexClient instance for covenant evaluation. */
+  client: NobulexClient;
   /** The covenant document whose constraints are enforced. */
   covenant: CovenantDocument;
   /**
@@ -72,14 +72,14 @@ export interface KervyxLangChainOptions {
   /**
    * Custom handler invoked when a tool call is denied. If provided,
    * its return value is returned instead of throwing. If not provided,
-   * a `KervyxAccessDeniedError` is thrown.
+   * a `NobulexAccessDeniedError` is thrown.
    */
   onDenied?: (tool: LangChainToolLike, result: EvaluationResult) => unknown;
 }
 
 // ─── Callback handler event ──────────────────────────────────────────────────
 
-/** A recorded event from the KervyxCallbackHandler audit trail. */
+/** A recorded event from the NobulexCallbackHandler audit trail. */
 export interface CallbackEvent {
   /** The event type (e.g. 'tool:start', 'chain:end', 'tool:error'). */
   type: string;
@@ -89,31 +89,31 @@ export interface CallbackEvent {
   timestamp: string;
 }
 
-// ─── KervyxCallbackHandler ────────────────────────────────────────────────────
+// ─── NobulexCallbackHandler ────────────────────────────────────────────────────
 
 /**
  * A LangChain-compatible callback handler that records agent actions
- * to a Kervyx audit trail.
+ * to a Nobulex audit trail.
  *
  * This handler does not enforce constraints; it only observes and
- * logs. Use it alongside `withKervyxTool` for enforcement + auditing.
+ * logs. Use it alongside `withNobulexTool` for enforcement + auditing.
  *
  * @example
  * ```typescript
- * const handler = new KervyxCallbackHandler({ client, covenant });
+ * const handler = new NobulexCallbackHandler({ client, covenant });
  * await handler.handleToolStart({ name: 'search' }, 'query');
  * console.log(handler.events); // [{ type: 'tool:start', ... }]
  * ```
  */
-export class KervyxCallbackHandler {
-  /** The KervyxClient used for event emission. */
-  readonly client: KervyxClient;
+export class NobulexCallbackHandler {
+  /** The NobulexClient used for event emission. */
+  readonly client: NobulexClient;
   /** The covenant document being audited. */
   readonly covenant: CovenantDocument;
   /** Ordered list of recorded events. */
   readonly events: CallbackEvent[] = [];
 
-  constructor(options: { client: KervyxClient; covenant: CovenantDocument }) {
+  constructor(options: { client: NobulexClient; covenant: CovenantDocument }) {
     this.client = options.client;
     this.covenant = options.covenant;
   }
@@ -199,14 +199,14 @@ export class KervyxCallbackHandler {
   }
 }
 
-// ─── withKervyxTool ───────────────────────────────────────────────────────────
+// ─── withNobulexTool ───────────────────────────────────────────────────────────
 
 /**
- * Wrap a LangChain-style tool with Kervyx covenant enforcement.
+ * Wrap a LangChain-style tool with Nobulex covenant enforcement.
  *
  * Wraps all three call patterns (`call`, `invoke`, `_call`) when present.
  * Before delegation, evaluates the action/resource against the covenant.
- * If denied, throws a `KervyxAccessDeniedError` (or invokes `onDenied`).
+ * If denied, throws a `NobulexAccessDeniedError` (or invokes `onDenied`).
  *
  * @param tool    - The LangChain tool to wrap.
  * @param options - Enforcement options including client and covenant.
@@ -214,13 +214,13 @@ export class KervyxCallbackHandler {
  *
  * @example
  * ```typescript
- * const protectedTool = withKervyxTool(searchTool, { client, covenant });
+ * const protectedTool = withNobulexTool(searchTool, { client, covenant });
  * await protectedTool.invoke('my query'); // throws if denied
  * ```
  */
-export function withKervyxTool<T extends LangChainToolLike>(
+export function withNobulexTool<T extends LangChainToolLike>(
   tool: T,
-  options: KervyxLangChainOptions,
+  options: NobulexLangChainOptions,
 ): T {
   const { client, covenant, actionFromTool, resourceFromTool, onDenied } = options;
   const wrapped = { ...tool } as T;
@@ -238,7 +238,7 @@ export function withKervyxTool<T extends LangChainToolLike>(
       if (onDenied) {
         return onDenied(tool, result);
       }
-      throw new KervyxAccessDeniedError(
+      throw new NobulexAccessDeniedError(
         `Action '${action}' on resource '${resource}' denied by covenant`,
         result,
       );
@@ -289,7 +289,7 @@ export function withKervyxTool<T extends LangChainToolLike>(
  * ```
  */
 export function createChainGuard(
-  options: KervyxLangChainOptions,
+  options: NobulexLangChainOptions,
 ): (chainName: string, input: unknown, fn: () => Promise<unknown>) => Promise<unknown> {
   const { client, covenant, onDenied } = options;
 
@@ -307,7 +307,7 @@ export function createChainGuard(
       if (onDenied) {
         return onDenied({ name: chainName } as LangChainToolLike, result);
       }
-      throw new KervyxAccessDeniedError(
+      throw new NobulexAccessDeniedError(
         `Chain '${chainName}' on resource '${resource}' denied by covenant`,
         result,
       );
