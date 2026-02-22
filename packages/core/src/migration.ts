@@ -1,5 +1,5 @@
 /**
- * @grith/core/migration — Document migration system for protocol version upgrades.
+ * @kervyx/core/migration — Document migration system for protocol version upgrades.
  *
  * Provides a `DocumentMigrator` class that can chain version-specific migrations
  * to upgrade CovenantDocument structures from older protocol versions to the current one.
@@ -12,7 +12,7 @@
  * @packageDocumentation
  */
 
-import { generateNonce, toHex } from '@grith/crypto';
+import { generateNonce, toHex } from '@kervyx/crypto';
 import { PROTOCOL_VERSION } from './types.js';
 
 // ─── Public types ────────────────────────────────────────────────────────────────

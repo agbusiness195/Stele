@@ -1,7 +1,7 @@
 /**
  * Example 01: Basic Covenant
  *
- * Getting started with the Grith SDK. Demonstrates:
+ * Getting started with the Kervyx SDK. Demonstrates:
  * - Generating Ed25519 key pairs for issuer and beneficiary
  * - Creating a simple permit/deny covenant
  * - Verifying the covenant's cryptographic integrity
@@ -12,11 +12,11 @@
  */
 
 import {
-  GrithClient,
+  KervyxClient,
   generateKeyPair,
   type Issuer,
   type Beneficiary,
-} from '@grith/sdk';
+} from '@kervyx/sdk';
 
 async function main() {
   console.log('========================================');
@@ -52,10 +52,10 @@ async function main() {
     name: 'Data Analyst Agent v1',
   };
 
-  // ── Step 3: Create the GrithClient ─────────────────────────────────────
+  // ── Step 3: Create the KervyxClient ─────────────────────────────────────
   // The client manages key pairs and provides the high-level API.
 
-  const client = new GrithClient({ keyPair: issuerKeys });
+  const client = new KervyxClient({ keyPair: issuerKeys });
 
   // ── Step 4: Create a covenant ──────────────────────────────────────────
   // Constraints are written in CCL (Covenant Constraint Language).

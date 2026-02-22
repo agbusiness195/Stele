@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "grith"
+name = "kervyx"
 version = "1.0.0"
-description = "Python implementation of the Grith protocol for AI covenant management"
+description = "Python implementation of the Kervyx protocol for AI covenant management"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"

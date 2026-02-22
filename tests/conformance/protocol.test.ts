@@ -1,5 +1,5 @@
 /**
- * Grith Protocol Conformance Test Suite
+ * Kervyx Protocol Conformance Test Suite
  *
  * These tests verify that the protocol implementation conforms to its specification.
  * Each test is a real assertion that exercises the actual implementation, not a stub.
@@ -23,7 +23,7 @@ import {
   timestamp,
   base64urlEncode,
   base64urlDecode,
-} from '@grith/crypto';
+} from '@kervyx/crypto';
 
 import {
   buildCovenant,
@@ -40,9 +40,9 @@ import {
   resolveChain,
   computeEffectiveConstraints,
   validateChainNarrowing,
-} from '@grith/core';
+} from '@kervyx/core';
 
-import type { CovenantDocument } from '@grith/core';
+import type { CovenantDocument } from '@kervyx/core';
 
 import {
   parse,
@@ -52,7 +52,7 @@ import {
   serialize,
   merge,
   checkRateLimit,
-} from '@grith/ccl';
+} from '@kervyx/ccl';
 
 import {
   createIdentity,
@@ -61,7 +61,7 @@ import {
   serializeIdentity,
   deserializeIdentity,
   computeIdentityHash,
-} from '@grith/identity';
+} from '@kervyx/identity';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -89,7 +89,7 @@ async function makeTestCovenant(constraints = "permit read on '/data/**'") {
 
 // ─── Test Suite ───────────────────────────────────────────────────────────────
 
-describe('Grith Protocol Conformance', () => {
+describe('Kervyx Protocol Conformance', () => {
 
   // ── Covenant Document Specification ─────────────────────────────────────────
 
@@ -922,7 +922,7 @@ describe('Grith Protocol Conformance', () => {
     it('SPEC-130: Public key is deterministically derived from private key', async () => {
       const kp1 = await generateKeyPair();
       // Import the same private key to get the same public key
-      const { keyPairFromPrivateKey } = await import('@grith/crypto');
+      const { keyPairFromPrivateKey } = await import('@kervyx/crypto');
       const kp2 = await keyPairFromPrivateKey(kp1.privateKey);
       expect(kp2.publicKeyHex).toBe(kp1.publicKeyHex);
     });
@@ -1439,7 +1439,7 @@ describe('Grith Protocol Conformance', () => {
 
     it('SPEC-400: Re-signing produces a new valid document with different ID', async () => {
       const { doc, issuerKp } = await makeTestCovenant();
-      const { resignCovenant } = await import('@grith/core');
+      const { resignCovenant } = await import('@kervyx/core');
       const resigned = await resignCovenant(doc, issuerKp.privateKey);
 
       // New document has a different ID due to new nonce

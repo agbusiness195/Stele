@@ -1,9 +1,9 @@
-import type { HashHex } from '@grith/crypto';
-import type { Severity } from '@grith/ccl';
+import type { HashHex } from '@kervyx/crypto';
+import type { Severity } from '@kervyx/ccl';
 
 // ─── Protocol constants ────────────────────────────────────────────────────────
 
-/** Current Grith Covenant protocol version. */
+/** Current Kervyx Covenant protocol version. */
 export const PROTOCOL_VERSION = '1.0';
 
 /** Maximum number of CCL constraint statements in a single covenant. */

@@ -1,9 +1,9 @@
 /**
- * Typed event emitter for the Grith SDK lifecycle.
+ * Typed event emitter for the Kervyx SDK lifecycle.
  *
  * Provides a fully typed, zero-dependency event emitter that tracks
  * covenant creation, verification, signing, action evaluation, and errors.
- * All event payloads are strictly typed via {@link GrithEventMap}.
+ * All event payloads are strictly typed via {@link KervyxEventMap}.
  *
  * @packageDocumentation
  */
@@ -16,7 +16,7 @@
  * Each key is a lifecycle event emitted by the SDK; the corresponding
  * value type describes the data delivered to listeners.
  */
-export type GrithLifecycleEventMap = {
+export type KervyxLifecycleEventMap = {
   /** Emitted when a new covenant document is created. */
   'covenant:created': { documentId: string; issuerId: string };
   /** Emitted when a covenant document has been verified. */
@@ -49,17 +49,17 @@ interface ListenerEntry<T> {
   once: boolean;
 }
 
-// ─── GrithEventEmitter ──────────────────────────────────────────────────────────
+// ─── KervyxEventEmitter ──────────────────────────────────────────────────────────
 
 /**
- * A strongly-typed event emitter for Grith SDK lifecycle events.
+ * A strongly-typed event emitter for Kervyx SDK lifecycle events.
  *
  * This implementation has **no dependency on Node's `events` module** and
  * can run in any JavaScript environment (Node, Deno, browser, edge workers).
  *
  * @example
  * ```typescript
- * const emitter = new GrithEventEmitter();
+ * const emitter = new KervyxEventEmitter();
  *
  * emitter.on('covenant:created', (data) => {
  *   console.log(`Created: ${data.documentId} by ${data.issuerId}`);
@@ -71,13 +71,13 @@ interface ListenerEntry<T> {
  * });
  * ```
  */
-export class GrithEventEmitter {
+export class KervyxEventEmitter {
   /**
    * Internal map of event names to their ordered listener entries.
    * Uses an array (rather than a Set) to preserve insertion order and
    * to allow the same function reference to be registered more than once.
    */
-  private readonly _listeners = new Map<keyof GrithLifecycleEventMap, ListenerEntry<GrithLifecycleEventMap[keyof GrithLifecycleEventMap]>[]>();
+  private readonly _listeners = new Map<keyof KervyxLifecycleEventMap, ListenerEntry<KervyxLifecycleEventMap[keyof KervyxLifecycleEventMap]>[]>();
 
   // ── on ──────────────────────────────────────────────────────────────────
 
@@ -96,16 +96,16 @@ export class GrithEventEmitter {
    * });
    * ```
    */
-  on<K extends keyof GrithLifecycleEventMap>(
+  on<K extends keyof KervyxLifecycleEventMap>(
     event: K,
-    listener: Listener<GrithLifecycleEventMap[K]>,
+    listener: Listener<KervyxLifecycleEventMap[K]>,
   ): this {
     let entries = this._listeners.get(event);
     if (!entries) {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener as Listener<GrithLifecycleEventMap[keyof GrithLifecycleEventMap]>, once: false });
+    entries.push({ fn: listener as Listener<KervyxLifecycleEventMap[keyof KervyxLifecycleEventMap]>, once: false });
     return this;
   }
 
@@ -129,9 +129,9 @@ export class GrithEventEmitter {
    * emitter.off('covenant:signed', handler);
    * ```
    */
-  off<K extends keyof GrithLifecycleEventMap>(
+  off<K extends keyof KervyxLifecycleEventMap>(
     event: K,
-    listener: Listener<GrithLifecycleEventMap[K]>,
+    listener: Listener<KervyxLifecycleEventMap[K]>,
   ): this {
     const entries = this._listeners.get(event);
     if (!entries) return this;
@@ -164,16 +164,16 @@ export class GrithEventEmitter {
    * });
    * ```
    */
-  once<K extends keyof GrithLifecycleEventMap>(
+  once<K extends keyof KervyxLifecycleEventMap>(
     event: K,
-    listener: Listener<GrithLifecycleEventMap[K]>,
+    listener: Listener<KervyxLifecycleEventMap[K]>,
   ): this {
     let entries = this._listeners.get(event);
     if (!entries) {
       entries = [];
       this._listeners.set(event, entries);
     }
-    entries.push({ fn: listener as Listener<GrithLifecycleEventMap[keyof GrithLifecycleEventMap]>, once: true });
+    entries.push({ fn: listener as Listener<KervyxLifecycleEventMap[keyof KervyxLifecycleEventMap]>, once: true });
     return this;
   }
 
@@ -198,9 +198,9 @@ export class GrithEventEmitter {
    * });
    * ```
    */
-  emit<K extends keyof GrithLifecycleEventMap>(
+  emit<K extends keyof KervyxLifecycleEventMap>(
     event: K,
-    data: GrithLifecycleEventMap[K],
+    data: KervyxLifecycleEventMap[K],
   ): boolean {
     const entries = this._listeners.get(event);
     if (!entries || entries.length === 0) return false;
@@ -244,7 +244,7 @@ export class GrithEventEmitter {
    * console.log(emitter.listenerCount('error')); // 1
    * ```
    */
-  listenerCount(event: keyof GrithLifecycleEventMap): number {
+  listenerCount(event: keyof KervyxLifecycleEventMap): number {
     const entries = this._listeners.get(event);
     return entries ? entries.length : 0;
   }
@@ -265,7 +265,7 @@ export class GrithEventEmitter {
    * emitter.removeAllListeners();              // clear everything
    * ```
    */
-  removeAllListeners(event?: keyof GrithLifecycleEventMap): this {
+  removeAllListeners(event?: keyof KervyxLifecycleEventMap): this {
     if (event !== undefined) {
       this._listeners.delete(event);
     } else {

@@ -1,11 +1,11 @@
-# @grith/enforcement
+# @kervyx/enforcement
 
 Runtime covenant enforcement with tamper-evident audit logging and capability-based access control.
 
 ## Installation
 
 ```bash
-npm install @grith/enforcement
+npm install @kervyx/enforcement
 ```
 
 ## Key APIs
@@ -20,7 +20,7 @@ npm install @grith/enforcement
 ## Usage
 
 ```typescript
-import { Monitor, CapabilityGate } from '@grith/enforcement';
+import { Monitor, CapabilityGate } from '@kervyx/enforcement';
 
 // Runtime enforcement with audit logging
 const monitor = new Monitor(covenantId, `
@@ -50,4 +50,4 @@ const valid = await CapabilityGate.verifyManifest(manifest);
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

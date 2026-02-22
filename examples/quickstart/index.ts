@@ -1,13 +1,13 @@
 /**
- * Grith SDK Quickstart
+ * Kervyx SDK Quickstart
  *
  * Demonstrates the basic flow: generate keys, build a covenant,
  * verify it, enforce constraints through a Monitor, and inspect
  * the tamper-evident audit log.
  */
-import { generateKeyPair } from '@grith/crypto';
-import { buildCovenant, verifyCovenant } from '@grith/core';
-import { Monitor, MonitorDeniedError } from '@grith/enforcement';
+import { generateKeyPair } from '@kervyx/crypto';
+import { buildCovenant, verifyCovenant } from '@kervyx/core';
+import { Monitor, MonitorDeniedError } from '@kervyx/enforcement';
 
 async function main() {
   // 1. Generate an Ed25519 key pair

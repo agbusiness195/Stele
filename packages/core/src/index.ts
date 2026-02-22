@@ -7,19 +7,19 @@ import {
   fromHex,
   generateNonce,
   timestamp,
-} from '@grith/crypto';
+} from '@kervyx/crypto';
 
-import type { KeyPair, HashHex } from '@grith/crypto';
+import type { KeyPair, HashHex } from '@kervyx/crypto';
 
-import { DocumentedGrithError as GrithError, DocumentedErrorCode as GrithErrorCode } from '@grith/types';
+import { DocumentedKervyxError as KervyxError, DocumentedErrorCode as KervyxErrorCode } from '@kervyx/types';
 
 import {
   parse as cclParse,
   merge as cclMerge,
   validateNarrowing as cclValidateNarrowing,
-} from '@grith/ccl';
+} from '@kervyx/ccl';
 
-import type { CCLDocument, NarrowingViolation } from '@grith/ccl';
+import type { CCLDocument, NarrowingViolation } from '@kervyx/ccl';
 
 import {
   PROTOCOL_VERSION,
@@ -37,7 +37,7 @@ import type {
   PartyRole,
 } from './types.js';
 
-// Re-export all types so consumers only need @grith/core
+// Re-export all types so consumers only need @kervyx/core
 export type {
   EnforcementType,
   ProofType,
@@ -764,16 +764,16 @@ export async function resolveChain(
   maxDepth: number = MAX_CHAIN_DEPTH,
 ): Promise<CovenantDocument[]> {
   if (doc == null) {
-    throw new GrithError(
-      GrithErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new KervyxError(
+      KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       'doc must not be null or undefined',
       { hint: 'Provide a valid CovenantDocument to resolveChain.' }
     );
   }
 
   if (typeof maxDepth !== 'number' || !Number.isFinite(maxDepth) || maxDepth < 0) {
-    throw new GrithError(
-      GrithErrorCode.PROTOCOL_INVALID_INPUT,
+    throw new KervyxError(
+      KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       'maxDepth must be a non-negative number',
       { hint: 'Provide a non-negative number for maxDepth.' }
     );

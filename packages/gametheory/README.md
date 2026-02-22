@@ -1,11 +1,11 @@
-# @grith/gametheory
+# @kervyx/gametheory
 
 Game-theoretic analysis for covenant systems, including Nash equilibria, mechanism design, and coalition stability.
 
 ## Installation
 
 ```bash
-npm install @grith/gametheory
+npm install @kervyx/gametheory
 ```
 
 ## Key APIs
@@ -23,7 +23,7 @@ npm install @grith/gametheory
 ## Usage
 
 ```typescript
-import { proveHonesty, repeatedGameEquilibrium, mechanismDesign } from '@grith/gametheory';
+import { proveHonesty, repeatedGameEquilibrium, mechanismDesign } from '@kervyx/gametheory';
 
 // Prove honesty is the dominant strategy
 const proof = proveHonesty({
@@ -56,4 +56,4 @@ console.log(mechanism.minimumPenalty); // 200
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

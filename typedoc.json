@@ -3,7 +3,7 @@
   "entryPointStrategy": "packages",
   "entryPoints": ["packages/*"],
   "out": "docs/api-generated",
-  "name": "Grith Protocol — API Reference",
+  "name": "Kervyx Protocol — API Reference",
   "excludePrivate": true,
   "excludeInternal": true,
   "readme": "README.md",

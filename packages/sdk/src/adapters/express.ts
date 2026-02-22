@@ -1,8 +1,8 @@
 /**
- * Express/HTTP middleware adapter for the Grith SDK.
+ * Express/HTTP middleware adapter for the Kervyx SDK.
  *
  * Provides zero-config HTTP middleware that wraps any Express/Connect-compatible
- * handler with Grith covenant enforcement. Uses generic request/response types
+ * handler with Kervyx covenant enforcement. Uses generic request/response types
  * so it works with Express, Koa, Hono, Fastify, and any Connect-compatible server.
  *
  * **Status: Stable** (promoted from beta in v1.0.0)
@@ -10,13 +10,13 @@
  * @packageDocumentation
  */
 
-import type { CovenantDocument } from '@grith/core';
+import type { CovenantDocument } from '@kervyx/core';
 import type { EvaluationResult } from '../types.js';
 
 /**
- * Minimal interface for covenant evaluation. GrithClient satisfies this.
+ * Minimal interface for covenant evaluation. KervyxClient satisfies this.
  */
-export interface GrithEvaluator {
+export interface KervyxEvaluator {
   evaluateAction(
     covenant: CovenantDocument,
     action: string,
@@ -64,11 +64,11 @@ export type NextFunction = (err?: unknown) => void;
 // ─── Middleware options ──────────────────────────────────────────────────────
 
 /**
- * Options for the grithMiddleware factory.
+ * Options for the kervyxMiddleware factory.
  */
-export interface GrithMiddlewareOptions {
-  /** The GrithClient (or any GrithEvaluator) instance to use for covenant evaluation. */
-  client: GrithEvaluator;
+export interface KervyxMiddlewareOptions {
+  /** The KervyxClient (or any KervyxEvaluator) instance to use for covenant evaluation. */
+  client: KervyxEvaluator;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
   /**
@@ -96,11 +96,11 @@ export interface GrithMiddlewareOptions {
 // ─── Guard handler options ───────────────────────────────────────────────────
 
 /**
- * Options for the grithGuardHandler factory.
+ * Options for the kervyxGuardHandler factory.
  */
-export interface GrithGuardHandlerOptions {
-  /** The GrithClient (or any GrithEvaluator) instance to use for covenant evaluation. */
-  client: GrithEvaluator;
+export interface KervyxGuardHandlerOptions {
+  /** The KervyxClient (or any KervyxEvaluator) instance to use for covenant evaluation. */
+  client: KervyxEvaluator;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
   /**
@@ -131,8 +131,8 @@ export interface GrithGuardHandlerOptions {
  * Options for the createCovenantRouter factory.
  */
 export interface CovenantRouterOptions {
-  /** The GrithClient (or any GrithEvaluator) instance to use for covenant evaluation. */
-  client: GrithEvaluator;
+  /** The KervyxClient (or any KervyxEvaluator) instance to use for covenant evaluation. */
+  client: KervyxEvaluator;
   /** The covenant document to enforce. */
   covenant: CovenantDocument;
 }
@@ -166,7 +166,7 @@ function defaultOnDenied(
   }
   if (res.setHeader) {
     res.setHeader('content-type', 'application/json');
-    res.setHeader('x-grith-permitted', 'false');
+    res.setHeader('x-kervyx-permitted', 'false');
   }
   if (res.end) {
     res.end(JSON.stringify({
@@ -199,16 +199,16 @@ function defaultOnError(
   }
 }
 
-// ─── grithMiddleware ─────────────────────────────────────────────────────────
+// ─── kervyxMiddleware ─────────────────────────────────────────────────────────
 
 /**
- * Connect-compatible middleware factory that enforces a Grith covenant
+ * Connect-compatible middleware factory that enforces a Kervyx covenant
  * on every incoming HTTP request.
  *
  * For each request:
  * - Extracts the action and resource using configurable extractors
  * - Evaluates them against the covenant's CCL constraints
- * - If permitted: sets `x-grith-permitted: true` header and calls `next()`
+ * - If permitted: sets `x-kervyx-permitted: true` header and calls `next()`
  * - If denied: calls `onDenied` handler (default: 403 JSON response)
  * - On error: calls `onError` handler (default: 500 JSON response)
  *
@@ -218,12 +218,12 @@ function defaultOnError(
  * @example
  * ```typescript
  * import express from 'express';
- * import { GrithClient, grithMiddleware } from '@grith/sdk';
+ * import { KervyxClient, kervyxMiddleware } from '@kervyx/sdk';
  *
- * const client = new GrithClient();
+ * const client = new KervyxClient();
  * const app = express();
  *
- * app.use(grithMiddleware({
+ * app.use(kervyxMiddleware({
  *   client,
  *   covenant: myCovenantDoc,
  * }));
@@ -233,8 +233,8 @@ function defaultOnError(
  * });
  * ```
  */
-export function grithMiddleware(
-  options: GrithMiddlewareOptions,
+export function kervyxMiddleware(
+  options: KervyxMiddlewareOptions,
 ): (req: IncomingRequest, res: OutgoingResponse, next: NextFunction) => void {
   const {
     client,
@@ -254,7 +254,7 @@ export function grithMiddleware(
       .then((result: EvaluationResult) => {
         if (result.permitted) {
           if (res.setHeader) {
-            res.setHeader('x-grith-permitted', 'true');
+            res.setHeader('x-kervyx-permitted', 'true');
           }
           next();
         } else {
@@ -267,7 +267,7 @@ export function grithMiddleware(
   };
 }
 
-// ─── grithGuardHandler ───────────────────────────────────────────────────────
+// ─── kervyxGuardHandler ───────────────────────────────────────────────────────
 
 /**
  * Async handler type compatible with any HTTP framework.
@@ -275,7 +275,7 @@ export function grithMiddleware(
 export type AsyncHandler = (req: IncomingRequest, res: OutgoingResponse) => Promise<void>;
 
 /**
- * Wraps an async handler with Grith covenant enforcement for standalone use
+ * Wraps an async handler with Kervyx covenant enforcement for standalone use
  * (no next function required).
  *
  * Evaluates the request against the covenant before invoking the handler.
@@ -287,7 +287,7 @@ export type AsyncHandler = (req: IncomingRequest, res: OutgoingResponse) => Prom
  *
  * @example
  * ```typescript
- * const guardedHandler = grithGuardHandler(
+ * const guardedHandler = kervyxGuardHandler(
  *   { client, covenant: myDoc },
  *   async (req, res) => {
  *     res.end(JSON.stringify({ data: 'success' }));
@@ -298,8 +298,8 @@ export type AsyncHandler = (req: IncomingRequest, res: OutgoingResponse) => Prom
  * http.createServer(guardedHandler);
  * ```
  */
-export function grithGuardHandler(
-  options: GrithGuardHandlerOptions,
+export function kervyxGuardHandler(
+  options: KervyxGuardHandlerOptions,
   handler: AsyncHandler,
 ): (req: IncomingRequest, res: OutgoingResponse) => Promise<void> {
   const {
@@ -320,7 +320,7 @@ export function grithGuardHandler(
 
       if (result.permitted) {
         if (res.setHeader) {
-          res.setHeader('x-grith-permitted', 'true');
+          res.setHeader('x-kervyx-permitted', 'true');
         }
         await handler(req, res);
       } else {
@@ -341,7 +341,7 @@ export interface CovenantRouter {
   /**
    * Returns middleware that enforces a specific action/resource pair.
    *
-   * Unlike `grithMiddleware` which extracts action/resource from the request,
+   * Unlike `kervyxMiddleware` which extracts action/resource from the request,
    * this allows you to specify exact values for route-level enforcement.
    *
    * @param action - The action to enforce (e.g., `"read"`, `"write"`).
@@ -416,7 +416,7 @@ export function createCovenantRouter(options: CovenantRouterOptions): CovenantRo
           .then((result: EvaluationResult) => {
             if (result.permitted) {
               if (res.setHeader) {
-                res.setHeader('x-grith-permitted', 'true');
+                res.setHeader('x-kervyx-permitted', 'true');
               }
               next();
             } else {

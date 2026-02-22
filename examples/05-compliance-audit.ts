@@ -1,5 +1,5 @@
 /**
- * Grith Compliance Audit Example
+ * Kervyx Compliance Audit Example
  *
  * Shows how to run a compliance audit using the certification system
  * and generate actionable findings for MCP servers.
@@ -17,7 +17,7 @@ import type { CertificationCriteria } from '../packages/mcp-server/src/certifica
 
 function main() {
   console.log('========================================');
-  console.log('  Grith Compliance Audit Example');
+  console.log('  Kervyx Compliance Audit Example');
   console.log('========================================\n');
 
   // ── Step 1: Register servers ────────────────────────────────────────

@@ -1,5 +1,5 @@
 /**
- * JSON Schema (Draft 2020-12) for a Grith CovenantDocument.
+ * JSON Schema (Draft 2020-12) for a Kervyx CovenantDocument.
  *
  * This schema enables any language to validate covenant documents
  * without the TypeScript SDK. It is the machine-readable specification
@@ -172,14 +172,14 @@ const definitions = {
 };
 
 /**
- * The complete JSON Schema for a Grith CovenantDocument.
+ * The complete JSON Schema for a Kervyx CovenantDocument.
  *
  * Conforms to JSON Schema Draft 2020-12 (https://json-schema.org/draft/2020-12/schema).
  *
  * @example
  * ```typescript
  * import Ajv from 'ajv';
- * import { COVENANT_SCHEMA } from '@grith/schema';
+ * import { COVENANT_SCHEMA } from '@kervyx/schema';
  *
  * const ajv = new Ajv();
  * const validate = ajv.compile(COVENANT_SCHEMA);
@@ -188,9 +188,9 @@ const definitions = {
  */
 export const COVENANT_SCHEMA = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
-  $id: 'https://grith.dev/schema/covenant-document.json',
-  title: 'Grith Covenant Document',
-  description: 'A complete, signed Grith Covenant document. The covenant is the fundamental unit of the Grith protocol — a cryptographically signed behavioral commitment between an issuer and a beneficiary.',
+  $id: 'https://kervyx.dev/schema/covenant-document.json',
+  title: 'Kervyx Covenant Document',
+  description: 'A complete, signed Kervyx Covenant document. The covenant is the fundamental unit of the Kervyx protocol — a cryptographically signed behavioral commitment between an issuer and a beneficiary.',
   type: 'object' as const,
 
   properties: {
@@ -276,9 +276,9 @@ export const COVENANT_SCHEMA = {
  */
 export const DISCOVERY_DOCUMENT_SCHEMA = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
-  $id: 'https://grith.dev/schema/discovery-document.json',
-  title: 'Grith Discovery Document',
-  description: 'A platform discovery document served at /.well-known/grith/configuration. Enables cross-platform agent verification and protocol negotiation.',
+  $id: 'https://kervyx.dev/schema/discovery-document.json',
+  title: 'Kervyx Discovery Document',
+  description: 'A platform discovery document served at /.well-known/kervyx/configuration. Enables cross-platform agent verification and protocol negotiation.',
   type: 'object' as const,
 
   properties: {
@@ -292,7 +292,7 @@ export const DISCOVERY_DOCUMENT_SCHEMA = {
       type: 'array' as const,
       items: { type: 'string' as const },
       minItems: 1,
-      description: 'Grith protocol versions supported',
+      description: 'Kervyx protocol versions supported',
     },
     signature_schemes_supported: {
       type: 'array' as const,
@@ -338,8 +338,8 @@ export const DISCOVERY_DOCUMENT_SCHEMA = {
  */
 export const AGENT_KEY_SCHEMA = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
-  $id: 'https://grith.dev/schema/agent-key.json',
-  title: 'Grith Agent Key Entry',
+  $id: 'https://kervyx.dev/schema/agent-key.json',
+  title: 'Kervyx Agent Key Entry',
   description: 'A single agent key entry in the key registry (like a JWK but for Ed25519).',
   type: 'object' as const,
 
@@ -364,7 +364,7 @@ export const AGENT_KEY_SCHEMA = {
  */
 export const CCL_EVALUATION_CONTEXT_SCHEMA = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
-  $id: 'https://grith.dev/schema/ccl-evaluation-context.json',
+  $id: 'https://kervyx.dev/schema/ccl-evaluation-context.json',
   title: 'CCL Evaluation Context',
   description: 'Context object passed to CCL evaluation for condition checking.',
   type: 'object' as const,

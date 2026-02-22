@@ -1,7 +1,7 @@
 {
-  "name": "@grith/mcp-server",
+  "name": "@kervyx/mcp-server",
   "version": "2.0.0",
-  "description": "Model Context Protocol server with stdio transport that exposes Grith covenant tools to AI agents",
+  "description": "Model Context Protocol server with stdio transport that exposes Kervyx covenant tools to AI agents",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "grith-mcp": "dist/bin.js"
+    "kervyx-mcp": "dist/bin.js"
   },
   "files": [
     "dist",
@@ -27,12 +27,12 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@grith/types": "2.0.0",
-    "@grith/crypto": "2.0.0",
-    "@grith/core": "2.0.0",
-    "@grith/store": "2.0.0",
-    "@grith/verifier": "2.0.0",
-    "@grith/sdk": "2.0.0"
+    "@kervyx/types": "2.0.0",
+    "@kervyx/crypto": "2.0.0",
+    "@kervyx/core": "2.0.0",
+    "@kervyx/store": "2.0.0",
+    "@kervyx/verifier": "2.0.0",
+    "@kervyx/sdk": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -43,16 +43,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/mcp-server"
   },
-  "homepage": "https://grith.dev",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
-  "author": "Grith Labs, Inc.",
+  "author": "Kervyx Labs, Inc.",
   "keywords": [
-    "grith",
+    "kervyx",
     "covenant",
     "ai-accountability",
     "mcp",

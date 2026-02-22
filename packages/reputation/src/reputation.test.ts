@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, sha256String, toHex } from '@grith/crypto';
-import type { KeyPair, HashHex } from '@grith/crypto';
+import { generateKeyPair, sha256String, toHex } from '@kervyx/crypto';
+import type { KeyPair, HashHex } from '@kervyx/crypto';
 import {
   createReceipt,
   verifyReceipt,

@@ -1,10 +1,10 @@
-# Grith Go Implementation
+# Kervyx Go Implementation
 
-A complete Go implementation of the Grith protocol for cryptographic accountability of AI agents.
+A complete Go implementation of the Kervyx protocol for cryptographic accountability of AI agents.
 
 ## Overview
 
-This package implements the core Grith protocol primitives:
+This package implements the core Kervyx protocol primitives:
 
 - **Crypto** (`crypto.go`) -- Ed25519 signing/verification, SHA-256 hashing, JCS (RFC 8785) JSON canonicalization
 - **CCL** (`ccl.go`) -- Covenant Constraint Language parser and evaluator with wildcard matching, rate limits, and narrowing validation
@@ -20,7 +20,7 @@ This package implements the core Grith protocol primitives:
 ## Installation
 
 ```bash
-go get github.com/agbusiness195/grith/implementations/go
+go get github.com/agbusiness195/kervyx/implementations/go
 ```
 
 ## Quick Start
@@ -30,22 +30,22 @@ package main
 
 import (
     "fmt"
-    grith "github.com/agbusiness195/grith/implementations/go"
+    kervyx "github.com/agbusiness195/kervyx/implementations/go"
 )
 
 func main() {
     // Generate key pairs
-    issuerKP, _ := grith.GenerateKeyPair()
-    beneficiaryKP, _ := grith.GenerateKeyPair()
+    issuerKP, _ := kervyx.GenerateKeyPair()
+    beneficiaryKP, _ := kervyx.GenerateKeyPair()
 
     // Build a covenant
-    doc, _ := grith.BuildCovenant(&grith.CovenantBuilderOptions{
-        Issuer: grith.Party{
+    doc, _ := kervyx.BuildCovenant(&kervyx.CovenantBuilderOptions{
+        Issuer: kervyx.Party{
             ID:        "alice",
             PublicKey: issuerKP.PublicKeyHex,
             Role:      "issuer",
         },
-        Beneficiary: grith.Party{
+        Beneficiary: kervyx.Party{
             ID:        "bob",
             PublicKey: beneficiaryKP.PublicKeyHex,
             Role:      "beneficiary",
@@ -55,12 +55,12 @@ func main() {
     })
 
     // Verify the covenant
-    result, _ := grith.VerifyCovenant(doc)
+    result, _ := kervyx.VerifyCovenant(doc)
     fmt.Println("Valid:", result.Valid)
 
     // Evaluate CCL constraints
-    ccl, _ := grith.Parse(doc.Constraints)
-    eval := grith.Evaluate(ccl, "read", "/data/users", nil)
+    ccl, _ := kervyx.Parse(doc.Constraints)
+    eval := kervyx.Evaluate(ccl, "read", "/data/users", nil)
     fmt.Println("Permitted:", eval.Permitted)
 }
 ```
@@ -73,7 +73,7 @@ go test -v ./...
 
 ## Protocol Version
 
-This implementation targets Grith protocol version 1.0.
+This implementation targets Kervyx protocol version 1.0.
 
 ## Architecture
 

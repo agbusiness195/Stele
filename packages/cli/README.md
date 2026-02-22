@@ -1,55 +1,55 @@
-# @grith/cli
+# @kervyx/cli
 
-Command-line interface for the Grith covenant protocol. Provides commands for key generation, covenant creation, verification, evaluation, inspection, CCL parsing, shell completions, diagnostics, and diff.
+Command-line interface for the Kervyx covenant protocol. Provides commands for key generation, covenant creation, verification, evaluation, inspection, CCL parsing, shell completions, diagnostics, and diff.
 
 ## Installation
 
 ```bash
-npm install @grith/cli
+npm install @kervyx/cli
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `grith init` | Generate an Ed25519 key pair and config file |
-| `grith create` | Create and sign a covenant document |
-| `grith verify <json>` | Verify a covenant document |
-| `grith evaluate <json> <action> <resource>` | Evaluate an action against a covenant |
-| `grith inspect <json>` | Pretty-print covenant details |
-| `grith parse <ccl>` | Parse CCL and output AST as JSON |
-| `grith completions <shell>` | Generate shell completion script (bash/zsh/fish) |
-| `grith doctor` | Check Grith installation health |
-| `grith diff <doc1> <doc2>` | Show differences between two covenant documents |
-| `grith version` | Print version information |
+| `kervyx init` | Generate an Ed25519 key pair and config file |
+| `kervyx create` | Create and sign a covenant document |
+| `kervyx verify <json>` | Verify a covenant document |
+| `kervyx evaluate <json> <action> <resource>` | Evaluate an action against a covenant |
+| `kervyx inspect <json>` | Pretty-print covenant details |
+| `kervyx parse <ccl>` | Parse CCL and output AST as JSON |
+| `kervyx completions <shell>` | Generate shell completion script (bash/zsh/fish) |
+| `kervyx doctor` | Check Kervyx installation health |
+| `kervyx diff <doc1> <doc2>` | Show differences between two covenant documents |
+| `kervyx version` | Print version information |
 
 ## Key APIs
 
 - **run(args, configDir?)**: Programmatic entry point -- runs a CLI command and returns `{ stdout, stderr, exitCode }`
-- **loadConfig / saveConfig**: Read and write `grith.config.json`
+- **loadConfig / saveConfig**: Read and write `kervyx.config.json`
 - **bashCompletions / zshCompletions / fishCompletions**: Generate shell completion scripts
-- **runDoctor**: Run diagnostic checks on the Grith installation
+- **runDoctor**: Run diagnostic checks on the Kervyx installation
 
 ## Usage
 
 ```bash
 # Generate a new key pair
-grith init
+kervyx init
 
 # Create a covenant
-grith create --issuer alice --beneficiary bob --constraints "permit read /data/**"
+kervyx create --issuer alice --beneficiary bob --constraints "permit read /data/**"
 
 # Verify a covenant document
-grith verify '{"id":"...","version":"1.0",...}'
+kervyx verify '{"id":"...","version":"1.0",...}'
 
 # Evaluate an action
-grith evaluate '{"id":"..."}' read /data/reports
+kervyx evaluate '{"id":"..."}' read /data/reports
 
 # Parse CCL
-grith parse "permit read /data/**"
+kervyx parse "permit read /data/**"
 
 # Check installation health
-grith doctor
+kervyx doctor
 ```
 
 ### Global Flags
@@ -60,4 +60,4 @@ grith doctor
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

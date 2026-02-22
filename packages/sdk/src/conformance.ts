@@ -1,14 +1,14 @@
 /**
- * Grith Protocol Conformance Suite
+ * Kervyx Protocol Conformance Suite
  *
  * Provides test vectors and validation functions for any implementation
- * of the Grith protocol. Implementations that pass all conformance checks
+ * of the Kervyx protocol. Implementations that pass all conformance checks
  * are considered spec-compliant.
  *
  * Like the W3C Acid Tests for browsers or TLS conformance suites --
- * a standardized set of test vectors that any Grith implementation must pass.
+ * a standardized set of test vectors that any Kervyx implementation must pass.
  *
- * This module is self-contained: it does NOT import from other @grith packages.
+ * This module is self-contained: it does NOT import from other @kervyx packages.
  * It generates its own keys and test documents using the provided
  * {@link ConformanceTarget} interface.
  *
@@ -46,7 +46,7 @@ export interface ConformanceFailure {
 /**
  * Functions that the implementation under test must provide.
  *
- * Any Grith-compatible implementation can be tested by wiring up these
+ * Any Kervyx-compatible implementation can be tested by wiring up these
  * functions and passing the resulting object to {@link runConformanceSuite}.
  */
 export interface ConformanceTarget {
@@ -253,7 +253,7 @@ export async function cryptoConformance(
   total++;
   try {
     const kp = (await target.generateKeyPair()) as ConformanceKeyPair;
-    const message = textEncode('grith conformance test message');
+    const message = textEncode('kervyx conformance test message');
     const sig = await target.sign(message, kp.privateKey);
     const valid = await target.verify(message, sig, kp.publicKey);
     if (!valid) {
@@ -1602,7 +1602,7 @@ export async function securityConformance(
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Run the complete Grith Protocol Conformance Suite.
+ * Run the complete Kervyx Protocol Conformance Suite.
  *
  * Executes all five categories (crypto, CCL, covenant, interop, security)
  * and aggregates the results. An implementation that returns
@@ -1613,10 +1613,10 @@ export async function securityConformance(
  *
  * @example
  * ```typescript
- * import { runConformanceSuite } from '@grith/sdk/conformance';
- * import { buildCovenant, verifyCovenant } from '@grith/core';
- * import { generateKeyPair, sign, verify, sha256 } from '@grith/crypto';
- * import { parse, evaluate } from '@grith/ccl';
+ * import { runConformanceSuite } from '@kervyx/sdk/conformance';
+ * import { buildCovenant, verifyCovenant } from '@kervyx/core';
+ * import { generateKeyPair, sign, verify, sha256 } from '@kervyx/crypto';
+ * import { parse, evaluate } from '@kervyx/ccl';
  *
  * const result = await runConformanceSuite({
  *   buildCovenant,

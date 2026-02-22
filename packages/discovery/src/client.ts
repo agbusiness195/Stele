@@ -1,13 +1,13 @@
 /**
- * @grith/discovery/client — Cross-platform discovery client.
+ * @kervyx/discovery/client — Cross-platform discovery client.
  *
  * Fetches, validates, and caches discovery documents from remote platforms.
  * This is what Agent A uses when it needs to verify Agent B's covenant
  * on a different platform.
  */
 
-import { generateNonce, timestamp, toHex } from '@grith/crypto';
-import type { KeyPair } from '@grith/crypto';
+import { generateNonce, timestamp, toHex } from '@kervyx/crypto';
+import type { KeyPair } from '@kervyx/crypto';
 
 import type {
   DiscoveryDocument,
@@ -39,9 +39,9 @@ export interface DiscoveryClientOptions {
 }
 
 /**
- * Client for the Grith cross-platform discovery protocol.
+ * Client for the Kervyx cross-platform discovery protocol.
  *
- * Discovers, caches, and interacts with remote Grith platform endpoints.
+ * Discovers, caches, and interacts with remote Kervyx platform endpoints.
  * This is the primary interface for cross-platform agent verification.
  *
  * @example
@@ -80,9 +80,9 @@ export class DiscoveryClient {
   }
 
   /**
-   * Discover a remote platform's Grith configuration.
+   * Discover a remote platform's Kervyx configuration.
    *
-   * Fetches the discovery document from `{platformUrl}/.well-known/grith/configuration`,
+   * Fetches the discovery document from `{platformUrl}/.well-known/kervyx/configuration`,
    * validates its structure, and optionally verifies its signature.
    *
    * @param platformUrl - The platform's base URL (e.g., "https://platform.example").
@@ -235,7 +235,7 @@ export class DiscoveryClient {
     const response = await this._fetchFn(discovery.verification_endpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/grith+json',
+        'Content-Type': 'application/kervyx+json',
         ...opts.headers,
       },
       body: JSON.stringify(request),
@@ -322,7 +322,7 @@ export class DiscoveryClient {
   private async _fetch(url: string, opts: FetchOptions): Promise<Response> {
     const response = await this._fetchFn(url, {
       headers: {
-        Accept: 'application/grith+json, application/json',
+        Accept: 'application/kervyx+json, application/json',
         ...opts.headers,
       },
       signal: opts.timeout ? AbortSignal.timeout(opts.timeout) : undefined,

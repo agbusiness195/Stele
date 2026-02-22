@@ -1,7 +1,7 @@
 /**
- * Grith adapter for LangChain.
+ * Kervyx adapter for LangChain.
  *
- * Provides a callback handler that logs agent actions to the Grith
+ * Provides a callback handler that logs agent actions to the Kervyx
  * audit trail, and tool/chain wrappers that enforce covenant constraints
  * before execution.
  *
@@ -11,20 +11,20 @@
  *
  * @example
  * ```typescript
- * import { GrithClient, GrithCallbackHandler, withGrithTool } from '@grith/sdk';
+ * import { KervyxClient, KervyxCallbackHandler, withKervyxTool } from '@kervyx/sdk';
  *
- * const handler = new GrithCallbackHandler({ client, covenant });
- * const protectedTool = withGrithTool(myTool, { client, covenant });
+ * const handler = new KervyxCallbackHandler({ client, covenant });
+ * const protectedTool = withKervyxTool(myTool, { client, covenant });
  * ```
  */
 
-import type { GrithClient } from '../index.js';
-import type { CovenantDocument } from '@grith/core';
+import type { KervyxClient } from '../index.js';
+import type { CovenantDocument } from '@kervyx/core';
 import type { EvaluationResult } from '../types.js';
-import { GrithAccessDeniedError } from './vercel-ai.js';
+import { KervyxAccessDeniedError } from './vercel-ai.js';
 
 // Re-export the shared error so consumers can import from either adapter
-export { GrithAccessDeniedError } from './vercel-ai.js';
+export { KervyxAccessDeniedError } from './vercel-ai.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -52,11 +52,11 @@ export interface LangChainToolLike {
 }
 
 /**
- * Options for wrapping LangChain tools with Grith enforcement.
+ * Options for wrapping LangChain tools with Kervyx enforcement.
  */
-export interface GrithLangChainOptions {
-  /** The GrithClient instance for covenant evaluation. */
-  client: GrithClient;
+export interface KervyxLangChainOptions {
+  /** The KervyxClient instance for covenant evaluation. */
+  client: KervyxClient;
   /** The covenant document whose constraints are enforced. */
   covenant: CovenantDocument;
   /**
@@ -72,14 +72,14 @@ export interface GrithLangChainOptions {
   /**
    * Custom handler invoked when a tool call is denied. If provided,
    * its return value is returned instead of throwing. If not provided,
-   * a `GrithAccessDeniedError` is thrown.
+   * a `KervyxAccessDeniedError` is thrown.
    */
   onDenied?: (tool: LangChainToolLike, result: EvaluationResult) => unknown;
 }
 
 // ─── Callback handler event ──────────────────────────────────────────────────
 
-/** A recorded event from the GrithCallbackHandler audit trail. */
+/** A recorded event from the KervyxCallbackHandler audit trail. */
 export interface CallbackEvent {
   /** The event type (e.g. 'tool:start', 'chain:end', 'tool:error'). */
   type: string;
@@ -89,31 +89,31 @@ export interface CallbackEvent {
   timestamp: string;
 }
 
-// ─── GrithCallbackHandler ────────────────────────────────────────────────────
+// ─── KervyxCallbackHandler ────────────────────────────────────────────────────
 
 /**
  * A LangChain-compatible callback handler that records agent actions
- * to a Grith audit trail.
+ * to a Kervyx audit trail.
  *
  * This handler does not enforce constraints; it only observes and
- * logs. Use it alongside `withGrithTool` for enforcement + auditing.
+ * logs. Use it alongside `withKervyxTool` for enforcement + auditing.
  *
  * @example
  * ```typescript
- * const handler = new GrithCallbackHandler({ client, covenant });
+ * const handler = new KervyxCallbackHandler({ client, covenant });
  * await handler.handleToolStart({ name: 'search' }, 'query');
  * console.log(handler.events); // [{ type: 'tool:start', ... }]
  * ```
  */
-export class GrithCallbackHandler {
-  /** The GrithClient used for event emission. */
-  readonly client: GrithClient;
+export class KervyxCallbackHandler {
+  /** The KervyxClient used for event emission. */
+  readonly client: KervyxClient;
   /** The covenant document being audited. */
   readonly covenant: CovenantDocument;
   /** Ordered list of recorded events. */
   readonly events: CallbackEvent[] = [];
 
-  constructor(options: { client: GrithClient; covenant: CovenantDocument }) {
+  constructor(options: { client: KervyxClient; covenant: CovenantDocument }) {
     this.client = options.client;
     this.covenant = options.covenant;
   }
@@ -199,14 +199,14 @@ export class GrithCallbackHandler {
   }
 }
 
-// ─── withGrithTool ───────────────────────────────────────────────────────────
+// ─── withKervyxTool ───────────────────────────────────────────────────────────
 
 /**
- * Wrap a LangChain-style tool with Grith covenant enforcement.
+ * Wrap a LangChain-style tool with Kervyx covenant enforcement.
  *
  * Wraps all three call patterns (`call`, `invoke`, `_call`) when present.
  * Before delegation, evaluates the action/resource against the covenant.
- * If denied, throws a `GrithAccessDeniedError` (or invokes `onDenied`).
+ * If denied, throws a `KervyxAccessDeniedError` (or invokes `onDenied`).
  *
  * @param tool    - The LangChain tool to wrap.
  * @param options - Enforcement options including client and covenant.
@@ -214,13 +214,13 @@ export class GrithCallbackHandler {
  *
  * @example
  * ```typescript
- * const protectedTool = withGrithTool(searchTool, { client, covenant });
+ * const protectedTool = withKervyxTool(searchTool, { client, covenant });
  * await protectedTool.invoke('my query'); // throws if denied
  * ```
  */
-export function withGrithTool<T extends LangChainToolLike>(
+export function withKervyxTool<T extends LangChainToolLike>(
   tool: T,
-  options: GrithLangChainOptions,
+  options: KervyxLangChainOptions,
 ): T {
   const { client, covenant, actionFromTool, resourceFromTool, onDenied } = options;
   const wrapped = { ...tool } as T;
@@ -238,7 +238,7 @@ export function withGrithTool<T extends LangChainToolLike>(
       if (onDenied) {
         return onDenied(tool, result);
       }
-      throw new GrithAccessDeniedError(
+      throw new KervyxAccessDeniedError(
         `Action '${action}' on resource '${resource}' denied by covenant`,
         result,
       );
@@ -289,7 +289,7 @@ export function withGrithTool<T extends LangChainToolLike>(
  * ```
  */
 export function createChainGuard(
-  options: GrithLangChainOptions,
+  options: KervyxLangChainOptions,
 ): (chainName: string, input: unknown, fn: () => Promise<unknown>) => Promise<unknown> {
   const { client, covenant, onDenied } = options;
 
@@ -307,7 +307,7 @@ export function createChainGuard(
       if (onDenied) {
         return onDenied({ name: chainName } as LangChainToolLike, result);
       }
-      throw new GrithAccessDeniedError(
+      throw new KervyxAccessDeniedError(
         `Chain '${chainName}' on resource '${resource}' denied by covenant`,
         result,
       );

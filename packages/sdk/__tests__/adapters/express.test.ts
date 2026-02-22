@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateKeyPair } from '@grith/crypto';
-import type { KeyPair } from '@grith/crypto';
-import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
+import { generateKeyPair } from '@kervyx/crypto';
+import type { KeyPair } from '@kervyx/crypto';
+import type { CovenantDocument, Issuer, Beneficiary } from '@kervyx/core';
 
 import {
-  GrithClient,
-  grithMiddleware,
-  grithGuardHandler,
+  KervyxClient,
+  kervyxMiddleware,
+  kervyxGuardHandler,
   createCovenantRouter,
 } from '../../src/index.js';
 
@@ -84,11 +84,11 @@ function mockResponse(): OutgoingResponse & {
 
 /** Helper: create a client and covenant for tests. */
 async function createTestFixture(constraints: string): Promise<{
-  client: GrithClient;
+  client: KervyxClient;
   covenant: CovenantDocument;
 }> {
   const { issuerKeyPair, issuer, beneficiary } = await makeParties();
-  const client = new GrithClient({ keyPair: issuerKeyPair });
+  const client = new KervyxClient({ keyPair: issuerKeyPair });
 
   const covenant = await client.createCovenant({
     issuer,
@@ -104,15 +104,15 @@ async function createTestFixture(constraints: string): Promise<{
 // ---------------------------------------------------------------------------
 
 describe('Express/HTTP middleware adapter', () => {
-  // ── grithMiddleware ─────────────────────────────────────────────────
+  // ── kervyxMiddleware ─────────────────────────────────────────────────
 
-  describe('grithMiddleware', () => {
+  describe('kervyxMiddleware', () => {
     it('calls next() and sets header for permitted requests', async () => {
       const { client, covenant } = await createTestFixture(
         "permit get on '/data'",
       );
 
-      const middleware = grithMiddleware({ client, covenant });
+      const middleware = kervyxMiddleware({ client, covenant });
 
       const req = mockRequest({ method: 'GET', path: '/data' });
       const res = mockResponse();
@@ -126,7 +126,7 @@ describe('Express/HTTP middleware adapter', () => {
       });
 
       expect(next).toHaveBeenCalledWith();
-      expect(res.setHeader).toHaveBeenCalledWith('x-grith-permitted', 'true');
+      expect(res.setHeader).toHaveBeenCalledWith('x-kervyx-permitted', 'true');
     });
 
     it('sends 403 for denied requests', async () => {
@@ -134,7 +134,7 @@ describe('Express/HTTP middleware adapter', () => {
         "deny get on '/secret'",
       );
 
-      const middleware = grithMiddleware({ client, covenant });
+      const middleware = kervyxMiddleware({ client, covenant });
 
       const req = mockRequest({ method: 'GET', path: '/secret' });
       const res = mockResponse();
@@ -149,7 +149,7 @@ describe('Express/HTTP middleware adapter', () => {
       expect(next).not.toHaveBeenCalled();
       expect(res._statusCode).toBe(403);
       expect(res._headers['content-type']).toBe('application/json');
-      expect(res._headers['x-grith-permitted']).toBe('false');
+      expect(res._headers['x-kervyx-permitted']).toBe('false');
 
       const body = JSON.parse(res._body!);
       expect(body.error).toBe('Forbidden');
@@ -161,7 +161,7 @@ describe('Express/HTTP middleware adapter', () => {
         "permit read on '/allowed'",
       );
 
-      const middleware = grithMiddleware({ client, covenant });
+      const middleware = kervyxMiddleware({ client, covenant });
 
       // POST to /allowed won't match the 'read' permit
       const req = mockRequest({ method: 'POST', path: '/allowed' });
@@ -183,7 +183,7 @@ describe('Express/HTTP middleware adapter', () => {
         "permit file.upload on '/data'",
       );
 
-      const middleware = grithMiddleware({
+      const middleware = kervyxMiddleware({
         client,
         covenant,
         actionExtractor: () => 'file.upload',
@@ -199,7 +199,7 @@ describe('Express/HTTP middleware adapter', () => {
         expect(next).toHaveBeenCalledTimes(1);
       });
 
-      expect(res.setHeader).toHaveBeenCalledWith('x-grith-permitted', 'true');
+      expect(res.setHeader).toHaveBeenCalledWith('x-kervyx-permitted', 'true');
     });
 
     it('uses custom resourceExtractor', async () => {
@@ -207,7 +207,7 @@ describe('Express/HTTP middleware adapter', () => {
         "permit get on '/custom/resource'",
       );
 
-      const middleware = grithMiddleware({
+      const middleware = kervyxMiddleware({
         client,
         covenant,
         resourceExtractor: () => '/custom/resource',
@@ -223,7 +223,7 @@ describe('Express/HTTP middleware adapter', () => {
         expect(next).toHaveBeenCalledTimes(1);
       });
 
-      expect(res.setHeader).toHaveBeenCalledWith('x-grith-permitted', 'true');
+      expect(res.setHeader).toHaveBeenCalledWith('x-kervyx-permitted', 'true');
     });
 
     it('uses custom onDenied handler', async () => {
@@ -233,7 +233,7 @@ describe('Express/HTTP middleware adapter', () => {
 
       const onDenied = vi.fn();
 
-      const middleware = grithMiddleware({
+      const middleware = kervyxMiddleware({
         client,
         covenant,
         onDenied,
@@ -267,7 +267,7 @@ describe('Express/HTTP middleware adapter', () => {
         new Error('evaluation failed'),
       );
 
-      const middleware = grithMiddleware({
+      const middleware = kervyxMiddleware({
         client,
         covenant,
         onError,
@@ -296,7 +296,7 @@ describe('Express/HTTP middleware adapter', () => {
         new Error('boom'),
       );
 
-      const middleware = grithMiddleware({ client, covenant });
+      const middleware = kervyxMiddleware({ client, covenant });
 
       const req = mockRequest({ method: 'GET', path: '/data' });
       const res = mockResponse();
@@ -321,7 +321,7 @@ describe('Express/HTTP middleware adapter', () => {
         "permit post on '/items'",
       );
 
-      const middleware = grithMiddleware({ client, covenant });
+      const middleware = kervyxMiddleware({ client, covenant });
 
       const req = mockRequest({ method: 'POST', path: '/items' });
       const res = mockResponse();
@@ -339,7 +339,7 @@ describe('Express/HTTP middleware adapter', () => {
         "permit get on '/from-url'",
       );
 
-      const middleware = grithMiddleware({ client, covenant });
+      const middleware = kervyxMiddleware({ client, covenant });
 
       const req = mockRequest({ method: 'GET', url: '/from-url', path: undefined });
       const res = mockResponse();
@@ -353,9 +353,9 @@ describe('Express/HTTP middleware adapter', () => {
     });
   });
 
-  // ── grithGuardHandler ──────────────────────────────────────────────
+  // ── kervyxGuardHandler ──────────────────────────────────────────────
 
-  describe('grithGuardHandler', () => {
+  describe('kervyxGuardHandler', () => {
     it('calls the handler for permitted requests', async () => {
       const { client, covenant } = await createTestFixture(
         "permit get on '/data'",
@@ -365,7 +365,7 @@ describe('Express/HTTP middleware adapter', () => {
         // handler body
       });
 
-      const guarded = grithGuardHandler({ client, covenant }, handler);
+      const guarded = kervyxGuardHandler({ client, covenant }, handler);
 
       const req = mockRequest({ method: 'GET', path: '/data' });
       const res = mockResponse();
@@ -374,7 +374,7 @@ describe('Express/HTTP middleware adapter', () => {
 
       expect(handler).toHaveBeenCalledTimes(1);
       expect(handler).toHaveBeenCalledWith(req, res);
-      expect(res.setHeader).toHaveBeenCalledWith('x-grith-permitted', 'true');
+      expect(res.setHeader).toHaveBeenCalledWith('x-kervyx-permitted', 'true');
     });
 
     it('does not call the handler for denied requests', async () => {
@@ -384,7 +384,7 @@ describe('Express/HTTP middleware adapter', () => {
 
       const handler = vi.fn(async () => {});
 
-      const guarded = grithGuardHandler({ client, covenant }, handler);
+      const guarded = kervyxGuardHandler({ client, covenant }, handler);
 
       const req = mockRequest({ method: 'GET', path: '/secret' });
       const res = mockResponse();
@@ -403,7 +403,7 @@ describe('Express/HTTP middleware adapter', () => {
       const onDenied = vi.fn();
       const handler = vi.fn(async () => {});
 
-      const guarded = grithGuardHandler(
+      const guarded = kervyxGuardHandler(
         { client, covenant, onDenied },
         handler,
       );
@@ -430,7 +430,7 @@ describe('Express/HTTP middleware adapter', () => {
 
       const handler = vi.fn(async () => {});
 
-      const guarded = grithGuardHandler({ client, covenant }, handler);
+      const guarded = kervyxGuardHandler({ client, covenant }, handler);
 
       const req = mockRequest({ method: 'GET', path: '/data' });
       const res = mockResponse();
@@ -457,7 +457,7 @@ describe('Express/HTTP middleware adapter', () => {
 
       const handler = vi.fn(async () => {});
 
-      const guarded = grithGuardHandler(
+      const guarded = kervyxGuardHandler(
         { client, covenant, onError },
         handler,
       );
@@ -478,7 +478,7 @@ describe('Express/HTTP middleware adapter', () => {
 
       const handler = vi.fn(async () => {});
 
-      const guarded = grithGuardHandler(
+      const guarded = kervyxGuardHandler(
         {
           client,
           covenant,
@@ -519,7 +519,7 @@ describe('Express/HTTP middleware adapter', () => {
           expect(next).toHaveBeenCalledTimes(1);
         });
 
-        expect(res.setHeader).toHaveBeenCalledWith('x-grith-permitted', 'true');
+        expect(res.setHeader).toHaveBeenCalledWith('x-kervyx-permitted', 'true');
       });
 
       it('denies when action/resource are not allowed', async () => {
@@ -682,7 +682,7 @@ describe('Express/HTTP middleware adapter', () => {
         "permit get on '/data/**'\ndeny delete on '/data/**'",
       );
 
-      const middleware = grithMiddleware({ client, covenant });
+      const middleware = kervyxMiddleware({ client, covenant });
 
       // GET should be permitted
       const reqGet = mockRequest({ method: 'GET', path: '/data/users' });
@@ -721,7 +721,7 @@ describe('Express/HTTP middleware adapter', () => {
         }
       });
 
-      const guarded = grithGuardHandler({ client, covenant }, handler);
+      const guarded = kervyxGuardHandler({ client, covenant }, handler);
 
       const req = mockRequest({ method: 'GET', path: '/api/v1/items' });
       const res = mockResponse();

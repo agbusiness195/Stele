@@ -1,16 +1,16 @@
-# Grith Protocol - Python Implementation
+# Kervyx Protocol - Python Implementation
 
-A complete Python implementation of the Grith protocol core primitives for AI covenant management.
+A complete Python implementation of the Kervyx protocol core primitives for AI covenant management.
 
 ## Overview
 
-This package implements the Grith protocol, providing:
+This package implements the Kervyx protocol, providing:
 
-- **Crypto** (`grith.crypto`) -- Ed25519 signing/verification, SHA-256 hashing, JCS canonicalization (RFC 8785)
-- **CCL** (`grith.ccl`) -- Constraint Commitment Language parser and evaluator
-- **Covenant** (`grith.covenant`) -- Covenant document build, verify, chain, serialize/deserialize
-- **Identity** (`grith.identity`) -- Agent identity creation, evolution, verification
-- **Store** (`grith.store`) -- In-memory covenant document storage
+- **Crypto** (`kervyx.crypto`) -- Ed25519 signing/verification, SHA-256 hashing, JCS canonicalization (RFC 8785)
+- **CCL** (`kervyx.ccl`) -- Constraint Commitment Language parser and evaluator
+- **Covenant** (`kervyx.covenant`) -- Covenant document build, verify, chain, serialize/deserialize
+- **Identity** (`kervyx.identity`) -- Agent identity creation, evolution, verification
+- **Store** (`kervyx.store`) -- In-memory covenant document storage
 
 ## Installation
 
@@ -26,7 +26,7 @@ pip install -e ".[dev]"
 ## Quick Start
 
 ```python
-from grith import crypto, covenant
+from kervyx import crypto, covenant
 
 # Generate key pairs
 issuer_kp = crypto.generate_key_pair()
@@ -72,4 +72,4 @@ reference implementation. Key interoperability points:
 
 ## Protocol Version
 
-This implementation targets Grith protocol version 1.0.
+This implementation targets Kervyx protocol version 1.0.

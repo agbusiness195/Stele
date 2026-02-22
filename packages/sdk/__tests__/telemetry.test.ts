@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import {
   telemetryMiddleware,
-  GrithMetrics,
+  KervyxMetrics,
   NoopTracer,
   NoopMeter,
   NoopSpan,
@@ -24,10 +24,10 @@ import type {
   EventSource,
 } from '../src/telemetry.js';
 import { MiddlewarePipeline } from '../src/middleware.js';
-import type { GrithMiddleware } from '../src/middleware.js';
+import type { KervyxMiddleware } from '../src/middleware.js';
 import type {
-  GrithEventType,
-  GrithEventMap,
+  KervyxEventType,
+  KervyxEventMap,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   EvaluationCompletedEvent,
@@ -120,11 +120,11 @@ class MockMeter implements Meter {
   }
 }
 
-/** A mock EventSource that simulates GrithClient's on() API. */
+/** A mock EventSource that simulates KervyxClient's on() API. */
 class MockEventSource implements EventSource {
-  private readonly _handlers = new Map<GrithEventType, Set<(data: unknown) => void>>();
+  private readonly _handlers = new Map<KervyxEventType, Set<(data: unknown) => void>>();
 
-  on<T extends GrithEventType>(event: T, handler: (data: GrithEventMap[T]) => void): () => void {
+  on<T extends KervyxEventType>(event: T, handler: (data: KervyxEventMap[T]) => void): () => void {
     if (!this._handlers.has(event)) {
       this._handlers.set(event, new Set());
     }
@@ -137,7 +137,7 @@ class MockEventSource implements EventSource {
   }
 
   /** Emit an event for testing. */
-  emit<T extends GrithEventType>(event: T, data: GrithEventMap[T]): void {
+  emit<T extends KervyxEventType>(event: T, data: KervyxEventMap[T]): void {
     const handlers = this._handlers.get(event);
     if (handlers) {
       for (const handler of handlers) {
@@ -147,7 +147,7 @@ class MockEventSource implements EventSource {
   }
 
   /** Return count of handlers for a given event. */
-  handlerCount(event: GrithEventType): number {
+  handlerCount(event: KervyxEventType): number {
     return this._handlers.get(event)?.size ?? 0;
   }
 }
@@ -181,15 +181,15 @@ describe('telemetryMiddleware — span creation', () => {
   it('creates a span for each operation', async () => {
     await pipeline.execute('createCovenant', {}, echoOp({ id: 'cov-1' }));
     expect(tracer.spans).toHaveLength(1);
-    expect(tracer.spans[0]!.attributes['_spanName']).toBe('grith.createCovenant');
+    expect(tracer.spans[0]!.attributes['_spanName']).toBe('kervyx.createCovenant');
   });
 
   it('creates separate spans for separate operations', async () => {
     await pipeline.execute('createCovenant', {}, echoOp({ id: 'cov-1' }));
     await pipeline.execute('verifyCovenant', {}, echoOp({ valid: true }));
     expect(tracer.spans).toHaveLength(2);
-    expect(tracer.spans[0]!.attributes['_spanName']).toBe('grith.createCovenant');
-    expect(tracer.spans[1]!.attributes['_spanName']).toBe('grith.verifyCovenant');
+    expect(tracer.spans[0]!.attributes['_spanName']).toBe('kervyx.createCovenant');
+    expect(tracer.spans[1]!.attributes['_spanName']).toBe('kervyx.verifyCovenant');
   });
 
   it('ends the span after a successful operation', async () => {
@@ -217,44 +217,44 @@ describe('telemetryMiddleware — span attributes', () => {
     pipeline.use(telemetryMiddleware({ tracer }));
   });
 
-  it('sets grith.operation attribute', async () => {
+  it('sets kervyx.operation attribute', async () => {
     await pipeline.execute('createCovenant', {}, echoOp({ id: 'cov-1' }));
-    expect(tracer.spans[0]!.attributes['grith.operation']).toBe('createCovenant');
+    expect(tracer.spans[0]!.attributes['kervyx.operation']).toBe('createCovenant');
   });
 
-  it('sets grith.covenant.id when result has an id', async () => {
+  it('sets kervyx.covenant.id when result has an id', async () => {
     await pipeline.execute('createCovenant', {}, echoOp({ id: 'cov-abc-123' }));
-    expect(tracer.spans[0]!.attributes['grith.covenant.id']).toBe('cov-abc-123');
+    expect(tracer.spans[0]!.attributes['kervyx.covenant.id']).toBe('cov-abc-123');
   });
 
-  it('sets grith.verification.valid when result has valid field', async () => {
+  it('sets kervyx.verification.valid when result has valid field', async () => {
     await pipeline.execute('verifyCovenant', {}, echoOp({ valid: true, checks: [] }));
-    expect(tracer.spans[0]!.attributes['grith.verification.valid']).toBe(true);
+    expect(tracer.spans[0]!.attributes['kervyx.verification.valid']).toBe(true);
   });
 
-  it('sets grith.evaluation.permitted when result has permitted field', async () => {
+  it('sets kervyx.evaluation.permitted when result has permitted field', async () => {
     await pipeline.execute('evaluateAction', {}, echoOp({ permitted: false, allMatches: [] }));
-    expect(tracer.spans[0]!.attributes['grith.evaluation.permitted']).toBe(false);
+    expect(tracer.spans[0]!.attributes['kervyx.evaluation.permitted']).toBe(false);
   });
 
-  it('sets grith.duration_ms attribute', async () => {
+  it('sets kervyx.duration_ms attribute', async () => {
     await pipeline.execute('createCovenant', {}, echoOp({ id: 'cov-1' }));
-    expect(tracer.spans[0]!.attributes['grith.duration_ms']).toBeDefined();
-    expect(typeof tracer.spans[0]!.attributes['grith.duration_ms']).toBe('number');
+    expect(tracer.spans[0]!.attributes['kervyx.duration_ms']).toBeDefined();
+    expect(typeof tracer.spans[0]!.attributes['kervyx.duration_ms']).toBe('number');
   });
 
   it('does not set result-specific attributes for non-object results', async () => {
     await pipeline.execute('someOp', {}, echoOp('string-result'));
     const span = tracer.spans[0]!;
-    expect(span.attributes['grith.covenant.id']).toBeUndefined();
-    expect(span.attributes['grith.verification.valid']).toBeUndefined();
-    expect(span.attributes['grith.evaluation.permitted']).toBeUndefined();
+    expect(span.attributes['kervyx.covenant.id']).toBeUndefined();
+    expect(span.attributes['kervyx.verification.valid']).toBeUndefined();
+    expect(span.attributes['kervyx.evaluation.permitted']).toBeUndefined();
   });
 
   it('does not set result-specific attributes for null results', async () => {
     await pipeline.execute('someOp', {}, echoOp(null));
     const span = tracer.spans[0]!;
-    expect(span.attributes['grith.covenant.id']).toBeUndefined();
+    expect(span.attributes['kervyx.covenant.id']).toBeUndefined();
   });
 });
 
@@ -305,23 +305,23 @@ describe('telemetryMiddleware — error handling', () => {
     ).rejects.toThrow('fail');
 
     const span = tracer.spans[0]!;
-    expect(span.attributes['grith.duration_ms']).toBeDefined();
-    expect(typeof span.attributes['grith.duration_ms']).toBe('number');
+    expect(span.attributes['kervyx.duration_ms']).toBeDefined();
+    expect(typeof span.attributes['kervyx.duration_ms']).toBe('number');
   });
 });
 
-// ─── GrithMetrics — event recording ─────────────────────────────────────────
+// ─── KervyxMetrics — event recording ─────────────────────────────────────────
 
-describe('GrithMetrics — record()', () => {
+describe('KervyxMetrics — record()', () => {
   let meter: MockMeter;
-  let metrics: GrithMetrics;
+  let metrics: KervyxMetrics;
 
   beforeEach(() => {
     meter = new MockMeter();
-    metrics = new GrithMetrics(meter);
+    metrics = new KervyxMetrics(meter);
   });
 
-  it('increments grith.covenants.created on covenant:created', () => {
+  it('increments kervyx.covenants.created on covenant:created', () => {
     const event: CovenantCreatedEvent = {
       type: 'covenant:created',
       timestamp: new Date().toISOString(),
@@ -329,11 +329,11 @@ describe('GrithMetrics — record()', () => {
     };
     metrics.record(event);
 
-    const counter = meter.counters.get('grith.covenants.created')!;
+    const counter = meter.counters.get('kervyx.covenants.created')!;
     expect(counter.total).toBe(1);
   });
 
-  it('increments grith.covenants.verified on covenant:verified', () => {
+  it('increments kervyx.covenants.verified on covenant:verified', () => {
     const event: CovenantVerifiedEvent = {
       type: 'covenant:verified',
       timestamp: new Date().toISOString(),
@@ -341,11 +341,11 @@ describe('GrithMetrics — record()', () => {
     };
     metrics.record(event);
 
-    const counter = meter.counters.get('grith.covenants.verified')!;
+    const counter = meter.counters.get('kervyx.covenants.verified')!;
     expect(counter.total).toBe(1);
   });
 
-  it('increments grith.evaluations.total on evaluation:completed', () => {
+  it('increments kervyx.evaluations.total on evaluation:completed', () => {
     const event: EvaluationCompletedEvent = {
       type: 'evaluation:completed',
       timestamp: new Date().toISOString(),
@@ -355,11 +355,11 @@ describe('GrithMetrics — record()', () => {
     };
     metrics.record(event);
 
-    const counter = meter.counters.get('grith.evaluations.total')!;
+    const counter = meter.counters.get('kervyx.evaluations.total')!;
     expect(counter.total).toBe(1);
   });
 
-  it('increments grith.evaluations.denied when evaluation is not permitted', () => {
+  it('increments kervyx.evaluations.denied when evaluation is not permitted', () => {
     const event: EvaluationCompletedEvent = {
       type: 'evaluation:completed',
       timestamp: new Date().toISOString(),
@@ -369,11 +369,11 @@ describe('GrithMetrics — record()', () => {
     };
     metrics.record(event);
 
-    const denied = meter.counters.get('grith.evaluations.denied')!;
+    const denied = meter.counters.get('kervyx.evaluations.denied')!;
     expect(denied.total).toBe(1);
   });
 
-  it('does not increment grith.evaluations.denied when evaluation is permitted', () => {
+  it('does not increment kervyx.evaluations.denied when evaluation is permitted', () => {
     const event: EvaluationCompletedEvent = {
       type: 'evaluation:completed',
       timestamp: new Date().toISOString(),
@@ -383,7 +383,7 @@ describe('GrithMetrics — record()', () => {
     };
     metrics.record(event);
 
-    const denied = meter.counters.get('grith.evaluations.denied')!;
+    const denied = meter.counters.get('kervyx.evaluations.denied')!;
     expect(denied.total).toBe(0);
   });
 
@@ -404,7 +404,7 @@ describe('GrithMetrics — record()', () => {
       document: {} as any,
     } as CovenantCreatedEvent);
 
-    const counter = meter.counters.get('grith.covenants.created')!;
+    const counter = meter.counters.get('kervyx.covenants.created')!;
     expect(counter.total).toBe(3);
   });
 
@@ -423,30 +423,30 @@ describe('GrithMetrics — record()', () => {
   it('records duration via recordDuration()', () => {
     metrics.recordDuration(42.5, { operation: 'createCovenant' });
 
-    const histogram = meter.histograms.get('grith.operation.duration')!;
+    const histogram = meter.histograms.get('kervyx.operation.duration')!;
     expect(histogram.calls).toHaveLength(1);
     expect(histogram.calls[0]!.value).toBe(42.5);
     expect(histogram.calls[0]!.attributes).toEqual({ operation: 'createCovenant' });
   });
 });
 
-// ─── GrithMetrics — bindToClient ────────────────────────────────────────────
+// ─── KervyxMetrics — bindToClient ────────────────────────────────────────────
 
-describe('GrithMetrics — bindToClient()', () => {
+describe('KervyxMetrics — bindToClient()', () => {
   let meter: MockMeter;
-  let metrics: GrithMetrics;
+  let metrics: KervyxMetrics;
   let source: MockEventSource;
 
   beforeEach(() => {
     meter = new MockMeter();
-    metrics = new GrithMetrics(meter);
+    metrics = new KervyxMetrics(meter);
     source = new MockEventSource();
   });
 
   it('subscribes to all event types', () => {
     metrics.bindToClient(source);
 
-    const expectedEvents: GrithEventType[] = [
+    const expectedEvents: KervyxEventType[] = [
       'covenant:created',
       'covenant:verified',
       'covenant:countersigned',
@@ -487,7 +487,7 @@ describe('GrithMetrics — bindToClient()', () => {
       document: {} as any,
     });
 
-    const counter = meter.counters.get('grith.covenants.created')!;
+    const counter = meter.counters.get('kervyx.covenants.created')!;
     expect(counter.total).toBe(1);
   });
 
@@ -502,8 +502,8 @@ describe('GrithMetrics — bindToClient()', () => {
       resource: '/system',
     });
 
-    const total = meter.counters.get('grith.evaluations.total')!;
-    const denied = meter.counters.get('grith.evaluations.denied')!;
+    const total = meter.counters.get('kervyx.evaluations.total')!;
+    const denied = meter.counters.get('kervyx.evaluations.denied')!;
     expect(total.total).toBe(1);
     expect(denied.total).toBe(1);
   });
@@ -517,7 +517,7 @@ describe('GrithMetrics — bindToClient()', () => {
       result: { valid: true, checks: [] } as any,
     });
 
-    const counter = meter.counters.get('grith.covenants.verified')!;
+    const counter = meter.counters.get('kervyx.covenants.verified')!;
     expect(counter.total).toBe(1);
   });
 });
@@ -588,7 +588,7 @@ describe('createTelemetry()', () => {
     expect(result).toHaveProperty('metrics');
   });
 
-  it('middleware is a valid GrithMiddleware', () => {
+  it('middleware is a valid KervyxMiddleware', () => {
     const { middleware } = createTelemetry();
     expect(middleware.name).toBe('telemetry');
     expect(middleware.before).toBeDefined();
@@ -596,9 +596,9 @@ describe('createTelemetry()', () => {
     expect(middleware.onError).toBeDefined();
   });
 
-  it('metrics is a GrithMetrics instance', () => {
+  it('metrics is a KervyxMetrics instance', () => {
     const { metrics } = createTelemetry();
-    expect(metrics).toBeInstanceOf(GrithMetrics);
+    expect(metrics).toBeInstanceOf(KervyxMetrics);
   });
 
   it('works with no-op defaults (no tracer/meter provided)', async () => {
@@ -629,7 +629,7 @@ describe('createTelemetry()', () => {
     await pipeline.execute('createCovenant', {}, echoOp({ id: 'cov-1' }));
 
     expect(tracer.spans).toHaveLength(1);
-    expect(tracer.spans[0]!.attributes['grith.operation']).toBe('createCovenant');
+    expect(tracer.spans[0]!.attributes['kervyx.operation']).toBe('createCovenant');
   });
 
   it('uses provided meter for metrics', () => {
@@ -642,7 +642,7 @@ describe('createTelemetry()', () => {
       document: {} as any,
     } as CovenantCreatedEvent);
 
-    const counter = meter.counters.get('grith.covenants.created')!;
+    const counter = meter.counters.get('kervyx.covenants.created')!;
     expect(counter.total).toBe(1);
   });
 
@@ -671,11 +671,11 @@ describe('createTelemetry()', () => {
 
     // Verify span was created
     expect(tracer.spans).toHaveLength(1);
-    expect(tracer.spans[0]!.attributes['grith.covenant.id']).toBe('cov-end-to-end');
+    expect(tracer.spans[0]!.attributes['kervyx.covenant.id']).toBe('cov-end-to-end');
     expect(tracer.spans[0]!.status!.code).toBe(SpanStatusCode.OK);
 
     // Verify metric was recorded
-    const counter = meter.counters.get('grith.covenants.created')!;
+    const counter = meter.counters.get('kervyx.covenants.created')!;
     expect(counter.total).toBe(1);
   });
 });

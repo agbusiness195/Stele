@@ -1,11 +1,11 @@
 /**
- * Property-based and fuzz-style tests for the Grith SDK.
+ * Property-based and fuzz-style tests for the Kervyx SDK.
  *
  * Since fast-check is unavailable, we use manual random generators with
  * crypto.getRandomValues for true randomness, running 20 iterations per
  * property to cover a broad range of inputs.
  *
- * Covers: @grith/crypto, @grith/ccl, @grith/core, @grith/identity
+ * Covers: @kervyx/crypto, @kervyx/ccl, @kervyx/core, @kervyx/identity
  */
 
 import { describe, it, expect } from 'vitest';
@@ -26,8 +26,8 @@ import {
   generateNonce,
   generateId,
   constantTimeEqual,
-} from '@grith/crypto';
-import type { KeyPair } from '@grith/crypto';
+} from '@kervyx/crypto';
+import type { KeyPair } from '@kervyx/crypto';
 
 import {
   parse,
@@ -39,8 +39,8 @@ import {
   matchAction,
   matchResource,
   evaluateCondition,
-} from '@grith/ccl';
-import type { CCLDocument, EvaluationContext } from '@grith/ccl';
+} from '@kervyx/ccl';
+import type { CCLDocument, EvaluationContext } from '@kervyx/ccl';
 
 import {
   buildCovenant,
@@ -52,8 +52,8 @@ import {
   serializeCovenant,
   deserializeCovenant,
   MAX_CHAIN_DEPTH,
-} from '@grith/core';
-import type { CovenantDocument, CovenantBuilderOptions } from '@grith/core';
+} from '@kervyx/core';
+import type { CovenantDocument, CovenantBuilderOptions } from '@kervyx/core';
 
 import {
   createIdentity,
@@ -61,8 +61,8 @@ import {
   verifyIdentity,
   computeIdentityHash,
   computeCapabilityManifestHash,
-} from '@grith/identity';
-import type { AgentIdentity, CreateIdentityOptions } from '@grith/identity';
+} from '@kervyx/identity';
+import type { AgentIdentity, CreateIdentityOptions } from '@kervyx/identity';
 
 // ---------------------------------------------------------------------------
 // Random generators

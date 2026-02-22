@@ -1,7 +1,7 @@
 {
-  "name": "@grith/core",
+  "name": "@kervyx/core",
   "version": "2.0.0",
-  "description": "Core covenant lifecycle management for the Grith framework",
+  "description": "Core covenant lifecycle management for the Kervyx framework",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,16 +27,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/core"
   },
-  "homepage": "https://grith.dev",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
-  "author": "Grith Labs, Inc.",
+  "author": "Kervyx Labs, Inc.",
   "keywords": [
-    "grith",
+    "kervyx",
     "covenant",
     "ai-accountability",
     "core",
@@ -52,7 +52,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@grith/crypto": "2.0.0",
-    "@grith/ccl": "2.0.0"
+    "@kervyx/crypto": "2.0.0",
+    "@kervyx/ccl": "2.0.0"
   }
 }

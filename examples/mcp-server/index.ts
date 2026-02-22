@@ -1,14 +1,14 @@
 /**
- * Grith SDK - MCP Server Wrapping
+ * Kervyx SDK - MCP Server Wrapping
  *
- * Demonstrates wrapping a Model Context Protocol server with GrithGuard
+ * Demonstrates wrapping a Model Context Protocol server with KervyxGuard
  * to enforce constraints on every tool call, generate compliance proofs,
  * and produce execution receipts.
  */
-import { GrithGuard } from '@grith/mcp';
-import type { MCPServer } from '@grith/mcp';
-import { MonitorDeniedError } from '@grith/enforcement';
-import { verifyComplianceProof } from '@grith/proof';
+import { KervyxGuard } from '@kervyx/mcp';
+import type { MCPServer } from '@kervyx/mcp';
+import { MonitorDeniedError } from '@kervyx/enforcement';
+import { verifyComplianceProof } from '@kervyx/proof';
 
 async function main() {
   // 1. Create a mock MCP server with three tools
@@ -32,10 +32,10 @@ async function main() {
     },
   };
 
-  // 2. Wrap with GrithGuard using data-isolation preset
+  // 2. Wrap with KervyxGuard using data-isolation preset
   //    This preset permits file.read on /data/**, denies file.write and
   //    network.send on all resources, and requires audit logging.
-  const server = await GrithGuard.wrap(mockServer, {
+  const server = await KervyxGuard.wrap(mockServer, {
     constraints: 'standard:data-isolation',
     mode: 'enforce',
   });

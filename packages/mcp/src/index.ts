@@ -1,22 +1,22 @@
-import { generateKeyPair, timestamp, sha256Object } from '@grith/crypto';
-import type { KeyPair, HashHex } from '@grith/crypto';
-import { parse } from '@grith/ccl';
-import type { Severity } from '@grith/ccl';
-import { buildCovenant } from '@grith/core';
-import type { CovenantDocument } from '@grith/core';
-import { Monitor } from '@grith/enforcement';
-import type { AuditLog, AuditEntry } from '@grith/enforcement';
-import { createIdentity } from '@grith/identity';
-import type { AgentIdentity, ModelAttestation } from '@grith/identity';
-import { createReceipt } from '@grith/reputation';
-import type { ExecutionReceipt } from '@grith/reputation';
-import { generateComplianceProof } from '@grith/proof';
-import type { ComplianceProof, AuditEntryData } from '@grith/proof';
+import { generateKeyPair, timestamp, sha256Object } from '@kervyx/crypto';
+import type { KeyPair, HashHex } from '@kervyx/crypto';
+import { parse } from '@kervyx/ccl';
+import type { Severity } from '@kervyx/ccl';
+import { buildCovenant } from '@kervyx/core';
+import type { CovenantDocument } from '@kervyx/core';
+import { Monitor } from '@kervyx/enforcement';
+import type { AuditLog, AuditEntry } from '@kervyx/enforcement';
+import { createIdentity } from '@kervyx/identity';
+import type { AgentIdentity, ModelAttestation } from '@kervyx/identity';
+import { createReceipt } from '@kervyx/reputation';
+import type { ExecutionReceipt } from '@kervyx/reputation';
+import { generateComplianceProof } from '@kervyx/proof';
+import type { ComplianceProof, AuditEntryData } from '@kervyx/proof';
 
 import { PRESETS } from './presets.js';
 import type {
   MCPServer,
-  GrithGuardOptions,
+  KervyxGuardOptions,
   WrappedMCPServer,
   ViolationDetails,
   ToolCallDetails,
@@ -26,7 +26,7 @@ import type {
 export type {
   MCPServer,
   MCPTool,
-  GrithGuardOptions,
+  KervyxGuardOptions,
   WrappedMCPServer,
   ViolationDetails,
   ToolCallDetails,
@@ -111,24 +111,24 @@ function extractConstraint(matchedRule: unknown): string {
 }
 
 // ---------------------------------------------------------------------------
-// GrithGuard
+// KervyxGuard
 // ---------------------------------------------------------------------------
 
 /**
- * GrithGuard wraps any MCP server with Grith accountability.
+ * KervyxGuard wraps any MCP server with Kervyx accountability.
  *
  * Usage (2 lines):
  * ```ts
- * import { GrithGuard } from '@grith/mcp';
- * const server = await GrithGuard.wrap(myMcpServer, { constraints: 'standard:data-isolation' });
+ * import { KervyxGuard } from '@kervyx/mcp';
+ * const server = await KervyxGuard.wrap(myMcpServer, { constraints: 'standard:data-isolation' });
  * ```
  */
-export class GrithGuard {
+export class KervyxGuard {
   // Private constructor - use static factory methods
   private constructor() {}
 
   /**
-   * Wrap an MCP server with Grith accountability using constraint text
+   * Wrap an MCP server with Kervyx accountability using constraint text
    * (either a preset name or raw CCL).
    *
    * Generates a keypair if one is not provided, creates an agent identity,
@@ -137,7 +137,7 @@ export class GrithGuard {
    */
   static async wrap(
     server: MCPServer,
-    options: GrithGuardOptions,
+    options: KervyxGuardOptions,
   ): Promise<WrappedMCPServer> {
     // 1. Resolve constraints
     const constraintSource = resolveConstraints(options.constraints);
@@ -195,7 +195,7 @@ export class GrithGuard {
     });
 
     // 6. Build the wrapped server
-    return GrithGuard.buildWrappedServer(
+    return KervyxGuard.buildWrappedServer(
       server,
       monitor,
       identity,
@@ -240,7 +240,7 @@ export class GrithGuard {
       mode,
     });
 
-    return GrithGuard.buildWrappedServer(
+    return KervyxGuard.buildWrappedServer(
       server,
       monitor,
       identity,
@@ -260,7 +260,7 @@ export class GrithGuard {
     identity: AgentIdentity,
     covenant: CovenantDocument,
     operatorKeyPair: KeyPair,
-    options: Partial<GrithGuardOptions>,
+    options: Partial<KervyxGuardOptions>,
   ): WrappedMCPServer {
     // Track state for receipt generation
     let totalToolCalls = 0;
@@ -391,7 +391,7 @@ export class GrithGuard {
     };
 
     // Build the wrapped server object by copying all original properties
-    // and adding the Grith methods
+    // and adding the Kervyx methods
     const wrapped: WrappedMCPServer = Object.create(null);
 
     // Copy all properties from the original server
@@ -410,7 +410,7 @@ export class GrithGuard {
     // Set the intercepted handler
     wrapped.handleToolCall = interceptedHandleToolCall;
 
-    // Expose Grith accessors
+    // Expose Kervyx accessors
     wrapped.getMonitor = (): Monitor => monitor;
     wrapped.getIdentity = (): AgentIdentity => identity;
     wrapped.getAuditLog = (): AuditLog => monitor.getAuditLog();

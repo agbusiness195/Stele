@@ -1,11 +1,11 @@
 /**
- * @grith/sdk type definitions.
+ * @kervyx/sdk type definitions.
  *
  * SDK-specific types that wrap and extend the lower-level package types
  * into a unified, ergonomic API surface.
  */
 
-import type { KeyPair } from '@grith/crypto';
+import type { KeyPair } from '@kervyx/crypto';
 import type {
   CovenantDocument,
   VerificationResult,
@@ -19,24 +19,24 @@ import type {
   CovenantMetadata,
   Obligation,
   PartyRole,
-} from '@grith/core';
+} from '@kervyx/core';
 import type {
   CCLDocument,
   EvaluationResult as CCLEvaluationResult,
   Statement,
   Severity,
-} from '@grith/ccl';
+} from '@kervyx/ccl';
 import type {
   AgentIdentity,
   ModelAttestation,
   DeploymentContext,
   LineageEntry,
-} from '@grith/identity';
+} from '@kervyx/identity';
 
 // ─── Client options ─────────────────────────────────────────────────────────
 
-/** Options for constructing a GrithClient instance. */
-export interface GrithClientOptions {
+/** Options for constructing a KervyxClient instance. */
+export interface KervyxClientOptions {
   /** Optional pre-generated key pair for signing operations. */
   keyPair?: KeyPair;
   /** Optional agent identifier for identity operations. */
@@ -167,8 +167,8 @@ export interface NarrowingViolationEntry {
 
 // ─── Events ─────────────────────────────────────────────────────────────────
 
-/** Event types emitted by GrithClient. */
-export type GrithEventType =
+/** Event types emitted by KervyxClient. */
+export type KervyxEventType =
   | 'covenant:created'
   | 'covenant:verified'
   | 'covenant:countersigned'
@@ -180,59 +180,59 @@ export type GrithEventType =
   | 'key:rotated';
 
 /** Base event payload. */
-export interface GrithEvent {
+export interface KervyxEvent {
   /** The event type. */
-  type: GrithEventType;
+  type: KervyxEventType;
   /** ISO 8601 timestamp of when the event occurred. */
   timestamp: string;
 }
 
 /** Event emitted when a covenant is created. */
-export interface CovenantCreatedEvent extends GrithEvent {
+export interface CovenantCreatedEvent extends KervyxEvent {
   type: 'covenant:created';
   document: CovenantDocument;
 }
 
 /** Event emitted when a covenant is verified. */
-export interface CovenantVerifiedEvent extends GrithEvent {
+export interface CovenantVerifiedEvent extends KervyxEvent {
   type: 'covenant:verified';
   result: VerificationResult;
 }
 
 /** Event emitted when a covenant is countersigned. */
-export interface CovenantCountersignedEvent extends GrithEvent {
+export interface CovenantCountersignedEvent extends KervyxEvent {
   type: 'covenant:countersigned';
   document: CovenantDocument;
   signerRole: PartyRole;
 }
 
 /** Event emitted when an identity is created. */
-export interface IdentityCreatedEvent extends GrithEvent {
+export interface IdentityCreatedEvent extends KervyxEvent {
   type: 'identity:created';
   identity: AgentIdentity;
 }
 
 /** Event emitted when an identity is evolved. */
-export interface IdentityEvolvedEvent extends GrithEvent {
+export interface IdentityEvolvedEvent extends KervyxEvent {
   type: 'identity:evolved';
   identity: AgentIdentity;
   changeType: LineageEntry['changeType'];
 }
 
 /** Event emitted when a chain is resolved. */
-export interface ChainResolvedEvent extends GrithEvent {
+export interface ChainResolvedEvent extends KervyxEvent {
   type: 'chain:resolved';
   documents: CovenantDocument[];
 }
 
 /** Event emitted when a chain is validated. */
-export interface ChainValidatedEvent extends GrithEvent {
+export interface ChainValidatedEvent extends KervyxEvent {
   type: 'chain:validated';
   result: ChainValidationResult;
 }
 
 /** Event emitted when an action is evaluated. */
-export interface EvaluationCompletedEvent extends GrithEvent {
+export interface EvaluationCompletedEvent extends KervyxEvent {
   type: 'evaluation:completed';
   result: EvaluationResult;
   action: string;
@@ -240,14 +240,14 @@ export interface EvaluationCompletedEvent extends GrithEvent {
 }
 
 /** Event emitted when a key rotation occurs. */
-export interface KeyRotatedEvent extends GrithEvent {
+export interface KeyRotatedEvent extends KervyxEvent {
   type: 'key:rotated';
   previousPublicKey: string;
   currentPublicKey: string;
 }
 
 /** Map of event types to their payloads. */
-export interface GrithEventMap {
+export interface KervyxEventMap {
   'covenant:created': CovenantCreatedEvent;
   'covenant:verified': CovenantVerifiedEvent;
   'covenant:countersigned': CovenantCountersignedEvent;
@@ -260,7 +260,7 @@ export interface GrithEventMap {
 }
 
 /** Event handler function type. */
-export type GrithEventHandler<T extends GrithEventType> = (event: GrithEventMap[T]) => void;
+export type KervyxEventHandler<T extends KervyxEventType> = (event: KervyxEventMap[T]) => void;
 
 // ─── Re-exports for convenience ─────────────────────────────────────────────
 

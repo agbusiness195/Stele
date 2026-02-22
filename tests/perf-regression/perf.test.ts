@@ -7,10 +7,10 @@
  * bound. If a test fails, it means something has regressed badly.
  */
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, sign, verify, sha256 } from '@grith/crypto';
-import { parse, evaluate } from '@grith/ccl';
-import { buildCovenant, verifyCovenant } from '@grith/core';
-import { MemoryStore } from '@grith/store';
+import { generateKeyPair, sign, verify, sha256 } from '@kervyx/crypto';
+import { parse, evaluate } from '@kervyx/ccl';
+import { buildCovenant, verifyCovenant } from '@kervyx/core';
+import { MemoryStore } from '@kervyx/store';
 
 // ---------------------------------------------------------------------------
 // Helpers

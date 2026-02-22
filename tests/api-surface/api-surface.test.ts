@@ -11,10 +11,10 @@ import { describe, it, expect } from 'vitest';
 
 describe('API Surface Tests', () => {
 
-  // ─── @grith/crypto ──────────────────────────────────────────────────────────
+  // ─── @kervyx/crypto ──────────────────────────────────────────────────────────
 
-  it('@grith/crypto exports', async () => {
-    const mod = await import('@grith/crypto');
+  it('@kervyx/crypto exports', async () => {
+    const mod = await import('@kervyx/crypto');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'KeyManager',
@@ -39,10 +39,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @grith/ccl ─────────────────────────────────────────────────────────────
+  // ─── @kervyx/ccl ─────────────────────────────────────────────────────────────
 
-  it('@grith/ccl exports', async () => {
-    const mod = await import('@grith/ccl');
+  it('@kervyx/ccl exports', async () => {
+    const mod = await import('@kervyx/ccl');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'CCLSyntaxError',
@@ -62,10 +62,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @grith/core ────────────────────────────────────────────────────────────
+  // ─── @kervyx/core ────────────────────────────────────────────────────────────
 
-  it('@grith/core exports', async () => {
-    const mod = await import('@grith/core');
+  it('@kervyx/core exports', async () => {
+    const mod = await import('@kervyx/core');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'CovenantBuildError',
@@ -95,10 +95,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @grith/store ───────────────────────────────────────────────────────────
+  // ─── @kervyx/store ───────────────────────────────────────────────────────────
 
-  it('@grith/store exports', async () => {
-    const mod = await import('@grith/store');
+  it('@kervyx/store exports', async () => {
+    const mod = await import('@kervyx/store');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'FileStore',
@@ -112,10 +112,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @grith/types ───────────────────────────────────────────────────────────
+  // ─── @kervyx/types ───────────────────────────────────────────────────────────
 
-  it('@grith/types exports', async () => {
-    const mod = await import('@grith/types');
+  it('@kervyx/types exports', async () => {
+    const mod = await import('@kervyx/types');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'ActiveSpan',
@@ -126,7 +126,7 @@ describe('API Surface Tests', () => {
       'CryptoError',
       'DEFAULT_SEVERITY',
       'DocumentedErrorCode',
-      'DocumentedGrithError',
+      'DocumentedKervyxError',
       'Gauge',
       'HealthChecker',
       'Histogram',
@@ -134,11 +134,11 @@ describe('API Surface Tests', () => {
       'LogLevel',
       'Logger',
       'MetricsRegistry',
-      'GRITH_VERSION',
+      'KERVYX_VERSION',
       'SUPPORTED_HASH_ALGORITHMS',
       'SUPPORTED_SIGNATURE_SCHEMES',
-      'GrithError',
-      'GrithErrorCode',
+      'KervyxError',
+      'KervyxErrorCode',
       'StorageError',
       'Tracer',
       'ValidationError',
@@ -178,10 +178,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @grith/identity ────────────────────────────────────────────────────────
+  // ─── @kervyx/identity ────────────────────────────────────────────────────────
 
-  it('@grith/identity exports', async () => {
-    const mod = await import('@grith/identity');
+  it('@kervyx/identity exports', async () => {
+    const mod = await import('@kervyx/identity');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'AdaptiveCarryForward',
@@ -208,10 +208,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @grith/verifier ────────────────────────────────────────────────────────
+  // ─── @kervyx/verifier ────────────────────────────────────────────────────────
 
-  it('@grith/verifier exports', async () => {
-    const mod = await import('@grith/verifier');
+  it('@kervyx/verifier exports', async () => {
+    const mod = await import('@kervyx/verifier');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'Verifier',
@@ -219,10 +219,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @grith/enforcement ─────────────────────────────────────────────────────
+  // ─── @kervyx/enforcement ─────────────────────────────────────────────────────
 
-  it('@grith/enforcement exports', async () => {
-    const mod = await import('@grith/enforcement');
+  it('@kervyx/enforcement exports', async () => {
+    const mod = await import('@kervyx/enforcement');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'AuditChain',
@@ -242,10 +242,10 @@ describe('API Surface Tests', () => {
     ].sort());
   });
 
-  // ─── @grith/sdk ─────────────────────────────────────────────────────────────
+  // ─── @kervyx/sdk ─────────────────────────────────────────────────────────────
 
-  it('@grith/sdk exports', async () => {
-    const mod = await import('@grith/sdk');
+  it('@kervyx/sdk exports', async () => {
+    const mod = await import('@kervyx/sdk');
     const exports = Object.keys(mod).sort();
     expect(exports).toEqual([
       'AGENT_KEY_SCHEMA',
@@ -320,14 +320,14 @@ describe('API Surface Tests', () => {
       'STAKE_TIERS',
       'STANDARD_ALIGNMENT_PROPERTIES',
       'STANDARD_METRICS',
-      'GRITH_MEDIA_TYPE',
+      'KERVYX_MEDIA_TYPE',
       'SUBSTRATE_DEFAULTS',
       'SpanStatusCode',
       'SqliteStore',
-      'GrithAccessDeniedError',
-      'GrithCallbackHandler',
-      'GrithClient',
-      'GrithMetrics',
+      'KervyxAccessDeniedError',
+      'KervyxCallbackHandler',
+      'KervyxClient',
+      'KervyxMetrics',
       'StoreIndex',
       'StreamlinedBFT',
       'StressResponseCurve',
@@ -624,8 +624,8 @@ describe('API Surface Tests', () => {
       'signString',
       'slashStake',
       'specificity',
-      'grithGuardHandler',
-      'grithMiddleware',
+      'kervyxGuardHandler',
+      'kervyxMiddleware',
       'stressTest',
       'substrateCapabilityMatrix',
       'substrateCompatibility',
@@ -678,9 +678,9 @@ describe('API Surface Tests', () => {
       'verifyReceiptChain',
       'verifyRecursively',
       'voteForAntibody',
-      'withGrith',
-      'withGrithTool',
-      'withGrithTools',
+      'withKervyx',
+      'withKervyxTool',
+      'withKervyxTools',
       'zeuthenStrategy',
     ].sort());
   });
@@ -690,32 +690,32 @@ describe('API Surface Tests', () => {
   describe('Cross-package consistency', () => {
 
     it('PROTOCOL_VERSION is consistent across core and sdk', async () => {
-      const core = await import('@grith/core');
-      const sdk = await import('@grith/sdk');
+      const core = await import('@kervyx/core');
+      const sdk = await import('@kervyx/sdk');
       expect(core.PROTOCOL_VERSION).toBe(sdk.PROTOCOL_VERSION);
     });
 
     it('MAX_CHAIN_DEPTH is consistent across core and sdk', async () => {
-      const core = await import('@grith/core');
-      const sdk = await import('@grith/sdk');
+      const core = await import('@kervyx/core');
+      const sdk = await import('@kervyx/sdk');
       expect(core.MAX_CHAIN_DEPTH).toBe(sdk.MAX_CHAIN_DEPTH);
     });
 
     it('buildCovenant is the same function in core and sdk', async () => {
-      const core = await import('@grith/core');
-      const sdk = await import('@grith/sdk');
+      const core = await import('@kervyx/core');
+      const sdk = await import('@kervyx/sdk');
       expect(core.buildCovenant).toBe(sdk.buildCovenant);
     });
 
     it('generateKeyPair is the same function in crypto and sdk', async () => {
-      const crypto = await import('@grith/crypto');
-      const sdk = await import('@grith/sdk');
+      const crypto = await import('@kervyx/crypto');
+      const sdk = await import('@kervyx/sdk');
       expect(crypto.generateKeyPair).toBe(sdk.generateKeyPair);
     });
 
     it('parse from ccl is the same function as parseCCL from sdk', async () => {
-      const ccl = await import('@grith/ccl');
-      const sdk = await import('@grith/sdk');
+      const ccl = await import('@kervyx/ccl');
+      const sdk = await import('@kervyx/sdk');
       expect(ccl.parse).toBe(sdk.parseCCL);
     });
   });

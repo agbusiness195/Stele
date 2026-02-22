@@ -1,5 +1,5 @@
-import { generateId } from '@grith/crypto';
-import { GrithError, GrithErrorCode } from '@grith/types';
+import { generateId } from '@kervyx/crypto';
+import { KervyxError, KervyxErrorCode } from '@kervyx/types';
 
 export type {
   NegotiationSession,
@@ -486,21 +486,21 @@ export function computeNPartyNash(
   config?: NPartyNashConfig,
 ): NPartyNashResult | null {
   if (outcomes.length === 0) {
-    throw new GrithError('outcomes array must not be empty', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KervyxError('outcomes array must not be empty', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (utilities.length < 2) {
-    throw new GrithError('At least 2 utility functions required for Nash bargaining', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KervyxError('At least 2 utility functions required for Nash bargaining', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   const n = utilities.length;
   const powers = bargainingPowers ?? utilities.map(() => 1.0);
 
   if (powers.length !== n) {
-    throw new GrithError(`bargainingPowers length (${powers.length}) must match utilities length (${n})`, GrithErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KervyxError(`bargainingPowers length (${powers.length}) must match utilities length (${n})`, KervyxErrorCode.PROTOCOL_INVALID_INPUT);
   }
   for (let i = 0; i < powers.length; i++) {
     if (powers[i]! <= 0) {
-      throw new GrithError(`bargainingPowers[${i}] must be positive, got ${powers[i]}`, GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError(`bargainingPowers[${i}] must be positive, got ${powers[i]}`, KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
   }
 
@@ -609,13 +609,13 @@ export class ConcessionProtocol {
 
   constructor(config: ConcessionConfig) {
     if (config.concessionRate < 0 || config.concessionRate > 1) {
-      throw new GrithError('concessionRate must be in [0, 1]', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('concessionRate must be in [0, 1]', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (config.maxRounds < 1) {
-      throw new GrithError('maxRounds must be >= 1', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('maxRounds must be >= 1', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (config.deadline <= 0) {
-      throw new GrithError('deadline must be positive', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('deadline must be positive', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     this.config = config;
     this.startTime = Date.now();
@@ -677,7 +677,7 @@ export class ConcessionProtocol {
     }
 
     if (this.state === 'ACCEPT' || this.state === 'REJECT' || this.state === 'TIMEOUT') {
-      throw new GrithError(`Cannot propose in terminal state: ${this.state}`, GrithErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KervyxError(`Cannot propose in terminal state: ${this.state}`, KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     this.log.push({
@@ -704,7 +704,7 @@ export class ConcessionProtocol {
     }
 
     if (this.state !== 'PROPOSE' && this.state !== 'CONCEDE') {
-      throw new GrithError(`Cannot counter in state: ${this.state}. Must be PROPOSE or CONCEDE.`, GrithErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KervyxError(`Cannot counter in state: ${this.state}. Must be PROPOSE or CONCEDE.`, KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     if (this.round >= this.config.maxRounds) {
@@ -740,7 +740,7 @@ export class ConcessionProtocol {
     }
 
     if (this.state !== 'COUNTER' && this.state !== 'PROPOSE') {
-      throw new GrithError(`Cannot concede in state: ${this.state}. Must be COUNTER or PROPOSE.`, GrithErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KervyxError(`Cannot concede in state: ${this.state}. Must be COUNTER or PROPOSE.`, KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     const concessionAmount = this.calculateConcession(remainingGap, now);
@@ -762,7 +762,7 @@ export class ConcessionProtocol {
    */
   accept(from: string, proposal: Proposal): ConcessionState {
     if (this.state === 'ACCEPT' || this.state === 'REJECT' || this.state === 'TIMEOUT') {
-      throw new GrithError(`Cannot accept in terminal state: ${this.state}`, GrithErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KervyxError(`Cannot accept in terminal state: ${this.state}`, KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     this.log.push({
@@ -781,7 +781,7 @@ export class ConcessionProtocol {
    */
   reject(from: string, proposal: Proposal): ConcessionState {
     if (this.state === 'ACCEPT' || this.state === 'REJECT' || this.state === 'TIMEOUT') {
-      throw new GrithError(`Cannot reject in terminal state: ${this.state}`, GrithErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KervyxError(`Cannot reject in terminal state: ${this.state}`, KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     this.log.push({
@@ -818,7 +818,7 @@ export class IncrementalParetoFrontier {
 
   constructor(dimensions: number) {
     if (dimensions < 2) {
-      throw new GrithError('Pareto frontier requires at least 2 dimensions', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('Pareto frontier requires at least 2 dimensions', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     this.dimensions = dimensions;
   }
@@ -859,7 +859,7 @@ export class IncrementalParetoFrontier {
    */
   insert(outcome: Outcome, utilities: number[]): boolean {
     if (utilities.length !== this.dimensions) {
-      throw new GrithError(`Expected ${this.dimensions} utility values, got ${utilities.length}`, GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError(`Expected ${this.dimensions} utility values, got ${utilities.length}`, KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     const newPoint: ParetoOutcome = {
@@ -1028,10 +1028,10 @@ export function runZeuthenNegotiation(
   maxRounds: number = 100,
 ): { rounds: ZeuthenResult[]; agreedOutcome: Outcome | null } {
   if (outcomes.length === 0) {
-    throw new GrithError('outcomes array must not be empty', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KervyxError('outcomes array must not be empty', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
   }
   if (maxRounds < 1) {
-    throw new GrithError('maxRounds must be >= 1', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+    throw new KervyxError('maxRounds must be >= 1', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
   }
 
   // Each party starts with their most preferred outcome
@@ -1326,7 +1326,7 @@ export interface OptimizedNegotiationResult {
  *      for either party, negotiation fails
  *   4. Verify all required constraints from both parties are satisfied
  *
- * This is the "trust handshake" described in the Grith vision as completing
+ * This is the "trust handshake" described in the Kervyx vision as completing
  * in <100ms. It avoids session creation, proposal objects, round tracking,
  * and other overhead from the multi-step session approach.
  *

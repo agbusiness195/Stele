@@ -1,6 +1,6 @@
-# Grith Protocol Specification
+# Kervyx Protocol Specification
 
-The full Grith Covenant Protocol specification lives in [SPECIFICATION.md](./SPECIFICATION.md).
+The full Kervyx Covenant Protocol specification lives in [SPECIFICATION.md](./SPECIFICATION.md).
 
 It covers:
 

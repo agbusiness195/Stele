@@ -12,7 +12,7 @@ const packages = [
 
 const alias: Record<string, string> = {};
 for (const pkg of packages) {
-  alias[`@grith/${pkg}`] = path.resolve(__dirname, `packages/${pkg}/src/index.ts`);
+  alias[`@kervyx/${pkg}`] = path.resolve(__dirname, `packages/${pkg}/src/index.ts`);
 }
 
 export default defineConfig({

@@ -1,5 +1,5 @@
 /**
- * @grith/ccl -- Constraint Commitment Language parser and evaluator.
+ * @kervyx/ccl -- Constraint Commitment Language parser and evaluator.
  *
  * Provides a complete pipeline for working with CCL: lexing, parsing,
  * evaluation, merging, narrowing validation, and serialization.

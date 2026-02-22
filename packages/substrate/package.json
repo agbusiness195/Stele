@@ -1,5 +1,5 @@
 {
-  "name": "@grith/substrate",
+  "name": "@kervyx/substrate",
   "version": "2.0.0",
   "description": "Cross-chain substrate layer for multi-network covenant anchoring",
   "sideEffects": false,
@@ -27,13 +27,13 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@grith/crypto": "2.0.0"
+    "@kervyx/crypto": "2.0.0"
   },
   "license": "MIT",
-  "author": "Grith Labs, Inc.",
-  "homepage": "https://grith.dev",
+  "author": "Kervyx Labs, Inc.",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
   "engines": {
     "node": ">=18"
@@ -43,11 +43,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/substrate"
   },
   "keywords": [
-    "grith",
+    "kervyx",
     "covenant",
     "ai-accountability",
     "substrate",

@@ -1,11 +1,11 @@
-# @grith/negotiation
+# @kervyx/negotiation
 
 Multi-party covenant negotiation with Nash bargaining, Zeuthen strategies, Pareto frontier analysis, and concession protocols.
 
 ## Installation
 
 ```bash
-npm install @grith/negotiation
+npm install @kervyx/negotiation
 ```
 
 ## Key APIs
@@ -27,8 +27,8 @@ npm install @grith/negotiation
 ## Usage
 
 ```typescript
-import { initiate, propose, evaluate, agree } from '@grith/negotiation';
-import type { NegotiationPolicy, Proposal } from '@grith/negotiation';
+import { initiate, propose, evaluate, agree } from '@kervyx/negotiation';
+import type { NegotiationPolicy, Proposal } from '@kervyx/negotiation';
 
 const policy: NegotiationPolicy = {
   requiredConstraints: ['deny:exfiltrate-data'],
@@ -61,4 +61,4 @@ if (decision === 'accept') {
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

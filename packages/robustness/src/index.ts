@@ -1,11 +1,11 @@
-import { parse, evaluate, matchAction, matchResource } from '@grith/ccl';
+import { parse, evaluate, matchAction, matchResource } from '@kervyx/ccl';
 import type {
   CCLDocument,
   Condition,
   CompoundCondition,
   PermitDenyStatement,
   EvaluationContext,
-} from '@grith/ccl';
+} from '@kervyx/ccl';
 
 export type {
   RobustnessProof,

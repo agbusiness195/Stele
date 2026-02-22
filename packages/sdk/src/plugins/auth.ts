@@ -1,11 +1,11 @@
 /**
- * Authentication middleware plugin for the Grith SDK.
+ * Authentication middleware plugin for the Kervyx SDK.
  *
  * Enforces authentication requirements on operations by validating
  * API keys or key pair credentials before allowing operations to proceed.
  */
 
-import type { GrithMiddleware, MiddlewareContext } from '../middleware.js';
+import type { KervyxMiddleware, MiddlewareContext } from '../middleware.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -49,10 +49,10 @@ export interface AuthOptions {
  * - `ctx.metadata.publicKeyHex` — the public key hex (key pair auth only)
  *
  * @param options - Authentication configuration.
- * @returns A GrithMiddleware that enforces authentication.
+ * @returns A KervyxMiddleware that enforces authentication.
  * @throws Error if neither `apiKey` nor `keyPair` is provided.
  */
-export function authMiddleware(options: AuthOptions): GrithMiddleware {
+export function authMiddleware(options: AuthOptions): KervyxMiddleware {
   const { apiKey, keyPair, requiredFor } = options;
 
   if (!apiKey && !keyPair) {

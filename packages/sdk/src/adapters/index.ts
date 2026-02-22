@@ -1,5 +1,5 @@
 /**
- * Framework adapters for the Grith SDK.
+ * Framework adapters for the Kervyx SDK.
  *
  * Re-exports all adapter factories and their associated types for
  * Express/HTTP, Vercel AI SDK, and LangChain integrations.
@@ -12,8 +12,8 @@
 // ─── Express / HTTP adapter (stable) ─────────────────────────────────────────
 
 export {
-  grithMiddleware,
-  grithGuardHandler,
+  kervyxMiddleware,
+  kervyxGuardHandler,
   createCovenantRouter,
 } from './express.js';
 
@@ -21,8 +21,8 @@ export type {
   IncomingRequest,
   OutgoingResponse,
   NextFunction,
-  GrithMiddlewareOptions,
-  GrithGuardHandlerOptions,
+  KervyxMiddlewareOptions,
+  KervyxGuardHandlerOptions,
   CovenantRouterOptions,
   CovenantRouter,
   AsyncHandler,
@@ -31,27 +31,27 @@ export type {
 // ─── Vercel AI SDK adapter (stable) ──────────────────────────────────────────
 
 export {
-  GrithAccessDeniedError,
-  withGrith,
-  withGrithTools,
+  KervyxAccessDeniedError,
+  withKervyx,
+  withKervyxTools,
   createToolGuard,
 } from './vercel-ai.js';
 
 export type {
   ToolLike,
-  GrithToolOptions,
+  KervyxToolOptions,
 } from './vercel-ai.js';
 
 // ─── LangChain adapter (stable) ──────────────────────────────────────────────
 
 export {
-  GrithCallbackHandler,
-  withGrithTool,
+  KervyxCallbackHandler,
+  withKervyxTool,
   createChainGuard,
 } from './langchain.js';
 
 export type {
   LangChainToolLike,
-  GrithLangChainOptions,
+  KervyxLangChainOptions,
   CallbackEvent,
 } from './langchain.js';

@@ -1,5 +1,5 @@
 /**
- * Advanced protocol integration tests for the Grith SDK.
+ * Advanced protocol integration tests for the Kervyx SDK.
  *
  * Covers:
  *   1. Canary System     - Canary generation, evaluation, scheduling, correlation
@@ -16,8 +16,8 @@ import {
   sha256Object,
   canonicalizeJson,
   toHex,
-} from '@grith/crypto';
-import type { KeyPair } from '@grith/crypto';
+} from '@kervyx/crypto';
+import type { KeyPair } from '@kervyx/crypto';
 
 import {
   buildCovenant,
@@ -26,18 +26,18 @@ import {
   deserializeCovenant,
   computeId,
   canonicalForm,
-} from '@grith/core';
-import type { CovenantDocument } from '@grith/core';
+} from '@kervyx/core';
+import type { CovenantDocument } from '@kervyx/core';
 
-import { parse, serialize, evaluate } from '@grith/ccl';
+import { parse, serialize, evaluate } from '@kervyx/ccl';
 
 import {
   createIdentity,
   serializeIdentity,
   deserializeIdentity,
-} from '@grith/identity';
+} from '@kervyx/identity';
 
-import { MemoryStore } from '@grith/store';
+import { MemoryStore } from '@kervyx/store';
 
 import {
   generateCanary,
@@ -46,7 +46,7 @@ import {
   isExpired,
   canarySchedule,
   canaryCorrelation,
-} from '@grith/canary';
+} from '@kervyx/canary';
 
 import {
   proveHonesty,
@@ -58,7 +58,7 @@ import {
   repeatedGameEquilibrium,
   coalitionStability,
   mechanismDesign,
-} from '@grith/gametheory';
+} from '@kervyx/gametheory';
 
 import {
   compose,
@@ -68,7 +68,7 @@ import {
   decomposeCovenants,
   compositionComplexity,
   proveSystemProperty,
-} from '@grith/composition';
+} from '@kervyx/composition';
 
 // ---------------------------------------------------------------------------
 // Helpers

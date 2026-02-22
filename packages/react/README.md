@@ -1,11 +1,11 @@
-# @grith/react
+# @kervyx/react
 
-Reactive primitives and React hooks for building Grith-powered UIs with observable state management.
+Reactive primitives and React hooks for building Kervyx-powered UIs with observable state management.
 
 ## Installation
 
 ```bash
-npm install @grith/react
+npm install @kervyx/react
 ```
 
 ## Key APIs
@@ -19,8 +19,8 @@ npm install @grith/react
 
 ### Factory Functions
 
-- **createCovenantState(client)**: Create a `CovenantState` bound to a `GrithClient`
-- **createIdentityState(client)**: Create an `IdentityState` bound to a `GrithClient`
+- **createCovenantState(client)**: Create a `CovenantState` bound to a `KervyxClient`
+- **createIdentityState(client)**: Create an `IdentityState` bound to a `KervyxClient`
 - **createStoreState(store)**: Create a `StoreState` bound to a `CovenantStore`
 
 ### React Hooks (requires React >= 18)
@@ -33,12 +33,12 @@ npm install @grith/react
 ## Usage
 
 ```typescript
-import { useCovenant, useIdentity, useCovenantStore } from '@grith/react';
-import { GrithClient } from '@grith/sdk';
-import { MemoryStore } from '@grith/store';
+import { useCovenant, useIdentity, useCovenantStore } from '@kervyx/react';
+import { KervyxClient } from '@kervyx/sdk';
+import { MemoryStore } from '@kervyx/store';
 
 function CovenantPanel() {
-  const client = new GrithClient();
+  const client = new KervyxClient();
   const { status, document, error, create, verify } = useCovenant(client);
 
   // status: 'idle' | 'creating' | 'created' | 'verifying' | 'verified' | 'error'
@@ -46,7 +46,7 @@ function CovenantPanel() {
 }
 
 // Framework-agnostic usage
-import { Observable, createCovenantState } from '@grith/react';
+import { Observable, createCovenantState } from '@kervyx/react';
 
 const count = new Observable(0);
 const doubled = count.map(n => n * 2);
@@ -56,4 +56,4 @@ count.set(5); // logs "doubled: 10"
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

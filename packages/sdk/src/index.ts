@@ -1,7 +1,7 @@
 /**
- * @grith/sdk -- High-level TypeScript SDK that unifies the entire Grith protocol.
+ * @kervyx/sdk -- High-level TypeScript SDK that unifies the entire Kervyx protocol.
  *
- * Provides a single entry point (GrithClient) for key management, covenant
+ * Provides a single entry point (KervyxClient) for key management, covenant
  * lifecycle, identity management, chain operations, and CCL utilities.
  *
  * @packageDocumentation
@@ -13,8 +13,8 @@ import {
   generateKeyPair as cryptoGenerateKeyPair,
   timestamp,
   KeyManager,
-} from '@grith/crypto';
-import type { KeyPair, KeyRotationPolicy, ManagedKeyPair } from '@grith/crypto';
+} from '@kervyx/crypto';
+import type { KeyPair, KeyRotationPolicy, ManagedKeyPair } from '@kervyx/crypto';
 
 import {
   buildCovenant,
@@ -35,7 +35,7 @@ import {
   resignCovenant,
   serializeCovenant,
   deserializeCovenant,
-} from '@grith/core';
+} from '@kervyx/core';
 import type {
   CovenantDocument,
   VerificationResult,
@@ -43,7 +43,7 @@ import type {
   Issuer,
   Beneficiary,
   PartyRole,
-} from '@grith/core';
+} from '@kervyx/core';
 
 import {
   parse as cclParse,
@@ -54,27 +54,27 @@ import {
   serialize as cclSerialize,
   checkRateLimit as cclCheckRateLimit,
   validateNarrowing as cclValidateNarrowing,
-} from '@grith/ccl';
-import type { CCLDocument, EvaluationContext } from '@grith/ccl';
+} from '@kervyx/ccl';
+import type { CCLDocument, EvaluationContext } from '@kervyx/ccl';
 
 import {
   createIdentity as identityCreate,
   evolveIdentity as identityEvolve,
   verifyIdentity as identityVerify,
-} from '@grith/identity';
-import type { AgentIdentity } from '@grith/identity';
+} from '@kervyx/identity';
+import type { AgentIdentity } from '@kervyx/identity';
 
 import type {
-  GrithClientOptions,
+  KervyxClientOptions,
   CreateCovenantOptions,
   EvaluationResult,
   CreateIdentityOptions,
   EvolveOptions,
   ChainValidationResult,
   NarrowingViolationEntry,
-  GrithEventType,
-  GrithEventMap,
-  GrithEventHandler,
+  KervyxEventType,
+  KervyxEventMap,
+  KervyxEventHandler,
 } from './types.js';
 
 // ─── Re-exports ─────────────────────────────────────────────────────────────
@@ -96,7 +96,7 @@ export type {
 
 // Re-export middleware system
 export { MiddlewarePipeline, loggingMiddleware, validationMiddleware, timingMiddleware, rateLimitMiddleware } from './middleware.js';
-export type { MiddlewareContext, MiddlewareResult, MiddlewareFn, GrithMiddleware } from './middleware.js';
+export type { MiddlewareContext, MiddlewareResult, MiddlewareFn, KervyxMiddleware } from './middleware.js';
 
 // Re-export plugins
 export * from './plugins/index.js';
@@ -104,7 +104,7 @@ export * from './plugins/index.js';
 // Re-export telemetry
 export {
   telemetryMiddleware,
-  GrithMetrics,
+  KervyxMetrics,
   NoopTracer,
   NoopMeter,
   NoopSpan,
@@ -126,16 +126,16 @@ export type {
 
 // Re-export all SDK types
 export type {
-  GrithClientOptions,
+  KervyxClientOptions,
   CreateCovenantOptions,
   EvaluationResult,
   CreateIdentityOptions,
   EvolveOptions,
   ChainValidationResult,
   NarrowingViolationEntry,
-  GrithEventType,
-  GrithEventMap,
-  GrithEventHandler,
+  KervyxEventType,
+  KervyxEventMap,
+  KervyxEventHandler,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   CovenantCountersignedEvent,
@@ -145,7 +145,7 @@ export type {
   ChainValidatedEvent,
   EvaluationCompletedEvent,
   KeyRotatedEvent,
-  GrithEvent,
+  KervyxEvent,
 } from './types.js';
 
 // Re-export core types
@@ -170,7 +170,7 @@ export type {
   ProofType,
   RevocationMethod,
   Severity,
-} from '@grith/core';
+} from '@kervyx/core';
 
 export {
   PROTOCOL_VERSION,
@@ -191,9 +191,9 @@ export {
   resolveChain as resolveChain_core,
   computeEffectiveConstraints,
   validateChainNarrowing,
-} from '@grith/core';
+} from '@kervyx/core';
 
-export type { ChainResolver } from '@grith/core';
+export type { ChainResolver } from '@kervyx/core';
 
 // Re-export crypto types and functions
 export type {
@@ -207,7 +207,7 @@ export type {
   Nonce,
   KeyRotationPolicy,
   ManagedKeyPair,
-} from '@grith/crypto';
+} from '@kervyx/crypto';
 
 export {
   generateKeyPair,
@@ -229,7 +229,7 @@ export {
   keyPairFromPrivateKey,
   keyPairFromPrivateKeyHex,
   KeyManager,
-} from '@grith/crypto';
+} from '@kervyx/crypto';
 
 // Re-export CCL types and functions
 export type {
@@ -243,7 +243,7 @@ export type {
   Condition,
   CompoundCondition,
   NarrowingViolation,
-} from '@grith/ccl';
+} from '@kervyx/ccl';
 
 export {
   parse as parseCCL,
@@ -260,7 +260,7 @@ export {
   parseTokens,
   CCLSyntaxError,
   CCLValidationError,
-} from '@grith/ccl';
+} from '@kervyx/ccl';
 
 // Re-export identity types and functions
 export type {
@@ -272,7 +272,7 @@ export type {
   CreateIdentityOptions as CoreCreateIdentityOptions,
   EvolveIdentityOptions as CoreEvolveIdentityOptions,
   RuntimeType,
-} from '@grith/identity';
+} from '@kervyx/identity';
 
 export {
   createIdentity as createIdentity_core,
@@ -289,20 +289,20 @@ export {
   triggerReverification,
   computeDecayedTrust,
   completeReverification,
-} from '@grith/identity';
+} from '@kervyx/identity';
 
-// ─── GrithClient ────────────────────────────────────────────────────────────
+// ─── KervyxClient ────────────────────────────────────────────────────────────
 
 /**
- * The main entry point for the Grith SDK.
+ * The main entry point for the Kervyx SDK.
  *
- * Provides a unified, high-level API for the entire Grith protocol:
+ * Provides a unified, high-level API for the entire Kervyx protocol:
  * key management, covenant lifecycle, identity management, chain
  * operations, and CCL utilities.
  *
  * @example
  * ```typescript
- * const client = new GrithClient();
+ * const client = new KervyxClient();
  * await client.generateKeyPair();
  *
  * const doc = await client.createCovenant({
@@ -315,14 +315,14 @@ export {
  * console.log(result.valid); // true
  * ```
  */
-export class GrithClient {
+export class KervyxClient {
   private _keyPair: KeyPair | undefined;
   private readonly _agentId: string | undefined;
   private readonly _strictMode: boolean;
-  private readonly _listeners: Map<GrithEventType, Set<GrithEventHandler<GrithEventType>>>;
+  private readonly _listeners: Map<KervyxEventType, Set<KervyxEventHandler<KervyxEventType>>>;
   private _keyManager: KeyManager | undefined;
 
-  constructor(options: GrithClientOptions = {}) {
+  constructor(options: KervyxClientOptions = {}) {
     this._keyPair = options.keyPair;
     this._agentId = options.agentId;
     this._strictMode = options.strictMode ?? false;
@@ -471,17 +471,17 @@ export class GrithClient {
     // ── Input validation (Stripe-quality errors at the public API boundary) ──
     if (!options.issuer || !options.issuer.id) {
       throw new Error(
-        "GrithClient.createCovenant(): issuer.id is required. Provide a non-empty string identifying the issuing party.",
+        "KervyxClient.createCovenant(): issuer.id is required. Provide a non-empty string identifying the issuing party.",
       );
     }
     if (!options.beneficiary || !options.beneficiary.id) {
       throw new Error(
-        "GrithClient.createCovenant(): beneficiary.id is required. Provide a non-empty string identifying the beneficiary party.",
+        "KervyxClient.createCovenant(): beneficiary.id is required. Provide a non-empty string identifying the beneficiary party.",
       );
     }
     if (!options.constraints || options.constraints.trim().length === 0) {
       throw new Error(
-        "GrithClient.createCovenant(): constraints must be a non-empty CCL string. Example: permit read on '/data/**'",
+        "KervyxClient.createCovenant(): constraints must be a non-empty CCL string. Example: permit read on '/data/**'",
       );
     }
 
@@ -497,7 +497,7 @@ export class GrithClient {
     const privateKey = options.privateKey ?? this._keyPair?.privateKey;
     if (!privateKey) {
       throw new Error(
-        "GrithClient.createCovenant(): No private key available. Either call client.generateKeyPair() first, or pass { privateKey } in the options.",
+        "KervyxClient.createCovenant(): No private key available. Either call client.generateKeyPair() first, or pass { privateKey } in the options.",
       );
     }
 
@@ -600,7 +600,7 @@ export class GrithClient {
     const kp = signerKeyPair ?? this._keyPair;
     if (!kp) {
       throw new Error(
-        "GrithClient.countersign(): No key pair available. Either call client.generateKeyPair() first, or pass a KeyPair as the third argument.",
+        "KervyxClient.countersign(): No key pair available. Either call client.generateKeyPair() first, or pass a KeyPair as the third argument.",
       );
     }
 
@@ -643,12 +643,12 @@ export class GrithClient {
   ): Promise<EvaluationResult> {
     if (!action || action.trim().length === 0) {
       throw new Error(
-        "GrithClient.evaluateAction(): action must be a non-empty string (e.g., 'read', 'write', 'api.call').",
+        "KervyxClient.evaluateAction(): action must be a non-empty string (e.g., 'read', 'write', 'api.call').",
       );
     }
     if (!resource || resource.trim().length === 0) {
       throw new Error(
-        "GrithClient.evaluateAction(): resource must be a non-empty string (e.g., '/data/**', '/api/endpoint').",
+        "KervyxClient.evaluateAction(): resource must be a non-empty string (e.g., '/data/**', '/api/endpoint').",
       );
     }
 
@@ -699,7 +699,7 @@ export class GrithClient {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
       throw new Error(
-        "GrithClient.createIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
+        "KervyxClient.createIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
 
@@ -748,7 +748,7 @@ export class GrithClient {
     const operatorKeyPair = options.operatorKeyPair ?? this._keyPair;
     if (!operatorKeyPair) {
       throw new Error(
-        "GrithClient.evolveIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
+        "KervyxClient.evolveIdentity(): No key pair available. Either call client.generateKeyPair() first, or pass { operatorKeyPair } in the options.",
       );
     }
 
@@ -929,18 +929,18 @@ export class GrithClient {
    * // later: off() to unsubscribe
    * ```
    */
-  on<T extends GrithEventType>(
+  on<T extends KervyxEventType>(
     event: T,
-    handler: GrithEventHandler<T>,
+    handler: KervyxEventHandler<T>,
   ): () => void {
     if (!this._listeners.has(event)) {
       this._listeners.set(event, new Set());
     }
     const handlers = this._listeners.get(event)!;
-    handlers.add(handler as GrithEventHandler<GrithEventType>);
+    handlers.add(handler as KervyxEventHandler<KervyxEventType>);
 
     return () => {
-      handlers.delete(handler as GrithEventHandler<GrithEventType>);
+      handlers.delete(handler as KervyxEventHandler<KervyxEventType>);
     };
   }
 
@@ -950,13 +950,13 @@ export class GrithClient {
    * @param event - The event type.
    * @param handler - The handler function to remove.
    */
-  off<T extends GrithEventType>(
+  off<T extends KervyxEventType>(
     event: T,
-    handler: GrithEventHandler<T>,
+    handler: KervyxEventHandler<T>,
   ): void {
     const handlers = this._listeners.get(event);
     if (handlers) {
-      handlers.delete(handler as GrithEventHandler<GrithEventType>);
+      handlers.delete(handler as KervyxEventHandler<KervyxEventType>);
     }
   }
 
@@ -966,7 +966,7 @@ export class GrithClient {
    *
    * @param event - Optional event type. If omitted, removes all handlers.
    */
-  removeAllListeners(event?: GrithEventType): void {
+  removeAllListeners(event?: KervyxEventType): void {
     if (event) {
       this._listeners.delete(event);
     } else {
@@ -975,9 +975,9 @@ export class GrithClient {
   }
 
   /** Emit an event to all registered handlers. */
-  private _emit<T extends GrithEventType>(
+  private _emit<T extends KervyxEventType>(
     event: T,
-    payload: GrithEventMap[T],
+    payload: KervyxEventMap[T],
   ): void {
     const handlers = this._listeners.get(event);
     if (handlers) {
@@ -1099,7 +1099,7 @@ export class QuickCovenant {
 export * from './adapters/index.js';
 
 // ─── Store ────────────────────────────────────────────────────────────────────
-export { MemoryStore, FileStore, SqliteStore, QueryBuilder, createQuery, StoreIndex, IndexedStore, createTransaction } from '@grith/store';
+export { MemoryStore, FileStore, SqliteStore, QueryBuilder, createQuery, StoreIndex, IndexedStore, createTransaction } from '@kervyx/store';
 export type {
   CovenantStore,
   StoreFilter,
@@ -1113,7 +1113,7 @@ export type {
   SortOrder,
   IndexField,
   Transaction,
-} from '@grith/store';
+} from '@kervyx/store';
 
 // ─── Breach Detection ─────────────────────────────────────────────────────────
 export {
@@ -1129,13 +1129,13 @@ export {
   createIncidentReport,
   escalateIncident,
   resolveIncident,
-} from '@grith/breach';
+} from '@kervyx/breach';
 export type {
   BreachAttestation,
   TrustStatus,
   TrustNode,
   BreachEvent,
-} from '@grith/breach';
+} from '@kervyx/breach';
 
 // ─── Reputation ───────────────────────────────────────────────────────────────
 export {
@@ -1170,7 +1170,7 @@ export {
   createStakedAgent,
   recordQuery,
   computeGovernanceVote,
-} from '@grith/reputation';
+} from '@kervyx/reputation';
 export type {
   ReputationScore,
   ExecutionReceipt,
@@ -1185,7 +1185,7 @@ export type {
   StakeTier,
   StakeTierConfig,
   StakedAgent,
-} from '@grith/reputation';
+} from '@kervyx/reputation';
 
 // ─── Proof ────────────────────────────────────────────────────────────────────
 export {
@@ -1197,13 +1197,13 @@ export {
   hashToField,
   fieldToHex,
   FIELD_PRIME,
-} from '@grith/proof';
+} from '@kervyx/proof';
 export type {
   ComplianceProof,
   ProofVerificationResult,
   ProofGenerationOptions,
   AuditEntryData,
-} from '@grith/proof';
+} from '@kervyx/proof';
 
 // ─── Attestation ──────────────────────────────────────────────────────────────
 export {
@@ -1219,7 +1219,7 @@ export {
   buildEntanglementNetwork,
   verifyEntangled,
   assessConditionalRisk,
-} from '@grith/attestation';
+} from '@kervyx/attestation';
 export type {
   ExternalAttestation,
   AttestationReconciliation,
@@ -1229,10 +1229,10 @@ export type {
   ChainVerificationResult,
   AgentAction,
   AttestationCoverageResult,
-} from '@grith/attestation';
+} from '@kervyx/attestation';
 
 // ─── Verifier ─────────────────────────────────────────────────────────────────
-export { Verifier, verifyBatch } from '@grith/verifier';
+export { Verifier, verifyBatch } from '@kervyx/verifier';
 export type {
   VerifierOptions,
   VerificationReport,
@@ -1245,7 +1245,7 @@ export type {
   BatchSummary,
   VerificationRecord,
   VerificationKind,
-} from '@grith/verifier';
+} from '@kervyx/verifier';
 
 // ─── Discovery ─────────────────────────────────────────────────────────────────
 export {
@@ -1257,7 +1257,7 @@ export {
   buildKeySet,
   WELL_KNOWN_PATH,
   CONFIGURATION_PATH,
-  GRITH_MEDIA_TYPE,
+  KERVYX_MEDIA_TYPE,
   MAX_DOCUMENT_AGE_MS,
   createFederationConfig,
   addResolver,
@@ -1270,7 +1270,7 @@ export {
   createTransaction as createMarketplaceTransaction,
   completeTransaction,
   disputeTransaction,
-} from '@grith/discovery';
+} from '@kervyx/discovery';
 export type {
   DiscoveryDocument,
   AgentKeyEntry,
@@ -1294,7 +1294,7 @@ export type {
   MarketplaceConfig,
   MarketplaceQuery,
   MarketplaceTransaction,
-} from '@grith/discovery';
+} from '@kervyx/discovery';
 
 // ─── Schema ────────────────────────────────────────────────────────────────────
 export {
@@ -1306,11 +1306,11 @@ export {
   validateDiscoverySchema,
   validateAgentKeySchema,
   getAllSchemas,
-} from '@grith/schema';
+} from '@kervyx/schema';
 export type {
   SchemaValidationError,
   SchemaValidationResult,
-} from '@grith/schema';
+} from '@kervyx/schema';
 
 // ─── Temporal ─────────────────────────────────────────────────────────────────
 export {
@@ -1330,7 +1330,7 @@ export {
   evaluatePhaseTransition,
   transitionPhase,
   computeVotingPower,
-} from '@grith/temporal';
+} from '@kervyx/temporal';
 export type {
   TriggerType,
   TriggerAction,
@@ -1355,7 +1355,7 @@ export type {
   GovernancePhase,
   GovernanceState,
   GovernanceBootstrapConfig,
-} from '@grith/temporal';
+} from '@kervyx/temporal';
 
 // ─── Trust Gate ───────────────────────────────────────────────────────────────
 export { createTrustGate, evaluateAccess, calculateRevenueLift } from './trust-gate.js';
@@ -1454,7 +1454,7 @@ export {
   isExpired as isCanaryExpired,
   canarySchedule,
   canaryCorrelation,
-} from '@grith/canary';
+} from '@kervyx/canary';
 export type {
   ChallengePayload,
   Canary,
@@ -1462,7 +1462,7 @@ export type {
   CanaryScheduleEntry,
   CanaryScheduleResult,
   CanaryCorrelationResult,
-} from '@grith/canary';
+} from '@kervyx/canary';
 
 // ─── Game Theory ──────────────────────────────────────────────────────────────
 export {
@@ -1480,7 +1480,7 @@ export {
   defineConjecture,
   getStandardConjectures,
   analyzeImpossibilityBounds,
-} from '@grith/gametheory';
+} from '@kervyx/gametheory';
 export type {
   HonestyParameters,
   HonestyProof,
@@ -1497,7 +1497,7 @@ export type {
   ConjectureStatus,
   Conjecture,
   ImpossibilityBound,
-} from '@grith/gametheory';
+} from '@kervyx/gametheory';
 
 // ─── Composition ──────────────────────────────────────────────────────────────
 export {
@@ -1520,7 +1520,7 @@ export {
   proposeImprovement,
   applyImprovement,
   verifyEnvelopeIntegrity,
-} from '@grith/composition';
+} from '@kervyx/composition';
 export type {
   CompositionProof,
   ComposedConstraint,
@@ -1533,7 +1533,7 @@ export type {
   SafetyEnvelope,
   ImprovementProposal,
   ImprovementResult,
-} from '@grith/composition';
+} from '@kervyx/composition';
 
 // ─── Antifragile ──────────────────────────────────────────────────────────────
 export {
@@ -1551,7 +1551,7 @@ export {
   PhaseTransitionDetector,
   FitnessEvolution,
   calibratedAntifragilityIndex,
-} from '@grith/antifragile';
+} from '@kervyx/antifragile';
 export type {
   BreachAntibody,
   NetworkHealth,
@@ -1565,7 +1565,7 @@ export type {
   ScoredAntibody,
   FitnessEvolutionConfig,
   CalibratedAntifragilityResult,
-} from '@grith/antifragile';
+} from '@kervyx/antifragile';
 
 // ─── Consensus ────────────────────────────────────────────────────────────────
 export {
@@ -1584,7 +1584,7 @@ export {
   DynamicQuorum,
   PipelineSimulator,
   QuorumIntersectionVerifier,
-} from '@grith/consensus';
+} from '@kervyx/consensus';
 export type {
   AccountabilityTier,
   AccountabilityScore,
@@ -1607,7 +1607,7 @@ export type {
   NetworkCondition,
   PipelineSimulationResult,
   QuorumIntersectionResult,
-} from '@grith/consensus';
+} from '@kervyx/consensus';
 
 // ─── Robustness ───────────────────────────────────────────────────────────────
 export {
@@ -1617,7 +1617,7 @@ export {
   generateAdversarialInputs,
   formalVerification,
   robustnessScore,
-} from '@grith/robustness';
+} from '@kervyx/robustness';
 export type {
   RobustnessProof,
   InputBound,
@@ -1630,7 +1630,7 @@ export type {
   Contradiction,
   RobustnessScoreResult,
   RobustnessFactor,
-} from '@grith/robustness';
+} from '@kervyx/robustness';
 
 // ─── Recursive ────────────────────────────────────────────────────────────────
 export {
@@ -1641,7 +1641,7 @@ export {
   addLayer,
   computeTrustTransitivity,
   findMinimalVerificationSet,
-} from '@grith/recursive';
+} from '@kervyx/recursive';
 export type {
   MetaTargetType,
   MetaCovenant,
@@ -1653,7 +1653,7 @@ export type {
   TransitiveTrustResult,
   VerifierNode,
   MinimalVerificationSetResult,
-} from '@grith/recursive';
+} from '@kervyx/recursive';
 
 // ─── Alignment ────────────────────────────────────────────────────────────────
 export {
@@ -1668,7 +1668,7 @@ export {
   DriftForecaster,
   AlignmentSurface,
   AlignmentFeedbackLoop,
-} from '@grith/alignment';
+} from '@kervyx/alignment';
 export type {
   AlignmentProperty,
   AlignmentCovenant,
@@ -1687,7 +1687,7 @@ export type {
   FeedbackLoopConfig,
   AlignmentOutcome,
   FeedbackLoopState,
-} from '@grith/alignment';
+} from '@kervyx/alignment';
 
 // ─── Norms ────────────────────────────────────────────────────────────────────
 export {
@@ -1697,7 +1697,7 @@ export {
   generateTemplate,
   normConflictDetection,
   normPrecedence,
-} from '@grith/norms';
+} from '@kervyx/norms';
 export type {
   DiscoveredNorm,
   NormAnalysis,
@@ -1708,7 +1708,7 @@ export type {
   NormDefinition,
   NormConflict,
   NormPrecedenceResult,
-} from '@grith/norms';
+} from '@kervyx/norms';
 
 // ─── Substrate ────────────────────────────────────────────────────────────────
 export {
@@ -1721,7 +1721,7 @@ export {
   substrateCompatibility,
   constraintTranslation,
   substrateCapabilityMatrix,
-} from '@grith/substrate';
+} from '@kervyx/substrate';
 export type {
   SubstrateType,
   SubstrateAdapter,
@@ -1736,7 +1736,7 @@ export type {
   CapabilityEntry,
   CapabilityMatrixRow,
   CapabilityMatrix,
-} from '@grith/substrate';
+} from '@kervyx/substrate';
 
 // ─── Derivatives ──────────────────────────────────────────────────────────────
 export {
@@ -1749,7 +1749,7 @@ export {
   blackScholesPrice,
   valueAtRisk,
   hedgeRatio,
-} from '@grith/derivatives';
+} from '@kervyx/derivatives';
 export type {
   TrustFuture,
   AgentInsurancePolicy,
@@ -1764,7 +1764,7 @@ export type {
   VaRResult,
   HedgeRatioParams,
   HedgeRatioResult,
-} from '@grith/derivatives';
+} from '@kervyx/derivatives';
 
 // ─── Legal ────────────────────────────────────────────────────────────────────
 export {
@@ -1786,7 +1786,7 @@ export {
   takeSnapshot,
   analyzeTrajectory,
   generateRegulatoryReport,
-} from '@grith/legal';
+} from '@kervyx/legal';
 export type {
   LegalIdentityPackage,
   ComplianceRecord,
@@ -1824,7 +1824,7 @@ export type {
   ComplianceSnapshot,
   ComplianceAlert,
   ComplianceAutopilotTrajectory,
-} from '@grith/legal';
+} from '@kervyx/legal';
 
 // ─── Enforcement ──────────────────────────────────────────────────────────────
 export {
@@ -1842,7 +1842,7 @@ export {
   addDefenseLayer,
   disableLayer,
   AuditChain,
-} from '@grith/enforcement';
+} from '@kervyx/enforcement';
 export type {
   ExecutionOutcome,
   AuditEntry,
@@ -1859,7 +1859,7 @@ export type {
   DefenseInDepthConfig,
   DefenseAnalysis,
   ChainedAuditEntry,
-} from '@grith/enforcement';
+} from '@kervyx/enforcement';
 
 // ─── Negotiation ──────────────────────────────────────────────────────────────
 export {
@@ -1878,7 +1878,7 @@ export {
   IncrementalParetoFrontier,
   zeuthenStrategy,
   runZeuthenNegotiation,
-} from '@grith/negotiation';
+} from '@kervyx/negotiation';
 export type {
   NegotiationSession,
   Proposal,
@@ -1893,5 +1893,5 @@ export type {
   ConcessionEvent,
   ConcessionConfig,
   ZeuthenResult,
-} from '@grith/negotiation';
+} from '@kervyx/negotiation';
 export { protect, listPresets, getPreset } from './easy';

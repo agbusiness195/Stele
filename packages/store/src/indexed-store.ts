@@ -9,7 +9,7 @@
  * @packageDocumentation
  */
 
-import type { CovenantDocument } from '@grith/core';
+import type { CovenantDocument } from '@kervyx/core';
 
 import type {
   CovenantStore,

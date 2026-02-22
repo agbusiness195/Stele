@@ -1,7 +1,7 @@
 {
-  "name": "@grith/discovery",
+  "name": "@kervyx/discovery",
   "version": "2.0.0",
-  "description": "Cross-platform discovery protocol for .well-known/grith/ endpoints",
+  "description": "Cross-platform discovery protocol for .well-known/kervyx/ endpoints",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,9 +27,9 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@grith/core": "2.0.0",
-    "@grith/crypto": "2.0.0",
-    "@grith/types": "2.0.0"
+    "@kervyx/core": "2.0.0",
+    "@kervyx/crypto": "2.0.0",
+    "@kervyx/types": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -40,16 +40,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/discovery"
   },
-  "homepage": "https://grith.dev",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
-  "author": "Grith Labs, Inc.",
+  "author": "Kervyx Labs, Inc.",
   "keywords": [
-    "grith",
+    "kervyx",
     "discovery",
     "well-known",
     "cross-platform",

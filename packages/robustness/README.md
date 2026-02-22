@@ -1,11 +1,11 @@
-# @grith/robustness
+# @kervyx/robustness
 
-Robustness analysis for Grith covenants: fuzz testing, formal verification, adversarial input generation, and composite scoring.
+Robustness analysis for Kervyx covenants: fuzz testing, formal verification, adversarial input generation, and composite scoring.
 
 ## Installation
 
 ```bash
-npm install @grith/robustness
+npm install @kervyx/robustness
 ```
 
 ## Key APIs
@@ -20,7 +20,7 @@ npm install @grith/robustness
 ## Usage
 
 ```typescript
-import { fuzz, formalVerification, robustnessScore } from '@grith/robustness';
+import { fuzz, formalVerification, robustnessScore } from '@kervyx/robustness';
 
 const covenant = {
   id: 'cov-1',
@@ -56,4 +56,4 @@ console.log(result.recommendations);
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

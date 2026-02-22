@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grith — The Accountability Primitive for AI Agents</title>
-<meta name="description" content="Cryptographic behavioral commitments with trustless verification. Grith is the accountability protocol for autonomous AI agents.">
+<title>Kervyx — The Accountability Primitive for AI Agents</title>
+<meta name="description" content="Cryptographic behavioral commitments with trustless verification. Kervyx is the accountability protocol for autonomous AI agents.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Inter+Tight:wght@900&family=Inter:wght@400;500&family=JetBrains+Mono&display=swap" rel="stylesheet">
@@ -497,7 +497,7 @@ footer {
     <div class="protocol-grid">
       <div class="protocol-col reveal">
         <h3 class="heading protocol-col-header">Inscribe</h3>
-        <!-- Grith/tablet icon -->
+        <!-- Kervyx/tablet icon -->
         <svg class="protocol-icon" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="8" y="4" width="32" height="40" rx="1" stroke="#c9a227" stroke-width="1.5"/>
           <line x1="14" y1="14" x2="34" y2="14" stroke="#c9a227" stroke-width="1.5"/>
@@ -547,8 +547,8 @@ footer {
 <span class="code-line"><span class="ck">const</span> <span class="cp">agent = </span><span class="ck">new</span> <span class="cf">Agent</span><span class="cp">(</span><span class="cs">"portfolio-manager"</span><span class="cp">);</span></span>
 <span class="code-line">&nbsp;</span>
 <span class="code-line"><span class="cc">// After: full cryptographic accountability in two lines</span></span>
-<span class="code-line"><span class="ck">import</span> <span class="cp">{ GrithGuard } </span><span class="ck">from</span> <span class="cs">"@grith/sdk"</span><span class="cp">;</span></span>
-<span class="code-line"><span class="ck">const</span> <span class="cp">guarded = </span><span class="ck">await</span> <span class="cf">GrithGuard.wrap</span><span class="cp">(agent, {</span></span>
+<span class="code-line"><span class="ck">import</span> <span class="cp">{ KervyxGuard } </span><span class="ck">from</span> <span class="cs">"@kervyx/sdk"</span><span class="cp">;</span></span>
+<span class="code-line"><span class="ck">const</span> <span class="cp">guarded = </span><span class="ck">await</span> <span class="cf">KervyxGuard.wrap</span><span class="cp">(agent, {</span></span>
 <span class="code-line"><span class="cp">  covenant: {</span></span>
 <span class="code-line"><span class="cp">    allow: [</span><span class="cs">"trade.execute"</span><span class="cp">, </span><span class="cs">"portfolio.rebalance"</span><span class="cp">],</span></span>
 <span class="code-line"><span class="cp">    deny:  [</span><span class="cs">"funds.withdraw"</span><span class="cp">, </span><span class="cs">"keys.export"</span><span class="cp">],</span></span>
@@ -566,16 +566,16 @@ footer {
   <div class="container">
     <h2 class="heading arch-heading reveal">The Protocol Stack</h2>
     <div id="archBars">
-      <div class="arch-bar reveal"><span class="arch-name">@grith/crypto</span><span class="arch-desc">Merkle trees, content-addressed hashing, and digital signatures</span></div>
-      <div class="arch-bar reveal"><span class="arch-name">@grith/ccl</span><span class="arch-desc">Covenant Constraint Language — parser, evaluator, and circuit compiler</span></div>
-      <div class="arch-bar reveal"><span class="arch-name">@grith/core</span><span class="arch-desc">Protocol engine for commitment creation, action logging, and proof generation</span></div>
-      <div class="arch-bar reveal"><span class="arch-name">@grith/identity</span><span class="arch-desc">Composite agent identity, lineage chains, and evolution policy</span></div>
-      <div class="arch-bar reveal"><span class="arch-name">@grith/enforcement</span><span class="arch-desc">Monitor, CapabilityGate, and tamper-evident audit logs</span></div>
-      <div class="arch-bar reveal"><span class="arch-name">@grith/proof</span><span class="arch-desc">ZK proof architecture — Poseidon commitments and circuit generation</span></div>
-      <div class="arch-bar reveal"><span class="arch-name">@grith/reputation</span><span class="arch-desc">Execution receipts, trust scoring, staking, and non-transferable personhood</span></div>
-      <div class="arch-bar reveal"><span class="arch-name">@grith/breach</span><span class="arch-desc">Breach attestations, trust graph propagation, and severity-mapped degradation</span></div>
-      <div class="arch-bar reveal"><span class="arch-name">@grith/mcp</span><span class="arch-desc">Model Context Protocol server exposing Grith tools to any AI agent</span></div>
-      <div class="arch-bar reveal"><span class="arch-name">@grith/cli</span><span class="arch-desc">Command-line tools for inspecting, querying, and verifying covenants</span></div>
+      <div class="arch-bar reveal"><span class="arch-name">@kervyx/crypto</span><span class="arch-desc">Merkle trees, content-addressed hashing, and digital signatures</span></div>
+      <div class="arch-bar reveal"><span class="arch-name">@kervyx/ccl</span><span class="arch-desc">Covenant Constraint Language — parser, evaluator, and circuit compiler</span></div>
+      <div class="arch-bar reveal"><span class="arch-name">@kervyx/core</span><span class="arch-desc">Protocol engine for commitment creation, action logging, and proof generation</span></div>
+      <div class="arch-bar reveal"><span class="arch-name">@kervyx/identity</span><span class="arch-desc">Composite agent identity, lineage chains, and evolution policy</span></div>
+      <div class="arch-bar reveal"><span class="arch-name">@kervyx/enforcement</span><span class="arch-desc">Monitor, CapabilityGate, and tamper-evident audit logs</span></div>
+      <div class="arch-bar reveal"><span class="arch-name">@kervyx/proof</span><span class="arch-desc">ZK proof architecture — Poseidon commitments and circuit generation</span></div>
+      <div class="arch-bar reveal"><span class="arch-name">@kervyx/reputation</span><span class="arch-desc">Execution receipts, trust scoring, staking, and non-transferable personhood</span></div>
+      <div class="arch-bar reveal"><span class="arch-name">@kervyx/breach</span><span class="arch-desc">Breach attestations, trust graph propagation, and severity-mapped degradation</span></div>
+      <div class="arch-bar reveal"><span class="arch-name">@kervyx/mcp</span><span class="arch-desc">Model Context Protocol server exposing Kervyx tools to any AI agent</span></div>
+      <div class="arch-bar reveal"><span class="arch-name">@kervyx/cli</span><span class="arch-desc">Command-line tools for inspecting, querying, and verifying covenants</span></div>
     </div>
   </div>
 </section>
@@ -610,8 +610,8 @@ footer {
 
 <!-- FOOTER -->
 <footer>
-  <div class="heading footer-name">Grith Labs, Inc.</div>
-  <a href="https://github.com/agbusiness195/grith" class="footer-gh" aria-label="GitHub">
+  <div class="heading footer-name">Kervyx Labs, Inc.</div>
+  <a href="https://github.com/agbusiness195/kervyx" class="footer-gh" aria-label="GitHub">
     <svg width="20" height="20" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
       <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
     </svg>

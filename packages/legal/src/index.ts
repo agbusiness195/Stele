@@ -1,5 +1,5 @@
-import { sha256Object } from '@grith/crypto';
-import { GrithError, GrithErrorCode } from '@grith/types';
+import { sha256Object } from '@kervyx/crypto';
+import { KervyxError, KervyxErrorCode } from '@kervyx/types';
 
 export type {
   LegalIdentityPackage,
@@ -855,9 +855,9 @@ export class ComplianceSurface {
    */
   addRequirement(name: string): void {
     if (!name || name.trim() === '') {
-      throw new GrithError(
+      throw new KervyxError(
         'Requirement name must be a non-empty string',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.requirementNames.add(name);
@@ -869,21 +869,21 @@ export class ComplianceSurface {
    */
   addDependency(dep: RequirementDependency): void {
     if (!dep.dependentRequirement || dep.dependentRequirement.trim() === '') {
-      throw new GrithError(
+      throw new KervyxError(
         'dependentRequirement must be a non-empty string',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!dep.prerequisiteRequirement || dep.prerequisiteRequirement.trim() === '') {
-      throw new GrithError(
+      throw new KervyxError(
         'prerequisiteRequirement must be a non-empty string',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(dep.couplingStrength) || dep.couplingStrength < 0 || dep.couplingStrength > 1) {
-      throw new GrithError(
+      throw new KervyxError(
         'couplingStrength must be between 0 and 1',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.requirementNames.add(dep.dependentRequirement);
@@ -910,16 +910,16 @@ export class ComplianceSurface {
     // Validate all requirement names have scores
     for (const name of this.requirementNames) {
       if (!(name in rawScores)) {
-        throw new GrithError(
+        throw new KervyxError(
           `Missing score for requirement "${name}"`,
-          GrithErrorCode.PROTOCOL_INVALID_INPUT,
+          KervyxErrorCode.PROTOCOL_INVALID_INPUT,
         );
       }
       const score = rawScores[name]!;
       if (!Number.isFinite(score) || score < 0 || score > 1) {
-        throw new GrithError(
+        throw new KervyxError(
           `Score for "${name}" must be between 0 and 1, got ${score}`,
-          GrithErrorCode.PROTOCOL_INVALID_INPUT,
+          KervyxErrorCode.PROTOCOL_INVALID_INPUT,
         );
       }
     }
@@ -1059,9 +1059,9 @@ export class ComplianceTrajectory {
    */
   constructor(breachThreshold = 0.7) {
     if (!Number.isFinite(breachThreshold) || breachThreshold < 0 || breachThreshold > 1) {
-      throw new GrithError(
+      throw new KervyxError(
         'breachThreshold must be between 0 and 1',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.breachThreshold = breachThreshold;
@@ -1072,15 +1072,15 @@ export class ComplianceTrajectory {
    */
   record(obs: ComplianceObservation): void {
     if (!Number.isFinite(obs.score) || obs.score < 0 || obs.score > 1) {
-      throw new GrithError(
+      throw new KervyxError(
         'Compliance score must be between 0 and 1',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(obs.timestamp)) {
-      throw new GrithError(
+      throw new KervyxError(
         'Timestamp must be a finite number',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.observations.push({ ...obs });
@@ -1092,13 +1092,13 @@ export class ComplianceTrajectory {
    * Computes a least-squares trend line and estimates when (if ever)
    * the compliance score will breach the threshold.
    *
-   * @throws {GrithError} if fewer than 2 observations are recorded.
+   * @throws {KervyxError} if fewer than 2 observations are recorded.
    */
   analyze(): ComplianceTrajectoryResult {
     if (this.observations.length < 2) {
-      throw new GrithError(
+      throw new KervyxError(
         'Need at least 2 observations for trajectory analysis',
-        GrithErrorCode.PROTOCOL_COMPUTATION_FAILED,
+        KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED,
       );
     }
 
@@ -1234,9 +1234,9 @@ export class RemediationPlanner {
    */
   plan(currentScores: Record<string, number>, targetImprovement = 0.1): RemediationPlanResult {
     if (targetImprovement <= 0 || targetImprovement > 1) {
-      throw new GrithError(
+      throw new KervyxError(
         'targetImprovement must be between 0 (exclusive) and 1 (inclusive)',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1371,27 +1371,27 @@ export class JurisdictionConflictResolver {
    */
   addRequirement(req: JurisdictionalRequirement): void {
     if (!req.jurisdiction || req.jurisdiction.trim() === '') {
-      throw new GrithError(
+      throw new KervyxError(
         'jurisdiction must be a non-empty string',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!req.requirementId || req.requirementId.trim() === '') {
-      throw new GrithError(
+      throw new KervyxError(
         'requirementId must be a non-empty string',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!Number.isFinite(req.threshold) || req.threshold < 0 || req.threshold > 1) {
-      throw new GrithError(
+      throw new KervyxError(
         'threshold must be between 0 and 1',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!req.category || req.category.trim() === '') {
-      throw new GrithError(
+      throw new KervyxError(
         'category must be a non-empty string',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.requirements.push({ ...req });
@@ -1407,9 +1407,9 @@ export class JurisdictionConflictResolver {
    */
   resolve(strategy: ResolutionStrategy = 'strictest-wins'): JurisdictionConflictResult {
     if (!['strictest-wins', 'lex-specialis', 'proportionality'].includes(strategy)) {
-      throw new GrithError(
+      throw new KervyxError(
         `Unknown resolution strategy: "${strategy}"`,
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1635,15 +1635,15 @@ export class RegulatoryImpactAnalyzer {
     weights: ComplianceWeights = DEFAULT_WEIGHTS,
   ): RegulatoryImpactResult {
     if (!change.changeId || change.changeId.trim() === '') {
-      throw new GrithError(
+      throw new KervyxError(
         'changeId must be a non-empty string',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!change.affectedStandard) {
-      throw new GrithError(
+      throw new KervyxError(
         'affectedStandard must be specified',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     validateComplianceRecord(currentCompliance);
@@ -1651,9 +1651,9 @@ export class RegulatoryImpactAnalyzer {
     // Get current standard requirements
     const currentStandard = COMPLIANCE_STANDARDS[change.affectedStandard];
     if (!currentStandard) {
-      throw new GrithError(
+      throw new KervyxError(
         `Unknown compliance standard: "${change.affectedStandard}"`,
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1775,9 +1775,9 @@ export class RegulatoryImpactAnalyzer {
     totalRecommendations: string[];
   } {
     if (changes.length === 0) {
-      throw new GrithError(
+      throw new KervyxError(
         'Must provide at least one regulatory change',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 

@@ -1,11 +1,11 @@
-# @grith/ccl
+# @kervyx/ccl
 
-Covenant Constraint Language (CCL) parser and evaluator. CCL is a domain-specific language for expressing access control policies in Grith covenants.
+Covenant Constraint Language (CCL) parser and evaluator. CCL is a domain-specific language for expressing access control policies in Kervyx covenants.
 
 ## Installation
 
 ```bash
-npm install @grith/ccl
+npm install @kervyx/ccl
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @grith/ccl
 ### Parse and Evaluate
 
 ```typescript
-import { parse, evaluate } from '@grith/ccl';
+import { parse, evaluate } from '@kervyx/ccl';
 
 const doc = parse(`
   permit read on '/data/**'
@@ -45,7 +45,7 @@ console.log(result.permitted); // true
 ### Merge and Narrowing
 
 ```typescript
-import { parse, merge, validateNarrowing, serialize } from '@grith/ccl';
+import { parse, merge, validateNarrowing, serialize } from '@kervyx/ccl';
 
 const parent = parse("permit read on '**'");
 const child = parse("permit read on '/data/**'\ndeny write on '**'");
@@ -76,4 +76,4 @@ const text = serialize(merged);
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference and architecture guide.

@@ -1,11 +1,11 @@
-# @grith/attestation
+# @kervyx/attestation
 
 Multi-party attestation creation, signing, verification, and reconciliation.
 
 ## Installation
 
 ```bash
-npm install @grith/attestation
+npm install @kervyx/attestation
 ```
 
 ## Key APIs
@@ -29,7 +29,7 @@ import {
   reconcile,
   attestationChainVerify,
   computeAttestationCoverage,
-} from '@grith/attestation';
+} from '@kervyx/attestation';
 
 // Create and sign an attestation
 const attestation = createAttestation(
@@ -60,4 +60,4 @@ console.log(coverage.coveragePercentage); // percentage of actions covered
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

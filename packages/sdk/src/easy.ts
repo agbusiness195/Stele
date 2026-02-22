@@ -1,5 +1,5 @@
-import { buildCovenant, verifyCovenant } from '@grith/core';
-import { generateKeyPair } from '@grith/crypto';
+import { buildCovenant, verifyCovenant } from '@kervyx/core';
+import { generateKeyPair } from '@kervyx/crypto';
 
 // ── Presets ────────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ export interface ProtectedAgent {
  *
  * @example
  * ```typescript
- * import { protect } from '@grith/sdk';
+ * import { protect } from '@kervyx/sdk';
  *
  * const agent = await protect({
  *   name: 'my-agent',

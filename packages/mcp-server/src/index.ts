@@ -1,17 +1,17 @@
 /**
- * @grith/mcp-server -- Model Context Protocol server that exposes
- * Grith tools to any AI agent.
+ * @kervyx/mcp-server -- Model Context Protocol server that exposes
+ * Kervyx tools to any AI agent.
  *
  * Implements JSON-RPC 2.0 over stdio, with tool definitions that map
- * to @grith/sdk, @grith/store, and @grith/crypto operations.
+ * to @kervyx/sdk, @kervyx/store, and @kervyx/crypto operations.
  *
  * @packageDocumentation
  */
 
-import { GrithClient } from '@grith/sdk';
-import { MemoryStore } from '@grith/store';
-import { generateKeyPair, toHex } from '@grith/crypto';
-import type { KeyPair } from '@grith/crypto';
+import { KervyxClient } from '@kervyx/sdk';
+import { MemoryStore } from '@kervyx/store';
+import { generateKeyPair, toHex } from '@kervyx/crypto';
+import type { KeyPair } from '@kervyx/crypto';
 
 import type {
   JsonRpcRequest,
@@ -208,20 +208,20 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
   },
 ];
 
-// ─── GrithServer ────────────────────────────────────────────────────────────────
+// ─── KervyxServer ────────────────────────────────────────────────────────────────
 
 /**
- * MCP server that exposes Grith protocol operations as tools via JSON-RPC 2.0.
+ * MCP server that exposes Kervyx protocol operations as tools via JSON-RPC 2.0.
  *
  * Accepts a {@link MemoryStore} for persisting covenant documents and provides
  * methods for handling MCP protocol messages, listing tools, and calling tools.
  */
-export class GrithServer {
+export class KervyxServer {
   /** The backing store for covenant documents. */
   readonly store: MemoryStore;
 
   /** The SDK client used for operations. */
-  private readonly client: GrithClient;
+  private readonly client: KervyxClient;
 
   /** Server name. */
   readonly name: string;
@@ -231,8 +231,8 @@ export class GrithServer {
 
   constructor(store: MemoryStore, options?: MCPServerOptions) {
     this.store = store;
-    this.client = new GrithClient();
-    this.name = options?.name ?? 'grith-mcp-server';
+    this.client = new KervyxClient();
+    this.name = options?.name ?? 'kervyx-mcp-server';
     this.version = options?.version ?? '0.1.0';
   }
 
@@ -397,7 +397,7 @@ export class GrithServer {
         return this._toolError('Missing required field: privateKeyHex');
       }
 
-      const { fromHex } = await import('@grith/crypto');
+      const { fromHex } = await import('@kervyx/crypto');
       const privateKey = fromHex(privateKeyHex);
 
       const doc = await this.client.createCovenant({
@@ -511,7 +511,7 @@ export class GrithServer {
 
       let keyPair: KeyPair;
       if (privateKeyHex) {
-        const { keyPairFromPrivateKeyHex } = await import('@grith/crypto');
+        const { keyPairFromPrivateKeyHex } = await import('@kervyx/crypto');
         keyPair = await keyPairFromPrivateKeyHex(privateKeyHex);
       } else {
         keyPair = await generateKeyPair();

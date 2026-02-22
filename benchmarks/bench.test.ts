@@ -6,7 +6,7 @@ import {
   verify,
   sha256,
   canonicalizeJson,
-} from '@grith/crypto';
+} from '@kervyx/crypto';
 
 import {
   parse,
@@ -14,7 +14,7 @@ import {
   merge,
   serialize,
   validateNarrowing,
-} from '@grith/ccl';
+} from '@kervyx/ccl';
 
 import {
   buildCovenant,
@@ -23,9 +23,9 @@ import {
   resolveChain,
   computeEffectiveConstraints,
   MemoryChainResolver,
-} from '@grith/core';
+} from '@kervyx/core';
 
-import { MemoryStore } from '@grith/store';
+import { MemoryStore } from '@kervyx/store';
 
 // ---------------------------------------------------------------------------
 // Benchmark helper

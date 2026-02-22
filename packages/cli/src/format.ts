@@ -1,5 +1,5 @@
 /**
- * @grith/cli formatting utilities.
+ * @kervyx/cli formatting utilities.
  *
  * Pure ANSI-code based terminal formatting with zero external dependencies.
  *

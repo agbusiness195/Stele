@@ -1,4 +1,4 @@
-import { sha256Object, generateId } from '@grith/crypto';
+import { sha256Object, generateId } from '@kervyx/crypto';
 
 export type {
   SubstrateType,

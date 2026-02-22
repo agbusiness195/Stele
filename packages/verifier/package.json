@@ -1,5 +1,5 @@
 {
-  "name": "@grith/verifier",
+  "name": "@kervyx/verifier",
   "version": "2.0.0",
   "description": "Standalone verification engine for third-party auditors",
   "sideEffects": false,
@@ -24,10 +24,10 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@grith/types": "2.0.0",
-    "@grith/crypto": "2.0.0",
-    "@grith/ccl": "2.0.0",
-    "@grith/core": "2.0.0"
+    "@kervyx/types": "2.0.0",
+    "@kervyx/crypto": "2.0.0",
+    "@kervyx/ccl": "2.0.0",
+    "@kervyx/core": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -38,16 +38,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/verifier"
   },
-  "homepage": "https://grith.dev",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
-  "author": "Grith Labs, Inc.",
+  "author": "Kervyx Labs, Inc.",
   "keywords": [
-    "grith",
+    "kervyx",
     "covenant",
     "ai-accountability",
     "verifier",

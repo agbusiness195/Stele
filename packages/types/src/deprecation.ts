@@ -1,5 +1,5 @@
 /**
- * Deprecation warning system for the Grith SDK.
+ * Deprecation warning system for the Kervyx SDK.
  *
  * Provides utilities to emit deprecation warnings to stderr (once per API
  * per process), wrap functions with deprecation notices, and inspect
@@ -12,13 +12,13 @@
 
 /** Describes a deprecated API and its replacement. */
 export interface DeprecationWarning {
-  /** The name of the deprecated API (e.g., `'GrithSDK.sign'`). */
+  /** The name of the deprecated API (e.g., `'KervyxSDK.sign'`). */
   api: string;
   /** The version in which the API was deprecated (e.g., `'0.2.0'`). */
   since: string;
   /** The version in which the API will be removed (e.g., `'1.0.0'`). */
   removeIn: string;
-  /** What to use instead (e.g., `'Use GrithSDK.signCovenant() instead'`). */
+  /** What to use instead (e.g., `'Use KervyxSDK.signCovenant() instead'`). */
   alternative: string;
 }
 
@@ -56,10 +56,10 @@ function formatWarning(warning: DeprecationWarning): string {
  * @example
  * ```typescript
  * deprecated({
- *   api: 'GrithSDK.sign',
+ *   api: 'KervyxSDK.sign',
  *   since: '0.2.0',
  *   removeIn: '1.0.0',
- *   alternative: 'Use GrithSDK.signCovenant() instead',
+ *   alternative: 'Use KervyxSDK.signCovenant() instead',
  * });
  * ```
  */

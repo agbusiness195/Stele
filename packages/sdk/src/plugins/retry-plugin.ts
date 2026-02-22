@@ -1,11 +1,11 @@
 /**
- * Retry middleware plugin for the Grith SDK.
+ * Retry middleware plugin for the Kervyx SDK.
  *
  * Automatically retries failed operations with exponential backoff
  * and configurable jitter. Records retry count in context metadata.
  */
 
-import type { GrithMiddleware, MiddlewareContext } from '../middleware.js';
+import type { KervyxMiddleware, MiddlewareContext } from '../middleware.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -59,9 +59,9 @@ function sleep(ms: number): Promise<void> {
  * context metadata and signals retry intent through the pipeline.
  *
  * @param options - Optional retry configuration.
- * @returns A GrithMiddleware that implements retry logic.
+ * @returns A KervyxMiddleware that implements retry logic.
  */
-export function retryMiddleware(options?: RetryPluginOptions): GrithMiddleware {
+export function retryMiddleware(options?: RetryPluginOptions): KervyxMiddleware {
   const maxRetries = options?.maxRetries ?? 3;
   const baseDelayMs = options?.baseDelayMs ?? 100;
   const shouldRetry = options?.shouldRetry ?? (() => true);

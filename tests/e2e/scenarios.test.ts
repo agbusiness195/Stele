@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, sha256String, toHex } from '@grith/crypto';
-import type { KeyPair, HashHex } from '@grith/crypto';
+import { generateKeyPair, sha256String, toHex } from '@kervyx/crypto';
+import type { KeyPair, HashHex } from '@kervyx/crypto';
 import {
   buildCovenant,
   verifyCovenant,
@@ -10,17 +10,17 @@ import {
   validateChainNarrowing,
   serializeCovenant,
   deserializeCovenant,
-} from '@grith/core';
-import type { CovenantDocument } from '@grith/core';
-import { evaluate, parse } from '@grith/ccl';
-import { Monitor, MonitorDeniedError } from '@grith/enforcement';
-import { GrithGuard } from '@grith/mcp';
-import type { MCPServer, WrappedMCPServer, ViolationDetails, ToolCallDetails } from '@grith/mcp';
-import { createReceipt, verifyReceipt, computeReputationScore, createEndorsement, verifyEndorsement } from '@grith/reputation';
-import type { ExecutionReceipt } from '@grith/reputation';
-import { generateComplianceProof, verifyComplianceProof } from '@grith/proof';
-import { createIdentity, evolveIdentity, verifyIdentity, serializeIdentity, deserializeIdentity } from '@grith/identity';
-import { createBreachAttestation, verifyBreachAttestation, TrustGraph } from '@grith/breach';
+} from '@kervyx/core';
+import type { CovenantDocument } from '@kervyx/core';
+import { evaluate, parse } from '@kervyx/ccl';
+import { Monitor, MonitorDeniedError } from '@kervyx/enforcement';
+import { KervyxGuard } from '@kervyx/mcp';
+import type { MCPServer, WrappedMCPServer, ViolationDetails, ToolCallDetails } from '@kervyx/mcp';
+import { createReceipt, verifyReceipt, computeReputationScore, createEndorsement, verifyEndorsement } from '@kervyx/reputation';
+import type { ExecutionReceipt } from '@kervyx/reputation';
+import { generateComplianceProof, verifyComplianceProof } from '@kervyx/proof';
+import { createIdentity, evolveIdentity, verifyIdentity, serializeIdentity, deserializeIdentity } from '@kervyx/identity';
+import { createBreachAttestation, verifyBreachAttestation, TrustGraph } from '@kervyx/breach';
 
 // ---------------------------------------------------------------------------
 // Scenario 1: Chain Delegation with Constraint Narrowing (3 levels)
@@ -420,12 +420,12 @@ describe('Scenario 2: MCP Server Wrap, Execute, Receipt, and Reputation', () => 
     };
   }
 
-  // ── Step 1: Wrap the MCP server with GrithGuard ───────────────────────
+  // ── Step 1: Wrap the MCP server with KervyxGuard ───────────────────────
 
-  it('Step 1: wraps the MCP server with GrithGuard and constraints', async () => {
+  it('Step 1: wraps the MCP server with KervyxGuard and constraints', async () => {
     operatorKeyPair = await generateKeyPair();
 
-    wrappedServer = await GrithGuard.wrap(createMockMCPServer(), {
+    wrappedServer = await KervyxGuard.wrap(createMockMCPServer(), {
       constraints: SERVER_CONSTRAINTS,
       mode: 'enforce',
       operatorKeyPair,

@@ -1,11 +1,11 @@
 /**
- * Cross-package lifecycle integration tests for the Grith SDK.
+ * Cross-package lifecycle integration tests for the Kervyx SDK.
  *
  * Tests FULL LIFECYCLE flows that span multiple packages working together:
  *
  *   1. Covenant -> Enforcement -> Reputation -> Breach pipeline
  *   2. Identity evolution + covenant binding
- *   3. SDK GrithClient full workflow
+ *   3. SDK KervyxClient full workflow
  *   4. Store + Verifier batch operations
  *   5. Attestation + Reputation cross-validation
  *
@@ -20,8 +20,8 @@ import {
   sha256Object,
   toHex,
   timestamp,
-} from '@grith/crypto';
-import type { KeyPair, HashHex } from '@grith/crypto';
+} from '@kervyx/crypto';
+import type { KeyPair, HashHex } from '@kervyx/crypto';
 
 import {
   buildCovenant,
@@ -34,17 +34,17 @@ import {
   serializeCovenant,
   deserializeCovenant,
   CovenantBuildError,
-} from '@grith/core';
-import type { CovenantDocument } from '@grith/core';
+} from '@kervyx/core';
+import type { CovenantDocument } from '@kervyx/core';
 
-import { parse, evaluate, merge, serialize, validateNarrowing } from '@grith/ccl';
+import { parse, evaluate, merge, serialize, validateNarrowing } from '@kervyx/ccl';
 
-import { MemoryStore } from '@grith/store';
-import type { StoreEvent } from '@grith/store';
+import { MemoryStore } from '@kervyx/store';
+import type { StoreEvent } from '@kervyx/store';
 
-import { Verifier, verifyBatch } from '@grith/verifier';
+import { Verifier, verifyBatch } from '@kervyx/verifier';
 
-import { GrithClient, QuickCovenant } from '@grith/sdk';
+import { KervyxClient, QuickCovenant } from '@kervyx/sdk';
 import type {
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
@@ -54,7 +54,7 @@ import type {
   ChainResolvedEvent,
   ChainValidatedEvent,
   EvaluationCompletedEvent,
-} from '@grith/sdk';
+} from '@kervyx/sdk';
 
 import {
   createIdentity,
@@ -63,14 +63,14 @@ import {
   serializeIdentity,
   deserializeIdentity,
   computeIdentityHash,
-} from '@grith/identity';
-import type { AgentIdentity } from '@grith/identity';
+} from '@kervyx/identity';
+import type { AgentIdentity } from '@kervyx/identity';
 
 import {
   Monitor,
   MonitorDeniedError,
   verifyMerkleProof,
-} from '@grith/enforcement';
+} from '@kervyx/enforcement';
 
 import {
   createReceipt,
@@ -82,15 +82,15 @@ import {
   createEndorsement,
   verifyEndorsement,
   verifyReceiptChain,
-} from '@grith/reputation';
-import type { ExecutionReceipt, Endorsement } from '@grith/reputation';
+} from '@kervyx/reputation';
+import type { ExecutionReceipt, Endorsement } from '@kervyx/reputation';
 
 import {
   createBreachAttestation,
   verifyBreachAttestation,
   TrustGraph,
-} from '@grith/breach';
-import type { BreachEvent } from '@grith/breach';
+} from '@kervyx/breach';
+import type { BreachEvent } from '@kervyx/breach';
 
 import {
   createAttestation,
@@ -99,15 +99,15 @@ import {
   reconcile,
   getDiscrepancies,
   computeAttestationCoverage,
-} from '@grith/attestation';
-import type { ReceiptSummary, AgentAction } from '@grith/attestation';
+} from '@kervyx/attestation';
+import type { ReceiptSummary, AgentAction } from '@kervyx/attestation';
 
 import {
   generateCanary,
   evaluateCanary,
   detectionProbability,
   isExpired,
-} from '@grith/canary';
+} from '@kervyx/canary';
 
 
 // ===========================================================================
@@ -615,15 +615,15 @@ describe('Identity evolution + covenant binding', () => {
 
 
 // ===========================================================================
-// 3. SDK GrithClient full workflow
+// 3. SDK KervyxClient full workflow
 // ===========================================================================
 
-describe('SDK GrithClient full workflow', () => {
-  let client: GrithClient;
+describe('SDK KervyxClient full workflow', () => {
+  let client: KervyxClient;
   let auditorKp: KeyPair;
 
   beforeEach(async () => {
-    client = new GrithClient();
+    client = new KervyxClient();
     auditorKp = await generateKeyPair();
   });
 

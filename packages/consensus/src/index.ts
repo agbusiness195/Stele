@@ -1,5 +1,5 @@
-import { sha256Object, generateId } from '@grith/crypto';
-import { GrithError, GrithErrorCode } from '@grith/types';
+import { sha256Object, generateId } from '@kervyx/crypto';
+import { KervyxError, KervyxErrorCode } from '@kervyx/types';
 
 export type {
   AccountabilityTier,
@@ -720,11 +720,11 @@ export class StreamlinedBFT {
 
   constructor(nodeIds: string[]) {
     if (nodeIds.length < 4) {
-      throw new GrithError('StreamlinedBFT requires at least 4 nodes (n >= 3f+1, f >= 1)', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('StreamlinedBFT requires at least 4 nodes (n >= 3f+1, f >= 1)', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const uniqueNodes = [...new Set(nodeIds)];
     if (uniqueNodes.length !== nodeIds.length) {
-      throw new GrithError('Node IDs must be unique', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('Node IDs must be unique', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     this.nodes = uniqueNodes;
@@ -780,7 +780,7 @@ export class StreamlinedBFT {
    */
   propose(proposer: string, payload: unknown, parentHash: string): BFTBlock {
     if (proposer !== this.viewState.leader) {
-      throw new GrithError(`Only the leader (${this.viewState.leader}) can propose, not ${proposer}`, GrithErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KervyxError(`Only the leader (${this.viewState.leader}) can propose, not ${proposer}`, KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     const block: BFTBlock = {
@@ -805,10 +805,10 @@ export class StreamlinedBFT {
    */
   vote(nodeId: string): QuorumCertificate | null {
     if (!this.nodes.includes(nodeId)) {
-      throw new GrithError(`Unknown node: ${nodeId}`, GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError(`Unknown node: ${nodeId}`, KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (!this.viewState.block) {
-      throw new GrithError('No block to vote on', GrithErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KervyxError('No block to vote on', KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
     if (this.viewState.votes.has(nodeId)) {
       return null; // Already voted
@@ -924,7 +924,7 @@ export class DynamicQuorum {
 
   constructor(initialMembers: string[]) {
     if (initialMembers.length < 1) {
-      throw new GrithError('Must have at least 1 initial member', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('Must have at least 1 initial member', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const unique = [...new Set(initialMembers)];
     this.epochs.push({
@@ -967,11 +967,11 @@ export class DynamicQuorum {
    */
   requestJoin(nodeId: string): ReconfigRequest {
     if (!nodeId || typeof nodeId !== 'string') {
-      throw new GrithError('nodeId must be a non-empty string', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('nodeId must be a non-empty string', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const current = this.currentEpoch();
     if (current.members.includes(nodeId)) {
-      throw new GrithError(`Node ${nodeId} is already a member`, GrithErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KervyxError(`Node ${nodeId} is already a member`, KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     const req: ReconfigRequest = { type: 'join', nodeId, requestedAt: Date.now() };
@@ -985,11 +985,11 @@ export class DynamicQuorum {
    */
   requestLeave(nodeId: string): ReconfigRequest {
     if (!nodeId || typeof nodeId !== 'string') {
-      throw new GrithError('nodeId must be a non-empty string', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('nodeId must be a non-empty string', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     const current = this.currentEpoch();
     if (!current.members.includes(nodeId)) {
-      throw new GrithError(`Node ${nodeId} is not a member`, GrithErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KervyxError(`Node ${nodeId} is not a member`, KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     const req: ReconfigRequest = { type: 'leave', nodeId, requestedAt: Date.now() };
@@ -1059,7 +1059,7 @@ export class DynamicQuorum {
     // Ensure we don't drop below minimum viable size
     if (newMembers.length < 1) {
       this.transitioning = false;
-      throw new GrithError('Cannot remove all members', GrithErrorCode.PROTOCOL_COMPUTATION_FAILED);
+      throw new KervyxError('Cannot remove all members', KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
 
     const newEpoch: Epoch = {
@@ -1125,16 +1125,16 @@ export class PipelineSimulator {
 
   constructor(condition: NetworkCondition) {
     if (condition.baseLatencyMs < 0) {
-      throw new GrithError('baseLatencyMs must be >= 0', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('baseLatencyMs must be >= 0', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (condition.jitterMs < 0) {
-      throw new GrithError('jitterMs must be >= 0', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('jitterMs must be >= 0', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (condition.lossProbability < 0 || condition.lossProbability >= 1) {
-      throw new GrithError('lossProbability must be in [0, 1)', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('lossProbability must be in [0, 1)', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (condition.processingTimeMs < 0) {
-      throw new GrithError('processingTimeMs must be >= 0', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('processingTimeMs must be >= 0', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     this.condition = condition;
   }
@@ -1164,10 +1164,10 @@ export class PipelineSimulator {
     seed: number = 42,
   ): PipelineSimulationResult {
     if (rounds < 1) {
-      throw new GrithError('rounds must be >= 1', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('rounds must be >= 1', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (nodesPerRound < 1) {
-      throw new GrithError('nodesPerRound must be >= 1', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('nodesPerRound must be >= 1', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     let totalTime = 0;
@@ -1295,13 +1295,13 @@ export class QuorumIntersectionVerifier {
     byzantineFaults: number,
   ): QuorumIntersectionResult {
     if (allNodes.length < 1) {
-      throw new GrithError('allNodes must not be empty', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('allNodes must not be empty', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (byzantineFaults < 0) {
-      throw new GrithError('byzantineFaults must be >= 0', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('byzantineFaults must be >= 0', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (quorumSets.length < 2) {
-      throw new GrithError('At least 2 quorum sets required for intersection analysis', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('At least 2 quorum sets required for intersection analysis', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     const n = allNodes.length;

@@ -1,7 +1,7 @@
 {
-  "name": "@grith/cli",
+  "name": "@kervyx/cli",
   "version": "2.0.0",
-  "description": "Command-line interface for the Grith covenant framework",
+  "description": "Command-line interface for the Kervyx covenant framework",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "grith": "./dist/index.js"
+    "kervyx": "./dist/index.js"
   },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm && tsc --emitDeclarationOnly --declaration --outDir dist",
@@ -29,15 +29,15 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@grith/crypto": "2.0.0",
-    "@grith/ccl": "2.0.0",
-    "@grith/core": "2.0.0",
-    "@grith/identity": "2.0.0",
-    "@grith/enforcement": "2.0.0",
-    "@grith/proof": "2.0.0",
-    "@grith/reputation": "2.0.0",
-    "@grith/breach": "2.0.0",
-    "@grith/mcp": "2.0.0"
+    "@kervyx/crypto": "2.0.0",
+    "@kervyx/ccl": "2.0.0",
+    "@kervyx/core": "2.0.0",
+    "@kervyx/identity": "2.0.0",
+    "@kervyx/enforcement": "2.0.0",
+    "@kervyx/proof": "2.0.0",
+    "@kervyx/reputation": "2.0.0",
+    "@kervyx/breach": "2.0.0",
+    "@kervyx/mcp": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -48,16 +48,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://grith.dev",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
-  "author": "Grith Labs, Inc.",
+  "author": "Kervyx Labs, Inc.",
   "keywords": [
-    "grith",
+    "kervyx",
     "covenant",
     "ai-accountability",
     "cli",

@@ -1,17 +1,17 @@
 /**
  * Regression test suite for known bugs and gotchas discovered during
- * development of the Grith SDK.
+ * development of the Kervyx SDK.
  *
  * Each test documents a specific issue that was encountered, along with
  * the correct behavior, to prevent future regressions.
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { generateKeyPair, toHex } from '@grith/crypto';
-import { buildCovenant, verifyCovenant, resignCovenant, countersignCovenant, computeId, canonicalForm } from '@grith/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
-import { parse, evaluate, merge, validateNarrowing } from '@grith/ccl';
-import { MemoryStore } from '@grith/store';
+import { generateKeyPair, toHex } from '@kervyx/crypto';
+import { buildCovenant, verifyCovenant, resignCovenant, countersignCovenant, computeId, canonicalForm } from '@kervyx/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@kervyx/core';
+import { parse, evaluate, merge, validateNarrowing } from '@kervyx/ccl';
+import { MemoryStore } from '@kervyx/store';
 
 // ---------------------------------------------------------------------------
 // Helpers

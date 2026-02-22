@@ -1,7 +1,7 @@
 /**
  * Example 05: Store and Query
  *
- * Demonstrates the @grith/store package for persisting and querying
+ * Demonstrates the @kervyx/store package for persisting and querying
  * covenant documents:
  * - Creating a MemoryStore
  * - Storing 5 covenants from different issuers
@@ -12,14 +12,14 @@
  * Run: npx tsx examples/05-store-and-query.ts
  */
 
-import { MemoryStore, type StoreEvent } from '@grith/store';
+import { MemoryStore, type StoreEvent } from '@kervyx/store';
 import {
   buildCovenant,
   type CovenantDocument,
   type Issuer,
   type Beneficiary,
-} from '@grith/core';
-import { generateKeyPair, type KeyPair } from '@grith/crypto';
+} from '@kervyx/core';
+import { generateKeyPair, type KeyPair } from '@kervyx/crypto';
 
 async function createTestCovenant(
   issuerName: string,

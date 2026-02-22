@@ -1,7 +1,7 @@
 {
-  "name": "@grith/ccl",
+  "name": "@kervyx/ccl",
   "version": "2.0.0",
-  "description": "Covenant Constraint Language parser and evaluator for Grith",
+  "description": "Covenant Constraint Language parser and evaluator for Kervyx",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,16 +27,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/ccl"
   },
-  "homepage": "https://grith.dev",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
-  "author": "Grith Labs, Inc.",
+  "author": "Kervyx Labs, Inc.",
   "keywords": [
-    "grith",
+    "kervyx",
     "covenant",
     "ai-accountability",
     "ccl",
@@ -53,6 +53,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@grith/crypto": "2.0.0"
+    "@kervyx/crypto": "2.0.0"
   }
 }

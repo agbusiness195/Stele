@@ -1,10 +1,10 @@
 /**
- * Grith adapter for Vercel AI SDK.
+ * Kervyx adapter for Vercel AI SDK.
  *
  * Wraps AI SDK tool definitions with covenant enforcement.
  * Before a tool's `execute()` is called, the action/resource pair is
  * evaluated against the covenant's CCL constraints. If denied, a
- * `GrithAccessDeniedError` is thrown (or the custom `onDenied` handler
+ * `KervyxAccessDeniedError` is thrown (or the custom `onDenied` handler
  * is invoked). If permitted, the original `execute()` runs normally.
  *
  * **Status: Stable** (promoted from beta in v1.0.0)
@@ -13,32 +13,32 @@
  *
  * @example
  * ```typescript
- * import { GrithClient, withGrith, withGrithTools } from '@grith/sdk';
+ * import { KervyxClient, withKervyx, withKervyxTools } from '@kervyx/sdk';
  *
- * const protectedTool = withGrith(myTool, { client, covenant });
- * const protectedTools = withGrithTools({ search, browse }, { client, covenant });
+ * const protectedTool = withKervyx(myTool, { client, covenant });
+ * const protectedTools = withKervyxTools({ search, browse }, { client, covenant });
  * ```
  */
 
-import type { GrithClient } from '../index.js';
-import type { CovenantDocument } from '@grith/core';
+import type { KervyxClient } from '../index.js';
+import type { CovenantDocument } from '@kervyx/core';
 import type { EvaluationResult } from '../types.js';
 
 // ─── Error ───────────────────────────────────────────────────────────────────
 
 /**
- * Error thrown when a tool call is denied by a Grith covenant.
+ * Error thrown when a tool call is denied by a Kervyx covenant.
  *
  * Carries the full `EvaluationResult` so callers can inspect the
  * matched rule, severity, and reason for the denial.
  */
-export class GrithAccessDeniedError extends Error {
+export class KervyxAccessDeniedError extends Error {
   /** The evaluation result that triggered the denial. */
   readonly evaluationResult: EvaluationResult;
 
   constructor(message: string, result: EvaluationResult) {
     super(message);
-    this.name = 'GrithAccessDeniedError';
+    this.name = 'KervyxAccessDeniedError';
     this.evaluationResult = result;
   }
 }
@@ -59,11 +59,11 @@ export interface ToolLike {
 }
 
 /**
- * Options for wrapping Vercel AI SDK tools with Grith enforcement.
+ * Options for wrapping Vercel AI SDK tools with Kervyx enforcement.
  */
-export interface GrithToolOptions {
-  /** The GrithClient instance for covenant evaluation. */
-  client: GrithClient;
+export interface KervyxToolOptions {
+  /** The KervyxClient instance for covenant evaluation. */
+  client: KervyxClient;
   /** The covenant document whose constraints are enforced. */
   covenant: CovenantDocument;
   /**
@@ -79,15 +79,15 @@ export interface GrithToolOptions {
   /**
    * Custom handler invoked when a tool call is denied. If provided,
    * its return value is returned instead of throwing. If not provided,
-   * a `GrithAccessDeniedError` is thrown.
+   * a `KervyxAccessDeniedError` is thrown.
    */
   onDenied?: (tool: ToolLike, result: EvaluationResult) => unknown;
 }
 
-// ─── withGrith ───────────────────────────────────────────────────────────────
+// ─── withKervyx ───────────────────────────────────────────────────────────────
 
 /**
- * Wrap a single Vercel AI SDK tool with Grith covenant enforcement.
+ * Wrap a single Vercel AI SDK tool with Kervyx covenant enforcement.
  *
  * Returns a new tool object whose `execute()` evaluates the
  * action/resource against the covenant before delegating to the
@@ -99,11 +99,11 @@ export interface GrithToolOptions {
  *
  * @example
  * ```typescript
- * const protectedTool = withGrith(myTool, { client, covenant });
+ * const protectedTool = withKervyx(myTool, { client, covenant });
  * await protectedTool.execute('arg1'); // throws if denied
  * ```
  */
-export function withGrith<T extends ToolLike>(tool: T, options: GrithToolOptions): T {
+export function withKervyx<T extends ToolLike>(tool: T, options: KervyxToolOptions): T {
   const { client, covenant, actionFromTool, resourceFromTool, onDenied } = options;
 
   const originalExecute = tool.execute;
@@ -127,7 +127,7 @@ export function withGrith<T extends ToolLike>(tool: T, options: GrithToolOptions
       if (onDenied) {
         return onDenied(tool, result);
       }
-      throw new GrithAccessDeniedError(
+      throw new KervyxAccessDeniedError(
         `Action '${action}' on resource '${resource}' denied by covenant`,
         result,
       );
@@ -139,43 +139,43 @@ export function withGrith<T extends ToolLike>(tool: T, options: GrithToolOptions
   return wrapped;
 }
 
-// ─── withGrithTools ──────────────────────────────────────────────────────────
+// ─── withKervyxTools ──────────────────────────────────────────────────────────
 
 /**
- * Wrap an array of tools with Grith covenant enforcement.
+ * Wrap an array of tools with Kervyx covenant enforcement.
  *
  * @param tools   - Array of tools to wrap.
  * @param options - Enforcement options.
  * @returns A new array of wrapped tools.
  */
-export function withGrithTools(
+export function withKervyxTools(
   tools: ToolLike[],
-  options: GrithToolOptions,
+  options: KervyxToolOptions,
 ): ToolLike[];
 
 /**
- * Wrap a record of tools with Grith covenant enforcement.
+ * Wrap a record of tools with Kervyx covenant enforcement.
  *
  * @param tools   - Record of named tools to wrap.
  * @param options - Enforcement options.
  * @returns A new record with the same keys and wrapped tool values.
  */
-export function withGrithTools(
+export function withKervyxTools(
   tools: Record<string, ToolLike>,
-  options: GrithToolOptions,
+  options: KervyxToolOptions,
 ): Record<string, ToolLike>;
 
-export function withGrithTools(
+export function withKervyxTools(
   tools: ToolLike[] | Record<string, ToolLike>,
-  options: GrithToolOptions,
+  options: KervyxToolOptions,
 ): ToolLike[] | Record<string, ToolLike> {
   if (Array.isArray(tools)) {
-    return tools.map((tool) => withGrith(tool, options));
+    return tools.map((tool) => withKervyx(tool, options));
   }
 
   const wrapped: Record<string, ToolLike> = {};
   for (const [key, tool] of Object.entries(tools)) {
-    wrapped[key] = withGrith(tool, options);
+    wrapped[key] = withKervyx(tool, options);
   }
   return wrapped;
 }
@@ -185,7 +185,7 @@ export function withGrithTools(
 /**
  * Create a reusable guard function that enforces a covenant on any tool call.
  *
- * Unlike `withGrith` which returns a new tool, `createToolGuard` returns a
+ * Unlike `withKervyx` which returns a new tool, `createToolGuard` returns a
  * function you call manually, passing the tool and arguments each time.
  *
  * @param options - Enforcement options.
@@ -199,7 +199,7 @@ export function withGrithTools(
  * ```
  */
 export function createToolGuard(
-  options: GrithToolOptions,
+  options: KervyxToolOptions,
 ): (tool: ToolLike, ...args: unknown[]) => Promise<unknown> {
   const { client, covenant, actionFromTool, resourceFromTool, onDenied } = options;
 
@@ -217,7 +217,7 @@ export function createToolGuard(
       if (onDenied) {
         return onDenied(tool, result);
       }
-      throw new GrithAccessDeniedError(
+      throw new KervyxAccessDeniedError(
         `Action '${action}' on resource '${resource}' denied by covenant`,
         result,
       );

@@ -1,11 +1,11 @@
-# @grith/norms
+# @kervyx/norms
 
 Social norm modeling with emergence detection, conflict resolution, and governance proposal generation from covenant data.
 
 ## Installation
 
 ```bash
-npm install @grith/norms
+npm install @kervyx/norms
 ```
 
 ## Key APIs
@@ -20,8 +20,8 @@ npm install @grith/norms
 ## Usage
 
 ```typescript
-import { analyzeNorms, proposeStandard, normConflictDetection } from '@grith/norms';
-import type { CovenantData } from '@grith/norms';
+import { analyzeNorms, proposeStandard, normConflictDetection } from '@kervyx/norms';
+import type { CovenantData } from '@kervyx/norms';
 
 const covenants: CovenantData[] = [
   {
@@ -51,4 +51,4 @@ for (const norm of analysis.emergentNorms) {
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

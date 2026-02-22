@@ -1,12 +1,12 @@
 /**
- * Middleware system for the Grith SDK.
+ * Middleware system for the Kervyx SDK.
  *
- * Provides a composable pipeline that intercepts GrithClient operations
+ * Provides a composable pipeline that intercepts KervyxClient operations
  * (create, verify, evaluate, etc.) for cross-cutting concerns like
  * logging, metrics, validation, caching, and rate limiting.
  */
 
-import { Logger, defaultLogger } from '@grith/types';
+import { Logger, defaultLogger } from '@kervyx/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ export type MiddlewareFn = (
 ) => Promise<unknown>;
 
 /** Structured middleware with named lifecycle hooks. */
-export interface GrithMiddleware {
+export interface KervyxMiddleware {
   /** Unique name identifying this middleware. */
   name: string;
   /** Called before the operation executes. Can modify args or prevent execution. */
@@ -53,16 +53,16 @@ export interface GrithMiddleware {
 // ─── Pipeline ────────────────────────────────────────────────────────────────
 
 /**
- * Composable middleware pipeline for intercepting GrithClient operations.
+ * Composable middleware pipeline for intercepting KervyxClient operations.
  *
  * Middleware is executed in registration order for `before` hooks,
  * and in reverse order for `after` hooks (onion model).
  */
 export class MiddlewarePipeline {
-  private readonly _middlewares: GrithMiddleware[] = [];
+  private readonly _middlewares: KervyxMiddleware[] = [];
 
   /** Add a middleware to the end of the pipeline. Returns `this` for chaining. */
-  use(middleware: GrithMiddleware): this {
+  use(middleware: KervyxMiddleware): this {
     // Prevent duplicate names
     const existing = this._middlewares.findIndex((m) => m.name === middleware.name);
     if (existing !== -1) {
@@ -173,15 +173,15 @@ export class MiddlewarePipeline {
 /**
  * Creates a logging middleware that logs operation start, completion, and errors.
  *
- * @param logger - Optional Logger instance. Defaults to the @grith/types defaultLogger.
+ * @param logger - Optional Logger instance. Defaults to the @kervyx/types defaultLogger.
  */
-export function loggingMiddleware(logger?: Logger): GrithMiddleware {
+export function loggingMiddleware(logger?: Logger): KervyxMiddleware {
   const log = logger ?? defaultLogger;
 
   return {
     name: 'logging',
     async before(ctx) {
-      log.info(`[grith] ${ctx.operation} started`, {
+      log.info(`[kervyx] ${ctx.operation} started`, {
         operation: ctx.operation,
         args: ctx.args,
         timestamp: ctx.timestamp,
@@ -189,14 +189,14 @@ export function loggingMiddleware(logger?: Logger): GrithMiddleware {
       return { proceed: true };
     },
     async after(ctx, result) {
-      log.info(`[grith] ${ctx.operation} completed`, {
+      log.info(`[kervyx] ${ctx.operation} completed`, {
         operation: ctx.operation,
         timestamp: ctx.timestamp,
       });
       return result;
     },
     async onError(ctx, error) {
-      log.error(`[grith] ${ctx.operation} failed: ${error.message}`, {
+      log.error(`[kervyx] ${ctx.operation} failed: ${error.message}`, {
         operation: ctx.operation,
         error: error.message,
         timestamp: ctx.timestamp,
@@ -212,7 +212,7 @@ export function loggingMiddleware(logger?: Logger): GrithMiddleware {
  * - `constraints` argument is a non-empty string (if present)
  * - `privateKey` argument has valid size (32 or 64 bytes for Ed25519, if present)
  */
-export function validationMiddleware(): GrithMiddleware {
+export function validationMiddleware(): KervyxMiddleware {
   return {
     name: 'validation',
     async before(ctx) {
@@ -249,7 +249,7 @@ export function validationMiddleware(): GrithMiddleware {
  * After execution, `ctx.metadata.durationMs` contains the elapsed time
  * in milliseconds.
  */
-export function timingMiddleware(): GrithMiddleware {
+export function timingMiddleware(): KervyxMiddleware {
   return {
     name: 'timing',
     async before(ctx) {
@@ -271,7 +271,7 @@ export function timingMiddleware(): GrithMiddleware {
  * @param options - Rate limit configuration.
  * @param options.maxPerSecond - Maximum number of operations allowed per second.
  */
-export function rateLimitMiddleware(options: { maxPerSecond: number }): GrithMiddleware {
+export function rateLimitMiddleware(options: { maxPerSecond: number }): KervyxMiddleware {
   const { maxPerSecond } = options;
   let tokens = maxPerSecond;
   let lastRefill = Date.now();

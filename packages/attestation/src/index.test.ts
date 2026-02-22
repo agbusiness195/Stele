@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, toHex, sha256Object } from '@grith/crypto';
+import { generateKeyPair, toHex, sha256Object } from '@kervyx/crypto';
 import {
   createAttestation,
   signAttestation,

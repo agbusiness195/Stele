@@ -1,22 +1,22 @@
-# @grith/discovery
+# @kervyx/discovery
 
-Cross-platform discovery protocol for `.well-known/grith/` endpoints. Enables agent key discovery, covenant registry lookup, cross-platform verification, and protocol negotiation.
+Cross-platform discovery protocol for `.well-known/kervyx/` endpoints. Enables agent key discovery, covenant registry lookup, cross-platform verification, and protocol negotiation.
 
 ## Installation
 
 ```bash
-npm install @grith/discovery
+npm install @kervyx/discovery
 ```
 
 ## Key APIs
 
-- **buildDiscoveryDocument(options)**: Generate a `.well-known/grith/configuration` document
+- **buildDiscoveryDocument(options)**: Generate a `.well-known/kervyx/configuration` document
 - **validateDiscoveryDocument(doc)**: Validate a discovery document's structure and fields
 - **buildKeyEntry(...)**: Create an `AgentKeyEntry` for the key registry
 - **buildKeySet(...)**: Create an `AgentKeySet` grouping multiple keys for an agent
 - **DiscoveryClient**: Fetch and validate discovery documents, key sets, and covenant registries from remote hosts
 - **DiscoveryServer**: Serve discovery endpoints with configurable route handlers
-- **WELL_KNOWN_PATH** / **CONFIGURATION_PATH** / **GRITH_MEDIA_TYPE** / **MAX_DOCUMENT_AGE_MS**: Protocol constants
+- **WELL_KNOWN_PATH** / **CONFIGURATION_PATH** / **KERVYX_MEDIA_TYPE** / **MAX_DOCUMENT_AGE_MS**: Protocol constants
 
 ## Usage
 
@@ -28,15 +28,15 @@ import {
   DiscoveryClient,
   DiscoveryServer,
   WELL_KNOWN_PATH,
-} from '@grith/discovery';
+} from '@kervyx/discovery';
 
 // Build a discovery document
 const doc = buildDiscoveryDocument({
   platformId: 'my-platform',
   platformName: 'My Platform',
-  covenantEndpoint: 'https://example.com/.well-known/grith/covenants',
-  keyEndpoint: 'https://example.com/.well-known/grith/keys',
-  negotiationEndpoint: 'https://example.com/.well-known/grith/negotiate',
+  covenantEndpoint: 'https://example.com/.well-known/kervyx/covenants',
+  keyEndpoint: 'https://example.com/.well-known/kervyx/keys',
+  negotiationEndpoint: 'https://example.com/.well-known/kervyx/negotiate',
 });
 
 // Validate a discovery document
@@ -65,4 +65,4 @@ const server = new DiscoveryServer({
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

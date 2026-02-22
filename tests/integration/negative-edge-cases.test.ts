@@ -1,6 +1,6 @@
 /**
  * Comprehensive negative / edge-case / boundary-condition integration tests
- * for the Grith SDK.
+ * for the Kervyx SDK.
  *
  * Covers: crypto, CCL, core covenant operations, store, identity, enforcement.
  * Target: ~75 tests exercising malformed input, corruption, and boundary scenarios.
@@ -23,7 +23,7 @@ import {
   generateId,
   keyPairFromPrivateKey,
   keyPairFromPrivateKeyHex,
-} from '@grith/crypto';
+} from '@kervyx/crypto';
 
 import {
   parse,
@@ -33,7 +33,7 @@ import {
   validateNarrowing,
   tokenize,
   CCLSyntaxError,
-} from '@grith/ccl';
+} from '@kervyx/ccl';
 
 import {
   buildCovenant,
@@ -46,10 +46,10 @@ import {
   MemoryChainResolver,
   resolveChain,
   validateChainNarrowing,
-} from '@grith/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
+} from '@kervyx/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@kervyx/core';
 
-import { MemoryStore } from '@grith/store';
+import { MemoryStore } from '@kervyx/store';
 
 import {
   createIdentity,
@@ -58,14 +58,14 @@ import {
   serializeIdentity,
   deserializeIdentity,
   computeIdentityHash,
-} from '@grith/identity';
+} from '@kervyx/identity';
 
 import {
   Monitor,
   CapabilityGate,
   MonitorDeniedError,
   verifyMerkleProof,
-} from '@grith/enforcement';
+} from '@kervyx/enforcement';
 
 // ---------------------------------------------------------------------------
 // Shared helpers

@@ -1,20 +1,20 @@
 /**
- * Grith SDK - Multi-Agent Chain Delegation
+ * Kervyx SDK - Multi-Agent Chain Delegation
  *
  * Demonstrates parent-child covenant chains where a child covenant
  * narrows the parent's constraints. Shows chain resolution, narrowing
  * validation, identity creation, and differential enforcement across
  * two agents operating under different constraint scopes.
  */
-import { generateKeyPair } from '@grith/crypto';
+import { generateKeyPair } from '@kervyx/crypto';
 import {
   buildCovenant,
   MemoryChainResolver,
   resolveChain,
   validateChainNarrowing,
-} from '@grith/core';
-import { Monitor, MonitorDeniedError } from '@grith/enforcement';
-import { createIdentity, verifyIdentity } from '@grith/identity';
+} from '@kervyx/core';
+import { Monitor, MonitorDeniedError } from '@kervyx/enforcement';
+import { createIdentity, verifyIdentity } from '@kervyx/identity';
 
 async function main() {
   // 1. Create two key pairs: one for the parent operator, one for the child

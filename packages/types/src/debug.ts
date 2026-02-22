@@ -1,8 +1,8 @@
 /**
- * Debug/verbose logging system for the Grith SDK.
+ * Debug/verbose logging system for the Kervyx SDK.
  *
  * Controlled by the `DEBUG` environment variable. Supports namespace
- * filtering with patterns like `grith`, `grith:*`, or `grith:crypto`.
+ * filtering with patterns like `kervyx`, `kervyx:*`, or `kervyx:crypto`.
  *
  * When debug is not enabled, all logging methods are no-ops with zero overhead.
  *
@@ -16,15 +16,15 @@
  *
  * Reads the `DEBUG` environment variable and checks for matching patterns.
  * Supported patterns:
- * - `grith`     — enables all Grith debug logging
- * - `grith:*`   — enables all Grith debug logging (wildcard)
- * - `grith:ccl` — enables only the `grith:ccl` namespace
+ * - `kervyx`     — enables all Kervyx debug logging
+ * - `kervyx:*`   — enables all Kervyx debug logging (wildcard)
+ * - `kervyx:ccl` — enables only the `kervyx:ccl` namespace
  * - `*`         — enables all debug logging
  *
  * Multiple patterns can be separated by commas.
  *
- * @param namespace - Optional namespace to check (e.g., `'grith:crypto'`).
- *   If omitted, checks whether any Grith debug logging is enabled.
+ * @param namespace - Optional namespace to check (e.g., `'kervyx:crypto'`).
+ *   If omitted, checks whether any Kervyx debug logging is enabled.
  * @returns `true` if debug output should be produced for this namespace.
  */
 export function isDebugEnabled(namespace?: string): boolean {
@@ -41,26 +41,26 @@ export function isDebugEnabled(namespace?: string): boolean {
       return true;
     }
 
-    // Exact match for "grith" enables all grith namespaces
-    if (pattern === 'grith') {
-      if (!namespace || namespace === 'grith' || namespace.startsWith('grith:')) {
+    // Exact match for "kervyx" enables all kervyx namespaces
+    if (pattern === 'kervyx') {
+      if (!namespace || namespace === 'kervyx' || namespace.startsWith('kervyx:')) {
         return true;
       }
     }
 
-    // "grith:*" enables all grith namespaces
-    if (pattern === 'grith:*') {
-      if (!namespace || namespace === 'grith' || namespace.startsWith('grith:')) {
+    // "kervyx:*" enables all kervyx namespaces
+    if (pattern === 'kervyx:*') {
+      if (!namespace || namespace === 'kervyx' || namespace.startsWith('kervyx:')) {
         return true;
       }
     }
 
-    // Exact namespace match (e.g., "grith:crypto")
+    // Exact namespace match (e.g., "kervyx:crypto")
     if (namespace && pattern === namespace) {
       return true;
     }
 
-    // Pattern with wildcard suffix (e.g., "grith:crypto:*")
+    // Pattern with wildcard suffix (e.g., "kervyx:crypto:*")
     if (namespace && pattern.endsWith(':*')) {
       const prefix = pattern.slice(0, -2);
       if (namespace === prefix || namespace.startsWith(prefix + ':')) {
@@ -107,16 +107,16 @@ function timestamp(): string {
  * When debug is not enabled for this namespace, all methods are no-ops
  * with zero overhead (no string formatting, no timestamp generation).
  *
- * @param namespace - The namespace for this logger (e.g., `'grith:crypto'`).
+ * @param namespace - The namespace for this logger (e.g., `'kervyx:crypto'`).
  * @returns A debug logger with `log`, `warn`, `error`, and `time` methods.
  *
  * @example
  * ```typescript
- * const dbg = createDebugLogger('grith:crypto');
+ * const dbg = createDebugLogger('kervyx:crypto');
  * dbg.log('generating keypair', { bits: 256 });
  * const stop = dbg.time('sign');
  * // ... signing operation ...
- * stop(); // logs: [grith:crypto] sign: 12.34ms
+ * stop(); // logs: [kervyx:crypto] sign: 12.34ms
  * ```
  */
 export function createDebugLogger(namespace: string): DebugLogger {
@@ -154,15 +154,15 @@ export function createDebugLogger(namespace: string): DebugLogger {
 // ─── Pre-created loggers ────────────────────────────────────────────────────────
 
 /**
- * Pre-created debug loggers for each Grith subsystem.
+ * Pre-created debug loggers for each Kervyx subsystem.
  *
  * Each logger is scoped to its subsystem namespace and will only produce
  * output when the corresponding DEBUG pattern is set.
  *
  * @example
  * ```typescript
- * // Enable with: DEBUG=grith:crypto node script.js
- * import { debug } from '@grith/types';
+ * // Enable with: DEBUG=kervyx:crypto node script.js
+ * import { debug } from '@kervyx/types';
  * debug.crypto.log('keypair generated');
  * ```
  */
@@ -175,11 +175,11 @@ export const debug: {
   identity: DebugLogger;
   enforcement: DebugLogger;
 } = {
-  crypto: createDebugLogger('grith:crypto'),
-  ccl: createDebugLogger('grith:ccl'),
-  core: createDebugLogger('grith:core'),
-  store: createDebugLogger('grith:store'),
-  sdk: createDebugLogger('grith:sdk'),
-  identity: createDebugLogger('grith:identity'),
-  enforcement: createDebugLogger('grith:enforcement'),
+  crypto: createDebugLogger('kervyx:crypto'),
+  ccl: createDebugLogger('kervyx:ccl'),
+  core: createDebugLogger('kervyx:core'),
+  store: createDebugLogger('kervyx:store'),
+  sdk: createDebugLogger('kervyx:sdk'),
+  identity: createDebugLogger('kervyx:identity'),
+  enforcement: createDebugLogger('kervyx:enforcement'),
 };

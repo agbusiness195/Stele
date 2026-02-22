@@ -1,11 +1,11 @@
 /**
- * Property-based / fuzz tests for the Grith SDK.
+ * Property-based / fuzz tests for the Kervyx SDK.
  *
  * Uses a hand-rolled `property()` helper that runs a generator+predicate
  * function N times with random inputs and asserts the predicate holds
  * for every generated value.  No external dependencies beyond vitest.
  *
- * Covers invariants across @grith/crypto, @grith/ccl, @grith/core, @grith/store.
+ * Covers invariants across @kervyx/crypto, @kervyx/ccl, @kervyx/core, @kervyx/store.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -21,9 +21,9 @@ import {
   base64urlEncode,
   base64urlDecode,
   generateNonce,
-} from '@grith/crypto';
+} from '@kervyx/crypto';
 
-import { parse, evaluate, merge, serialize } from '@grith/ccl';
+import { parse, evaluate, merge, serialize } from '@kervyx/ccl';
 
 import {
   buildCovenant,
@@ -32,9 +32,9 @@ import {
   canonicalForm,
   serializeCovenant,
   deserializeCovenant,
-} from '@grith/core';
+} from '@kervyx/core';
 
-import { MemoryStore } from '@grith/store';
+import { MemoryStore } from '@kervyx/store';
 
 // ---------------------------------------------------------------------------
 // Property-testing helper

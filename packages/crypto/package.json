@@ -1,7 +1,7 @@
 {
-  "name": "@grith/crypto",
+  "name": "@kervyx/crypto",
   "version": "2.0.0",
-  "description": "Cryptographic primitives for the Grith covenant framework",
+  "description": "Cryptographic primitives for the Kervyx covenant framework",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,16 +27,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/crypto"
   },
-  "homepage": "https://grith.dev",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
-  "author": "Grith Labs, Inc.",
+  "author": "Kervyx Labs, Inc.",
   "keywords": [
-    "grith",
+    "kervyx",
     "covenant",
     "ai-accountability",
     "cryptography",
@@ -55,6 +55,6 @@
   "dependencies": {
     "@noble/ed25519": "^2.1.0",
     "@noble/hashes": "^1.4.0",
-    "@grith/types": "2.0.0"
+    "@kervyx/types": "2.0.0"
   }
 }

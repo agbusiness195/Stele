@@ -33,12 +33,12 @@ describe('bashCompletions', () => {
 
   it('includes the complete command registration', () => {
     const result = bashCompletions();
-    expect(result).toContain('complete -F _grith_completions grith');
+    expect(result).toContain('complete -F _kervyx_completions kervyx');
   });
 
   it('includes the completion function name', () => {
     const result = bashCompletions();
-    expect(result).toContain('_grith_completions');
+    expect(result).toContain('_kervyx_completions');
   });
 
   it('includes compgen for word generation', () => {
@@ -100,12 +100,12 @@ describe('zshCompletions', () => {
 
   it('starts with #compdef directive', () => {
     const result = zshCompletions();
-    expect(result).toContain('#compdef grith');
+    expect(result).toContain('#compdef kervyx');
   });
 
-  it('includes the _grith function', () => {
+  it('includes the _kervyx function', () => {
     const result = zshCompletions();
-    expect(result).toContain('_grith');
+    expect(result).toContain('_kervyx');
   });
 
   it('includes _arguments for option parsing', () => {
@@ -137,7 +137,7 @@ describe('zshCompletions', () => {
     const result = zshCompletions();
     expect(result).toContain('Generate an Ed25519 key pair');
     expect(result).toContain('Verify a covenant document');
-    expect(result).toContain('Check Grith installation health');
+    expect(result).toContain('Check Kervyx installation health');
   });
 
   it('includes evaluate action suggestions', () => {
@@ -175,7 +175,7 @@ describe('fishCompletions', () => {
 
   it('uses fish complete command', () => {
     const result = fishCompletions();
-    expect(result).toContain('complete -c grith');
+    expect(result).toContain('complete -c kervyx');
   });
 
   it('includes all commands', () => {
@@ -197,7 +197,7 @@ describe('fishCompletions', () => {
     const result = fishCompletions();
     expect(result).toContain('Generate an Ed25519 key pair');
     expect(result).toContain('Verify a covenant document');
-    expect(result).toContain('Check Grith installation health');
+    expect(result).toContain('Check Kervyx installation health');
   });
 
   it('includes evaluate action suggestions', () => {
@@ -225,7 +225,7 @@ describe('fishCompletions', () => {
 
   it('disables default file completions', () => {
     const result = fishCompletions();
-    expect(result).toContain('complete -c grith -f');
+    expect(result).toContain('complete -c kervyx -f');
   });
 
   it('uses __fish_seen_subcommand_from for context', () => {

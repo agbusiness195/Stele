@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  GrithErrorCode,
-  GrithError,
+  KervyxErrorCode,
+  KervyxError,
   ValidationError,
   CryptoError,
   CCLError,
@@ -11,7 +11,7 @@ import {
   validateRange,
   validateHex,
   validateProbability,
-  GRITH_VERSION,
+  KERVYX_VERSION,
   DEFAULT_SEVERITY,
   SUPPORTED_HASH_ALGORITHMS,
   SUPPORTED_SIGNATURE_SCHEMES,
@@ -22,83 +22,83 @@ import {
 import type { Result, Identifiable, Timestamped, Hashable, Serializable } from './index';
 
 // ---------------------------------------------------------------------------
-// GrithErrorCode enum
+// KervyxErrorCode enum
 // ---------------------------------------------------------------------------
-describe('GrithErrorCode', () => {
+describe('KervyxErrorCode', () => {
   it('contains INVALID_INPUT', () => {
-    expect(GrithErrorCode.INVALID_INPUT).toBe('INVALID_INPUT');
+    expect(KervyxErrorCode.INVALID_INPUT).toBe('INVALID_INPUT');
   });
 
   it('contains CRYPTO_FAILURE', () => {
-    expect(GrithErrorCode.CRYPTO_FAILURE).toBe('CRYPTO_FAILURE');
+    expect(KervyxErrorCode.CRYPTO_FAILURE).toBe('CRYPTO_FAILURE');
   });
 
   it('contains CCL_PARSE_ERROR', () => {
-    expect(GrithErrorCode.CCL_PARSE_ERROR).toBe('CCL_PARSE_ERROR');
+    expect(KervyxErrorCode.CCL_PARSE_ERROR).toBe('CCL_PARSE_ERROR');
   });
 
   it('contains CHAIN_DEPTH_EXCEEDED', () => {
-    expect(GrithErrorCode.CHAIN_DEPTH_EXCEEDED).toBe('CHAIN_DEPTH_EXCEEDED');
+    expect(KervyxErrorCode.CHAIN_DEPTH_EXCEEDED).toBe('CHAIN_DEPTH_EXCEEDED');
   });
 
   it('contains STORAGE_NOT_FOUND', () => {
-    expect(GrithErrorCode.STORAGE_NOT_FOUND).toBe('STORAGE_NOT_FOUND');
+    expect(KervyxErrorCode.STORAGE_NOT_FOUND).toBe('STORAGE_NOT_FOUND');
   });
 
   it('contains VERIFICATION_FAILED', () => {
-    expect(GrithErrorCode.VERIFICATION_FAILED).toBe('VERIFICATION_FAILED');
+    expect(KervyxErrorCode.VERIFICATION_FAILED).toBe('VERIFICATION_FAILED');
   });
 
   it('contains OUT_OF_RANGE', () => {
-    expect(GrithErrorCode.OUT_OF_RANGE).toBe('OUT_OF_RANGE');
+    expect(KervyxErrorCode.OUT_OF_RANGE).toBe('OUT_OF_RANGE');
   });
 
   it('contains INVALID_HEX', () => {
-    expect(GrithErrorCode.INVALID_HEX).toBe('INVALID_HEX');
+    expect(KervyxErrorCode.INVALID_HEX).toBe('INVALID_HEX');
   });
 
   it('contains INVALID_PROBABILITY', () => {
-    expect(GrithErrorCode.INVALID_PROBABILITY).toBe('INVALID_PROBABILITY');
+    expect(KervyxErrorCode.INVALID_PROBABILITY).toBe('INVALID_PROBABILITY');
   });
 
   it('contains STORAGE_OPERATION_FAILED', () => {
-    expect(GrithErrorCode.STORAGE_OPERATION_FAILED).toBe('STORAGE_OPERATION_FAILED');
+    expect(KervyxErrorCode.STORAGE_OPERATION_FAILED).toBe('STORAGE_OPERATION_FAILED');
   });
 
   it('contains SERIALIZATION_ERROR', () => {
-    expect(GrithErrorCode.SERIALIZATION_ERROR).toBe('SERIALIZATION_ERROR');
+    expect(KervyxErrorCode.SERIALIZATION_ERROR).toBe('SERIALIZATION_ERROR');
   });
 
   it('contains NARROWING_VIOLATION', () => {
-    expect(GrithErrorCode.NARROWING_VIOLATION).toBe('NARROWING_VIOLATION');
+    expect(KervyxErrorCode.NARROWING_VIOLATION).toBe('NARROWING_VIOLATION');
   });
 });
 
 // ---------------------------------------------------------------------------
-// GrithError base class
+// KervyxError base class
 // ---------------------------------------------------------------------------
-describe('GrithError', () => {
+describe('KervyxError', () => {
   it('extends Error', () => {
-    const err = new GrithError('test', GrithErrorCode.INVALID_INPUT);
+    const err = new KervyxError('test', KervyxErrorCode.INVALID_INPUT);
     expect(err).toBeInstanceOf(Error);
-    expect(err).toBeInstanceOf(GrithError);
+    expect(err).toBeInstanceOf(KervyxError);
   });
 
   it('carries the provided message and code', () => {
-    const err = new GrithError('something broke', GrithErrorCode.CRYPTO_FAILURE);
+    const err = new KervyxError('something broke', KervyxErrorCode.CRYPTO_FAILURE);
     expect(err.message).toBe('something broke');
-    expect(err.code).toBe(GrithErrorCode.CRYPTO_FAILURE);
+    expect(err.code).toBe(KervyxErrorCode.CRYPTO_FAILURE);
   });
 
-  it('has name "GrithError"', () => {
-    const err = new GrithError('msg', GrithErrorCode.INVALID_INPUT);
-    expect(err.name).toBe('GrithError');
+  it('has name "KervyxError"', () => {
+    const err = new KervyxError('msg', KervyxErrorCode.INVALID_INPUT);
+    expect(err.name).toBe('KervyxError');
   });
 
   it('code is readonly', () => {
-    const err = new GrithError('msg', GrithErrorCode.INVALID_INPUT);
+    const err = new KervyxError('msg', KervyxErrorCode.INVALID_INPUT);
     // TypeScript prevents assignment; verify the value is stable
-    expect(err.code).toBe(GrithErrorCode.INVALID_INPUT);
+    expect(err.code).toBe(KervyxErrorCode.INVALID_INPUT);
   });
 });
 
@@ -106,9 +106,9 @@ describe('GrithError', () => {
 // ValidationError
 // ---------------------------------------------------------------------------
 describe('ValidationError', () => {
-  it('extends GrithError', () => {
+  it('extends KervyxError', () => {
     const e = new ValidationError('bad input', 'field1');
-    expect(e).toBeInstanceOf(GrithError);
+    expect(e).toBeInstanceOf(KervyxError);
     expect(e).toBeInstanceOf(Error);
   });
 
@@ -119,12 +119,12 @@ describe('ValidationError', () => {
 
   it('defaults to INVALID_INPUT code', () => {
     const e = new ValidationError('bad', 'x');
-    expect(e.code).toBe(GrithErrorCode.INVALID_INPUT);
+    expect(e.code).toBe(KervyxErrorCode.INVALID_INPUT);
   });
 
   it('accepts a custom error code', () => {
-    const e = new ValidationError('bad hex', 'key', GrithErrorCode.INVALID_HEX);
-    expect(e.code).toBe(GrithErrorCode.INVALID_HEX);
+    const e = new ValidationError('bad hex', 'key', KervyxErrorCode.INVALID_HEX);
+    expect(e.code).toBe(KervyxErrorCode.INVALID_HEX);
   });
 
   it('carries the field name', () => {
@@ -137,10 +137,10 @@ describe('ValidationError', () => {
 // CryptoError
 // ---------------------------------------------------------------------------
 describe('CryptoError', () => {
-  it('extends GrithError with CRYPTO_FAILURE code', () => {
+  it('extends KervyxError with CRYPTO_FAILURE code', () => {
     const e = new CryptoError('sign failed');
-    expect(e).toBeInstanceOf(GrithError);
-    expect(e.code).toBe(GrithErrorCode.CRYPTO_FAILURE);
+    expect(e).toBeInstanceOf(KervyxError);
+    expect(e.code).toBe(KervyxErrorCode.CRYPTO_FAILURE);
     expect(e.name).toBe('CryptoError');
     expect(e.message).toBe('sign failed');
   });
@@ -150,10 +150,10 @@ describe('CryptoError', () => {
 // CCLError
 // ---------------------------------------------------------------------------
 describe('CCLError', () => {
-  it('extends GrithError with CCL_PARSE_ERROR code', () => {
+  it('extends KervyxError with CCL_PARSE_ERROR code', () => {
     const e = new CCLError('unexpected token');
-    expect(e).toBeInstanceOf(GrithError);
-    expect(e.code).toBe(GrithErrorCode.CCL_PARSE_ERROR);
+    expect(e).toBeInstanceOf(KervyxError);
+    expect(e.code).toBe(KervyxErrorCode.CCL_PARSE_ERROR);
     expect(e.name).toBe('CCLError');
     expect(e.message).toBe('unexpected token');
   });
@@ -163,16 +163,16 @@ describe('CCLError', () => {
 // ChainError
 // ---------------------------------------------------------------------------
 describe('ChainError', () => {
-  it('extends GrithError with default CHAIN_DEPTH_EXCEEDED code', () => {
+  it('extends KervyxError with default CHAIN_DEPTH_EXCEEDED code', () => {
     const e = new ChainError('too deep');
-    expect(e).toBeInstanceOf(GrithError);
-    expect(e.code).toBe(GrithErrorCode.CHAIN_DEPTH_EXCEEDED);
+    expect(e).toBeInstanceOf(KervyxError);
+    expect(e.code).toBe(KervyxErrorCode.CHAIN_DEPTH_EXCEEDED);
     expect(e.name).toBe('ChainError');
   });
 
   it('accepts a custom error code', () => {
-    const e = new ChainError('narrowing failed', GrithErrorCode.NARROWING_VIOLATION);
-    expect(e.code).toBe(GrithErrorCode.NARROWING_VIOLATION);
+    const e = new ChainError('narrowing failed', KervyxErrorCode.NARROWING_VIOLATION);
+    expect(e.code).toBe(KervyxErrorCode.NARROWING_VIOLATION);
   });
 });
 
@@ -180,16 +180,16 @@ describe('ChainError', () => {
 // StorageError
 // ---------------------------------------------------------------------------
 describe('StorageError', () => {
-  it('extends GrithError with default STORAGE_NOT_FOUND code', () => {
+  it('extends KervyxError with default STORAGE_NOT_FOUND code', () => {
     const e = new StorageError('not found');
-    expect(e).toBeInstanceOf(GrithError);
-    expect(e.code).toBe(GrithErrorCode.STORAGE_NOT_FOUND);
+    expect(e).toBeInstanceOf(KervyxError);
+    expect(e.code).toBe(KervyxErrorCode.STORAGE_NOT_FOUND);
     expect(e.name).toBe('StorageError');
   });
 
   it('accepts a custom error code', () => {
-    const e = new StorageError('write failed', GrithErrorCode.STORAGE_OPERATION_FAILED);
-    expect(e.code).toBe(GrithErrorCode.STORAGE_OPERATION_FAILED);
+    const e = new StorageError('write failed', KervyxErrorCode.STORAGE_OPERATION_FAILED);
+    expect(e.code).toBe(KervyxErrorCode.STORAGE_OPERATION_FAILED);
   });
 });
 
@@ -224,7 +224,7 @@ describe('validateNonEmpty', () => {
       validateNonEmpty('', 'x');
       expect.unreachable('should have thrown');
     } catch (e) {
-      expect((e as ValidationError).code).toBe(GrithErrorCode.INVALID_INPUT);
+      expect((e as ValidationError).code).toBe(KervyxErrorCode.INVALID_INPUT);
     }
   });
 
@@ -266,7 +266,7 @@ describe('validateRange', () => {
       validateRange(100, 0, 10, 'depth');
       expect.unreachable('should have thrown');
     } catch (e) {
-      expect((e as ValidationError).code).toBe(GrithErrorCode.OUT_OF_RANGE);
+      expect((e as ValidationError).code).toBe(KervyxErrorCode.OUT_OF_RANGE);
     }
   });
 
@@ -313,7 +313,7 @@ describe('validateHex', () => {
       validateHex('zz', 'key');
       expect.unreachable('should have thrown');
     } catch (e) {
-      expect((e as ValidationError).code).toBe(GrithErrorCode.INVALID_HEX);
+      expect((e as ValidationError).code).toBe(KervyxErrorCode.INVALID_HEX);
     }
   });
 
@@ -356,7 +356,7 @@ describe('validateProbability', () => {
       validateProbability(2, 'p');
       expect.unreachable('should have thrown');
     } catch (e) {
-      expect((e as ValidationError).code).toBe(GrithErrorCode.INVALID_PROBABILITY);
+      expect((e as ValidationError).code).toBe(KervyxErrorCode.INVALID_PROBABILITY);
     }
   });
 
@@ -373,9 +373,9 @@ describe('validateProbability', () => {
 // Protocol constants
 // ---------------------------------------------------------------------------
 describe('protocol constants', () => {
-  it('GRITH_VERSION is a semver string', () => {
-    expect(typeof GRITH_VERSION).toBe('string');
-    expect(/^\d+\.\d+\.\d+/.test(GRITH_VERSION)).toBe(true);
+  it('KERVYX_VERSION is a semver string', () => {
+    expect(typeof KERVYX_VERSION).toBe('string');
+    expect(/^\d+\.\d+\.\d+/.test(KERVYX_VERSION)).toBe(true);
   });
 
   it('DEFAULT_SEVERITY is "must"', () => {
@@ -491,13 +491,13 @@ describe('Result type', () => {
     }
   });
 
-  it('err() works with GrithError', () => {
-    const error = new GrithError('bad', GrithErrorCode.CRYPTO_FAILURE);
+  it('err() works with KervyxError', () => {
+    const error = new KervyxError('bad', KervyxErrorCode.CRYPTO_FAILURE);
     const result = err(error);
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.error).toBeInstanceOf(GrithError);
-      expect(result.error.code).toBe(GrithErrorCode.CRYPTO_FAILURE);
+      expect(result.error).toBeInstanceOf(KervyxError);
+      expect(result.error.code).toBe(KervyxErrorCode.CRYPTO_FAILURE);
     }
   });
 
@@ -538,7 +538,7 @@ describe('Result type', () => {
 // ---------------------------------------------------------------------------
 describe('error hierarchy', () => {
   it('all error classes extend Error', () => {
-    expect(new GrithError('a', GrithErrorCode.INVALID_INPUT)).toBeInstanceOf(Error);
+    expect(new KervyxError('a', KervyxErrorCode.INVALID_INPUT)).toBeInstanceOf(Error);
     expect(new ValidationError('a', 'f')).toBeInstanceOf(Error);
     expect(new CryptoError('a')).toBeInstanceOf(Error);
     expect(new CCLError('a')).toBeInstanceOf(Error);
@@ -546,17 +546,17 @@ describe('error hierarchy', () => {
     expect(new StorageError('a')).toBeInstanceOf(Error);
   });
 
-  it('all specialized errors extend GrithError', () => {
-    expect(new ValidationError('a', 'f')).toBeInstanceOf(GrithError);
-    expect(new CryptoError('a')).toBeInstanceOf(GrithError);
-    expect(new CCLError('a')).toBeInstanceOf(GrithError);
-    expect(new ChainError('a')).toBeInstanceOf(GrithError);
-    expect(new StorageError('a')).toBeInstanceOf(GrithError);
+  it('all specialized errors extend KervyxError', () => {
+    expect(new ValidationError('a', 'f')).toBeInstanceOf(KervyxError);
+    expect(new CryptoError('a')).toBeInstanceOf(KervyxError);
+    expect(new CCLError('a')).toBeInstanceOf(KervyxError);
+    expect(new ChainError('a')).toBeInstanceOf(KervyxError);
+    expect(new StorageError('a')).toBeInstanceOf(KervyxError);
   });
 
   it('each error has a distinct name', () => {
     const names = [
-      new GrithError('a', GrithErrorCode.INVALID_INPUT).name,
+      new KervyxError('a', KervyxErrorCode.INVALID_INPUT).name,
       new ValidationError('a', 'f').name,
       new CryptoError('a').name,
       new CCLError('a').name,
@@ -567,8 +567,8 @@ describe('error hierarchy', () => {
     expect(unique.size).toBe(names.length);
   });
 
-  it('errors can be caught by GrithError type', () => {
-    const errors: GrithError[] = [
+  it('errors can be caught by KervyxError type', () => {
+    const errors: KervyxError[] = [
       new ValidationError('a', 'f'),
       new CryptoError('a'),
       new CCLError('a'),
@@ -576,7 +576,7 @@ describe('error hierarchy', () => {
       new StorageError('a'),
     ];
     for (const e of errors) {
-      expect(e).toBeInstanceOf(GrithError);
+      expect(e).toBeInstanceOf(KervyxError);
       expect(typeof e.code).toBe('string');
     }
   });

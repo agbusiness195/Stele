@@ -1,7 +1,7 @@
 {
-  "name": "@grith/react",
+  "name": "@kervyx/react",
   "version": "2.0.0",
-  "description": "React hooks and reactive primitives for Grith-powered UIs",
+  "description": "React hooks and reactive primitives for Kervyx-powered UIs",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,12 +24,12 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@grith/ccl": "2.0.0",
-    "@grith/core": "2.0.0",
-    "@grith/identity": "2.0.0",
-    "@grith/sdk": "2.0.0",
-    "@grith/store": "2.0.0",
-    "@grith/types": "2.0.0"
+    "@kervyx/ccl": "2.0.0",
+    "@kervyx/core": "2.0.0",
+    "@kervyx/identity": "2.0.0",
+    "@kervyx/sdk": "2.0.0",
+    "@kervyx/store": "2.0.0",
+    "@kervyx/types": "2.0.0"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
@@ -48,16 +48,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/react"
   },
-  "homepage": "https://grith.dev",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
-  "author": "Grith Labs, Inc.",
+  "author": "Kervyx Labs, Inc.",
   "keywords": [
-    "grith",
+    "kervyx",
     "covenant",
     "ai-accountability",
     "react",

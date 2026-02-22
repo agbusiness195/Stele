@@ -1,11 +1,11 @@
-# @grith/types
+# @kervyx/types
 
-Shared type definitions, error classes, validation utilities, and protocol constants for the Grith SDK.
+Shared type definitions, error classes, validation utilities, and protocol constants for the Kervyx SDK.
 
 ## Installation
 
 ```bash
-npm install @grith/types
+npm install @kervyx/types
 ```
 
 ## Usage
@@ -13,12 +13,12 @@ npm install @grith/types
 ### Error Classes
 
 ```typescript
-import { GrithError, GrithErrorCode, ValidationError } from '@grith/types';
+import { KervyxError, KervyxErrorCode, ValidationError } from '@kervyx/types';
 
 try {
-  throw new GrithError('Something went wrong', GrithErrorCode.INVALID_INPUT);
+  throw new KervyxError('Something went wrong', KervyxErrorCode.INVALID_INPUT);
 } catch (err) {
-  if (err instanceof GrithError) {
+  if (err instanceof KervyxError) {
     console.log(err.code); // 'INVALID_INPUT'
   }
 }
@@ -27,7 +27,7 @@ try {
 ### Result Type
 
 ```typescript
-import { ok, err, type Result } from '@grith/types';
+import { ok, err, type Result } from '@kervyx/types';
 
 function divide(a: number, b: number): Result<number> {
   if (b === 0) return err(new Error('Division by zero'));
@@ -43,7 +43,7 @@ if (result.ok) {
 ### Validation Utilities
 
 ```typescript
-import { validateNonEmpty, validateRange, validateHex, validateProbability } from '@grith/types';
+import { validateNonEmpty, validateRange, validateHex, validateProbability } from '@kervyx/types';
 
 validateNonEmpty(name, 'issuer.name');       // throws ValidationError if blank
 validateRange(depth, 1, 16, 'chain.depth');  // throws if outside [1, 16]
@@ -54,7 +54,7 @@ validateProbability(rate, 'carryForward');    // throws if not in [0, 1]
 ### Type Guards
 
 ```typescript
-import { isNonEmptyString, isValidHex, isValidPublicKey, sanitizeString } from '@grith/types';
+import { isNonEmptyString, isValidHex, isValidPublicKey, sanitizeString } from '@kervyx/types';
 
 if (isValidPublicKey(input)) {
   // input is narrowed to a valid public key string
@@ -65,15 +65,15 @@ const safe = sanitizeString(userInput, { maxLength: 256 });
 
 ## Key APIs
 
-- **Error classes**: `GrithError`, `ValidationError`, `CryptoError`, `CCLError`, `ChainError`, `StorageError`
+- **Error classes**: `KervyxError`, `ValidationError`, `CryptoError`, `CCLError`, `ChainError`, `StorageError`
 - **Result type**: `Result<T, E>`, `ok()`, `err()`
 - **Validation**: `validateNonEmpty()`, `validateRange()`, `validateHex()`, `validateProbability()`
 - **Type guards**: `isNonEmptyString()`, `isValidHex()`, `isValidPublicKey()`, `isPlainObject()`
 - **Sanitization**: `sanitizeString()`, `sanitizeJsonInput()`, `freezeDeep()`
 - **Observability**: `Logger`, `createLogger()`, `Tracer`, `Counter`, `Gauge`, `Histogram`
 - **Resilience**: `withRetry()`, `CircuitBreaker`, `HealthChecker`
-- **Constants**: `GRITH_VERSION`, `DEFAULT_SEVERITY`, `SUPPORTED_HASH_ALGORITHMS`
+- **Constants**: `KERVYX_VERSION`, `DEFAULT_SEVERITY`, `SUPPORTED_HASH_ALGORITHMS`
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference and architecture guide.

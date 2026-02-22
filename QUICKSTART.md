@@ -1,28 +1,28 @@
-# Grith: 5-Minute Quickstart
+# Kervyx: 5-Minute Quickstart
 
 Go from zero to enforcing your first covenant in under five minutes.
 
 ## 1. Install
 
 ```bash
-npm install @grith/sdk
+npm install @kervyx/sdk
 ```
 
-The SDK re-exports everything you need from the underlying packages (`@grith/crypto`, `@grith/ccl`, `@grith/core`, `@grith/identity`, `@grith/enforcement`). One import covers the full API.
+The SDK re-exports everything you need from the underlying packages (`@kervyx/crypto`, `@kervyx/ccl`, `@kervyx/core`, `@kervyx/identity`, `@kervyx/enforcement`). One import covers the full API.
 
 ## 2. Create Keys
 
 Every party in a covenant needs an Ed25519 key pair. Generate one:
 
 ```typescript
-import { GrithClient } from '@grith/sdk';
+import { KervyxClient } from '@kervyx/sdk';
 
-const issuerClient = new GrithClient();
+const issuerClient = new KervyxClient();
 const issuerKeys = await issuerClient.generateKeyPair();
 console.log(issuerKeys.publicKeyHex); // 64-char hex-encoded public key
 
 // The beneficiary also needs keys — typically on a different machine
-const beneficiaryClient = new GrithClient();
+const beneficiaryClient = new KervyxClient();
 const beneficiaryKeys = await beneficiaryClient.generateKeyPair();
 ```
 
@@ -156,25 +156,25 @@ You now have a working covenant pipeline: create, sign, verify, enforce. Here is
 
 **Express Middleware** -- Enforce covenants on every HTTP request:
 ```typescript
-import { grithMiddleware } from '@grith/sdk';
-app.use(grithMiddleware({ covenant, client: issuerClient }));
+import { kervyxMiddleware } from '@kervyx/sdk';
+app.use(kervyxMiddleware({ covenant, client: issuerClient }));
 ```
 
 **Vercel AI SDK** -- Wrap AI tools with covenant enforcement:
 ```typescript
-import { withGrith } from '@grith/sdk';
-const guardedTool = withGrith(myTool, { covenant, client });
+import { withKervyx } from '@kervyx/sdk';
+const guardedTool = withKervyx(myTool, { covenant, client });
 ```
 
 **LangChain** -- Add a callback handler to any chain:
 ```typescript
-import { GrithCallbackHandler } from '@grith/sdk';
-const handler = new GrithCallbackHandler({ covenant, client });
+import { KervyxCallbackHandler } from '@kervyx/sdk';
+const handler = new KervyxCallbackHandler({ covenant, client });
 ```
 
 **Key Rotation** -- Automatic key lifecycle management:
 ```typescript
-const client = new GrithClient({
+const client = new KervyxClient({
   keyRotation: { maxAgeMs: 86_400_000, overlapPeriodMs: 3_600_000 },
 });
 await client.initializeKeyRotation();
@@ -194,9 +194,9 @@ console.log(chainResult.valid); // true — child only narrows
 
 **Countersignatures** -- Let auditors co-sign covenants:
 ```typescript
-const auditorClient = new GrithClient();
+const auditorClient = new KervyxClient();
 const auditorKeys = await auditorClient.generateKeyPair();
 const audited = await auditorClient.countersign(covenant, 'auditor');
 ```
 
-Full API reference: see the JSDoc comments in `@grith/sdk` or run `npx typedoc`.
+Full API reference: see the JSDoc comments in `@kervyx/sdk` or run `npx typedoc`.

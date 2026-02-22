@@ -1,5 +1,5 @@
 /**
- * Cross-package integration tests for the Grith monorepo.
+ * Cross-package integration tests for the Kervyx monorepo.
  *
  * Validates that packages interact correctly when composed together:
  *   SDK + Store, SDK + Verifier, Core + Identity, CCL + Verifier,
@@ -8,8 +8,8 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { generateKeyPair, sha256String, toHex } from '@grith/crypto';
-import type { KeyPair } from '@grith/crypto';
+import { generateKeyPair, sha256String, toHex } from '@kervyx/crypto';
+import type { KeyPair } from '@kervyx/crypto';
 
 import {
   buildCovenant,
@@ -25,12 +25,12 @@ import {
   serializeCovenant,
   deserializeCovenant,
   MAX_CHAIN_DEPTH,
-} from '@grith/core';
-import type { CovenantDocument } from '@grith/core';
+} from '@kervyx/core';
+import type { CovenantDocument } from '@kervyx/core';
 
-import { GrithClient, QuickCovenant } from '@grith/sdk';
+import { KervyxClient, QuickCovenant } from '@kervyx/sdk';
 import type {
-  GrithEventType,
+  KervyxEventType,
   CovenantCreatedEvent,
   CovenantVerifiedEvent,
   IdentityCreatedEvent,
@@ -38,14 +38,14 @@ import type {
   ChainResolvedEvent,
   ChainValidatedEvent,
   EvaluationCompletedEvent,
-} from '@grith/sdk';
+} from '@kervyx/sdk';
 
-import { MemoryStore } from '@grith/store';
-import type { StoreEvent } from '@grith/store';
+import { MemoryStore } from '@kervyx/store';
+import type { StoreEvent } from '@kervyx/store';
 
-import { Verifier, verifyBatch } from '@grith/verifier';
+import { Verifier, verifyBatch } from '@kervyx/verifier';
 
-import { parse, evaluate, merge as mergeCCL, serialize as serializeCCL } from '@grith/ccl';
+import { parse, evaluate, merge as mergeCCL, serialize as serializeCCL } from '@kervyx/ccl';
 
 import {
   createIdentity,
@@ -53,26 +53,26 @@ import {
   verifyIdentity,
   serializeIdentity,
   deserializeIdentity,
-} from '@grith/identity';
-import type { AgentIdentity } from '@grith/identity';
+} from '@kervyx/identity';
+import type { AgentIdentity } from '@kervyx/identity';
 
 
 // ---------------------------------------------------------------------------
-// SDK + Store: Create covenants via GrithClient, store, retrieve, verify
+// SDK + Store: Create covenants via KervyxClient, store, retrieve, verify
 // ---------------------------------------------------------------------------
 
 describe('SDK + Store integration', () => {
-  let client: GrithClient;
+  let client: KervyxClient;
   let store: MemoryStore;
   let kp: KeyPair;
 
   beforeEach(async () => {
     kp = await generateKeyPair();
-    client = new GrithClient({ keyPair: kp });
+    client = new KervyxClient({ keyPair: kp });
     store = new MemoryStore();
   });
 
-  it('should create a covenant via GrithClient and store it in MemoryStore', async () => {
+  it('should create a covenant via KervyxClient and store it in MemoryStore', async () => {
     const doc = await client.createCovenant({
       issuer: { id: 'issuer-1', publicKey: kp.publicKeyHex, role: 'issuer' },
       beneficiary: { id: 'ben-1', publicKey: kp.publicKeyHex, role: 'beneficiary' },
@@ -203,21 +203,21 @@ describe('SDK + Store integration', () => {
 
 
 // ---------------------------------------------------------------------------
-// SDK + Verifier: Create via GrithClient, verify via standalone Verifier
+// SDK + Verifier: Create via KervyxClient, verify via standalone Verifier
 // ---------------------------------------------------------------------------
 
 describe('SDK + Verifier integration', () => {
-  let client: GrithClient;
+  let client: KervyxClient;
   let verifier: Verifier;
   let kp: KeyPair;
 
   beforeEach(async () => {
     kp = await generateKeyPair();
-    client = new GrithClient({ keyPair: kp });
+    client = new KervyxClient({ keyPair: kp });
     verifier = new Verifier({ verifierId: 'test-verifier' });
   });
 
-  it('should verify a covenant created by GrithClient via Verifier.verify', async () => {
+  it('should verify a covenant created by KervyxClient via Verifier.verify', async () => {
     const doc = await client.createCovenant({
       issuer: { id: 'sdk-issuer', publicKey: kp.publicKeyHex, role: 'issuer' },
       beneficiary: { id: 'sdk-ben', publicKey: kp.publicKeyHex, role: 'beneficiary' },
@@ -887,12 +887,12 @@ describe('Crypto + Core integration', () => {
 // ---------------------------------------------------------------------------
 
 describe('SDK event system integration', () => {
-  let client: GrithClient;
+  let client: KervyxClient;
   let kp: KeyPair;
 
   beforeEach(async () => {
     kp = await generateKeyPair();
-    client = new GrithClient({ keyPair: kp });
+    client = new KervyxClient({ keyPair: kp });
   });
 
   it('should emit covenant:created event when creating a covenant', async () => {
@@ -1207,8 +1207,8 @@ describe('Chain operations spanning multiple packages', () => {
     expect(narrowing.violations.length).toBeGreaterThan(0);
   });
 
-  it('should validate a valid narrowing chain via GrithClient.validateChain', async () => {
-    const client = new GrithClient({ keyPair: kpRoot });
+  it('should validate a valid narrowing chain via KervyxClient.validateChain', async () => {
+    const client = new KervyxClient({ keyPair: kpRoot });
 
     const root = await client.createCovenant({
       issuer: { id: 'vc-root', publicKey: kpRoot.publicKeyHex, role: 'issuer' },
@@ -1216,7 +1216,7 @@ describe('Chain operations spanning multiple packages', () => {
       constraints: "permit file.read on '**'\ndeny file.delete on '**' severity critical",
     });
 
-    const childClient = new GrithClient({ keyPair: kpMid });
+    const childClient = new KervyxClient({ keyPair: kpMid });
     const child = await childClient.createCovenant({
       issuer: { id: 'vc-child', publicKey: kpMid.publicKeyHex, role: 'issuer' },
       beneficiary: { id: 'vc-leaf', publicKey: kpLeaf.publicKeyHex, role: 'beneficiary' },
@@ -1230,7 +1230,7 @@ describe('Chain operations spanning multiple packages', () => {
   });
 
   it('should use SDK parseCCL and mergeCCL together', () => {
-    const client = new GrithClient();
+    const client = new KervyxClient();
     const doc1 = client.parseCCL("permit file.read on '/data/**'");
     const doc2 = client.parseCCL("deny file.write on '**' severity critical");
     const merged = client.mergeCCL(doc1, doc2);
@@ -1245,7 +1245,7 @@ describe('Chain operations spanning multiple packages', () => {
   });
 
   it('should SDK serializeCCL preserve semantics after round-trip', () => {
-    const client = new GrithClient();
+    const client = new KervyxClient();
     const original = client.parseCCL("permit file.read on '/data/**'\ndeny file.write on '/system/**' severity critical");
     const serialized = client.serializeCCL(original);
     const reparsed = client.parseCCL(serialized);
@@ -1290,7 +1290,7 @@ describe('Chain operations spanning multiple packages', () => {
   });
 
   it('should strictly mode throw CovenantVerificationError on invalid covenant', async () => {
-    const client = new GrithClient({ keyPair: kpRoot, strictMode: true });
+    const client = new KervyxClient({ keyPair: kpRoot, strictMode: true });
 
     const doc = await client.createCovenant({
       issuer: { id: 'strict-issuer', publicKey: kpRoot.publicKeyHex, role: 'issuer' },

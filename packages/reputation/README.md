@@ -1,11 +1,11 @@
-# @grith/reputation
+# @kervyx/reputation
 
-Reputation scoring, stake management, endorsements, and receipt-chain verification for Grith covenant agents.
+Reputation scoring, stake management, endorsements, and receipt-chain verification for Kervyx covenant agents.
 
 ## Installation
 
 ```bash
-npm install @grith/reputation
+npm install @kervyx/reputation
 ```
 
 ## Key APIs
@@ -40,8 +40,8 @@ npm install @grith/reputation
 ## Usage
 
 ```typescript
-import { createReceipt, computeReputationScore, createStake } from '@grith/reputation';
-import { generateKeyPair } from '@grith/crypto';
+import { createReceipt, computeReputationScore, createStake } from '@kervyx/reputation';
+import { generateKeyPair } from '@kervyx/crypto';
 
 const keys = await generateKeyPair();
 
@@ -69,4 +69,4 @@ const stake = await createStake(agentIdentityHash, covenantId, 0.5, keys);
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

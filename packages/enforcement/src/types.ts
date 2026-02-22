@@ -1,5 +1,5 @@
-import type { HashHex } from '@grith/crypto';
-import type { Statement, Severity, EvaluationResult } from '@grith/ccl';
+import type { HashHex } from '@kervyx/crypto';
+import type { Statement, Severity, EvaluationResult } from '@kervyx/ccl';
 
 export type ExecutionOutcome = 'EXECUTED' | 'DENIED' | 'IMPOSSIBLE';
 

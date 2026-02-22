@@ -1,7 +1,7 @@
 {
-  "name": "@grith/schema",
+  "name": "@kervyx/schema",
   "version": "2.0.0",
-  "description": "Formal JSON Schema definitions for Grith protocol documents",
+  "description": "Formal JSON Schema definitions for Kervyx protocol documents",
   "sideEffects": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,13 +27,13 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@grith/types": "2.0.0"
+    "@kervyx/types": "2.0.0"
   },
   "license": "MIT",
-  "author": "Grith Labs, Inc.",
-  "homepage": "https://grith.dev",
+  "author": "Kervyx Labs, Inc.",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
   "engines": {
     "node": ">=18"
@@ -43,11 +43,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/schema"
   },
   "keywords": [
-    "grith",
+    "kervyx",
     "schema",
     "json-schema",
     "covenant",

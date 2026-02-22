@@ -1,5 +1,5 @@
-import { sha256Object, generateId } from '@grith/crypto';
-import { GrithError, GrithErrorCode } from '@grith/types';
+import { sha256Object, generateId } from '@kervyx/crypto';
+import { KervyxError, KervyxErrorCode } from '@kervyx/types';
 
 export type {
   TriggerType,
@@ -686,7 +686,7 @@ export class DecayModel {
 
   constructor(models: DecayModelConfig[]) {
     if (models.length === 0) {
-      throw new GrithError('At least one decay model is required', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('At least one decay model is required', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     for (const m of models) {
       this.validateModel(m);
@@ -696,30 +696,30 @@ export class DecayModel {
 
   private validateModel(model: DecayModelConfig): void {
     if (model.type === 'exponential' && model.rate < 0) {
-      throw new GrithError('Exponential decay rate must be >= 0', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('Exponential decay rate must be >= 0', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (model.type === 'linear' && model.rate < 0) {
-      throw new GrithError('Linear decay rate must be >= 0', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('Linear decay rate must be >= 0', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (model.type === 'step') {
       if (!model.steps || model.steps.length === 0) {
-        throw new GrithError('Step decay requires at least one breakpoint', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new KervyxError('Step decay requires at least one breakpoint', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
       }
       for (const [t, v] of model.steps) {
         if (t < 0 || t > 1) {
-          throw new GrithError(`Step time fraction must be in [0, 1], got ${t}`, GrithErrorCode.PROTOCOL_INVALID_INPUT);
+          throw new KervyxError(`Step time fraction must be in [0, 1], got ${t}`, KervyxErrorCode.PROTOCOL_INVALID_INPUT);
         }
         if (v < 0) {
-          throw new GrithError(`Step value must be >= 0, got ${v}`, GrithErrorCode.PROTOCOL_INVALID_INPUT);
+          throw new KervyxError(`Step value must be >= 0, got ${v}`, KervyxErrorCode.PROTOCOL_INVALID_INPUT);
         }
       }
     }
     if (model.type === 'seasonal') {
       if (model.rate <= 0) {
-        throw new GrithError('Seasonal frequency (rate) must be > 0', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new KervyxError('Seasonal frequency (rate) must be > 0', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
       }
       if (model.amplitude !== undefined && (model.amplitude < 0 || model.amplitude > 1)) {
-        throw new GrithError(`Seasonal amplitude must be in [0, 1], got ${model.amplitude}`, GrithErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new KervyxError(`Seasonal amplitude must be in [0, 1], got ${model.amplitude}`, KervyxErrorCode.PROTOCOL_INVALID_INPUT);
       }
     }
   }
@@ -757,7 +757,7 @@ export class DecayModel {
       }
 
       default:
-        throw new GrithError(`Unknown decay model type: ${model.type}`, GrithErrorCode.PROTOCOL_COMPUTATION_FAILED);
+        throw new KervyxError(`Unknown decay model type: ${model.type}`, KervyxErrorCode.PROTOCOL_COMPUTATION_FAILED);
     }
   }
 
@@ -771,7 +771,7 @@ export class DecayModel {
    */
   evaluate(t: number, initialWeight: number = 1.0): number {
     if (initialWeight < 0) {
-      throw new GrithError('initialWeight must be >= 0', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('initialWeight must be >= 0', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     let composedFactor = 1.0;
@@ -787,7 +787,7 @@ export class DecayModel {
    */
   schedule(initialWeight: number, steps: number): DecayPoint[] {
     if (steps < 2) {
-      throw new GrithError('steps must be >= 2', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('steps must be >= 2', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     const points: DecayPoint[] = [];
@@ -874,17 +874,17 @@ export class ContinuousTrigger {
 
   constructor(triggers: ContinuousTriggerConfig[], activationThreshold: number = 0.5) {
     if (triggers.length === 0) {
-      throw new GrithError('At least one trigger is required', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('At least one trigger is required', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (activationThreshold < 0 || activationThreshold > 1) {
-      throw new GrithError('activationThreshold must be in [0, 1]', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('activationThreshold must be in [0, 1]', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     for (const t of triggers) {
       if (t.steepness !== undefined && t.steepness <= 0) {
-        throw new GrithError('steepness must be > 0', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new KervyxError('steepness must be > 0', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
       }
       if (t.weight !== undefined && t.weight < 0) {
-        throw new GrithError('weight must be >= 0', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new KervyxError('weight must be >= 0', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
       }
     }
     this.triggers = triggers;
@@ -1019,17 +1019,17 @@ export class ViolationForecaster {
 
   constructor(config: ForecastConfig) {
     if (config.alpha <= 0 || config.alpha >= 1) {
-      throw new GrithError('alpha must be in (0, 1)', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('alpha must be in (0, 1)', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (config.beta <= 0 || config.beta >= 1) {
-      throw new GrithError('beta must be in (0, 1)', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('beta must be in (0, 1)', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (config.forecastPeriods < 1) {
-      throw new GrithError('forecastPeriods must be >= 1', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('forecastPeriods must be >= 1', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (config.confidenceLevel !== undefined) {
       if (config.confidenceLevel <= 0 || config.confidenceLevel >= 1) {
-        throw new GrithError('confidenceLevel must be in (0, 1)', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new KervyxError('confidenceLevel must be in (0, 1)', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
       }
     }
     this.config = config;
@@ -1044,12 +1044,12 @@ export class ViolationForecaster {
    */
   forecast(historicalRates: number[]): ForecastResult {
     if (historicalRates.length < 2) {
-      throw new GrithError('At least 2 historical data points required', GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError('At least 2 historical data points required', KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
 
     for (let i = 0; i < historicalRates.length; i++) {
       if (typeof historicalRates[i] !== 'number' || isNaN(historicalRates[i]!)) {
-        throw new GrithError(`historicalRates[${i}] must be a valid number`, GrithErrorCode.PROTOCOL_INVALID_INPUT);
+        throw new KervyxError(`historicalRates[${i}] must be a valid number`, KervyxErrorCode.PROTOCOL_INVALID_INPUT);
       }
     }
 
@@ -1194,16 +1194,16 @@ export class TemporalConstraintAlgebra {
    */
   private validate(constraint: TemporalConstraint): void {
     if (constraint.start < 0 || constraint.start > 1) {
-      throw new GrithError(`start must be in [0, 1], got ${constraint.start}`, GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError(`start must be in [0, 1], got ${constraint.start}`, KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (constraint.end < 0 || constraint.end > 1) {
-      throw new GrithError(`end must be in [0, 1], got ${constraint.end}`, GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError(`end must be in [0, 1], got ${constraint.end}`, KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (constraint.start > constraint.end) {
-      throw new GrithError(`start (${constraint.start}) must be <= end (${constraint.end})`, GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError(`start (${constraint.start}) must be <= end (${constraint.end})`, KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
     if (constraint.weight < 0 || constraint.weight > 1) {
-      throw new GrithError(`weight must be in [0, 1], got ${constraint.weight}`, GrithErrorCode.PROTOCOL_INVALID_INPUT);
+      throw new KervyxError(`weight must be in [0, 1], got ${constraint.weight}`, KervyxErrorCode.PROTOCOL_INVALID_INPUT);
     }
   }
 

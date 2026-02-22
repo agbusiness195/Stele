@@ -1,11 +1,11 @@
 /**
- * Lightweight tracing utilities for the Grith SDK.
+ * Lightweight tracing utilities for the Kervyx SDK.
  * Provides Span-based instrumentation without OpenTelemetry dependency.
  *
  * @packageDocumentation
  */
 
-import { generateId } from '@grith/crypto';
+import { generateId } from '@kervyx/crypto';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 

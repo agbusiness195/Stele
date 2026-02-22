@@ -1,6 +1,6 @@
-# Grith SDK Examples
+# Kervyx SDK Examples
 
-Runnable TypeScript examples demonstrating the Grith protocol SDK.
+Runnable TypeScript examples demonstrating the Kervyx protocol SDK.
 
 ## Running
 

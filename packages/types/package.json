@@ -1,5 +1,5 @@
 {
-  "name": "@grith/types",
+  "name": "@kervyx/types",
   "version": "2.0.0",
   "description": "Shared TypeScript type definitions and protocol schemas",
   "sideEffects": false,
@@ -32,19 +32,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/types"
   },
-  "homepage": "https://grith.dev",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
-  "author": "Grith Labs, Inc.",
+  "author": "Kervyx Labs, Inc.",
   "dependencies": {
-    "@grith/crypto": "2.0.0"
+    "@kervyx/crypto": "2.0.0"
   },
   "keywords": [
-    "grith",
+    "kervyx",
     "covenant",
     "ai-accountability",
     "types",

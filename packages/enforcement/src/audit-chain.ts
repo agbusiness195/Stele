@@ -15,7 +15,7 @@ import {
   generateNonce,
   toHex,
   timestamp,
-} from '@grith/crypto';
+} from '@kervyx/crypto';
 
 /**
  * A single entry in the audit chain.

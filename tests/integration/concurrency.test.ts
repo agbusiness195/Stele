@@ -1,5 +1,5 @@
 /**
- * Concurrency and stress tests for the Grith SDK.
+ * Concurrency and stress tests for the Kervyx SDK.
  *
  * Exercises parallel operations, race conditions, and high-volume
  * scenarios across crypto, core, store, verifier, identity,
@@ -15,8 +15,8 @@ import {
   sha256,
   toHex,
   generateNonce,
-} from '@grith/crypto';
-import type { KeyPair, HashHex } from '@grith/crypto';
+} from '@kervyx/crypto';
+import type { KeyPair, HashHex } from '@kervyx/crypto';
 
 import {
   buildCovenant,
@@ -25,14 +25,14 @@ import {
   computeId,
   serializeCovenant,
   deserializeCovenant,
-} from '@grith/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
+} from '@kervyx/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@kervyx/core';
 
-import { parse, evaluate } from '@grith/ccl';
+import { parse, evaluate } from '@kervyx/ccl';
 
-import { MemoryStore } from '@grith/store';
+import { MemoryStore } from '@kervyx/store';
 
-import { Verifier, verifyBatch } from '@grith/verifier';
+import { Verifier, verifyBatch } from '@kervyx/verifier';
 
 import {
   createIdentity,
@@ -40,19 +40,19 @@ import {
   verifyIdentity,
   serializeIdentity,
   deserializeIdentity,
-} from '@grith/identity';
+} from '@kervyx/identity';
 
 import {
   Monitor,
   MonitorDeniedError,
   CapabilityGate,
-} from '@grith/enforcement';
+} from '@kervyx/enforcement';
 
 import {
   createReceipt,
   verifyReceipt,
   computeReputationScore,
-} from '@grith/reputation';
+} from '@kervyx/reputation';
 
 // ---------------------------------------------------------------------------
 // Helpers

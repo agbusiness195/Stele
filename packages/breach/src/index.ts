@@ -5,9 +5,9 @@ export type {
   BreachEvent,
 } from './types.js';
 
-import type { KeyPair, HashHex } from '@grith/crypto';
-import type { Severity } from '@grith/ccl';
-import { GrithError, GrithErrorCode } from '@grith/types';
+import type { KeyPair, HashHex } from '@kervyx/crypto';
+import type { Severity } from '@kervyx/ccl';
+import { KervyxError, KervyxErrorCode } from '@kervyx/types';
 import {
   sha256Object,
   canonicalizeJson,
@@ -16,7 +16,7 @@ import {
   toHex,
   fromHex,
   timestamp,
-} from '@grith/crypto';
+} from '@kervyx/crypto';
 
 import type {
   BreachAttestation,
@@ -533,15 +533,15 @@ export class ExponentialDegradation {
 
   constructor(config: ExponentialDegradationConfig) {
     if (config.baseLoss <= 0 || config.baseLoss > 1) {
-      throw new GrithError(
+      throw new KervyxError(
         'ExponentialDegradation baseLoss must be in (0, 1]',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (config.lambda <= 0) {
-      throw new GrithError(
+      throw new KervyxError(
         'ExponentialDegradation lambda must be > 0',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.baseLoss = config.baseLoss;
@@ -555,9 +555,9 @@ export class ExponentialDegradation {
    */
   computeLoss(hopDistance: number): number {
     if (hopDistance < 0 || !Number.isFinite(hopDistance)) {
-      throw new GrithError(
+      throw new KervyxError(
         'hopDistance must be a non-negative finite number',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     return this.baseLoss * Math.exp(-this.lambda * hopDistance);
@@ -571,9 +571,9 @@ export class ExponentialDegradation {
    */
   degrade(currentTrust: number, hopDistance: number): number {
     if (currentTrust < 0 || currentTrust > 1) {
-      throw new GrithError(
+      throw new KervyxError(
         'currentTrust must be in [0, 1]',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     const loss = this.computeLoss(hopDistance);
@@ -586,9 +586,9 @@ export class ExponentialDegradation {
    */
   profile(maxHops: number): number[] {
     if (maxHops < 0 || !Number.isInteger(maxHops)) {
-      throw new GrithError(
+      throw new KervyxError(
         'maxHops must be a non-negative integer',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     const result: number[] = [];
@@ -606,9 +606,9 @@ export class ExponentialDegradation {
    */
   effectiveRadius(threshold: number): number {
     if (threshold <= 0 || threshold > 1) {
-      throw new GrithError(
+      throw new KervyxError(
         'threshold must be in (0, 1]',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.baseLoss < threshold) {
@@ -680,9 +680,9 @@ export class BreachStateMachine {
 
   constructor(breachId: string, config?: Partial<BreachStateMachineConfig>) {
     if (!breachId || breachId.trim().length === 0) {
-      throw new GrithError(
+      throw new KervyxError(
         'breachId must be a non-empty string',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.breachId = breachId;
@@ -726,20 +726,20 @@ export class BreachStateMachine {
    * @param to - Target state.
    * @param actor - Identifier of the entity performing the transition.
    * @param evidence - Evidence supporting the transition.
-   * @throws GrithError if the transition is invalid.
+   * @throws KervyxError if the transition is invalid.
    */
   transition(to: BreachState, actor: string, evidence: BreachEvidence[] = []): void {
     const allowedTargets = VALID_TRANSITIONS[this._state];
     if (!allowedTargets.includes(to)) {
-      throw new GrithError(
+      throw new KervyxError(
         `Invalid breach state transition: ${this._state} -> ${to}. Allowed: [${allowedTargets.join(', ')}]`,
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (!actor || actor.trim().length === 0) {
-      throw new GrithError(
+      throw new KervyxError(
         'actor must be a non-empty string',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -832,21 +832,21 @@ export class RecoveryModel {
 
   constructor(config: RecoveryModelConfig) {
     if (config.maxRecovery <= 0 || config.maxRecovery > 1) {
-      throw new GrithError(
+      throw new KervyxError(
         'maxRecovery must be in (0, 1]',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (config.steepness <= 0) {
-      throw new GrithError(
+      throw new KervyxError(
         'steepness must be > 0',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (config.midpointMs <= 0) {
-      throw new GrithError(
+      throw new KervyxError(
         'midpointMs must be > 0',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     this.config = { ...config };
@@ -859,9 +859,9 @@ export class RecoveryModel {
    */
   recoveryFraction(elapsedMs: number): number {
     if (elapsedMs < 0) {
-      throw new GrithError(
+      throw new KervyxError(
         'elapsedMs must be non-negative',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     const { maxRecovery, steepness, midpointMs } = this.config;
@@ -886,21 +886,21 @@ export class RecoveryModel {
     elapsedMs: number,
   ): number {
     if (preBreachTrust < 0 || preBreachTrust > 1) {
-      throw new GrithError(
+      throw new KervyxError(
         'preBreachTrust must be in [0, 1]',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (historicalReliability < 0 || historicalReliability > 1) {
-      throw new GrithError(
+      throw new KervyxError(
         'historicalReliability must be in [0, 1]',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (elapsedMs < 0) {
-      throw new GrithError(
+      throw new KervyxError(
         'elapsedMs must be non-negative',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
 
@@ -1034,21 +1034,21 @@ export class RepeatOffenderDetector {
   constructor(config?: Partial<RepeatOffenderConfig>) {
     this.config = { ...DEFAULT_OFFENDER_CONFIG, ...config };
     if (this.config.warningThreshold <= 0) {
-      throw new GrithError(
+      throw new KervyxError(
         'warningThreshold must be > 0',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.restrictionThreshold <= this.config.warningThreshold) {
-      throw new GrithError(
+      throw new KervyxError(
         'restrictionThreshold must be > warningThreshold',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     if (this.config.revocationThreshold <= this.config.restrictionThreshold) {
-      throw new GrithError(
+      throw new KervyxError(
         'revocationThreshold must be > restrictionThreshold',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
   }
@@ -1058,9 +1058,9 @@ export class RepeatOffenderDetector {
    */
   recordBreach(agentId: string, record: BreachRecord): void {
     if (!agentId || agentId.trim().length === 0) {
-      throw new GrithError(
+      throw new KervyxError(
         'agentId must be a non-empty string',
-        GrithErrorCode.PROTOCOL_INVALID_INPUT,
+        KervyxErrorCode.PROTOCOL_INVALID_INPUT,
       );
     }
     let records = this.history.get(agentId);

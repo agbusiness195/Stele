@@ -10,9 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### Interop Layer
-- **@grith/discovery**: `.well-known/grith/` discovery protocol with `DiscoveryServer`,
+- **@kervyx/discovery**: `.well-known/kervyx/` discovery protocol with `DiscoveryServer`,
   `DiscoveryClient`, agent key registry, and capability negotiation.
-- **@grith/schema**: JSON Schema (Draft 2020-12) for `CovenantDocument`,
+- **@kervyx/schema**: JSON Schema (Draft 2020-12) for `CovenantDocument`,
   `DiscoveryDocument`, and `AgentKeyEntry` with `validateCovenantDocument()`,
   `validateDiscoveryDocument()`, and `validateAgentKeyEntry()`.
 
@@ -26,12 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   histogram reporting.
 
 #### Developer Experience
-- **@grith/cli**: Shell completions for Bash, Zsh, and Fish; `grith doctor`
+- **@kervyx/cli**: Shell completions for Bash, Zsh, and Fish; `kervyx doctor`
   environment diagnostics; JSON/table output formatting; config file management.
 
 ### Changed
 - Raised coverage thresholds from 80/75/80/80 to 99/97/99/99.
-- Updated all error constructors to use `GrithErrorCode` enum consistently.
+- Updated all error constructors to use `KervyxErrorCode` enum consistently.
 - Added `@types/node` for proper TypeScript type coverage of Node.js globals.
 - Fixed 224 TypeScript strict-mode errors across the entire codebase.
 - Updated README badges to reflect actual counts (5,158+ tests, 85 suites, 34 packages).
@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TypeScript `TextEncoder`, `btoa`, `atob`, `process`, `console` references now
   properly resolved via `@types/node`.
 - Strict null check errors in test and source files (TS2532, TS18048).
-- `GrithErrorCode` type mismatches in negotiation, consensus, and temporal packages.
+- `KervyxErrorCode` type mismatches in negotiation, consensus, and temporal packages.
 - Removed `as any` casts from conformance suite in favour of proper type assertions.
 
 ## [0.1.0] - 2025-02-07
@@ -48,86 +48,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### Foundation Layer
-- **@grith/types**: Shared error classes (`GrithError`, `ValidationError`, `CryptoError`,
+- **@kervyx/types**: Shared error classes (`KervyxError`, `ValidationError`, `CryptoError`,
   `CCLError`, `ChainError`, `StorageError`), validation utilities (`validateNonEmpty`,
   `validateRange`, `validateHex`, `validateProbability`), `Result<T, E>` type,
   runtime type guards, input sanitization, and structured logging with levels and
   child loggers.
-- **@grith/crypto**: Ed25519 key generation, signing, and verification via
+- **@kervyx/crypto**: Ed25519 key generation, signing, and verification via
   `@noble/ed25519`; SHA-256 hashing; canonical JSON (JCS / RFC 8785);
   hex and base64url encoding; constant-time comparison; nonce generation.
-- **@grith/ccl**: Covenant Constraint Language (CCL) with `permit`, `deny`,
+- **@kervyx/ccl**: Covenant Constraint Language (CCL) with `permit`, `deny`,
   `require`, and `limit` statements; `when` conditional clauses; glob-based
   resource matching; deny-wins merge semantics; narrowing validation; serialization.
-- **@grith/core**: Covenant document lifecycle -- `buildCovenant`, `verifyCovenant`
+- **@kervyx/core**: Covenant document lifecycle -- `buildCovenant`, `verifyCovenant`
   (11 specification checks), `countersignCovenant`, `resignCovenant`, chain
   resolution, effective constraint computation, narrowing validation, and
   JSON serialization/deserialization.
-- **@grith/store**: Pluggable `CovenantStore` interface with `MemoryStore` (in-memory)
+- **@kervyx/store**: Pluggable `CovenantStore` interface with `MemoryStore` (in-memory)
   and `FileStore` (persistent, atomic writes) implementations; event system for
   put/delete notifications; batch operations; filtered listing.
-- **@grith/verifier**: Standalone `Verifier` class with single, chain, action, and
+- **@kervyx/verifier**: Standalone `Verifier` class with single, chain, action, and
   batch verification; history tracking; strict mode with warning escalation.
-- **@grith/sdk**: Unified `GrithClient` entry point combining key management,
+- **@kervyx/sdk**: Unified `KervyxClient` entry point combining key management,
   covenant lifecycle, identity management, chain operations, and CCL utilities;
   `QuickCovenant` convenience builders; typed event system with 8 event types.
-- **@grith/identity**: Agent identity with model attestation, capabilities, deployment
+- **@kervyx/identity**: Agent identity with model attestation, capabilities, deployment
   context, lineage tracking, evolution with carry-forward rates, and cryptographic
   verification.
 
 #### Enforcement Layer
-- **@grith/enforcement**: Runtime `Monitor` with CCL evaluation, rate limiting,
+- **@kervyx/enforcement**: Runtime `Monitor` with CCL evaluation, rate limiting,
   hash-chained audit logging, and capability manifests.
-- **@grith/proof**: Poseidon-based compliance proofs -- audit commitment, constraint
+- **@kervyx/proof**: Poseidon-based compliance proofs -- audit commitment, constraint
   commitment, proof generation, and verification.
-- **@grith/breach**: Breach attestation with severity-based trust status mapping,
+- **@kervyx/breach**: Breach attestation with severity-based trust status mapping,
   trust graph management, and cryptographic verification.
-- **@grith/reputation**: Reputation scoring with recency decay, breach penalties,
+- **@kervyx/reputation**: Reputation scoring with recency decay, breach penalties,
   staking, delegation, and endorsements.
-- **@grith/mcp**: MCP guard wrapping MCP servers with Grith enforcement, audit
+- **@kervyx/mcp**: MCP guard wrapping MCP servers with Kervyx enforcement, audit
   logging, identity creation, and compliance proof generation; named presets.
 
 #### Protocol Layer
-- **@grith/attestation**: External attestation creation, reconciliation, chain
+- **@kervyx/attestation**: External attestation creation, reconciliation, chain
   linking, and coverage analysis.
-- **@grith/canary**: Canary testing with challenge generation from CCL constraints,
+- **@kervyx/canary**: Canary testing with challenge generation from CCL constraints,
   scheduled execution, and result correlation.
-- **@grith/gametheory**: Game-theoretic honesty proofs with minimum stake computation.
-- **@grith/composition**: Formal constraint composition with system-property checking,
+- **@kervyx/gametheory**: Game-theoretic honesty proofs with minimum stake computation.
+- **@kervyx/composition**: Formal constraint composition with system-property checking,
   decomposition, and complexity analysis.
-- **@grith/antifragile**: Breach-to-antibody generation, network health assessment,
+- **@kervyx/antifragile**: Breach-to-antibody generation, network health assessment,
   stress testing, governance proposals, and antifragility indexing.
-- **@grith/negotiation**: Multi-party negotiation sessions with proposal workflows,
+- **@kervyx/negotiation**: Multi-party negotiation sessions with proposal workflows,
   Nash bargaining solutions, and Pareto optimality.
-- **@grith/consensus**: Accountability-score-based tier classification and access
+- **@kervyx/consensus**: Accountability-score-based tier classification and access
   decisions with configurable component weights.
-- **@grith/robustness**: Input bound verification, vulnerability scanning, formal
+- **@kervyx/robustness**: Input bound verification, vulnerability scanning, formal
   verification, contradiction detection, and robustness scoring.
-- **@grith/temporal**: Trigger-based constraint evolution, trust decay modeling,
+- **@kervyx/temporal**: Trigger-based constraint evolution, trust decay modeling,
   violation tracking, and expiration forecasting.
-- **@grith/recursive**: Meta-covenants, recursive verification, termination proofs,
+- **@kervyx/recursive**: Meta-covenants, recursive verification, termination proofs,
   transitive trust computation, and minimal verification sets.
-- **@grith/alignment**: HHH (Helpful, Honest, Harmless) alignment properties,
+- **@kervyx/alignment**: HHH (Helpful, Honest, Harmless) alignment properties,
   alignment verification, drift detection, and decomposition.
-- **@grith/norms**: Emergent norm discovery, clustering, governance proposals,
+- **@kervyx/norms**: Emergent norm discovery, clustering, governance proposals,
   template creation, conflict detection, and precedence resolution.
-- **@grith/substrate**: Cross-substrate adapters for AI agents, robots, IoT devices,
+- **@kervyx/substrate**: Cross-substrate adapters for AI agents, robots, IoT devices,
   autonomous vehicles, smart contracts, and drones; constraint translation and
   safety bounds.
-- **@grith/derivatives**: Trust futures, agent insurance policies, risk assessment
+- **@kervyx/derivatives**: Trust futures, agent insurance policies, risk assessment
   with configurable weights, and settlement.
-- **@grith/legal**: Legal identity packages, compliance checking, jurisdictional
+- **@kervyx/legal**: Legal identity packages, compliance checking, jurisdictional
   mapping, cross-jurisdiction analysis, audit trail export, and regulatory gap analysis.
 
 #### Platform Layer
-- **@grith/react**: Framework-agnostic reactive primitives (`Observable`,
+- **@kervyx/react**: Framework-agnostic reactive primitives (`Observable`,
   `CovenantState`, `IdentityState`, `StoreState`).
-- **@grith/evm**: EVM anchoring utilities -- ABI encoding/decoding, function
+- **@kervyx/evm**: EVM anchoring utilities -- ABI encoding/decoding, function
   selector computation, covenant anchoring, and anchor verification.
-- **@grith/mcp-server**: JSON-RPC 2.0 MCP server with 6 tools (`create_covenant`,
+- **@kervyx/mcp-server**: JSON-RPC 2.0 MCP server with 6 tools (`create_covenant`,
   `verify_covenant`, `evaluate_action`, `create_identity`, `parse_ccl`,
   `list_covenants`).
-- **@grith/cli**: Command-line interface for key generation, covenant build/verify/
+- **@kervyx/cli**: Command-line interface for key generation, covenant build/verify/
   inspect/resign, CCL parsing, and identity create/evolve.
 
 #### Infrastructure

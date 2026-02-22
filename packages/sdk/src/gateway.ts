@@ -1,5 +1,5 @@
 /**
- * API gateway for the Grith protocol.
+ * API gateway for the Kervyx protocol.
  *
  * Drop-in middleware that requires covenants before granting API access.
  * Enforces identity verification, covenant presence, trust score minimums,

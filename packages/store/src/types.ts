@@ -1,11 +1,11 @@
 /**
- * Type definitions for the @grith/store package.
+ * Type definitions for the @kervyx/store package.
  *
  * Defines the CovenantStore interface, query/filter types, event system,
  * and batch operation contracts.
  */
 
-import type { CovenantDocument } from '@grith/core';
+import type { CovenantDocument } from '@kervyx/core';
 
 // ─── Query / filter types ───────────────────────────────────────────────────────
 

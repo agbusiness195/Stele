@@ -16,15 +16,15 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { run } from '@grith/cli';
-import { GrithServer } from '@grith/mcp-server';
-import { MemoryStore } from '@grith/store';
+import { run } from '@kervyx/cli';
+import { KervyxServer } from '@kervyx/mcp-server';
+import { MemoryStore } from '@kervyx/store';
 
 describe('CLI smoke tests', () => {
   it('prints help text with exit code 0', async () => {
     const result = await run(['help']);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('grith');
+    expect(result.stdout).toContain('kervyx');
     expect(result.stderr).toBe('');
   });
 
@@ -59,13 +59,13 @@ describe('CLI smoke tests', () => {
 describe('MCP Server smoke tests', () => {
   it('creates a server instance', () => {
     const store = new MemoryStore();
-    const server = new GrithServer(store);
+    const server = new KervyxServer(store);
     expect(server).toBeDefined();
   });
 
   it('responds to initialize message', async () => {
     const store = new MemoryStore();
-    const server = new GrithServer(store);
+    const server = new KervyxServer(store);
     const response = await server.handleMessage({
       jsonrpc: '2.0',
       method: 'initialize',
@@ -77,7 +77,7 @@ describe('MCP Server smoke tests', () => {
 
   it('returns error for unknown method', async () => {
     const store = new MemoryStore();
-    const server = new GrithServer(store);
+    const server = new KervyxServer(store);
     const response = await server.handleMessage({
       jsonrpc: '2.0',
       method: 'nonexistent/method',

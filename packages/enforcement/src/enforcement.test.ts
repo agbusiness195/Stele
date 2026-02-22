@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, sha256String } from '@grith/crypto';
-import type { HashHex, KeyPair } from '@grith/crypto';
+import { generateKeyPair, sha256String } from '@kervyx/crypto';
+import type { HashHex, KeyPair } from '@kervyx/crypto';
 import {
   Monitor,
   MonitorDeniedError,

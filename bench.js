@@ -1,5 +1,5 @@
-const { buildCovenant, verifyCovenant } = require('@grith/core');
-const { generateKeyPair } = require('@grith/crypto');
+const { buildCovenant, verifyCovenant } = require('@kervyx/core');
+const { generateKeyPair } = require('@kervyx/crypto');
 
 (async () => {
   const issuer = await generateKeyPair();

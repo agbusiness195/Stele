@@ -1,11 +1,11 @@
-# @grith/canary
+# @kervyx/canary
 
 Canary token generation, tripwire evaluation, scheduling, and breach correlation analysis.
 
 ## Installation
 
 ```bash
-npm install @grith/canary
+npm install @kervyx/canary
 ```
 
 ## Key APIs
@@ -26,7 +26,7 @@ import {
   detectionProbability,
   canarySchedule,
   canaryCorrelation,
-} from '@grith/canary';
+} from '@kervyx/canary';
 
 // Generate a canary from a CCL constraint
 const canary = generateCanary(
@@ -64,4 +64,4 @@ console.log(correlation.meaningful);  // true if sample size >= 3
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

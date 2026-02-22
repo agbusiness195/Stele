@@ -1,11 +1,11 @@
-# @grith/substrate
+# @kervyx/substrate
 
 Cross-substrate layer for translating and enforcing covenants across heterogeneous platforms: AI agents, robots, drones, IoT devices, autonomous vehicles, and smart contracts.
 
 ## Installation
 
 ```bash
-npm install @grith/substrate
+npm install @kervyx/substrate
 ```
 
 ## Key APIs
@@ -29,7 +29,7 @@ import {
   checkSafetyBound,
   substrateCompatibility,
   constraintTranslation,
-} from '@grith/substrate';
+} from '@kervyx/substrate';
 
 // Create substrate adapters
 const robot = createAdapter('robot', {
@@ -80,4 +80,4 @@ console.log(compat.interactionProtocol);  // 'bridged'
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

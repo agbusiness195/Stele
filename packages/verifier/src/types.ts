@@ -1,5 +1,5 @@
 /**
- * @grith/verifier type definitions.
+ * @kervyx/verifier type definitions.
  *
  * Report types, options, and records used by the Verifier class
  * and the standalone `verifyBatch` function.
@@ -9,9 +9,9 @@ import type {
   CovenantDocument,
   VerificationResult,
   VerificationCheck,
-} from '@grith/core';
+} from '@kervyx/core';
 
-import type { Statement, NarrowingViolation, EvaluationContext, Severity } from '@grith/ccl';
+import type { Statement, NarrowingViolation, EvaluationContext, Severity } from '@kervyx/ccl';
 
 // ─── Options ────────────────────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ export interface VerifierOptions {
 
   /**
    * Optional maximum chain depth override.
-   * Defaults to MAX_CHAIN_DEPTH from @grith/core (16).
+   * Defaults to MAX_CHAIN_DEPTH from @kervyx/core (16).
    */
   maxChainDepth?: number;
 }

@@ -2,8 +2,8 @@
   "_meta": {
     "generated_at": "2026-01-01T00:00:00.000Z",
     "protocol_version": "1.0",
-    "generator": "@grith/test-vectors",
-    "description": "Canonical test vectors for the Grith protocol. Any conformant implementation MUST produce identical results for these inputs.",
+    "generator": "@kervyx/test-vectors",
+    "description": "Canonical test vectors for the Kervyx protocol. Any conformant implementation MUST produce identical results for these inputs.",
     "total_vectors": 56,
     "categories": [
       "crypto",
@@ -160,10 +160,10 @@
       },
       {
         "category": "crypto",
-        "name": "ed25519-sign-The-Grith-Protocol",
-        "description": "Ed25519 sign/verify of \"The Grith Protocol\"",
+        "name": "ed25519-sign-The-Kervyx-Protocol",
+        "description": "Ed25519 sign/verify of \"The Kervyx Protocol\"",
         "input": {
-          "message": "The Grith Protocol",
+          "message": "The Kervyx Protocol",
           "publicKey": "4cb5abf6ad79fbf5abbccafcc269d85cd2651ed4b885b5869f241aedf0a5ba29",
           "privateKey": "0000000000000000000000000000000000000000000000000000000000000001"
         },

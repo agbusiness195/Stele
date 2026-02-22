@@ -1,12 +1,12 @@
 /**
  * SDK Protocol Re-export Integration Tests
  *
- * Verifies that all protocol packages re-exported from @grith/sdk are
+ * Verifies that all protocol packages re-exported from @kervyx/sdk are
  * correctly available and are the expected types (function, class, object).
  * Detailed behavioral tests are in each package's own test suite.
  */
 import { describe, it, expect } from 'vitest';
-import * as sdk from '@grith/sdk';
+import * as sdk from '@kervyx/sdk';
 
 describe('SDK > Protocol Re-exports', () => {
   // ─── Canary ───────────────────────────────────────────────────────────

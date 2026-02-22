@@ -1,5 +1,5 @@
-import { sha256String } from '@grith/crypto';
-import type { HashHex } from '@grith/crypto';
+import { sha256String } from '@kervyx/crypto';
+import type { HashHex } from '@kervyx/crypto';
 
 /**
  * BN254 (alt_bn128) scalar field prime.

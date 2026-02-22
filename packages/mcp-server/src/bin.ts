@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 /**
- * Grith MCP Server — stdio transport.
+ * Kervyx MCP Server — stdio transport.
  *
  * Reads newline-delimited JSON-RPC 2.0 messages from stdin,
- * dispatches them to the GrithServer, and writes responses to stdout.
+ * dispatches them to the KervyxServer, and writes responses to stdout.
  *
  * Usage:
- *   npx grith-mcp
- *   echo '{"jsonrpc":"2.0","method":"initialize","id":1}' | npx grith-mcp
+ *   npx kervyx-mcp
+ *   echo '{"jsonrpc":"2.0","method":"initialize","id":1}' | npx kervyx-mcp
  */
 
-import { GrithServer } from './index';
-import { MemoryStore } from '@grith/store';
+import { KervyxServer } from './index';
+import { MemoryStore } from '@kervyx/store';
 import type { JsonRpcRequest } from './types';
 
 const store = new MemoryStore();
-const server = new GrithServer(store);
+const server = new KervyxServer(store);
 
 let buffer = '';
 

@@ -1,5 +1,5 @@
 /**
- * Certification authority for the Grith protocol.
+ * Certification authority for the Kervyx protocol.
  *
  * Certifies agents like UL certifies electronics. Agents earn certificates
  * at basic, standard, or enterprise tiers based on trust history, attestation

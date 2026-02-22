@@ -1,11 +1,11 @@
-# @grith/identity
+# @kervyx/identity
 
 Agent identity management with cryptographic lineage tracking. Create, evolve, and verify AI agent identities with reputation carry-forward across identity changes.
 
 ## Installation
 
 ```bash
-npm install @grith/identity
+npm install @kervyx/identity
 ```
 
 ## Usage
@@ -13,8 +13,8 @@ npm install @grith/identity
 ### Create an Identity
 
 ```typescript
-import { generateKeyPair } from '@grith/crypto';
-import { createIdentity } from '@grith/identity';
+import { generateKeyPair } from '@kervyx/crypto';
+import { createIdentity } from '@kervyx/identity';
 
 const kp = await generateKeyPair();
 
@@ -32,7 +32,7 @@ console.log(identity.version); // 1
 ### Evolve an Identity
 
 ```typescript
-import { evolveIdentity } from '@grith/identity';
+import { evolveIdentity } from '@kervyx/identity';
 
 const evolved = await evolveIdentity(identity, {
   operatorKeyPair: kp,
@@ -48,7 +48,7 @@ console.log(evolved.lineage.length);   // 2
 ### Verify, Lineage, and Serialization
 
 ```typescript
-import { verifyIdentity, getLineage, shareAncestor, serializeIdentity } from '@grith/identity';
+import { verifyIdentity, getLineage, shareAncestor, serializeIdentity } from '@kervyx/identity';
 
 const result = await verifyIdentity(identity);
 console.log(result.valid); // true
@@ -70,4 +70,4 @@ const json = serializeIdentity(identity);
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference and architecture guide.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference and architecture guide.

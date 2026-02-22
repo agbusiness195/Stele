@@ -1,5 +1,5 @@
 /**
- * Metrics Dashboard data model for the Grith protocol.
+ * Metrics Dashboard data model for the Kervyx protocol.
  *
  * Provides a structured data model for building monitoring dashboards
  * with metric series, panels, aggregation, and retention policies.
@@ -67,7 +67,7 @@ export interface Dashboard {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-/** Standard metrics tracked by the Grith protocol. */
+/** Standard metrics tracked by the Kervyx protocol. */
 export const STANDARD_METRICS: string[] = [
   'trust_resolutions_total',
   'enforcement_decisions_total',
@@ -185,7 +185,7 @@ export function addMetric(
 }
 
 /**
- * Create a pre-built standard dashboard with panels for the Grith protocol.
+ * Create a pre-built standard dashboard with panels for the Kervyx protocol.
  *
  * Includes four panels:
  * 1. "Trust Overview" -- trust score gauge, resolutions line chart

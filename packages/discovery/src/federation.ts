@@ -1,5 +1,5 @@
 /**
- * @grith/discovery/federation — Federated Discovery Protocol.
+ * @kervyx/discovery/federation — Federated Discovery Protocol.
  *
  * DNS-like resolution with multiple independent resolvers.
  * Any entity can run a resolver. Trust the Ed25519 signature, not the resolver.

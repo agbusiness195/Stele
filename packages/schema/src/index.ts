@@ -1,5 +1,5 @@
 /**
- * @grith/schema — Formal JSON Schema definitions for Grith protocol documents.
+ * @kervyx/schema — Formal JSON Schema definitions for Kervyx protocol documents.
  *
  * Provides machine-readable schemas (JSON Schema Draft 2020-12) for:
  * - Covenant documents
@@ -8,7 +8,7 @@
  * - CCL evaluation contexts
  *
  * These schemas enable any language implementation to validate
- * Grith protocol documents without the TypeScript SDK.
+ * Kervyx protocol documents without the TypeScript SDK.
  *
  * @packageDocumentation
  */

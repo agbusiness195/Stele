@@ -12,15 +12,15 @@
  */
 
 import {
-  GrithClient,
+  KervyxClient,
   generateKeyPair,
   countersignCovenant,
   type Issuer,
   type Beneficiary,
   type CovenantDocument,
-} from '@grith/sdk';
+} from '@kervyx/sdk';
 
-import { Verifier } from '@grith/verifier';
+import { Verifier } from '@kervyx/verifier';
 
 async function main() {
   console.log('========================================');
@@ -60,7 +60,7 @@ async function main() {
     name: 'Trading Bot v2',
   };
 
-  const client = new GrithClient({ keyPair: issuerKeys });
+  const client = new KervyxClient({ keyPair: issuerKeys });
 
   const covenant = await client.createCovenant({
     issuer,

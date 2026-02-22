@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { GrithServer, JSON_RPC_ERRORS } from './index';
+import { KervyxServer, JSON_RPC_ERRORS } from './index';
 import type {
   JsonRpcRequest,
   JsonRpcSuccessResponse,
@@ -7,11 +7,11 @@ import type {
   ToolDefinition,
   ToolResult,
 } from './index';
-import { MemoryStore } from '@grith/store';
-import { generateKeyPair, toHex } from '@grith/crypto';
-import type { KeyPair } from '@grith/crypto';
-import { buildCovenant } from '@grith/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
+import { MemoryStore } from '@kervyx/store';
+import { generateKeyPair, toHex } from '@kervyx/crypto';
+import type { KeyPair } from '@kervyx/crypto';
+import { buildCovenant } from '@kervyx/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@kervyx/core';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -84,26 +84,26 @@ async function createAndStoreCovenant(
 
 // ─── Tests ──────────────────────────────────────────────────────────────────────
 
-describe('GrithServer', () => {
+describe('KervyxServer', () => {
   let store: MemoryStore;
-  let server: GrithServer;
+  let server: KervyxServer;
 
   beforeEach(() => {
     store = new MemoryStore();
-    server = new GrithServer(store);
+    server = new KervyxServer(store);
   });
 
   // ── Server initialization ───────────────────────────────────────────────
 
   describe('initialization', () => {
     it('should create a server with default options', () => {
-      expect(server).toBeInstanceOf(GrithServer);
-      expect(server.name).toBe('grith-mcp-server');
+      expect(server).toBeInstanceOf(KervyxServer);
+      expect(server.name).toBe('kervyx-mcp-server');
       expect(server.version).toBe('0.1.0');
     });
 
     it('should create a server with custom name and version', () => {
-      const custom = new GrithServer(store, { name: 'my-server', version: '2.0.0' });
+      const custom = new KervyxServer(store, { name: 'my-server', version: '2.0.0' });
       expect(custom.name).toBe('my-server');
       expect(custom.version).toBe('2.0.0');
     });
@@ -119,7 +119,7 @@ describe('GrithServer', () => {
       expect(result.protocolVersion).toBe('2024-11-05');
       expect(result.capabilities).toBeDefined();
       expect(result.serverInfo).toEqual({
-        name: 'grith-mcp-server',
+        name: 'kervyx-mcp-server',
         version: '0.1.0',
       });
     });

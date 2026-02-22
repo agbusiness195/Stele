@@ -8,7 +8,7 @@ import {
   verify,
   toHex,
   fromHex,
-} from '@grith/crypto';
+} from '@kervyx/crypto';
 import {
   buildCovenant,
   verifyCovenant,
@@ -17,8 +17,8 @@ import {
   canonicalForm,
   computeId,
   PROTOCOL_VERSION,
-} from '@grith/core';
-import type { CovenantDocument, Issuer, Beneficiary } from '@grith/core';
+} from '@kervyx/core';
+import type { CovenantDocument, Issuer, Beneficiary } from '@kervyx/core';
 import {
   parse,
   evaluate,
@@ -26,11 +26,11 @@ import {
   matchResource,
   checkRateLimit,
   serialize,
-} from '@grith/ccl';
-import { createIdentity, evolveIdentity } from '@grith/identity';
+} from '@kervyx/ccl';
+import { createIdentity, evolveIdentity } from '@kervyx/identity';
 
 /**
- * Canonical Test Vectors for the Grith Protocol.
+ * Canonical Test Vectors for the Kervyx Protocol.
  *
  * These vectors enable cross-implementation verification.
  * Any conformant implementation in any language MUST produce
@@ -120,7 +120,7 @@ describe('Canonical Test Vector Generation', () => {
 
     const messages = [
       'hello world',
-      'The Grith Protocol',
+      'The Kervyx Protocol',
       JSON.stringify({ action: 'read', resource: '/data' }),
     ];
 
@@ -794,9 +794,9 @@ describe('Canonical Test Vector Generation', () => {
       _meta: {
         generated_at: '2026-01-01T00:00:00.000Z',
         protocol_version: PROTOCOL_VERSION,
-        generator: '@grith/test-vectors',
+        generator: '@kervyx/test-vectors',
         description:
-          'Canonical test vectors for the Grith protocol. Any conformant implementation MUST produce identical results for these inputs.',
+          'Canonical test vectors for the Kervyx protocol. Any conformant implementation MUST produce identical results for these inputs.',
         total_vectors: vectors.length,
         categories: Object.keys(grouped),
         category_counts: Object.fromEntries(

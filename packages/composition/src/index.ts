@@ -1,4 +1,4 @@
-import { sha256Object } from '@grith/crypto';
+import { sha256Object } from '@kervyx/crypto';
 import {
   parse,
   evaluate,
@@ -6,7 +6,7 @@ import {
   serialize,
   matchAction,
   matchResource,
-} from '@grith/ccl';
+} from '@kervyx/ccl';
 import type {
   CCLDocument,
   PermitDenyStatement,
@@ -16,7 +16,7 @@ import type {
   Condition,
   CompoundCondition,
   EvaluationContext,
-} from '@grith/ccl';
+} from '@kervyx/ccl';
 
 export type {
   CompositionProof,

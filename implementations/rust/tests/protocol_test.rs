@@ -1,4 +1,4 @@
-//! Integration tests for the Grith protocol Rust implementation.
+//! Integration tests for the Kervyx protocol Rust implementation.
 //!
 //! These tests exercise all core operations: key generation, signing,
 //! CCL parsing/evaluation, covenant building/verification/chaining,
@@ -6,16 +6,16 @@
 
 use std::collections::HashMap;
 
-use grith::ccl;
-use grith::covenant::{
+use kervyx::ccl;
+use kervyx::covenant::{
     self, ChainReference, CovenantBuilderOptions, CovenantDocument, Party,
     PROTOCOL_VERSION, MAX_CHAIN_DEPTH,
 };
-use grith::crypto;
-use grith::identity::{
+use kervyx::crypto;
+use kervyx::identity::{
     self, CreateIdentityOptions, DeploymentInfo, EvolveIdentityOptions, ModelInfo,
 };
-use grith::store::{MemoryStore, Store};
+use kervyx::store::{MemoryStore, Store};
 
 // ---------------------------------------------------------------------------
 // Helpers

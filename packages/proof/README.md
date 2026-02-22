@@ -1,11 +1,11 @@
-# @grith/proof
+# @kervyx/proof
 
 Compliance proof generation and verification using Poseidon hash commitments over audit logs and covenant constraints.
 
 ## Installation
 
 ```bash
-npm install @grith/proof
+npm install @kervyx/proof
 ```
 
 ## Key APIs
@@ -25,7 +25,7 @@ npm install @grith/proof
 import {
   generateComplianceProof,
   verifyComplianceProof,
-} from '@grith/proof';
+} from '@kervyx/proof';
 
 // Generate a proof that audit entries comply with constraints
 const proof = await generateComplianceProof({
@@ -50,4 +50,4 @@ console.log(result.errors);  // []
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

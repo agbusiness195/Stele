@@ -1,16 +1,16 @@
-# @grith/mcp-server
+# @kervyx/mcp-server
 
-Model Context Protocol (MCP) server that exposes Grith covenant operations as tools to any AI agent via JSON-RPC 2.0.
+Model Context Protocol (MCP) server that exposes Kervyx covenant operations as tools to any AI agent via JSON-RPC 2.0.
 
 ## Installation
 
 ```bash
-npm install @grith/mcp-server
+npm install @kervyx/mcp-server
 ```
 
 ## Key APIs
 
-- **GrithServer**: MCP server class that handles JSON-RPC 2.0 messages and exposes Grith tools. Supports `initialize`, `tools/list`, `tools/call`, and `ping` methods.
+- **KervyxServer**: MCP server class that handles JSON-RPC 2.0 messages and exposes Kervyx tools. Supports `initialize`, `tools/list`, `tools/call`, and `ping` methods.
 - **createAuthMiddleware()**: Authentication middleware for securing MCP endpoints.
 - **JSON_RPC_ERRORS**: Standard JSON-RPC 2.0 error code constants.
 
@@ -28,11 +28,11 @@ npm install @grith/mcp-server
 ## Usage
 
 ```typescript
-import { GrithServer } from '@grith/mcp-server';
-import { MemoryStore } from '@grith/store';
+import { KervyxServer } from '@kervyx/mcp-server';
+import { MemoryStore } from '@kervyx/store';
 
-const server = new GrithServer(new MemoryStore(), {
-  name: 'my-grith-server',
+const server = new KervyxServer(new MemoryStore(), {
+  name: 'my-kervyx-server',
   version: '1.0.0',
 });
 
@@ -54,4 +54,4 @@ const result = await server.callTool('evaluate_action', {
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

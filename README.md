@@ -1,4 +1,4 @@
-# GRITH
+# KERVYX
 
 **The accountability primitive for AI agents.**
 
@@ -9,7 +9,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
 ![Node](https://img.shields.io/badge/node-18%20%7C%2020%20%7C%2022-green)
 
-## What Grith Does
+## What Kervyx Does
 
 Agents publish signed **Covenants** -- cryptographic behavioral commitments declaring
 what they will do, what they will not do, and what happens when they violate.
@@ -20,13 +20,13 @@ signatures and SHA-256 content addressing. No trusted third party required.
 ## Quick Start
 
 ```bash
-npm install @grith/sdk
+npm install @kervyx/sdk
 ```
 
 ```typescript
-import { GrithClient } from '@grith/sdk';
+import { KervyxClient } from '@kervyx/sdk';
 
-const client = new GrithClient();
+const client = new KervyxClient();
 await client.generateKeyPair();
 
 // Create a covenant
@@ -47,7 +47,7 @@ console.log(eval.permitted); // true
 
 ## The Protocol
 
-Grith works in three steps:
+Kervyx works in three steps:
 
 1. **Inscribe** -- An agent publishes a signed Covenant: a cryptographic document
    specifying behavioral constraints, the issuer who operates the agent, and the
@@ -68,65 +68,65 @@ Grith works in three steps:
 
 | Package | Description |
 |---------|-------------|
-| `@grith/types` | Error hierarchy, validation guards, logging, tracing, retry utilities |
-| `@grith/crypto` | Ed25519 signing, SHA-256 hashing, JCS canonicalization |
-| `@grith/ccl` | Covenant Constraint Language parser & evaluator |
-| `@grith/core` | Covenant build, verify, chain, serialize, countersign |
-| `@grith/store` | MemoryStore + FileStore pluggable persistence |
-| `@grith/verifier` | Stateful verification engine with 11 specification checks |
-| `@grith/identity` | Agent identity creation, evolution & lineage tracking |
+| `@kervyx/types` | Error hierarchy, validation guards, logging, tracing, retry utilities |
+| `@kervyx/crypto` | Ed25519 signing, SHA-256 hashing, JCS canonicalization |
+| `@kervyx/ccl` | Covenant Constraint Language parser & evaluator |
+| `@kervyx/core` | Covenant build, verify, chain, serialize, countersign |
+| `@kervyx/store` | MemoryStore + FileStore pluggable persistence |
+| `@kervyx/verifier` | Stateful verification engine with 11 specification checks |
+| `@kervyx/identity` | Agent identity creation, evolution & lineage tracking |
 
 ### SDK
 
 | Package | Description |
 |---------|-------------|
-| `@grith/sdk` | GrithClient unified API, QuickCovenant builders, event system |
+| `@kervyx/sdk` | KervyxClient unified API, QuickCovenant builders, event system |
 
 ### Enforcement
 
 | Package | Description |
 |---------|-------------|
-| `@grith/enforcement` | Runtime enforcement monitor with audit trail |
-| `@grith/proof` | Poseidon-based compliance proof generation |
-| `@grith/breach` | Breach detection, attestation & trust graph propagation |
-| `@grith/reputation` | Trust scoring with decay and stake-weighted reputation |
-| `@grith/mcp` | MCP middleware guard for tool-call enforcement |
+| `@kervyx/enforcement` | Runtime enforcement monitor with audit trail |
+| `@kervyx/proof` | Poseidon-based compliance proof generation |
+| `@kervyx/breach` | Breach detection, attestation & trust graph propagation |
+| `@kervyx/reputation` | Trust scoring with decay and stake-weighted reputation |
+| `@kervyx/mcp` | MCP middleware guard for tool-call enforcement |
 
 ### Protocol
 
 | Package | Description |
 |---------|-------------|
-| `@grith/attestation` | External attestation reconciliation |
-| `@grith/canary` | Canary testing framework for constraint validation |
-| `@grith/gametheory` | Game-theoretic honesty proofs and incentive analysis |
-| `@grith/composition` | Formal constraint composition and verification |
-| `@grith/antifragile` | Breach-to-improvement antifragility engine |
-| `@grith/negotiation` | Multi-party covenant negotiation sessions |
-| `@grith/consensus` | Accountability-based consensus protocol |
-| `@grith/robustness` | Formal robustness and coverage analysis |
-| `@grith/temporal` | Temporal evolution, triggers & scheduled transitions |
-| `@grith/recursive` | Meta-covenants and recursive verification |
-| `@grith/alignment` | AI alignment property verification |
-| `@grith/norms` | Emergent norm discovery from behavioral patterns |
-| `@grith/substrate` | Cross-substrate constraint translation |
-| `@grith/derivatives` | Trust futures, insurance & derivative instruments |
-| `@grith/legal` | Legal compliance mapping and audit trails |
+| `@kervyx/attestation` | External attestation reconciliation |
+| `@kervyx/canary` | Canary testing framework for constraint validation |
+| `@kervyx/gametheory` | Game-theoretic honesty proofs and incentive analysis |
+| `@kervyx/composition` | Formal constraint composition and verification |
+| `@kervyx/antifragile` | Breach-to-improvement antifragility engine |
+| `@kervyx/negotiation` | Multi-party covenant negotiation sessions |
+| `@kervyx/consensus` | Accountability-based consensus protocol |
+| `@kervyx/robustness` | Formal robustness and coverage analysis |
+| `@kervyx/temporal` | Temporal evolution, triggers & scheduled transitions |
+| `@kervyx/recursive` | Meta-covenants and recursive verification |
+| `@kervyx/alignment` | AI alignment property verification |
+| `@kervyx/norms` | Emergent norm discovery from behavioral patterns |
+| `@kervyx/substrate` | Cross-substrate constraint translation |
+| `@kervyx/derivatives` | Trust futures, insurance & derivative instruments |
+| `@kervyx/legal` | Legal compliance mapping and audit trails |
 
 ### Interop
 
 | Package | Description |
 |---------|-------------|
-| `@grith/discovery` | `.well-known/grith/` discovery protocol, key registry & negotiation |
-| `@grith/schema` | JSON Schema (Draft 2020-12) validation for all document types |
+| `@kervyx/discovery` | `.well-known/kervyx/` discovery protocol, key registry & negotiation |
+| `@kervyx/schema` | JSON Schema (Draft 2020-12) validation for all document types |
 
 ### Platform
 
 | Package | Description |
 |---------|-------------|
-| `@grith/react` | Reactive UI primitives (Observable, CovenantState) |
-| `@grith/evm` | EVM anchoring, ABI encoding & on-chain registry |
-| `@grith/mcp-server` | JSON-RPC 2.0 MCP server exposing Grith tools |
-| `@grith/cli` | Command-line interface for the Grith protocol |
+| `@kervyx/react` | Reactive UI primitives (Observable, CovenantState) |
+| `@kervyx/evm` | EVM anchoring, ABI encoding & on-chain registry |
+| `@kervyx/mcp-server` | JSON-RPC 2.0 MCP server exposing Kervyx tools |
+| `@kervyx/cli` | Command-line interface for the Kervyx protocol |
 
 ## CCL (Covenant Constraint Language)
 
@@ -170,7 +170,7 @@ layers below it:
 |              discovery  .  schema                     |
 +-----------------------------------------------------+
 |                        SDK                           |
-|           sdk (GrithClient, QuickCovenant)            |
+|           sdk (KervyxClient, QuickCovenant)            |
 +-----------------------------------------------------+
 |                      Protocol                        |
 |    attestation . canary . gametheory . composition    |
@@ -200,7 +200,7 @@ composition, antifragility, negotiation, consensus, robustness, temporal
 evolution, recursive meta-covenants, alignment verification, emergent norms,
 cross-substrate translation, trust derivatives, and legal compliance.
 
-**SDK** is a thin unification layer (`GrithClient`) that wraps Foundation
+**SDK** is a thin unification layer (`KervyxClient`) that wraps Foundation
 packages into a single ergonomic API with a typed event system.
 
 **Platform** provides integration adapters: reactive UI primitives, EVM
@@ -210,8 +210,8 @@ blockchain anchoring, a JSON-RPC MCP server, and a CLI.
 
 ```bash
 # Clone the repository
-git clone https://github.com/agbusiness195/grith.git
-cd grith
+git clone https://github.com/agbusiness195/kervyx.git
+cd kervyx
 
 # Install all dependencies (npm workspaces)
 npm install

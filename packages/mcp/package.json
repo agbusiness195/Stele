@@ -1,5 +1,5 @@
 {
-  "name": "@grith/mcp",
+  "name": "@kervyx/mcp",
   "version": "2.0.0",
   "description": "Model Context Protocol integration utilities",
   "sideEffects": false,
@@ -27,19 +27,19 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@grith/crypto": "2.0.0",
-    "@grith/ccl": "2.0.0",
-    "@grith/core": "2.0.0",
-    "@grith/enforcement": "2.0.0",
-    "@grith/identity": "2.0.0",
-    "@grith/reputation": "2.0.0",
-    "@grith/proof": "2.0.0"
+    "@kervyx/crypto": "2.0.0",
+    "@kervyx/ccl": "2.0.0",
+    "@kervyx/core": "2.0.0",
+    "@kervyx/enforcement": "2.0.0",
+    "@kervyx/identity": "2.0.0",
+    "@kervyx/reputation": "2.0.0",
+    "@kervyx/proof": "2.0.0"
   },
   "license": "MIT",
-  "author": "Grith Labs, Inc.",
-  "homepage": "https://grith.dev",
+  "author": "Kervyx Labs, Inc.",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
   "engines": {
     "node": ">=18"
@@ -49,11 +49,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/mcp"
   },
   "keywords": [
-    "grith",
+    "kervyx",
     "covenant",
     "ai-accountability",
     "mcp",

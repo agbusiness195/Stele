@@ -1,5 +1,5 @@
 {
-  "name": "@grith/antifragile",
+  "name": "@kervyx/antifragile",
   "version": "2.0.0",
   "description": "Antifragility analysis with stress testing and recovery metrics",
   "sideEffects": false,
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@grith/crypto": "2.0.0",
-    "@grith/types": "2.0.0"
+    "@kervyx/crypto": "2.0.0",
+    "@kervyx/types": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -39,16 +39,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/antifragile"
   },
-  "homepage": "https://grith.dev",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
-  "author": "Grith Labs, Inc.",
+  "author": "Kervyx Labs, Inc.",
   "keywords": [
-    "grith",
+    "kervyx",
     "covenant",
     "ai-accountability",
     "antifragile",

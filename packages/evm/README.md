@@ -1,11 +1,11 @@
-# @grith/evm
+# @kervyx/evm
 
 EVM anchoring utilities for on-chain covenant verification with ABI encoding and Keccak-256 hashing.
 
 ## Installation
 
 ```bash
-npm install @grith/evm
+npm install @kervyx/evm
 ```
 
 ## Key APIs
@@ -22,12 +22,12 @@ npm install @grith/evm
 - **checksumAddress()**: EIP-55 mixed-case checksum encoding.
 - **isValidAddress()**: Validate EVM addresses.
 - **keccak256()**: Keccak-256 hashing for EVM-compatible use cases.
-- **GRITH_REGISTRY_ABI**: JSON ABI for the on-chain Grith registry contract.
+- **KERVYX_REGISTRY_ABI**: JSON ABI for the on-chain Kervyx registry contract.
 
 ## Usage
 
 ```typescript
-import { EVMClient, buildAnchorCalldata, computeAnchorHash } from '@grith/evm';
+import { EVMClient, buildAnchorCalldata, computeAnchorHash } from '@kervyx/evm';
 
 // Plug in any JSON-RPC provider (ethers, viem, raw fetch, etc.)
 const client = new EVMClient(myProvider, '0xRegistryAddress');
@@ -48,4 +48,4 @@ const isAnchored = await client.verifyCovenant(anchor.covenantId);
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

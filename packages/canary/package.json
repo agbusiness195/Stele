@@ -1,5 +1,5 @@
 {
-  "name": "@grith/canary",
+  "name": "@kervyx/canary",
   "version": "2.0.0",
   "description": "Canary token generation and tripwire monitoring",
   "sideEffects": false,
@@ -27,8 +27,8 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@grith/ccl": "2.0.0",
-    "@grith/crypto": "2.0.0"
+    "@kervyx/ccl": "2.0.0",
+    "@kervyx/crypto": "2.0.0"
   },
   "license": "MIT",
   "engines": {
@@ -39,16 +39,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agbusiness195/grith.git",
+    "url": "https://github.com/agbusiness195/kervyx.git",
     "directory": "packages/canary"
   },
-  "homepage": "https://grith.dev",
+  "homepage": "https://kervyx.dev",
   "bugs": {
-    "url": "https://github.com/agbusiness195/grith/issues"
+    "url": "https://github.com/agbusiness195/kervyx/issues"
   },
-  "author": "Grith Labs, Inc.",
+  "author": "Kervyx Labs, Inc.",
   "keywords": [
-    "grith",
+    "kervyx",
     "covenant",
     "ai-accountability",
     "canary",

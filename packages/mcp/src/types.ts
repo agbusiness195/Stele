@@ -1,4 +1,4 @@
-import type { Severity } from '@grith/ccl';
+import type { Severity } from '@kervyx/ccl';
 
 export interface MCPServer {
   tools?: MCPTool[];
@@ -12,24 +12,24 @@ export interface MCPTool {
   inputSchema?: Record<string, unknown>;
 }
 
-export interface GrithGuardOptions {
+export interface KervyxGuardOptions {
   constraints: string;
   mode?: 'enforce' | 'log_only';
   proofType?: 'audit_log' | 'capability_manifest';
-  operatorKeyPair?: import('@grith/crypto').KeyPair;
+  operatorKeyPair?: import('@kervyx/crypto').KeyPair;
   agentIdentifier?: string;
-  model?: import('@grith/identity').ModelAttestation;
+  model?: import('@kervyx/identity').ModelAttestation;
   onViolation?: (details: ViolationDetails) => void;
   onToolCall?: (details: ToolCallDetails) => void;
 }
 
 export interface WrappedMCPServer extends MCPServer {
-  getMonitor(): import('@grith/enforcement').Monitor;
-  getIdentity(): import('@grith/identity').AgentIdentity;
-  getAuditLog(): import('@grith/enforcement').AuditLog;
-  generateProof(): Promise<import('@grith/proof').ComplianceProof>;
-  getReceipt(): import('@grith/reputation').ExecutionReceipt | null;
-  getCovenant(): import('@grith/core').CovenantDocument;
+  getMonitor(): import('@kervyx/enforcement').Monitor;
+  getIdentity(): import('@kervyx/identity').AgentIdentity;
+  getAuditLog(): import('@kervyx/enforcement').AuditLog;
+  generateProof(): Promise<import('@kervyx/proof').ComplianceProof>;
+  getReceipt(): import('@kervyx/reputation').ExecutionReceipt | null;
+  getCovenant(): import('@kervyx/core').CovenantDocument;
 }
 
 export interface ViolationDetails {

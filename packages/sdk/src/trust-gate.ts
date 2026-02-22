@@ -1,7 +1,7 @@
 /**
- * Trust-gated access control for the Grith protocol.
+ * Trust-gated access control for the Kervyx protocol.
  *
- * Agents without Grith covenant compliance get no access to premium APIs.
+ * Agents without Kervyx covenant compliance get no access to premium APIs.
  * Trust scores determine the access tier: denied, basic, standard, or premium.
  * Supports grace periods for new agents and bypass tokens for testing.
  *
@@ -172,50 +172,50 @@ export function evaluateAccess(
 // ─── Revenue Analysis ────────────────────────────────────────────────────────
 
 /**
- * Calculate the revenue lift from Grith adoption.
+ * Calculate the revenue lift from Kervyx adoption.
  *
- * Non-Grith agents pay basic pricing (1x). Grith agents at standard tier
- * also pay 1x, while Grith agents at premium tier pay the premium price
- * multiplier. The lift percentage measures how much more revenue Grith
+ * Non-Kervyx agents pay basic pricing (1x). Kervyx agents at standard tier
+ * also pay 1x, while Kervyx agents at premium tier pay the premium price
+ * multiplier. The lift percentage measures how much more revenue Kervyx
  * adoption generates compared to a baseline of all agents at 1x.
  *
  * @param params - Revenue calculation parameters.
- * @returns Total revenue, Grith-attributable revenue, and lift percentage.
+ * @returns Total revenue, Kervyx-attributable revenue, and lift percentage.
  */
 export function calculateRevenueLift(params: {
   totalAgents: number;
-  grithAdoptionRate: number;
+  kervyxAdoptionRate: number;
   premiumRate: number;
   premiumPriceMultiplier: number;
-}): { totalRevenue: number; grithRevenue: number; liftPercentage: number } {
-  const { totalAgents, grithAdoptionRate, premiumRate, premiumPriceMultiplier } = params;
+}): { totalRevenue: number; kervyxRevenue: number; liftPercentage: number } {
+  const { totalAgents, kervyxAdoptionRate, premiumRate, premiumPriceMultiplier } = params;
 
-  const grithAgents = totalAgents * grithAdoptionRate;
-  const nonGrithAgents = totalAgents - grithAgents;
-  const premiumAgents = grithAgents * premiumRate;
-  const standardGrithAgents = grithAgents - premiumAgents;
+  const kervyxAgents = totalAgents * kervyxAdoptionRate;
+  const nonKervyxAgents = totalAgents - kervyxAgents;
+  const premiumAgents = kervyxAgents * premiumRate;
+  const standardKervyxAgents = kervyxAgents - premiumAgents;
 
-  // Non-Grith agents: basic pricing (1x each)
-  const nonGrithRevenue = nonGrithAgents * 1;
+  // Non-Kervyx agents: basic pricing (1x each)
+  const nonKervyxRevenue = nonKervyxAgents * 1;
 
-  // Grith standard agents: 1x each
-  const standardRevenue = standardGrithAgents * 1;
+  // Kervyx standard agents: 1x each
+  const standardRevenue = standardKervyxAgents * 1;
 
-  // Grith premium agents: premiumPriceMultiplier each
+  // Kervyx premium agents: premiumPriceMultiplier each
   const premiumRevenue = premiumAgents * premiumPriceMultiplier;
 
-  const grithRevenue = standardRevenue + premiumRevenue;
-  const totalRevenue = nonGrithRevenue + grithRevenue;
+  const kervyxRevenue = standardRevenue + premiumRevenue;
+  const totalRevenue = nonKervyxRevenue + kervyxRevenue;
 
   // Baseline: all agents at 1x
   const baseRevenue = totalAgents * 1;
 
   const liftPercentage =
-    baseRevenue === 0 ? 0 : ((grithRevenue - baseRevenue) / baseRevenue) * 100;
+    baseRevenue === 0 ? 0 : ((kervyxRevenue - baseRevenue) / baseRevenue) * 100;
 
   return {
     totalRevenue,
-    grithRevenue,
+    kervyxRevenue,
     liftPercentage,
   };
 }

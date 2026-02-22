@@ -1,11 +1,11 @@
-# @grith/legal
+# @kervyx/legal
 
 Legal identity packages, regulatory compliance mapping, and jurisdiction conflict resolution for covenant systems.
 
 ## Installation
 
 ```bash
-npm install @grith/legal
+npm install @kervyx/legal
 ```
 
 ## Key APIs
@@ -31,7 +31,7 @@ import {
   mapToJurisdiction,
   generateComplianceReport,
   regulatoryGapAnalysis,
-} from '@grith/legal';
+} from '@kervyx/legal';
 
 const pkg = exportLegalPackage('agent-1', 'operator-1', {
   covenants: [{ id: 'cov-1', constraints: ['no-delete'], signedAt: Date.now(), status: 'active' }],
@@ -54,4 +54,4 @@ console.log(gaps.readinessPercentage);
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.

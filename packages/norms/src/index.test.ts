@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { sha256Object } from '@grith/crypto';
+import { sha256Object } from '@kervyx/crypto';
 import {
   analyzeNorms,
   discoverNorms,

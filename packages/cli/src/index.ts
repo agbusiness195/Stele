@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * @grith/cli -- Command-line interface for the Grith covenant protocol.
+ * @kervyx/cli -- Command-line interface for the Kervyx covenant protocol.
  *
  * Provides commands for key generation, covenant creation, verification,
  * evaluation, inspection, CCL parsing, shell completions, diagnostics, and diff.
@@ -9,17 +9,17 @@
  * @packageDocumentation
  */
 
-import { generateKeyPair, toHex } from '@grith/crypto';
-import type { KeyPair } from '@grith/crypto';
+import { generateKeyPair, toHex } from '@kervyx/crypto';
+import type { KeyPair } from '@kervyx/crypto';
 import {
   buildCovenant,
   verifyCovenant,
   deserializeCovenant,
   serializeCovenant,
   PROTOCOL_VERSION,
-} from '@grith/core';
-import type { CovenantDocument } from '@grith/core';
-import { parse, evaluate, serialize as serializeCCL } from '@grith/ccl';
+} from '@kervyx/core';
+import type { CovenantDocument } from '@kervyx/core';
+import { parse, evaluate, serialize as serializeCCL } from '@kervyx/ccl';
 
 import {
   setColorsEnabled,
@@ -38,7 +38,7 @@ import {
   box,
 } from './format';
 import { loadConfig, saveConfig } from './config';
-import type { GrithConfig } from './config';
+import type { KervyxConfig } from './config';
 import {
   bashCompletions,
   zshCompletions,
@@ -112,9 +112,9 @@ function hasFlag(flags: Record<string, string | boolean>, key: string): boolean 
 function buildMainHelp(): string {
   const lines: string[] = [];
   lines.push('');
-  lines.push(header('Grith CLI') + dim(' - Covenant Protocol Tool'));
+  lines.push(header('Kervyx CLI') + dim(' - Covenant Protocol Tool'));
   lines.push('');
-  lines.push(`${bold('Usage:')} grith <command> [options]`);
+  lines.push(`${bold('Usage:')} kervyx <command> [options]`);
   lines.push('');
   lines.push(bold('Commands:'));
   lines.push('');
@@ -129,7 +129,7 @@ function buildMainHelp(): string {
         ['inspect <json>', 'Pretty-print covenant details'],
         ['parse <ccl>', 'Parse CCL and output AST as JSON'],
         ['completions <shell>', 'Generate shell completion script (bash|zsh|fish)'],
-        ['doctor', 'Check Grith installation health'],
+        ['doctor', 'Check Kervyx installation health'],
         ['audit', 'Run compliance audit and generate report'],
         ['diff <doc1> <doc2>', 'Show differences between two covenant documents'],
         ['version', 'Print version information'],
@@ -154,17 +154,17 @@ function buildMainHelp(): string {
   return lines.join('\n');
 }
 
-const INIT_HELP = `grith init - Generate an Ed25519 key pair and write grith.config.json.
+const INIT_HELP = `kervyx init - Generate an Ed25519 key pair and write kervyx.config.json.
 
-Usage: grith init [--json]
+Usage: kervyx init [--json]
 
 Generates a new key pair, outputs the public key, and writes a
-grith.config.json configuration file in the current directory.
+kervyx.config.json configuration file in the current directory.
 With --json, outputs { publicKey, privateKey } as JSON.`;
 
-const CREATE_HELP = `grith create - Create and sign a covenant document.
+const CREATE_HELP = `kervyx create - Create and sign a covenant document.
 
-Usage: grith create --issuer <id> --beneficiary <id> --constraints <ccl> [--json]
+Usage: kervyx create --issuer <id> --beneficiary <id> --constraints <ccl> [--json]
 
 Options:
   --issuer <id>          Issuer identifier (required)
@@ -172,35 +172,35 @@ Options:
   --constraints <ccl>    CCL constraint string (required)
   --json                 Output raw JSON`;
 
-const VERIFY_HELP = `grith verify - Verify a covenant document.
+const VERIFY_HELP = `kervyx verify - Verify a covenant document.
 
-Usage: grith verify <json-string> [--json]
+Usage: kervyx verify <json-string> [--json]
 
 Runs all verification checks on the covenant and reports results.`;
 
-const EVALUATE_HELP = `grith evaluate - Evaluate an action against a covenant.
+const EVALUATE_HELP = `kervyx evaluate - Evaluate an action against a covenant.
 
-Usage: grith evaluate <json-string> <action> <resource> [--json]
+Usage: kervyx evaluate <json-string> <action> <resource> [--json]
 
 Parses the covenant's CCL constraints and evaluates the given action
 and resource against them.`;
 
-const INSPECT_HELP = `grith inspect - Pretty-print covenant details.
+const INSPECT_HELP = `kervyx inspect - Pretty-print covenant details.
 
-Usage: grith inspect <json-string> [--json]
+Usage: kervyx inspect <json-string> [--json]
 
 Displays covenant fields including parties, constraints, and metadata.`;
 
-const PARSE_HELP = `grith parse - Parse CCL source text and output AST.
+const PARSE_HELP = `kervyx parse - Parse CCL source text and output AST.
 
-Usage: grith parse <ccl-string> [--json]
+Usage: kervyx parse <ccl-string> [--json]
 
 Parses CCL and outputs the AST. With --json, outputs the full
 CCLDocument as JSON. Without --json, outputs a human-readable summary.`;
 
-const COMPLETIONS_HELP = `grith completions - Generate shell completion script.
+const COMPLETIONS_HELP = `kervyx completions - Generate shell completion script.
 
-Usage: grith completions <shell>
+Usage: kervyx completions <shell>
 
 Supported shells:
   bash    Generate Bash completion script
@@ -208,26 +208,26 @@ Supported shells:
   fish    Generate Fish completion script
 
 Pipe the output to the appropriate file:
-  grith completions bash > /etc/bash_completion.d/grith
-  grith completions zsh > ~/.zsh/completions/_grith
-  grith completions fish > ~/.config/fish/completions/grith.fish`;
+  kervyx completions bash > /etc/bash_completion.d/kervyx
+  kervyx completions zsh > ~/.zsh/completions/_kervyx
+  kervyx completions fish > ~/.config/fish/completions/kervyx.fish`;
 
-const DOCTOR_HELP = `grith doctor - Check Grith installation health.
+const DOCTOR_HELP = `kervyx doctor - Check Kervyx installation health.
 
-Usage: grith doctor [--json]
+Usage: kervyx doctor [--json]
 
-Runs diagnostic checks on the Grith installation:
+Runs diagnostic checks on the Kervyx installation:
   - Node.js version >= 18
-  - All @grith/* packages importable
+  - All @kervyx/* packages importable
   - Crypto key pair generation works
   - Covenant build and verify round-trip
   - CCL parsing works
   - Config file readable (if exists)
   - No stale dist files detected`;
 
-const AUDIT_HELP = `grith audit - Run compliance audit and generate report.
+const AUDIT_HELP = `kervyx audit - Run compliance audit and generate report.
 
-Usage: grith audit [options] [--json]
+Usage: kervyx audit [options] [--json]
 
 Options:
   --covenants <n>          Number of configured covenants (default: 0)
@@ -246,9 +246,9 @@ Runs a compliance audit that checks:
 
 Reports findings with severity levels, a 0-100 score, and a letter grade.`;
 
-const DIFF_HELP = `grith diff - Show differences between two covenant documents.
+const DIFF_HELP = `kervyx diff - Show differences between two covenant documents.
 
-Usage: grith diff <doc1-json> <doc2-json> [--json]
+Usage: kervyx diff <doc1-json> <doc2-json> [--json]
 
 Compares two covenant documents and highlights:
   - Changed fields (version, constraints, timestamps, etc.)
@@ -273,7 +273,7 @@ async function cmdInit(flags: Record<string, string | boolean>, configDir?: stri
   }
 
   // Write config file
-  const config: GrithConfig = {
+  const config: KervyxConfig = {
     defaultIssuer: { id: 'default', publicKey: publicKeyHex },
     outputFormat: 'text',
   };
@@ -292,9 +292,9 @@ async function cmdInit(flags: Record<string, string | boolean>, configDir?: stri
       ['Public key', publicKeyHex],
     ]),
     '',
-    success('Wrote grith.config.json'),
+    success('Wrote kervyx.config.json'),
     '',
-    dim('Run "grith create" to build your first covenant.'),
+    dim('Run "kervyx create" to build your first covenant.'),
     '',
   ];
   return { stdout: lines.join('\n'), stderr: '', exitCode: 0 };
@@ -302,7 +302,7 @@ async function cmdInit(flags: Record<string, string | boolean>, configDir?: stri
 
 // ─── Command: create ──────────────────────────────────────────────────────────
 
-async function cmdCreate(flags: Record<string, string | boolean>, config?: GrithConfig): Promise<RunResult> {
+async function cmdCreate(flags: Record<string, string | boolean>, config?: KervyxConfig): Promise<RunResult> {
   if (hasFlag(flags, 'help')) {
     return { stdout: CREATE_HELP, stderr: '', exitCode: 0 };
   }
@@ -723,7 +723,7 @@ async function cmdDoctor(
   }
 
   const lines: string[] = [''];
-  lines.push(header('Grith Doctor'));
+  lines.push(header('Kervyx Doctor'));
   lines.push('');
 
   for (const check of checks) {
@@ -1033,10 +1033,10 @@ function cmdHelp(): RunResult {
 // ─── Main run function ────────────────────────────────────────────────────────
 
 /**
- * Run the Grith CLI with the given argument list.
+ * Run the Kervyx CLI with the given argument list.
  *
  * @param args - The command-line arguments (without node/script prefix).
- * @param configDir - Optional directory to search for grith.config.json (defaults to cwd).
+ * @param configDir - Optional directory to search for kervyx.config.json (defaults to cwd).
  * @returns An object with stdout, stderr, and exitCode.
  */
 export async function run(args: string[], configDir?: string): Promise<RunResult> {
@@ -1048,7 +1048,7 @@ export async function run(args: string[], configDir?: string): Promise<RunResult
   setColorsEnabled(!noColor && !jsonMode);
 
   // Load config file (non-fatal if missing)
-  let config: GrithConfig | undefined;
+  let config: KervyxConfig | undefined;
   try {
     config = loadConfig(configDir);
   } catch {
@@ -1095,7 +1095,7 @@ export async function run(args: string[], configDir?: string): Promise<RunResult
       default:
         return {
           stdout: '',
-          stderr: `Error: Unknown command '${parsed.command}'. Run 'grith help' for usage.`,
+          stderr: `Error: Unknown command '${parsed.command}'. Run 'kervyx help' for usage.`,
           exitCode: 1,
         };
     }

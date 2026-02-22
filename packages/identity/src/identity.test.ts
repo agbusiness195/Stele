@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair } from '@grith/crypto';
-import type { KeyPair } from '@grith/crypto';
+import { generateKeyPair } from '@kervyx/crypto';
+import type { KeyPair } from '@kervyx/crypto';
 
 import {
   createIdentity,
@@ -77,7 +77,7 @@ async function createTestIdentity(
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('@grith/identity', () => {
+describe('@kervyx/identity', () => {
   // ── createIdentity ─────────────────────────────────────────────────────
 
   describe('createIdentity', () => {

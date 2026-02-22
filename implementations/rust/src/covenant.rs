@@ -7,10 +7,10 @@
 
 use crate::ccl;
 use crate::crypto;
-use crate::GrithError;
+use crate::KervyxError;
 use serde::{Deserialize, Serialize};
 
-/// Current Grith Covenant protocol version.
+/// Current Kervyx Covenant protocol version.
 pub const PROTOCOL_VERSION: &str = "1.0";
 
 /// Maximum number of CCL constraint statements in a single covenant.
@@ -116,14 +116,14 @@ pub struct CovenantBuilderOptions {
 ///
 /// Strips `id`, `signature`, and `countersignatures`, then produces
 /// deterministic JSON via JCS (sorted keys) canonicalization.
-pub fn canonical_form(doc: &CovenantDocument) -> Result<String, GrithError> {
+pub fn canonical_form(doc: &CovenantDocument) -> Result<String, KervyxError> {
     // Build a JSON value, then remove the mutable fields
     let val = serde_json::to_value(doc)
-        .map_err(|e| GrithError::SerializationError(format!("Failed to convert to JSON value: {}", e)))?;
+        .map_err(|e| KervyxError::SerializationError(format!("Failed to convert to JSON value: {}", e)))?;
 
     let mut obj = match val {
         serde_json::Value::Object(m) => m,
-        _ => return Err(GrithError::SerializationError("Expected object".to_string())),
+        _ => return Err(KervyxError::SerializationError("Expected object".to_string())),
     };
 
     // Remove fields that are not part of the canonical form
@@ -136,7 +136,7 @@ pub fn canonical_form(doc: &CovenantDocument) -> Result<String, GrithError> {
 }
 
 /// Compute the SHA-256 document ID from its canonical form.
-pub fn compute_id(doc: &CovenantDocument) -> Result<String, GrithError> {
+pub fn compute_id(doc: &CovenantDocument) -> Result<String, KervyxError> {
     let canonical = canonical_form(doc)?;
     Ok(crypto::sha256_string(&canonical))
 }
@@ -152,41 +152,41 @@ pub fn compute_id(doc: &CovenantDocument) -> Result<String, GrithError> {
 /// issuer's private key, and computes the document ID.
 ///
 /// # Errors
-/// Returns `GrithError::InvalidInput` for missing/invalid fields,
-/// `GrithError::CCLParseError` for invalid constraints, or
-/// `GrithError::CryptoError` for signing failures.
-pub fn build_covenant(opts: CovenantBuilderOptions) -> Result<CovenantDocument, GrithError> {
+/// Returns `KervyxError::InvalidInput` for missing/invalid fields,
+/// `KervyxError::CCLParseError` for invalid constraints, or
+/// `KervyxError::CryptoError` for signing failures.
+pub fn build_covenant(opts: CovenantBuilderOptions) -> Result<CovenantDocument, KervyxError> {
     // Validate required inputs
     if opts.issuer.id.is_empty() {
-        return Err(GrithError::InvalidInput("issuer.id is required".to_string()));
+        return Err(KervyxError::InvalidInput("issuer.id is required".to_string()));
     }
     if opts.issuer.public_key.is_empty() {
-        return Err(GrithError::InvalidInput(
+        return Err(KervyxError::InvalidInput(
             "issuer.publicKey is required".to_string(),
         ));
     }
     if opts.issuer.role != "issuer" {
-        return Err(GrithError::InvalidInput(
+        return Err(KervyxError::InvalidInput(
             "issuer.role must be \"issuer\"".to_string(),
         ));
     }
     if opts.beneficiary.id.is_empty() {
-        return Err(GrithError::InvalidInput(
+        return Err(KervyxError::InvalidInput(
             "beneficiary.id is required".to_string(),
         ));
     }
     if opts.beneficiary.public_key.is_empty() {
-        return Err(GrithError::InvalidInput(
+        return Err(KervyxError::InvalidInput(
             "beneficiary.publicKey is required".to_string(),
         ));
     }
     if opts.beneficiary.role != "beneficiary" {
-        return Err(GrithError::InvalidInput(
+        return Err(KervyxError::InvalidInput(
             "beneficiary.role must be \"beneficiary\"".to_string(),
         ));
     }
     if opts.constraints.trim().is_empty() {
-        return Err(GrithError::InvalidInput(
+        return Err(KervyxError::InvalidInput(
             "constraints is required".to_string(),
         ));
     }
@@ -194,7 +194,7 @@ pub fn build_covenant(opts: CovenantBuilderOptions) -> Result<CovenantDocument, 
     // Parse CCL to verify syntax and check constraint count
     let parsed_ccl = ccl::parse(&opts.constraints)?;
     if parsed_ccl.statements.len() > MAX_CONSTRAINTS {
-        return Err(GrithError::InvalidInput(format!(
+        return Err(KervyxError::InvalidInput(format!(
             "Constraints exceed maximum of {} statements (got {})",
             MAX_CONSTRAINTS,
             parsed_ccl.statements.len()
@@ -204,22 +204,22 @@ pub fn build_covenant(opts: CovenantBuilderOptions) -> Result<CovenantDocument, 
     // Validate chain reference if present
     if let Some(ref chain) = opts.chain {
         if chain.parent_id.is_empty() {
-            return Err(GrithError::InvalidInput(
+            return Err(KervyxError::InvalidInput(
                 "chain.parentId is required".to_string(),
             ));
         }
         if chain.relation.is_empty() {
-            return Err(GrithError::InvalidInput(
+            return Err(KervyxError::InvalidInput(
                 "chain.relation is required".to_string(),
             ));
         }
         if chain.depth < 1 {
-            return Err(GrithError::InvalidInput(
+            return Err(KervyxError::InvalidInput(
                 "chain.depth must be a positive integer".to_string(),
             ));
         }
         if chain.depth > MAX_CHAIN_DEPTH {
-            return Err(GrithError::InvalidInput(format!(
+            return Err(KervyxError::InvalidInput(format!(
                 "chain.depth exceeds maximum of {} (got {})",
                 MAX_CHAIN_DEPTH, chain.depth
             )));
@@ -255,9 +255,9 @@ pub fn build_covenant(opts: CovenantBuilderOptions) -> Result<CovenantDocument, 
 
     // Validate serialized size
     let serialized = serde_json::to_string(&doc)
-        .map_err(|e| GrithError::SerializationError(format!("Failed to serialize: {}", e)))?;
+        .map_err(|e| KervyxError::SerializationError(format!("Failed to serialize: {}", e)))?;
     if serialized.len() > MAX_DOCUMENT_SIZE {
-        return Err(GrithError::InvalidInput(format!(
+        return Err(KervyxError::InvalidInput(format!(
             "Serialized document exceeds maximum size of {} bytes",
             MAX_DOCUMENT_SIZE
         )));
@@ -284,7 +284,7 @@ pub fn build_covenant(opts: CovenantBuilderOptions) -> Result<CovenantDocument, 
 ///  9. `document_size` -- Serialized size does not exceed MAX_DOCUMENT_SIZE
 /// 10. `countersignatures` -- All countersignatures are valid
 /// 11. `nonce_present` -- Nonce is present and non-empty
-pub fn verify_covenant(doc: &CovenantDocument) -> Result<VerificationResult, GrithError> {
+pub fn verify_covenant(doc: &CovenantDocument) -> Result<VerificationResult, KervyxError> {
     let mut checks: Vec<VerificationCheck> = Vec::new();
 
     // 1. ID match
@@ -580,7 +580,7 @@ pub fn countersign_covenant(
     doc: &CovenantDocument,
     kp: &crypto::KeyPair,
     role: &str,
-) -> Result<CovenantDocument, GrithError> {
+) -> Result<CovenantDocument, KervyxError> {
     let canonical = canonical_form(doc)?;
     let sig_bytes = crypto::sign(canonical.as_bytes(), &kp.signing_key)?;
 
@@ -604,15 +604,15 @@ pub fn countersign_covenant(
 // ---------------------------------------------------------------------------
 
 /// Serialize a CovenantDocument to a JSON string.
-pub fn serialize_covenant(doc: &CovenantDocument) -> Result<String, GrithError> {
+pub fn serialize_covenant(doc: &CovenantDocument) -> Result<String, KervyxError> {
     serde_json::to_string_pretty(doc)
-        .map_err(|e| GrithError::SerializationError(format!("Failed to serialize covenant: {}", e)))
+        .map_err(|e| KervyxError::SerializationError(format!("Failed to serialize covenant: {}", e)))
 }
 
 /// Deserialize a JSON string into a CovenantDocument.
-pub fn deserialize_covenant(json: &str) -> Result<CovenantDocument, GrithError> {
+pub fn deserialize_covenant(json: &str) -> Result<CovenantDocument, KervyxError> {
     serde_json::from_str(json)
-        .map_err(|e| GrithError::SerializationError(format!("Failed to deserialize covenant: {}", e)))
+        .map_err(|e| KervyxError::SerializationError(format!("Failed to deserialize covenant: {}", e)))
 }
 
 // ---------------------------------------------------------------------------
@@ -626,7 +626,7 @@ pub fn deserialize_covenant(json: &str) -> Result<CovenantDocument, GrithError> 
 pub fn validate_chain_narrowing(
     child: &CovenantDocument,
     parent: &CovenantDocument,
-) -> Result<ccl::NarrowingResult, GrithError> {
+) -> Result<ccl::NarrowingResult, KervyxError> {
     let parent_ccl = ccl::parse(&parent.constraints)?;
     let child_ccl = ccl::parse(&child.constraints)?;
     Ok(ccl::validate_narrowing(&parent_ccl, &child_ccl))

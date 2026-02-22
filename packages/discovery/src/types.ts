@@ -1,7 +1,7 @@
 /**
- * @grith/discovery — Types for the Grith cross-platform discovery protocol.
+ * @kervyx/discovery — Types for the Kervyx cross-platform discovery protocol.
  *
- * Defines the `.well-known/grith/` endpoint format, key discovery (JWKS-like),
+ * Defines the `.well-known/kervyx/` endpoint format, key discovery (JWKS-like),
  * protocol version negotiation, and cross-platform covenant resolution.
  *
  * @packageDocumentation
@@ -10,7 +10,7 @@
 // ─── Discovery Document ─────────────────────────────────────────────────────
 
 /**
- * The discovery document served at `/.well-known/grith/configuration`.
+ * The discovery document served at `/.well-known/kervyx/configuration`.
  *
  * Modeled after OAuth 2.0 Authorization Server Metadata (RFC 8414)
  * and OpenID Connect Discovery. This is the entry point for any
@@ -18,8 +18,8 @@
  *
  * @example
  * ```
- * GET https://platform.example/.well-known/grith/configuration
- * Content-Type: application/grith+json
+ * GET https://platform.example/.well-known/kervyx/configuration
+ * Content-Type: application/kervyx+json
  * ```
  */
 export interface DiscoveryDocument {
@@ -41,7 +41,7 @@ export interface DiscoveryDocument {
   /** URL of the breach reporting endpoint. */
   breach_endpoint?: string;
 
-  /** Grith protocol versions supported by this platform. */
+  /** Kervyx protocol versions supported by this platform. */
   protocol_versions_supported: string[];
 
   /** Signature schemes supported (e.g., ["ed25519"]). */
@@ -84,7 +84,7 @@ export interface AgentKeyEntry {
   /** Unique key identifier (hex-encoded SHA-256 of the public key). */
   kid: string;
 
-  /** Key type (always "Ed25519" for Grith). */
+  /** Key type (always "Ed25519" for Kervyx). */
   kty: 'Ed25519';
 
   /** Hex-encoded Ed25519 public key. */

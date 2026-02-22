@@ -1,5 +1,5 @@
 /**
- * Grith Trust-Gated Access Quickstart
+ * Kervyx Trust-Gated Access Quickstart
  *
  * Shows how to gate API access based on trust scores.
  * Agents with higher trust scores get better access tiers.
@@ -14,7 +14,7 @@ import {
 
 function main() {
   console.log('========================================');
-  console.log('  Grith Trust-Gated Access Quickstart');
+  console.log('  Kervyx Trust-Gated Access Quickstart');
   console.log('========================================\n');
 
   // ── Step 1: Create a trust gate with default thresholds ─────────────

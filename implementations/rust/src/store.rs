@@ -6,7 +6,7 @@
 //! suitable for testing and lightweight use cases.
 
 use crate::covenant::CovenantDocument;
-use crate::GrithError;
+use crate::KervyxError;
 use std::collections::HashMap;
 
 /// Trait for covenant document storage.
@@ -17,18 +17,18 @@ pub trait Store {
     /// Store a covenant document, keyed by its ID.
     ///
     /// If a document with the same ID already exists, it is overwritten.
-    fn put(&mut self, id: &str, doc: CovenantDocument) -> Result<(), GrithError>;
+    fn put(&mut self, id: &str, doc: CovenantDocument) -> Result<(), KervyxError>;
 
     /// Retrieve a covenant document by ID.
     ///
     /// Returns `Ok(Some(&doc))` if found, `Ok(None)` if not found.
-    fn get(&self, id: &str) -> Result<Option<&CovenantDocument>, GrithError>;
+    fn get(&self, id: &str) -> Result<Option<&CovenantDocument>, KervyxError>;
 
     /// Delete a covenant document by ID.
     ///
     /// Returns `Ok(true)` if the document existed and was deleted,
     /// `Ok(false)` if the document was not found.
-    fn delete(&mut self, id: &str) -> Result<bool, GrithError>;
+    fn delete(&mut self, id: &str) -> Result<bool, KervyxError>;
 
     /// List all stored covenant documents.
     fn list(&self) -> Vec<&CovenantDocument>;
@@ -64,19 +64,19 @@ impl Default for MemoryStore {
 }
 
 impl Store for MemoryStore {
-    fn put(&mut self, id: &str, doc: CovenantDocument) -> Result<(), GrithError> {
+    fn put(&mut self, id: &str, doc: CovenantDocument) -> Result<(), KervyxError> {
         if id.is_empty() {
-            return Err(GrithError::StorageError("Document ID cannot be empty".to_string()));
+            return Err(KervyxError::StorageError("Document ID cannot be empty".to_string()));
         }
         self.documents.insert(id.to_string(), doc);
         Ok(())
     }
 
-    fn get(&self, id: &str) -> Result<Option<&CovenantDocument>, GrithError> {
+    fn get(&self, id: &str) -> Result<Option<&CovenantDocument>, KervyxError> {
         Ok(self.documents.get(id))
     }
 
-    fn delete(&mut self, id: &str) -> Result<bool, GrithError> {
+    fn delete(&mut self, id: &str) -> Result<bool, KervyxError> {
         Ok(self.documents.remove(id).is_some())
     }
 

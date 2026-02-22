@@ -1,7 +1,7 @@
 /**
- * @grith/discovery — Cross-platform discovery protocol for Grith.
+ * @kervyx/discovery — Cross-platform discovery protocol for Kervyx.
  *
- * Implements the `.well-known/grith/` endpoint specification,
+ * Implements the `.well-known/kervyx/` endpoint specification,
  * enabling cross-platform agent verification, key discovery,
  * and protocol negotiation.
  *
@@ -30,7 +30,7 @@ export {
   buildKeySet,
   WELL_KNOWN_PATH,
   CONFIGURATION_PATH,
-  GRITH_MEDIA_TYPE,
+  KERVYX_MEDIA_TYPE,
   MAX_DOCUMENT_AGE_MS,
 } from './well-known.js';
 export type { BuildDiscoveryDocumentOptions, DiscoveryValidationResult } from './well-known.js';

@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { generateKeyPair } from '@grith/crypto';
-import type { KeyPair } from '@grith/crypto';
+import { generateKeyPair } from '@kervyx/crypto';
+import type { KeyPair } from '@kervyx/crypto';
 import {
   buildCovenant,
   PROTOCOL_VERSION,
   MAX_CHAIN_DEPTH,
-} from '@grith/core';
+} from '@kervyx/core';
 import type {
   CovenantDocument,
   CovenantBuilderOptions,
   Issuer,
   Beneficiary,
   ChainReference,
-} from '@grith/core';
+} from '@kervyx/core';
 
 import { Verifier, verifyBatch } from './index';
 import type {
@@ -132,7 +132,7 @@ async function buildChain(length: number): Promise<{
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('@grith/verifier', () => {
+describe('@kervyx/verifier', () => {
   // ── Verifier constructor ─────────────────────────────────────────────
 
   describe('Verifier constructor', () => {

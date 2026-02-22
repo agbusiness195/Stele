@@ -1,24 +1,24 @@
-# @grith/mcp
+# @kervyx/mcp
 
-Model Context Protocol (MCP) integration -- wraps any MCP server with Grith covenant enforcement, audit logging, and compliance proofs.
+Model Context Protocol (MCP) integration -- wraps any MCP server with Kervyx covenant enforcement, audit logging, and compliance proofs.
 
 ## Installation
 
 ```bash
-npm install @grith/mcp
+npm install @kervyx/mcp
 ```
 
 ## Key APIs
 
-- **GrithGuard.wrap(server, options)**: Wrap an MCP server with constraint enforcement using CCL text or a preset name. Returns a `WrappedMCPServer`.
-- **GrithGuard.fromCovenant(server, covenant, keyPair)**: Wrap an MCP server using a pre-built `CovenantDocument` (for externally managed covenants).
+- **KervyxGuard.wrap(server, options)**: Wrap an MCP server with constraint enforcement using CCL text or a preset name. Returns a `WrappedMCPServer`.
+- **KervyxGuard.fromCovenant(server, covenant, keyPair)**: Wrap an MCP server using a pre-built `CovenantDocument` (for externally managed covenants).
 - **PRESETS**: Built-in CCL constraint presets (`standard:data-isolation`, `standard:read-write`, `standard:network`, `standard:minimal`).
 - **WrappedMCPServer**: Extended server with `getMonitor()`, `getAuditLog()`, `generateProof()`, `getReceipt()`, and `getCovenant()` accessors.
 
 ## Usage
 
 ```typescript
-import { GrithGuard } from '@grith/mcp';
+import { KervyxGuard } from '@kervyx/mcp';
 
 // Your existing MCP server
 const mcpServer = {
@@ -29,7 +29,7 @@ const mcpServer = {
 };
 
 // Wrap with a built-in preset (2 lines)
-const guarded = await GrithGuard.wrap(mcpServer, {
+const guarded = await KervyxGuard.wrap(mcpServer, {
   constraints: 'standard:data-isolation',
   mode: 'enforce', // or 'log_only'
   onViolation: (v) => console.warn(`Blocked: ${v.toolName} - ${v.constraint}`),
@@ -47,14 +47,14 @@ const receipt = guarded.getReceipt();
 ### Using a pre-built covenant
 
 ```typescript
-import { GrithGuard } from '@grith/mcp';
-import { buildCovenant } from '@grith/core';
-import { generateKeyPair } from '@grith/crypto';
+import { KervyxGuard } from '@kervyx/mcp';
+import { buildCovenant } from '@kervyx/core';
+import { generateKeyPair } from '@kervyx/crypto';
 
 const keyPair = await generateKeyPair();
 const covenant = await buildCovenant({ /* ... */ });
 
-const guarded = await GrithGuard.fromCovenant(mcpServer, covenant, keyPair);
+const guarded = await KervyxGuard.fromCovenant(mcpServer, covenant, keyPair);
 ```
 
 ## Presets
@@ -68,4 +68,4 @@ const guarded = await GrithGuard.fromCovenant(mcpServer, covenant, keyPair);
 
 ## Docs
 
-See the [Grith SDK root documentation](../../README.md) for the full API reference.
+See the [Kervyx SDK root documentation](../../README.md) for the full API reference.
