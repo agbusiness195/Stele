@@ -1,7 +1,7 @@
 /**
- * React hooks for Kova.
+ * React hooks for Kervyx.
  *
- * Provides idiomatic React hooks for subscribing to Kova observables,
+ * Provides idiomatic React hooks for subscribing to Kervyx observables,
  * managing covenant state, identity state, and store queries.
  *
  * Requires React >= 18 as a peer dependency.
@@ -9,11 +9,11 @@
  * @packageDocumentation
  */
 
-import type { CovenantDocument, VerificationResult } from '@usekova/core';
-import type { AgentIdentity } from '@usekova/identity';
-import type { CovenantStore, StoreFilter } from '@usekova/store';
-import type { KovaClient, CreateCovenantOptions, EvaluationResult, CreateIdentityOptions, EvolveOptions } from '@usekova/sdk';
-import type { EvaluationContext } from '@usekova/ccl';
+import type { CovenantDocument, VerificationResult } from '@kervyx/core';
+import type { AgentIdentity } from '@kervyx/identity';
+import type { CovenantStore, StoreFilter } from '@kervyx/store';
+import type { KervyxClient, CreateCovenantOptions, EvaluationResult, CreateIdentityOptions, EvolveOptions } from '@kervyx/sdk';
+import type { EvaluationContext } from '@kervyx/ccl';
 import { Observable, CovenantState, IdentityState, StoreState } from './index';
 
 // ─── Minimal React type interface ──────────────────────────────────────────────
@@ -24,7 +24,8 @@ export interface ReactModule {
   useState<T>(initial: T | (() => T)): [T, (v: T | ((prev: T) => T)) => void];
   useEffect(effect: () => void | (() => void), deps?: unknown[]): void;
   useRef<T>(initial: T): { current: T };
-  useCallback<T extends (...args: unknown[]) => unknown>(fn: T, deps: unknown[]): T;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  useCallback<T extends (...args: any[]) => any>(fn: T, deps: unknown[]): T;
   useSyncExternalStore<T>(subscribe: (cb: () => void) => () => void, getSnapshot: () => T): T;
 }
 
@@ -39,7 +40,7 @@ function getReact(): ReactModule {
       _react = require('react') as ReactModule;
     } catch {
       throw new Error(
-        '@usekova/react hooks require React >= 18 as a peer dependency. ' +
+        '@kervyx/react hooks require React >= 18 as a peer dependency. ' +
         'Install it with: npm install react',
       );
     }
@@ -66,7 +67,7 @@ export function _resetReact(): void {
 // ─── useObservable ─────────────────────────────────────────────────────────────
 
 /**
- * Subscribe to a Kova {@link Observable} and re-render when it changes.
+ * Subscribe to a Kervyx{@link Observable} and re-render when it changes.
  *
  * Uses `useSyncExternalStore` for tear-free reads that are compatible
  * with React concurrent features.
@@ -114,18 +115,18 @@ export interface UseCovenantReturn {
  * Manage the full covenant lifecycle (create, verify, evaluate) with
  * reactive state updates.
  *
- * @param client - A configured {@link KovaClient} instance.
+ * @param client - A configured {@link KervyxClient} instance.
  * @returns Reactive covenant state and action methods.
  *
  * @example
  * ```tsx
- * function CovenantPanel({ client }: { client: KovaClient }) {
+ * function CovenantPanel({ client }: { client: KervyxClient }) {
  *   const { status, document, create, verify } = useCovenant(client);
  *   // ...
  * }
  * ```
  */
-export function useCovenant(client: KovaClient): UseCovenantReturn {
+export function useCovenant(client: KervyxClient): UseCovenantReturn {
   const react = getReact();
   const stateRef = react.useRef<CovenantState | null>(null);
 
@@ -174,10 +175,10 @@ export interface UseIdentityReturn {
  * Manage the agent identity lifecycle (create, evolve) with reactive
  * state updates.
  *
- * @param client - A configured {@link KovaClient} instance.
+ * @param client - A configured {@link KervyxClient} instance.
  * @returns Reactive identity state and action methods.
  */
-export function useIdentity(client: KovaClient): UseIdentityReturn {
+export function useIdentity(client: KervyxClient): UseIdentityReturn {
   const react = getReact();
   const stateRef = react.useRef<IdentityState | null>(null);
 
